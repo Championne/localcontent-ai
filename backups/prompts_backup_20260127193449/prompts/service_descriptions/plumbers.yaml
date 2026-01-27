@@ -1,0 +1,68 @@
+
+name: Plumbers - Website Service Description
+description: Generate compelling website service descriptions for plumbing businesses, incorporating problem-solution storytelling, local SEO, emergency services, reliability, and a comprehensive list of plumbing solutions.
+fields:
+  - id: business_name
+    name: Business Name
+    description: The name of the plumbing business.
+    type: string
+    required: true
+  - id: city
+    name: City/Service Area
+    description: The primary city or service area for local SEO.
+    type: string
+    required: true
+  - id: emergency_phone
+    name: Emergency Phone Number
+    description: The phone number for emergency services.
+    type: string
+    required: false
+  - id: unique_selling_proposition
+    name: Unique Selling Proposition
+    description: A brief statement about what makes the business stand out (e.g., "eco-friendly solutions," "24/7 availability," "licensed and insured").
+    type: string
+    required: false
+  - id: services_offered
+    name: Specific Services Offered (Optional)
+    description: A comma-separated list of specific plumbing services to highlight (e.g., "water heater repair, drain cleaning, pipe inspection").
+    type: string
+    required: false
+template: |
+  ---
+  ## {{business_name}} - Your Trusted Plumbing Experts in {{city}}
+
+  **Facing a plumbing crisis? Don't let a leaky faucet, clogged drain, or burst pipe disrupt your life!**
+
+  At {{business_name}}, we understand that plumbing problems can strike at the worst possible times. That's why we're dedicated to providing fast, reliable, and professional plumbing services throughout {{city}} and the surrounding areas. When you're searching for "plumber near me" or "emergency plumbing {{city}}", know that our team is ready to respond.
+
+  ### Why Choose {{business_name}}?
+
+  *   **24/7 Emergency Service:** Burst pipe at 3 AM? No problem. Our expert plumbers are on call {{if emergency_phone}}at {{emergency_phone}}{{endif}} to tackle any emergency, day or night, ensuring minimal damage and peace of mind.
+  *   **Reliability You Can Trust:** We pride ourselves on transparent pricing, punctual service, and lasting solutions. Our licensed and experienced technicians use state-of-the-art equipment to diagnose and fix issues right the first time. {{if unique_selling_proposition}}We're also known for our {{unique_selling_proposition}}.{{endif}}
+  *   **Local Experts:** As a locally owned and operated business in {{city}}, we're familiar with the specific plumbing challenges faced by homes and businesses in our community. We're committed to providing personalized service with a friendly, local touch.
+
+  ### Our Comprehensive Plumbing Solutions Include:
+
+  Whether it's a minor repair or a major installation, {{business_name}} has you covered. Our extensive range of services includes:
+
+  *   **Emergency Plumbing:** Immediate response to leaks, burst pipes, backups, and more.
+  *   **Drain Cleaning & Unclogging:** From stubborn sink clogs to main line blockages, we get your water flowing freely.
+  *   **Water Heater Repair & Installation:** Expert service for traditional and tankless water heaters.
+  *   **Pipe Repair & Replacement:** Fixing leaks, re-piping, and addressing corrosion issues.
+  *   **Toilet Repair & Installation:** Solving running toilets, clogs, and installing new units.
+  *   **Leak Detection & Repair:** Pinpointing hidden leaks to prevent water damage and high bills.
+  *   **Fixture Installation:** Faucet, sink, shower, and other plumbing fixture installations.
+  *   **Sewer Line Services:** Inspections, repairs, and replacements for effective waste removal.
+  *   **Sump Pump Services:** Installation, repair, and maintenance to prevent basement flooding.
+  {{if services_offered}}
+  *   And much more, including: {{services_offered}}
+  {{endif}}
+
+  ### Don't Wait for a Plumbing Disaster!
+
+  For dependable, efficient, and friendly plumbing services in {{city}}, look no further than {{business_name}}. We're here to solve your plumbing problems quickly and effectively, so you can get back to what matters most.
+
+  **Contact {{business_name}} today for a free estimate or immediate emergency service!**
+  Phone: {{emergency_phone if emergency_phone else "Your Phone Number"}}
+  Website: YourWebsite.com
+  ---

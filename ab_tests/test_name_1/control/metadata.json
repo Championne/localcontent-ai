@@ -1,0 +1,9 @@
+{
+  "test_name": "test_name_1",
+  "variant_id": "control",
+  "parameters": {
+    "keyword_density": 0.03,
+    "tone_of_voice": "neutral",
+    "cta_phrasing": "Vraag offerte aan"
+  }
+}

@@ -1,0 +1,5 @@
+name: Test Template
+description: A simple template for testing
+example_output: |
+  Greeting, {user_name}! You are {user_age} years old.
+  Today's product is {product_name}.

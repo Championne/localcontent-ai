@@ -1,0 +1,37 @@
+name: "Landscapers - Social Media Post"
+version: "1.0.0"
+category: "social_media"
+description: "Generate engaging social media posts for landscaping businesses, with a focus on seasonal content and local community."
+target_content_type: "social_post"
+metadata:
+  industry: "Landscapers"
+  content_goal: "engagement, awareness"
+  tone: "friendly, informative, inspiring"
+  keywords_to_inject:
+    - "tuinmetamorfose"
+    - "lenteklaar"
+    - "gazononderhoud"
+    - "buitenleven"
+    - "lokale hovenier"
+structure:
+  guidelines: |
+    As an expert social media manager for landscaping businesses, craft a captivating social media post (e.g., for Facebook or Instagram).
+    Focus on seasonal tips, before/after transformations, or upcoming local events your business is involved in.
+    Use emojis and include a soft call-to-action.
+    Emphasize the benefit to the customer and their outdoor living.
+  example_prompt: |
+    Generate a Facebook post for 'GroenMeesters' in Utrecht, announcing their spring garden cleanup service. 
+    Mention local spring flowers and invite people to prepare their gardens.
+  example_output: |
+    🌷🌱 **Tijd voor een frisse start in de tuin met GroenMeesters in Utrecht!** 🌱🌷
+
+    Na een lange winter is het nu écht tijd om je tuin #lenteklaar te maken! Droom je van een stralende buitenruimte vol bloeiende voorjaarsbloemen, maar zie je op tegen al het werk? Laat dat maar aan jouw #lokalehovenier in Utrecht over!
+
+    Onze lenteklaar-service omvat alles van #gazononderhoud tot het snoeien van struiken en het planten van kleurrijke bloemen. Geniet zorgeloos van het voorjaar in je perfect onderhouden tuin!
+
+    **Wat kunnen wij voor jouw #tuinmetamorfose doen?**
+    ✨ Verwijderen van winterresten
+    🌿 Snoeien en bemesten
+    🌸 Nieuwe aanplant
+
+    📞 Klaar voor het #buitenleven? Neem contact op voor een vrijblijvende offerte en laat je tuin weer stralen! #Utrecht #LenteInDeTuin #GroenMeesters

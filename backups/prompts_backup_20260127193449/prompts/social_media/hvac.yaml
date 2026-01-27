@@ -1,0 +1,61 @@
+name: HVAC - Social Media Post
+description: Generate social media posts for HVAC services, following a problem-solution storytelling approach and including local SEO elements.
+template: |
+  Write a social media post for an HVAC company in {{location}}.
+
+  **Problem:** Start by addressing a common and relatable pain point that homeowners face with their HVAC systems, such as:
+  - "Is your AC struggling to keep up with the summer heat?"
+  - "Tired of sky-high energy bills because your old furnace is inefficient?"
+  - "Strange noises coming from your vents got you worried?"
+  - "Dealing with inconsistent temperatures in different rooms?"
+  - "Worried about the air quality in your {{location}} home?"
+
+  **Solution:** Then, introduce {{company_name}}'s HVAC services as the clear, trustworthy solution. Highlight specific benefits and services like:
+  - "Our expert technicians at {{company_name}} can diagnose and repair any AC issue quickly, restoring your comfort."
+  - "Upgrade to a new, energy-efficient HVAC system from {{company_name}} and save money on your monthly bills."
+  - "Schedule a professional inspection with {{company_name}} to ensure your system runs safely and efficiently."
+  - "We offer comprehensive maintenance plans to prevent breakdowns and extend the life of your unit."
+  - "Improve your indoor air quality with our advanced filtration systems and duct cleaning services in {{location}}."
+
+  **Trust-building Element:** Conclude with a statement that builds trust and encourages action, such as:
+  - "With 5-star reviews and certified technicians, {{company_name}} is the trusted choice for {{location}}."
+  - "Serving the {{location}} community for over 20 years, we stand by our quality service and customer satisfaction."
+  - "Contact {{company_name}} today for a free estimate and experience the difference!"
+  - "Your comfort is our priority. Visit our website or call us at {{phone_number}} to learn more about our {{service_type}} services in {{location}}."
+
+  **Local SEO:**
+  - Naturally integrate keywords like "HVAC repair {{location}}", "AC service {{location}}", "furnace installation {{location}}", "indoor air quality {{location}}", etc.
+  - Mention specific local landmarks or neighborhoods if appropriate (optional).
+
+  **Call to Action:** Include a clear call to action.
+
+  **Tone:** Friendly, helpful, professional, and reassuring.
+
+  **Example Output Structure:**
+  [Emoji related to problem] Is your [problem - e.g., AC] struggling to keep you cool in {{location}}? Don't sweat it! 🥵
+  At {{company_name}}, we're dedicated to providing top-notch [service_type] services to homes and businesses across {{location}}. Our certified technicians are ready to tackle everything from emergency repairs to energy-efficient upgrades.
+  Say goodbye to discomfort and hello to reliable service!
+  📞 Call us today at {{phone_number}} or visit our website [website_link] to schedule your service.
+  #{{location}}HVAC #{{company_name}} #ACRepair #HomeComfort
+
+variables:
+  - name: location
+    description: The city or region where the HVAC company operates.
+    type: string
+    required: true
+  - name: company_name
+    description: The name of the HVAC company.
+    type: string
+    required: true
+  - name: service_type
+    description: Specific HVAC service being promoted (e.g., "AC repair", "furnace installation", "maintenance plans").
+    type: string
+    required: false
+  - name: phone_number
+    description: The HVAC company's phone number.
+    type: string
+    required: false
+  - name: website_link
+    description: The HVAC company's website link.
+    type: string
+    required: false

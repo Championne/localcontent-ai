@@ -1,0 +1,27 @@
+
+[
+    {
+        "id": "1",
+        "review_text": "This product is amazing! I love its features and ease of use. Highly recommend it to everyone."
+    },
+    {
+        "id": "2",
+        "review_text": "The service was terrible. Very slow response times and the quality was poor. Extremely disappointed."
+    },
+    {
+        "id": "3",
+        "review_text": "It's an okay product. Some features are good, others are just average. Nothing special."
+    },
+    {
+        "id": "4",
+        "review_text": "Fantastic experience! The customer support was excellent and the delivery was super fast. A definite five-star experience."
+    },
+    {
+        "id": "5",
+        "review_text": "Worst purchase ever. The item broke within a week and getting a refund was a nightmare. Avoid at all costs."
+    },
+    {
+        "id": "6",
+        "review_text": "Decent performance for the price. Not outstanding, but gets the job done without much fuss."
+    }
+]

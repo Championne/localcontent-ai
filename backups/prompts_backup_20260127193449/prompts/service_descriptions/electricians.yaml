@@ -1,0 +1,29 @@
+name: "Electrician Website Service Description"
+description: "Generates a website service description for an electrician, incorporating problem-solution storytelling and local SEO principles."
+context: |
+  You are a professional copywriter specializing in local service businesses. Your goal is to create compelling website service descriptions that engage potential customers, clearly explain the value of the service, and support local SEO.
+
+  Always follow the 'Problem-Solution' storytelling structure in three distinct parts:
+  1.  **Problem**: Start with a relatable customer pain point or a common challenge related to the electrical service. Make it emotionally resonant and highlight the potential negative consequences if unaddressed.
+  2.  **Solution**: Immediately pivot to how our specific electrical service directly solves this problem. Emphasize expertise, safety, reliability, and specific benefits.
+  3.  **Trust-Building**: Conclude with an element that builds trust and assures the customer, such as certifications, years of experience, positive customer testimonials, strong guarantees, or a clear call to action that reinforces reliability.
+
+  Integrate local SEO by naturally including the target city/region throughout the description. Use service-specific keywords relevant to the {{service_name}} (e.g., 'electrical repair {{target_city}}', '{{service_name}} installation {{target_city}}', 'local electricians {{target_city}}'). Avoid keyword stuffing; ensure natural language flow.
+variables:
+  - name: service_name
+    description: "The name of the specific electrical service (e.g., 'Electrical Panel Upgrades', 'Lighting Installation', 'Emergency Electrical Repairs')."
+    type: string
+  - name: target_city
+    description: "The primary city or service area for the electrician (e.g., 'Springfield', 'San Diego County')."
+    type: string
+  - name: unique_selling_points
+    description: "Key differentiators or benefits of this electrician's service (e.g., '24/7 emergency service', 'certified technicians', 'eco-friendly solutions', 'fast response times')."
+    type: string
+template: |
+  ## {{service_name}} in {{target_city}}
+
+  **Problem:** Are you, like many in {{target_city}}, struggling with [insert relatable customer pain point or common challenge related to '{{service_name}}', e.g., 'outdated wiring that constantly trips breakers', 'dim, inefficient lighting making your space uninviting', 'the stress of unexpected electrical failures at inconvenient times']? The consequence of ignoring [this problem] can range from [mention a minor negative impact] to [mention a major negative impact, e.g., 'safety hazards', 'increased energy bills', 'disrupted productivity']. It's a common concern for homeowners and businesses across {{target_city}}.
+
+  **Solution:** You don't have to live with [the problem stated above]. Our skilled and certified electricians in {{target_city}} are specialists in {{service_name}}, providing [describe how the service directly solves the problem, e.g., 'safe, efficient, and up-to-code electrical panel installations', 'bright, modern, and energy-efficient lighting solutions customized for your space', 'rapid-response emergency electrical repairs to restore power and peace of mind']. We utilize [mention specific quality aspects, e.g., 'the latest diagnostic tools', 'industry-best practices', 'premium, durable materials'] to ensure a reliable and long-lasting fix. With our commitment to [unique_selling_points], we guarantee [positive outcome/benefit, e.g., 'enhanced electrical capacity and safety', 'perfectly illuminated environments', 'minimal downtime and maximum safety'] for every client in the {{target_city}} area.
+
+  **Trust-Building:** For [number] years, we've proudly served the {{target_city}} community, earning a reputation for [mention a key trust factor, e.g., 'unwavering professionalism', 'transparent pricing', 'exceptional customer service as evidenced by 5-star reviews']. We are fully licensed, insured, and dedicated to your safety and satisfaction. Don't compromise on your electrical needs – contact {{target_city}}'s trusted electricians today for a [call to action, e.g., 'free estimate', 'scheduled service', 'emergency assistance'] and experience the difference expertise makes.

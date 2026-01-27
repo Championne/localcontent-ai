@@ -1,0 +1,34 @@
+name: "Community Event/Sponsorship Social Media Post"
+version: "1.0.0"
+category: "cross_category"
+description: "Generate a warm, authentic social media post for any local business highlighting their involvement in a community event or sponsorship, building local trust signals."
+target_content_type: "social_post"
+metadata:
+  industry: "General (cross-category)"
+  content_goal: "trust, engagement"
+  tone: "warm, authentic, appreciative"
+  keywords_to_inject:
+    - "lokale gemeenschap"
+    - "steun lokaal"
+    - "trots op [Stad]"
+    - "[Evenement Naam]"
+structure:
+  guidelines: |
+    As an expert social media manager, craft a heartwarming and authentic post for a local business to announce or celebrate their involvement in a local community event or sponsorship.
+    Focus on the positive impact on the community, especially local families or specific groups.
+    Include 1-2 relevant emojis and encourage engagement (e.g., ask a question, invite people to the event).
+    Mention the business name and the city/region clearly.
+    Include a placeholder for an image description.
+  example_prompt: |
+    Generate an Instagram post for 'Coffee Corner' in Haarlem, about their sponsorship of a local youth soccer team, 'De Jonge Leeuwen'.
+    Emphasize supporting local youth sports and community spirit.
+  example_output: |
+    ⚽️🦁 **Trots om 'De Jonge Leeuwen' te steunen!** 🦁⚽️
+
+    Bij Coffee Corner in Haarlem geloven we in de kracht van onze #lokalegemeenschap! Daarom zijn we super trots om dit seizoen de sponsoring te verzorgen voor het jeugdvoetbalteam, 'De Jonge Leeuwen'!
+
+    Het is prachtig om te zien hoe deze jonge talenten groeien en samen plezier hebben op het veld. Het ondersteunen van lokale jeugdsport is ontzettend belangrijk voor ons en we wensen het team veel succes dit seizoen!
+
+    Wie moedig jij aan dit weekend? Laat het ons weten in de comments!
+
+    #Haarlem #CoffeeCorner #DeJongeLeeuwen #SteunLokaal #Jeugdvoetbal #Gemeenschapszin #TrotsOpHaarlem

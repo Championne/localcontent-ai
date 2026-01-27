@@ -1,0 +1,23 @@
+
+{
+  "competitors": [
+    {
+      "name": "Competitor A",
+      "content_types": ["blog_post", "whitepaper", "webinar"],
+      "keywords": ["AI marketing", "predictive analytics", "customer segmentation", "content strategy"],
+      "target_audience": "Marketing Professionals"
+    },
+    {
+      "name": "Competitor B",
+      "content_types": ["blog_post", "e-book", "case_study"],
+      "keywords": ["AI for sales", "lead generation", "CRM integration", "sales automation"],
+      "target_audience": "Sales Managers"
+    },
+    {
+      "name": "Our Company",
+      "content_types": ["blog_post", "whitepaper"],
+      "keywords": ["AI content creation", "natural language processing", "content optimization", "SEO for AI"],
+      "target_audience": "Content Marketers"
+    }
+  ]
+}
