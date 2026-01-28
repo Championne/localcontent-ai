@@ -1,4 +1,24 @@
 
+export interface ActionableSuggestion {
+  id: string; // Unique identifier for the suggestion
+  type: 'content_gap' | 'feature_request' | 'common_complaint' | 'positive_feedback'; // Category of the suggestion
+  title: string; // Short, descriptive title of the suggestion (e.g., "Missing tutorial for feature X")
+  description: string; // Detailed explanation or context for the suggestion
+  impact_score: number; // A score indicating the potential impact if addressed (e.g., 1-10 scale)
+  sentiment_score: number; // Average sentiment related to this suggestion (-1 to 1)
+  related_keywords: string[]; // Keywords frequently associated with this suggestion
+  example_reviews_count: number; // Number of reviews contributing to this suggestion
+  // Optional:
+  suggested_action?: string; // What action could be taken (e.g., "Create a help article", "Develop feature")
+  priority?: 'high' | 'medium' | 'low'; // Priority level
+}
+
+export interface ReviewInsightsData {
+  overall_sentiment: number; // Overall average sentiment across all analyzed reviews
+  total_reviews_analyzed: number;
+  suggestions: ActionableSuggestion[];
+}
+
 // localcontent_ai/web/app/review-insights/mockApi.ts
 export const fetchMockReviewInsights = async (): Promise<ReviewInsightsData> => {
   return new Promise((resolve) =>
@@ -60,23 +80,3 @@ export const fetchMockReviewInsights = async (): Promise<ReviewInsightsData> => 
     }, 500)
   );
 };
-
-interface ActionableSuggestion {
-  id: string; // Unique identifier for the suggestion
-  type: 'content_gap' | 'feature_request' | 'common_complaint' | 'positive_feedback'; // Category of the suggestion
-  title: string; // Short, descriptive title of the suggestion (e.g., "Missing tutorial for feature X")
-  description: string; // Detailed explanation or context for the suggestion
-  impact_score: number; // A score indicating the potential impact if addressed (e.g., 1-10 scale)
-  sentiment_score: number; // Average sentiment related to this suggestion (-1 to 1)
-  related_keywords: string[]; // Keywords frequently associated with this suggestion
-  example_reviews_count: number; // Number of reviews contributing to this suggestion
-  // Optional:
-  suggested_action?: string; // What action could be taken (e.g., "Create a help article", "Develop feature")
-  priority?: 'high' | 'medium' | 'low'; // Priority level
-}
-
-export interface ReviewInsightsData {
-  overall_sentiment: number; // Overall average sentiment across all analyzed reviews
-  total_reviews_analyzed: number;
-  suggestions: ActionableSuggestion[];
-}

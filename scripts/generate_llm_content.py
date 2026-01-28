@@ -69,10 +69,15 @@ def generate_llm_content(template_path: str, user_inputs: dict, keywords: list) 
 
     return generated_content
 
-def save_content_via_api(title: str, content: str):
+def save_content_via_api(title: str, content: str, model: str):
     api_url = "http://localhost:3000/api/content-manager" # Assuming Next.js app runs on port 3000
     headers = {'Content-Type': 'application/json'}
-    payload = {'title': title, 'content': content}
+    payload = {
+        'title': title,
+        'content': content,
+        'model': model,
+        'timestamp': datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
 
     try:
         response = requests.post(api_url, headers=headers, data=json.dumps(payload))
@@ -101,4 +106,4 @@ if __name__ == "__main__":
     print("Generated Content:\n", output_content)
 
     if args.title and output_content and "Error:" not in output_content:
-        save_content_via_api(args.title, output_content)
+        save_content_via_api(args.title, output_content, "gpt-3.5-turbo")

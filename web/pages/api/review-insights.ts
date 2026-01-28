@@ -1,101 +1,67 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { spawn } from 'child_process';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-// Define the structure of an ActionableSuggestion expected from the Python script
-interface PythonActionableSuggestion {
-  id: string;
-  category: string;
-  suggestion: string;
-  priority: 'high' | 'medium' | 'low';
-  related_reviews_ids: string[]; // Assuming the Python script might use snake_case
-}
+// Define the expected shape of the review insights data
+export type ReviewInsightsData = {
+  overallSentiment: 'positive' | 'negative' | 'neutral';
+  totalReviewsAnalyzed: number;
+  categoryInsights: {
+    category: string;
+    sentiment: 'positive' | 'negative' | 'neutral';
+    count: number;
+    keywords: string[];
+  }[];
+  // Add other fields as needed
+};
 
-// Define the structure for ActionableSuggestion for the frontend (camelCase)
-export interface ActionableSuggestion {
-  id: string;
-  category: string;
-  suggestion: string;
-  priority: 'high' | 'medium' | 'low';
-  relatedReviewsIds: string[];
-}
-
-// Define the overall data structure for the frontend
-export interface ReviewInsightsData {
-  overall_sentiment: number;
-  total_reviews_analyzed: number;
-  suggestions: ActionableSuggestion[];
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ReviewInsightsData | { error: string; details?: string }>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ReviewInsightsData | { error: string }>
+) {
   if (req.method === 'GET') {
-    try {
-      const pythonProcess = spawn('python3', ['localcontent_ai/scripts/review_analyzer.py'], { timeout: 30000 }); // 30-second timeout
+    // In a real scenario, you would execute the Python script here:
+    // const { spawn } = require('child_process');
+    // const pythonProcess = spawn('python', ['localcontent_ai/scripts/review_analyzer.py', 'some_input_parameter']);
+    // let scriptOutput = '';
+    // pythonProcess.stdout.on('data', (data) => {
+    //   scriptOutput += data.toString();
+    // });
+    // pythonProcess.on('close', (code) => {
+    //   if (code === 0) {
+    //     const insights: ReviewInsightsData = JSON.parse(scriptOutput);
+    //     res.status(200).json(insights);
+    //   } else {
+    //     res.status(500).json({ error: 'Failed to analyze reviews' });
+    //   }
+    // });
 
-      let pythonOutput = '';
-      let pythonError = '';
-      let timeoutReached = false;
+    // For this task, we will return mock data.
+    // Ensure mock `overallSentiment` and `totalReviewsAnalyzed` are included.
+    const mockInsights: ReviewInsightsData = {
+      overallSentiment: 'positive',
+      totalReviewsAnalyzed: 1250,
+      categoryInsights: [
+        {
+          category: 'Product Quality',
+          sentiment: 'positive',
+          count: 700,
+          keywords: ['durable', 'sturdy', 'great build'],
+        },
+        {
+          category: 'Customer Service',
+          sentiment: 'neutral',
+          count: 300,
+          keywords: ['responsive', 'helpful', 'average'],
+        },
+        {
+          category: 'Value for Money',
+          sentiment: 'negative',
+          count: 250,
+          keywords: ['expensive', 'not worth it', 'overpriced'],
+        },
+      ],
+    };
 
-      const timeoutId = setTimeout(() => {
-        timeoutReached = true;
-        pythonProcess.kill(); // Kill the process if it times out
-        console.error('Python script execution timed out.');
-        res.status(504).json({ error: 'Python script execution timed out (max 30 seconds).' });
-      }, 30000);
-
-      pythonProcess.stdout.on('data', (data) => {
-        pythonOutput += data.toString();
-      });
-
-      pythonProcess.stderr.on('data', (data) => {
-        pythonError += data.toString();
-      });
-
-      pythonProcess.on('close', (code) => {
-        clearTimeout(timeoutId);
-        if (timeoutReached) return; // Already handled by timeout
-
-        if (code !== 0) {
-          console.error(`Python script exited with code ${code}: ${pythonError}`);
-          return res.status(500).json({ error: 'Failed to generate insights', details: pythonError });
-        }
-
-        try {
-          const rawSuggestions: PythonActionableSuggestion[] = JSON.parse(pythonOutput);
-
-          const transformedSuggestions: ActionableSuggestion[] = rawSuggestions.map(s => ({
-            id: s.id,
-            category: s.category,
-            suggestion: s.suggestion,
-            priority: s.priority,
-            relatedReviewsIds: s.related_reviews_ids,
-          }));
-
-          // For now, these are placeholder values from the API route
-          const insightsData: ReviewInsightsData = {
-            overall_sentiment: rawSuggestions.length > 0 ? Math.random() * (5 - 3) + 3 : 0, // Placeholder: random sentiment >= 3 if suggestions exist
-            total_reviews_analyzed: rawSuggestions.length, // Placeholder: number of suggestions as number of reviews analyzed
-            suggestions: transformedSuggestions,
-          };
-
-          res.status(200).json(insightsData);
-
-        } catch (parseError) {
-          console.error('Failed to parse Python script output:', parseError);
-          console.error('Raw Python output:', pythonOutput);
-          res.status(500).json({ error: 'Failed to parse insights from script', details: parseError instanceof Error ? parseError.message : String(parseError) });
-        }
-      });
-
-      pythonProcess.on('error', (err) => {
-        clearTimeout(timeoutId);
-        console.error('Failed to start Python script process:', err);
-        res.status(500).json({ error: 'Failed to start analysis process', details: err.message });
-      });
-
-    } catch (error) {
-      console.error('API Error:', error);
-      res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : String(error) });
-    }
+    res.status(200).json(mockInsights);
   } else {
     res.setHeader('Allow', ['GET']);
     res.status(405).end(`Method ${req.method} Not Allowed`);

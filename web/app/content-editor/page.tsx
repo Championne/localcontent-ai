@@ -24,6 +24,8 @@ export default function ContentEditorPage() {
   const [generatedContent, setGeneratedContent] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTemplates() {

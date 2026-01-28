@@ -1,13 +1,14 @@
 
+// localcontent_ai/data/mockABTests.ts
 export interface Variant {
   name: string;
   sessions: number;
   clicks: number;
   conversions: number;
-  conversionRate: string;
-  clickThroughRate: string;
-  uplift?: string;
-  statisticalSignificance?: string;
+  conversionRate: string; // e.g., "1.0%"
+  clickThroughRate: string; // e.g., "5.0%"
+  uplift?: string; // e.g., "+18%"
+  statisticalSignificance?: string; // e.g., "95%"
   isWinning?: boolean;
 }
 
@@ -15,8 +16,8 @@ export interface AbTest {
   id: string;
   name: string;
   status: "Running" | "Completed" | "Paused";
-  startDate: string;
-  endDate: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
   hypothesis: string;
   variants: Variant[];
 }
@@ -28,8 +29,7 @@ export const mockABTests: AbTest[] = [
     status: "Completed",
     startDate: "2023-10-01",
     endDate: "2023-10-15",
-    hypothesis:
-      "Changing the CTA button color from blue to green will increase click-through rate by 10%.",
+    hypothesis: "Changing the CTA button color from blue to green will increase click-through rate by 10%.",
     variants: [
       {
         name: "Control (Blue CTA)",
@@ -50,6 +50,15 @@ export const mockABTests: AbTest[] = [
         statisticalSignificance: "95%",
         isWinning: true,
       },
+      {
+        name: "Variant B (Red CTA)",
+        sessions: 9800,
+        clicks: 480,
+        conversions: 95,
+        conversionRate: "0.97%",
+        clickThroughRate: "4.9%",
+        isWinning: false,
+      },
     ],
   },
   {
@@ -58,8 +67,7 @@ export const mockABTests: AbTest[] = [
     status: "Running",
     startDate: "2024-03-01",
     endDate: "2024-03-31",
-    hypothesis:
-      "A new product page layout with larger images will improve conversion rate.",
+    hypothesis: "A new product page layout with larger images will improve conversion rate.",
     variants: [
       {
         name: "Control (Old Layout)",
@@ -70,7 +78,7 @@ export const mockABTests: AbTest[] = [
         clickThroughRate: "6.0%",
       },
       {
-        name: "Variant B (New Layout)",
+        name: "Variant A (New Layout)",
         sessions: 5100,
         clicks: 320,
         conversions: 55,
@@ -83,26 +91,28 @@ export const mockABTests: AbTest[] = [
     id: "checkout_flow_optimization",
     name: "Checkout Flow Optimization",
     status: "Paused",
-    startDate: "2024-01-10",
-    endDate: "2024-01-20",
-    hypothesis:
-      "Simplifying the checkout form will reduce abandonment rate by 5%.",
+    startDate: "2024-02-10",
+    endDate: "2024-02-20",
+    hypothesis: "Reducing the number of steps in the checkout process will decrease cart abandonment.",
     variants: [
       {
-        name: "Control (Current Form)",
+        name: "Control (3 Steps)",
         sessions: 7000,
-        clicks: 200,
-        conversions: 70,
-        conversionRate: "1.0%",
-        clickThroughRate: "2.86%",
+        clicks: 400,
+        conversions: 200,
+        conversionRate: "2.86%",
+        clickThroughRate: "5.71%",
       },
       {
-        name: "Variant C (Simplified Form)",
-        sessions: 6800,
-        clicks: 210,
-        conversions: 75,
-        conversionRate: "1.1%",
-        clickThroughRate: "3.09%",
+        name: "Variant X (2 Steps)",
+        sessions: 7200,
+        clicks: 450,
+        conversions: 240,
+        conversionRate: "3.33%",
+        clickThroughRate: "6.25%",
+        uplift: "+16%",
+        statisticalSignificance: "90%",
+        isWinning: true,
       },
     ],
   },

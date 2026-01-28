@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActionableSuggestion } from '../../pages/api/review-insights'; // Or a shared types file
+import { ActionableSuggestion } from '../mockApi'; // Or a shared types file
 
 interface SuggestionCardProps {
   suggestion: ActionableSuggestion;

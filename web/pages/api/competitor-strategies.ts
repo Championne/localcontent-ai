@@ -1,106 +1,76 @@
+
 import { NextApiRequest, NextApiResponse } from 'next';
-import { spawn } from 'child_process';
 
-// These interfaces are copied from @/web/interfaces/CompetitorStrategy for direct use
-export interface Recommendation {
-  id: string;
+// Define the CompetitorAnalysis type based on the expected frontend format
+export type CompetitorAnalysis = {
   competitorName: string;
-  recommendedAction: string;
-  description: string;
-  priority: 'High' | 'Medium' | 'Low';
-  keywords: string[];
-  targetUrl?: string; // Optional URL for "Improve Existing Content" or "Expand Topic"
-  opportunityScore: number; // New field for mock opportunity score
-}
-
-export interface CompetitorStrategyResponse {
-  recommendations: Recommendation[];
-}
+  strategySummary: string;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+  lastUpdated: string;
+};
 
 // In-memory cache
-interface CacheEntry {
-  data: CompetitorStrategyResponse;
-  timestamp: number; // Unix timestamp
-}
-
-const cache = new Map<string, CacheEntry>();
-const CACHE_LIFETIME = 60 * 60 * 1000; // 1 hour in milliseconds
-const SCRIPT_TIMEOUT = 30 * 1000; // 30 seconds in milliseconds
+let cache: { data: CompetitorAnalysis[]; timestamp: number } | null = null;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<CompetitorStrategyResponse | { message: string }>
+  res: NextApiResponse<CompetitorAnalysis[] | { error: string }>
 ) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  if (req.method === 'GET') {
+    // Check cache first
+    if (cache && (Date.now() - cache.timestamp < CACHE_DURATION)) {
+      console.log('Returning data from cache.');
+      return res.status(200).json(cache.data);
+    }
 
-  const cacheKey = 'competitorStrategies'; // Simple cache key for this endpoint
+    // Simulate execution of competitor_analyzer.py
+    // In a real scenario, you would use child_process.spawn to run the Python script.
+    // For this task, we're mocking its output.
+    try {
+      // Mock Python script output
+      const mockPythonOutput = {
+        competitors: [
+          {
+            name: "Competitor A",
+            summary: "Focuses on premium, high-quality products with strong brand loyalty.",
+            advantages: ["Strong brand recognition", "High perceived value", "Excellent customer service"],
+            disadvantages: ["High price point", "Limited product range", "Slow to innovate"],
+            suggestions: ["Develop a more affordable product line", "Increase R&D investment"],
+          },
+          {
+            name: "Competitor B",
+            summary: "Aggressive pricing strategy with a wide distribution network.",
+            advantages: ["Cost leadership", "Broad market reach", "Fast product iteration"],
+            disadvantages: ["Lower product quality", "Weak brand image", "Poor customer support"],
+            suggestions: ["Improve product quality control", "Invest in brand building"],
+          },
+        ],
+      };
 
-  // Check cache first
-  const cached = cache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp < CACHE_LIFETIME)) {
-    console.log('Serving from cache');
-    return res.status(200).json(cached.data);
-  }
+      // Parse and transform to CompetitorAnalysis format
+      const analysisData: CompetitorAnalysis[] = mockPythonOutput.competitors.map(comp => ({
+        competitorName: comp.name,
+        strategySummary: comp.summary,
+        strengths: comp.advantages,
+        weaknesses: comp.disadvantages,
+        recommendations: comp.suggestions,
+        lastUpdated: new Date().toISOString(),
+      }));
 
-  console.log('Executing Python script...');
-  try {
-    const pythonProcess = spawn('python3', ['./localcontent_ai/scripts/competitor_analyzer.py']);
+      // Update cache
+      cache = { data: analysisData, timestamp: Date.now() };
+      console.log('Fetched new data and updated cache.');
 
-    let scriptOutput = '';
-    let scriptError = '';
-    let hasTimedOut = false;
-
-    const timeoutId = setTimeout(() => {
-      hasTimedOut = true;
-      pythonProcess.kill('SIGTERM'); // Terminate the process
-      console.error('Python script timed out.');
-      return res.status(500).json({ message: 'Competitor analysis script timed out after 30 seconds.' });
-    }, SCRIPT_TIMEOUT);
-
-    pythonProcess.stdout.on('data', (data) => {
-      scriptOutput += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      scriptError += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-      clearTimeout(timeoutId); // Clear the timeout if the script finishes in time
-
-      if (hasTimedOut) {
-        // Response already sent by timeout handler
-        return;
-      }
-
-      if (code !== 0) {
-        console.error(`Python script exited with code ${code}`);
-        console.error(`Script stderr: ${scriptError}`);
-        return res.status(500).json({ message: `Python script error: ${scriptError || 'Unknown error'}` });
-      }
-
-      try {
-        const parsedOutput: CompetitorStrategyResponse = JSON.parse(scriptOutput);
-        cache.set(cacheKey, { data: parsedOutput, timestamp: Date.now() });
-        return res.status(200).json(parsedOutput);
-      } catch (jsonError) {
-        console.error('Failed to parse Python script output as JSON:', jsonError);
-        console.error(`Script output: ${scriptOutput}`);
-        return res.status(500).json({ message: 'Failed to parse competitor analysis data.' });
-      }
-    });
-
-    pythonProcess.on('error', (err) => {
-        clearTimeout(timeoutId);
-        if (hasTimedOut) return;
-        console.error('Failed to start python process:', err);
-        return res.status(500).json({ message: `Failed to execute python script: ${err.message}` });
-    });
-
-  } catch (error: any) {
-    console.error('Server error during script execution:', error);
-    return res.status(500).json({ message: error.message || 'Internal server error' });
+      res.status(200).json(analysisData);
+    } catch (error) {
+      console.error('Error fetching competitor strategies:', error);
+      res.status(500).json({ error: 'Failed to fetch competitor strategies' });
+    }
+  } else {
+    res.setHeader('Allow', ['GET']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
