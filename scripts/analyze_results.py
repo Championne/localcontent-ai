@@ -19,9 +19,10 @@ def parse_log_entry(line):
     return None
 
 def aggregate_metrics(log_file_path, target_test_name):
-    """Aggregates views and CTA clicks for each variant."""
+    """Aggregates views and CTA clicks (conversions) for each variant across unique sessions."""
     metrics = defaultdict(lambda: {"views": 0, "cta_clicks": 0})
-    unique_sessions = defaultdict(set) # To count unique views per session_id for a variant
+    # Use unique_sessions to ensure each session_id only counts once for a 'VIEW' event per variant
+    unique_sessions = defaultdict(set)
 
     try:
         with open(log_file_path, "r") as f:
@@ -45,16 +46,17 @@ def aggregate_metrics(log_file_path, target_test_name):
     return metrics
 
 def calculate_conversion_rates(metrics):
-    """Calculates conversion rates for each variant."""
+    """Calculates Click-Through Rates (CTR) for each variant."""
     results = {}
     for variant_id, data in metrics.items():
         views = data["views"]
         cta_clicks = data["cta_clicks"]
-        conversion_rate = (cta_clicks / views * 100) if views > 0 else 0
+        # In this context, CTA Clicks / Views is the CTR
+        ctr = (cta_clicks / views * 100) if views > 0 else 0
         results[variant_id] = {
             "views": views,
             "cta_clicks": cta_clicks,
-            "conversion_rate": conversion_rate,
+            "ctr": ctr, # Renamed from conversion_rate to ctr
         }
     return results
 
@@ -104,11 +106,11 @@ def generate_html_report(test_name, results):
 
         # Find the best variant for visual indication
         best_variant = None
-        highest_conversion = -1
+        highest_ctr = -1
         if results:
             for variant_id, data in results.items():
-                if data["conversion_rate"] > highest_conversion:
-                    highest_conversion = data["conversion_rate"]
+                if data["ctr"] > highest_ctr:
+                    highest_ctr = data["ctr"]
                     best_variant = variant_id
 
         # Views Row
@@ -123,17 +125,17 @@ def generate_html_report(test_name, results):
             html_content += f"<td>{results[vid]['cta_clicks']}</td>"
         html_content += "</tr>"
 
-        # Conversion Rate Row with visual indicators
-        html_content += "<tr><td>Conversion Rate</td>"
+        # CTR Row with visual indicators
+        html_content += "<tr><td>CTR</td>" # Renamed from Conversion Rate to CTR
         for vid in variant_ids:
-            conversion_rate = results[vid]['conversion_rate']
+            ctr = results[vid]['ctr'] # Renamed from conversion_rate to ctr
             color_class = "neutral"
             if best_variant and vid == best_variant:
                 color_class = "green"
-            elif highest_conversion > 0 and conversion_rate < highest_conversion:
+            elif highest_ctr > 0 and ctr < highest_ctr: # Using highest_ctr
                 color_class = "red"
             
-            html_content += f"<td class='{color_class}'>{conversion_rate:.2f}%</td>"
+            html_content += f"<td class='{color_class}'>{ctr:.2f}%</td>"
         html_content += "</tr>"
         html_content += "</tbody></table>"
 
@@ -157,19 +159,19 @@ def generate_html_report(test_name, results):
             """
         html_content += "</div>"
 
-        # Conversion Rate Bar Chart
-        html_content += "<h3>Conversion Rate Comparison</h3>"
+        # CTR Bar Chart
+        html_content += "<h3>CTR Comparison</h3>" # Renamed from Conversion Rate Comparison to CTR Comparison
         html_content += "<div class='bar-chart'>"
-        conv_values = [results[vid]['conversion_rate'] for vid in variant_ids]
-        max_conv = max(conv_values) if conv_values else 0
+        ctr_values = [results[vid]['ctr'] for vid in variant_ids] # Renamed from conv_values to ctr_values and uses 'ctr'
+        max_ctr = max(ctr_values) if ctr_values else 0
         for i, vid in enumerate(variant_ids):
-            conv_rate = conv_values[i]
-            bar_width = (conv_rate / max_conv * 100) if max_conv > 0 else 0
+            ctr_rate = ctr_values[i] # Renamed from conv_rate to ctr_rate
+            bar_width = (ctr_rate / max_ctr * 100) if max_ctr > 0 else 0
             html_content += f"""
             <div class="bar-chart-row">
                 <span class="bar-chart-label">{vid}</span>
                 <div class="bar" style="width: {bar_width:.2f}%;"></div>
-                <span class="bar-value">{conv_rate:.2f}%</span>
+                <span class="bar-value">{ctr_rate:.2f}%</span>
             </div>
             """
         html_content += "</div>"
@@ -181,20 +183,20 @@ def generate_html_report(test_name, results):
                 <h2>Recommendations</h2>
         """
         best_variant = None
-        highest_conversion = -1
+        highest_ctr = -1 # Renamed highest_conversion to highest_ctr
 
         for variant_id, data in results.items():
-            if data["conversion_rate"] > highest_conversion:
-                highest_conversion = data["conversion_rate"]
+            if data["ctr"] > highest_ctr: # Using 'ctr'
+                highest_ctr = data["ctr"] # Using 'ctr'
                 best_variant = variant_id
-            elif data["conversion_rate"] == highest_conversion: # Handle ties
+            elif data["ctr"] == highest_ctr: # Handle ties (using 'ctr')
                 if best_variant is None:
                     best_variant = variant_id
                 else:
                     best_variant += f" and {variant_id}"
 
         if best_variant:
-            html_content += f"<p>Based on conversion rate, '<strong>{best_variant}</strong>' is the best-performing variant with a conversion rate of <strong>{highest_conversion:.2f}%</strong>.</p>"
+            html_content += f"<p>Based on CTR, '<strong>{best_variant}</strong>' is the best-performing variant with a CTR of <strong>{highest_ctr:.2f}%</strong>.</p>" # Using 'CTR' and 'highest_ctr'
             html_content += "<p>Consider deploying this variant or further investigating its characteristics (e.g., CTA phrasing, content length, tone of voice) to understand why it performed better.</p>"
         else:
             html_content += "<p>Unable to determine a best-performing variant or no conversion data available.</p>"
@@ -235,5 +237,5 @@ if __name__ == "__main__":
     # print_summary_table(args.test_name, results)
     # if results:
     #     print_bar_chart(results, "views", "Views")
-    #     print_bar_chart(results, "conversion_rate", "Conversion Rate")
+    #     print_bar_chart(results, "ctr", "CTR") # Renamed from conversion_rate to ctr
     # provide_recommendations(results)

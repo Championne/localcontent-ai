@@ -1,4 +1,3 @@
-
 import json
 import random
 
@@ -32,54 +31,81 @@ def analyze_keyword_opportunities(our_company_data, competitors_data):
     new_keyword_opportunities = all_competitor_keywords - our_keywords
     return list(new_keyword_opportunities)
 
-def generate_insights_and_recommendations(content_gaps, keyword_opportunities):
+def generate_recommendations_json(content_gaps, keyword_opportunities):
     """
-    Generates high-level insights and specific, actionable content strategy recommendations.
+    Generates a list of recommendations matching the CompetitorAnalysis interface.
     """
-    insights = []
-    recommendations = []
-    actionable_strategies = []
+    recommendations_list = []
+    rec_id_counter = 1
+
+    priorities = ['High', 'Medium', 'Low']
 
     if content_gaps:
-        insights.append(f"Conceptual content gaps identified: Your company is not currently producing {', '.join(content_gaps)} which competitors are.")
-        recommendations.append(f"Consider developing new content types such as {', '.join(content_gaps)} to broaden your content strategy and compete effectively.")
-        # Generate specific content type recommendations
         for gap in content_gaps:
-            # Suggest different content formats and quantities dynamically
             content_formats = ["blog posts", "video tutorials", "infographics", "webinars", "e-books"]
             chosen_format = random.choice(content_formats)
-            num_pieces = random.randint(2, 5) # Suggest 2-5 pieces of content
+            num_pieces = random.randint(2, 5)
+            recommended_action = f"Develop {num_pieces} {chosen_format} on '{gap}'"
+            description = f"Directly address the content gap in '{gap}', as identified by competitor analysis. Focus on providing unique value and a fresh perspective to differentiate from existing competitor content."
 
-            actionable_strategies.append(f"Develop {num_pieces} {chosen_format} on '{gap}' to directly address this content gap. Focus on providing unique value and a fresh perspective compared to existing competitor content.")
-    else:
-        insights.append("No significant conceptual content gaps identified based on content types.")
-        recommendations.append("Continue to monitor competitor content types for emerging trends.")
+            recommendations_list.append({
+                "id": f"REC-{rec_id_counter}",
+                "competitorName": "Various Competitors",
+                "recommendedAction": recommended_action,
+                "description": description,
+                "priority": random.choice(priorities),
+                "keywords": [gap.replace(" ", "-").lower()], # Mock keyword
+                "opportunityScore": random.randint(70, 95)
+            })
+            rec_id_counter += 1
 
     if keyword_opportunities:
-        insights.append(f"New keyword opportunities identified: Competitors are ranking for {', '.join(keyword_opportunities)}.")
-        recommendations.append(f"Research and consider incorporating keywords like {', '.join(keyword_opportunities)} into your SEO and content strategy to capture a wider audience.")
-        # Generate specific keyword recommendations
         for keyword in keyword_opportunities:
-            # Simulating identification of competitor's weak area and content format
             content_formats = ["blog post", "in-depth guide", "video tutorial", "infographic"]
             angles = ["beginner's guide", "advanced techniques", "real-world case studies", "cost-benefit analysis", "future trends"]
 
             chosen_format = random.choice(content_formats)
             chosen_angle = random.choice(angles)
-            num_pieces = random.randint(2, 4) # Suggest 2-4 pieces of content
+            num_pieces = random.randint(2, 4)
+            recommended_action = f"Develop {num_pieces} {chosen_format}(s) targeting the keyword '{keyword}' "
+            description = f"Focus on an angle of '{chosen_angle}' to differentiate from competitors, specifically aiming to provide more depth than their current content for '{keyword}'."
 
-            # In a real scenario, 'competitor_weak_area' would be identified through deeper analysis.
-            competitor_weak_area = "general overview" # Placeholder, more advanced analysis would pinpoint specifics
-            actionable_strategies.append(f"Develop {num_pieces} {chosen_format}(s) targeting the keyword '{keyword}'. Focus on an angle of '{chosen_angle}' to differentiate from competitors, specifically aiming to provide more depth than their current '{competitor_weak_area}' content.")
-    else:
-        insights.append("No significant new keyword opportunities identified based on competitor keywords.")
-        recommendations.append("Continue to perform regular keyword research to stay ahead of trends.")
+            recommendations_list.append({
+                "id": f"REC-{rec_id_counter}",
+                "competitorName": "Specific Competitors",
+                "recommendedAction": recommended_action,
+                "description": description,
+                "priority": random.choice(priorities),
+                "keywords": [keyword],
+                "opportunityScore": random.randint(75, 98)
+            })
+            rec_id_counter += 1
 
-    return insights, recommendations, actionable_strategies
+    if not content_gaps and not keyword_opportunities:
+        # Default recommendation if no specific gaps/keywords found
+        recommendations_list.append({
+            "id": f"REC-{rec_id_counter}",
+            "competitorName": "Market",
+            "recommendedAction": "Continue regular competitive monitoring",
+            "description": "No significant content gaps or new keyword opportunities identified at this time. Maintain vigilance.",
+            "priority": "Low",
+            "keywords": ["competitive-analysis", "market-trends"],
+            "opportunityScore": random.randint(60, 70)
+        })
+
+    return {"recommendations": recommendations_list}
 
 if __name__ == "__main__":
-    mock_data_filepath = 'localcontent_ai/mock_data/mock_competitor_data.json'
-    data = load_competitor_data(mock_data_filepath)
+    mock_data_filepath = './localcontent_ai/mock_data/mock_competitor_data.json'
+
+    try:
+        data = load_competitor_data(mock_data_filepath)
+    except FileNotFoundError:
+        print(json.dumps({"recommendations": [], "error": "Mock data file not found."}), file=sys.stderr)
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print(json.dumps({"recommendations": [], "error": "Failed to parse mock data file."}), file=sys.stderr)
+        sys.exit(1)
 
     our_company_data = None
     competitors_data = []
@@ -91,29 +117,11 @@ if __name__ == "__main__":
             competitors_data.append(entity)
 
     if not our_company_data:
-        print("Error: 'Our Company' data not found in mock data.")
+        print(json.dumps({"recommendations": [], "error": "'Our Company' data not found in mock data."}), file=sys.stderr)
+        sys.exit(1)
     else:
-        print("--- Competition Intelligence AI Analysis ---")
-
-        # 1. Identify conceptual content gaps
         content_gaps = analyze_content_gaps(our_company_data, competitors_data)
-        print("\nContent Gaps Identified:", content_gaps)
-
-        # 2. Identify keyword opportunities
         keyword_opportunities = analyze_keyword_opportunities(our_company_data, competitors_data)
-        print("Keyword Opportunities Identified:", keyword_opportunities)
 
-        # 3. Generate high-level insights and recommendations
-        insights, recommendations, actionable_strategies = generate_insights_and_recommendations(content_gaps, keyword_opportunities)
-
-        print("\nInsights:")
-        for insight in insights:
-            print(f"- {insight}")
-
-        print("\nHigh-Level Recommendations:")
-        for recommendation in recommendations:
-            print(f"- {recommendation}")
-
-        print("\nActionable Content Strategy Recommendations:")
-        for strategy in actionable_strategies:
-            print(f"- {strategy}")
+        response_data = generate_recommendations_json(content_gaps, keyword_opportunities)
+        print(json.dumps(response_data))

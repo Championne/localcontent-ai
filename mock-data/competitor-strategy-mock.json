@@ -1,0 +1,63 @@
+{
+  "analysisDate": "2024-07-30",
+  "competitors": [
+    {
+      "id": "comp1",
+      "name": "Competitor A",
+      "website": "https://www.comp-a.com",
+      "overview": "Leading in SaaS education, strong blog and webinars.",
+      "keyStrategies": [
+        { "strategy": "Long-form educational blog posts", "count": 120, "performance": "High engagement" },
+        { "strategy": "Weekly expert webinars", "count": 50, "performance": "Good lead generation" }
+      ],
+      "contentGapsIdentified": ["Short-form video content", "Interactive tools"],
+      "keywordsTargeted": ["SaaS marketing", "cloud solutions", "enterprise software"]
+    },
+    {
+      "id": "comp2",
+      "name": "Competitor B",
+      "website": "https://www.comp-b.com",
+      "overview": "Focused on quick-start guides and tool demonstrations.",
+      "keyStrategies": [
+        { "strategy": "Product demo videos", "count": 80, "performance": "High conversion" },
+        { "strategy": "User-generated content campaigns", "count": 15, "performance": "Moderate reach" }
+      ],
+      "contentGapsIdentified": ["In-depth case studies", "Thought leadership articles"],
+      "keywordsTargeted": ["product onboarding", "CRM tutorials", "SMB tech"]
+    },
+    {
+      "id": "comp3",
+      "name": "Competitor C",
+      "website": "https://www.comp-c.com",
+      "overview": "Niche player with strong community focus and highly technical content.",
+      "keyStrategies": [
+        { "strategy": "Technical whitepapers and research", "count": 30, "performance": "High authority" },
+        { "strategy": "Community forums and user groups", "count": 5, "performance": "Strong retention" }
+      ],
+      "contentGapsIdentified": ["Beginner-friendly guides", "Visual explainers"],
+      "keywordsTargeted": ["API integration", "developer tools", "open source platforms"]
+    }
+  ],
+  "overallRecommendations": [
+    {
+      "recommendation": "Develop a series of short-form video tutorials for quick problem-solving.",
+      "justification": "Competitor A's success in long-form opens a gap for easily digestible content. Competitor B shows video efficacy.",
+      "priority": "High"
+    },
+    {
+      "recommendation": "Create interactive lead magnets, such as a content strategy builder tool.",
+      "justification": "Addresses a gap identified in Competitor A's strategy, offering unique value.",
+      "priority": "Medium"
+    },
+    {
+      "recommendation": "Invest in comprehensive technical documentation and API reference guides to attract developers.",
+      "justification": "Leverage Competitor C's success in technical content, but with a more structured approach.",
+      "priority": "High"
+    },
+    {
+      "recommendation": "Launch a podcast series featuring industry experts and success stories.",
+      "justification": "Identified as an untapped channel across all competitors, offering a new way to engage audiences.",
+      "priority": "Medium"
+    }
+  ]
+}

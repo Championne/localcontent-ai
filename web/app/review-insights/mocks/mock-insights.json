@@ -1,0 +1,85 @@
+[
+  {
+    "id": "insight-001",
+    "title": "Battery Life Concerns",
+    "description": "Many users express dissatisfaction with the battery longevity and fast draining issues. This is a critical issue affecting user satisfaction.",
+    "reviewCount": 125,
+    "overallSentiment": "Negative",
+    "sentimentScore": -0.75,
+    "impactScore": "High",
+    "actionItems": [
+      "Develop a detailed 'Battery Optimization Guide' blog post targeting common user issues.",
+      "Update product specifications to clarify expected battery performance under various conditions.",
+      "Investigate potential software optimizations for power consumption in the next release.",
+      "Provide customer support training on troubleshooting battery-related complaints effectively."
+    ],
+    "exampleSnippets": [
+      {
+        "text": "The battery barely lasts half a day with moderate use. Very disappointed.",
+        "sentiment": "Negative"
+      },
+      {
+        "text": "Charging is quick, but it drains even faster. Needs improvement.",
+        "sentiment": "Negative"
+      },
+      {
+        "text": "Wish the battery lasted longer, otherwise a great device.",
+        "sentiment": "Neutral"
+      }
+    ]
+  },
+  {
+    "id": "insight-002",
+    "title": "Camera Quality Appreciation",
+    "description": "Users consistently praise the high quality of photos and video recording, particularly in low-light conditions. This is a key selling point.",
+    "reviewCount": 210,
+    "overallSentiment": "Positive",
+    "sentimentScore": 0.92,
+    "impactScore": "Medium",
+    "actionItems": [
+      "Feature user-generated photos and videos prominently in marketing campaigns and social media.",
+      "Create a 'Pro Camera Tips' tutorial video series to help users maximize camera features.",
+      "Include diverse camera samples and detailed technical specs in all product listings and reviews.",
+      "Collaborate with photography influencers for product showcases."
+    ],
+    "exampleSnippets": [
+      {
+        "text": "Absolutely stunning camera! Best photos I've ever taken with a phone.",
+        "sentiment": "Positive"
+      },
+      {
+        "text": "The video quality is incredible, even in low light.",
+        "sentiment": "Positive"
+      }
+    ]
+  },
+  {
+    "id": "insight-003",
+    "title": "Software UI/UX Feedback",
+    "description": "Mixed feedback on the software interface. Some find it intuitive, others find certain features confusing or clunky.",
+    "reviewCount": 78,
+    "overallSentiment": "Neutral",
+    "sentimentScore": 0.1,
+    "impactScore": "Medium",
+    "actionItems": [
+      "Conduct user testing sessions specifically for the most criticized UI elements.",
+      "Simplify complex settings menus and provide better in-app guidance.",
+      "Gather feature requests through community forums for future updates.",
+      "Review competitor UI/UX designs for best practices."
+    ],
+    "exampleSnippets": [
+      {
+        "text": "The new settings menu is a bit confusing to navigate.",
+        "sentiment": "Negative"
+      },
+      {
+        "text": "Love the clean design, very intuitive!",
+        "sentiment": "Positive"
+      },
+      {
+        "text": "Some features are hidden too deep, took me a while to find.",
+        "sentiment": "Neutral"
+      }
+    ]
+  }
+]

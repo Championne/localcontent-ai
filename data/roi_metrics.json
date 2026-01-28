@@ -1,0 +1,77 @@
+[
+    {
+        "contentId": "blog_post_ai_trends",
+        "metrics": {
+            "impressions": 83083,
+            "clicks": 5186,
+            "conversions": 744,
+            "revenue": 26252.87,
+            "cost": 3280.95
+        },
+        "period": {
+            "start_date": "2025-12-29",
+            "end_date": "2026-01-28"
+        },
+        "calculatedROI": 700.16
+    },
+    {
+        "contentId": "product_page_feature_x",
+        "metrics": {
+            "impressions": 96478,
+            "clicks": 7556,
+            "conversions": 556,
+            "revenue": 11897.83,
+            "cost": 1439.5
+        },
+        "period": {
+            "start_date": "2025-12-29",
+            "end_date": "2026-01-28"
+        },
+        "calculatedROI": 726.53
+    },
+    {
+        "contentId": "email_campaign_summer_sale",
+        "metrics": {
+            "impressions": 70499,
+            "clicks": 6581,
+            "conversions": 891,
+            "revenue": 22209.82,
+            "cost": 2394.0
+        },
+        "period": {
+            "start_date": "2025-12-29",
+            "end_date": "2026-01-28"
+        },
+        "calculatedROI": 827.73
+    },
+    {
+        "contentId": "social_ad_platform_y",
+        "metrics": {
+            "impressions": 23550,
+            "clicks": 1375,
+            "conversions": 230,
+            "revenue": 3435.61,
+            "cost": 689.42
+        },
+        "period": {
+            "start_date": "2025-12-29",
+            "end_date": "2026-01-28"
+        },
+        "calculatedROI": 398.33
+    },
+    {
+        "contentId": "webinar_signup_page",
+        "metrics": {
+            "impressions": 37187,
+            "clicks": 2569,
+            "conversions": 208,
+            "revenue": 5636.0,
+            "cost": 1009.36
+        },
+        "period": {
+            "start_date": "2025-12-29",
+            "end_date": "2026-01-28"
+        },
+        "calculatedROI": 458.37
+    }
+]

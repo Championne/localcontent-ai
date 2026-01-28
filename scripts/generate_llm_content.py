@@ -4,6 +4,10 @@ import yaml
 import os
 from openai import OpenAI
 
+import datetime
+import json
+import requests
+
 def generate_llm_content(template_path: str, user_inputs: dict, keywords: list) -> str:
     """
     Generates content using an LLM based on a YAML template, user inputs, and keywords.
@@ -65,15 +69,27 @@ def generate_llm_content(template_path: str, user_inputs: dict, keywords: list) 
 
     return generated_content
 
+def save_content_via_api(title: str, content: str):
+    api_url = "http://localhost:3000/api/content-manager" # Assuming Next.js app runs on port 3000
+    headers = {'Content-Type': 'application/json'}
+    payload = {'title': title, 'content': content}
+
+    try:
+        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+        response.raise_for_status() # Raise an exception for HTTP errors
+        print(f"Content successfully saved via API: {response.json()}")
+    except requests.exceptions.RequestException as e:
+        print(f"Error saving content via API: {e}")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate LLM content based on a YAML template, user inputs, and keywords.")
     parser.add_argument("--template_path", required=True, help="Path to the YAML template file.")
     parser.add_argument("--inputs", type=str, default="{}", help="JSON string of user inputs (e.g., '{\"topic\": \"AI in healthcare\"}').")
     parser.add_argument("--keywords", type=str, default="[]", help="JSON string of selected keywords (e.g., '[\"innovation\", \"future\"]').")
+    parser.add_argument("--title", type=str, required=False, help="Title for the generated content to be saved via API.")
 
     args = parser.parse_args()
 
-    import json
     try:
         user_inputs_dict = json.loads(args.inputs)
         keywords_list = json.loads(args.keywords)
@@ -82,4 +98,7 @@ if __name__ == "__main__":
         exit(1)
 
     output_content = generate_llm_content(args.template_path, user_inputs_dict, keywords_list)
-    print(output_content)
+    print("Generated Content:\n", output_content)
+
+    if args.title and output_content and "Error:" not in output_content:
+        save_content_via_api(args.title, output_content)
