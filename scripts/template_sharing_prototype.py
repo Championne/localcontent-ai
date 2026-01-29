@@ -2,120 +2,98 @@
 import json
 import os
 
-DATA_FILE = "localcontent_ai/scripts/shared_templates.json"
+SHARED_TEMPLATES_FILE = "shared_templates.json"
 
-def _read_data():
-    """Reads the mock data from the JSON file."""
-    if not os.path.exists(DATA_FILE):
-        return {
-            "shared_templates": [],
-            "peer_connections": [
-                {"user_id": "user_alice", "connections": ["user_bob", "user_charlie"]},
-                {"user_id": "user_bob", "connections": ["user_alice", "user_david"]},
-                {"user_id": "user_charlie", "connections": ["user_alice"]},
-                {"user_id": "user_david", "connections": ["user_bob"]}
-            ],
-            "community_engagement_metrics": {
-                "total_shares": 0,
-                "active_users": 10,
-                "new_templates_this_week": 0
-            }
-        }
-    with open(DATA_FILE, 'r') as f:
-        return json.load(f)
+def _load_shared_templates():
+    """Loads shared templates from the JSON file."""
+    if os.path.exists(SHARED_TEMPLATES_FILE):
+        with open(SHARED_TEMPLATES_FILE, "r") as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return []
+    return []
 
-def _write_data(data):
-    """Writes the mock data to the JSON file."""
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, indent=4)
+def _save_shared_templates(templates):
+    """Saves shared templates to the JSON file."""
+    with open(SHARED_TEMPLATES_FILE, "w") as f:
+        json.dump(templates, f, indent=4)
 
-def share_template(template_id: str, recipient: str, permissions: str, shared_by: str):
+def share_template(template_id: str, recipient_id: str, permissions: list):
     """
-    Simulates sharing a template with a recipient.
-    Updates the mock data structure and engagement metrics.
+    Simulates sharing a template with a recipient and specified permissions.
+    Adds the shared template to a mock JSON data structure.
     """
-    data = _read_data()
-    
+    shared_templates = _load_shared_templates()
     new_share = {
         "template_id": template_id,
-        "recipient": recipient,
+        "recipient_id": recipient_id,
         "permissions": permissions,
-        "shared_by": shared_by,
-        "timestamp": os.path.getmtime(DATA_FILE) # Mock timestamp
+        "shared_by": "current_user_mock_id" # Mock user sharing the template
     }
-    data["shared_templates"].append(new_share)
-    data["community_engagement_metrics"]["total_shares"] += 1
+    shared_templates.append(new_share)
+    _save_shared_templates(shared_templates)
+    return {"status": "success", "message": f"Template {template_id} shared with {recipient_id}"}
 
-    _write_data(data)
-    return {"status": "success", "message": f"Template {template_id} shared with {recipient}"}
 
 def get_shared_templates(user_id: str):
     """
-    Retrieves templates shared with a specific user.
+    Retrieves a list of templates shared with the specified user.
     """
-    data = _read_data()
-    shared_with_user = [
-        template for template in data["shared_templates"] 
-        if template["recipient"] == user_id
+    shared_templates = _load_shared_templates()
+    user_shares = [
+        template for template in shared_templates if template["recipient_id"] == user_id
     ]
-    return {"user_id": user_id, "shared_templates": shared_with_user}
+    return {"user_id": user_id, "shared_with_you": user_shares}
 
-def get_peer_connections(user_id: str):
+def get_mock_network_effects_data():
     """
-    Retrieves mock peer connections for a given user.
+    Returns mock data for peer connections and community engagement metrics.
+    This would typically be called by the `network-effects.ts` API.
     """
-    data = _read_data()
-    for user_conn in data["peer_connections"]:
-        if user_conn["user_id"] == user_id:
-            return {"user_id": user_id, "connections": user_conn["connections"]}
-    return {"user_id": user_id, "connections": []}
-
-def get_community_engagement_metrics():
-    """
-    Retrieves mock community engagement metrics.
-    """
-    data = _read_data()
-    return data["community_engagement_metrics"]
+    return {
+        "peer_connections": [
+            {"user_id": "user_a", "connections": ["user_b", "user_c"]},
+            {"user_id": "user_b", "connections": ["user_a", "user_d"]},
+        ],
+        "community_engagement_metrics": {
+            "total_templates_shared": len(_load_shared_templates()),
+            "active_sharers": ["user_a", "user_c", "user_e"],
+            "most_popular_templates": [
+                {"template_id": "template_001", "shares": 15},
+                {"template_id": "template_005", "shares": 10},
+            ],
+            "average_engagement_score": 7.8
+        }
+    }
 
 if __name__ == "__main__":
-    # Initialize data file if it doesn't exist
-    if not os.path.exists(DATA_FILE):
-        _write_data(_read_data()) # This will write the initial structure
+    # Example Usage:
 
-    print("--- Initial State ---")
-    print("All Data:", _read_data())
-    print("\n")
+    # Clean up file from previous runs for consistent testing
+    if os.path.exists(SHARED_TEMPLATES_FILE):
+        os.remove(SHARED_TEMPLATES_FILE)
+        print(f"Cleaned up {SHARED_TEMPLATES_FILE}")
 
-    # Example Usage: Share templates
     print("--- Sharing Templates ---")
-    print(share_template("template_001", "user_alice", "view", "user_bob"))
-    print(share_template("template_002", "user_bob", "edit", "user_charlie"))
-    print(share_template("template_003", "user_alice", "comment", "user_david"))
-    print("\n")
+    share_template("template_001", "user_alice", ["view", "edit"])
+    share_template("template_002", "user_bob", ["view"])
+    share_template("template_001", "user_charlie", ["view"])
+    share_template("template_003", "user_alice", ["view"])
+    print("Templates shared.")
 
-    # Example Usage: Get shared templates for a user
-    print("--- Templates shared with user_alice ---")
-    print(get_shared_templates("user_alice"))
-    print("\n")
+    print("\n--- Getting Shared Templates for Alice ---")
+    alice_templates = get_shared_templates("user_alice")
+    print(json.dumps(alice_templates, indent=4))
 
-    print("--- Templates shared with user_bob ---")
-    print(get_shared_templates("user_bob"))
-    print("\n")
+    print("\n--- Getting Shared Templates for Bob ---")
+    bob_templates = get_shared_templates("user_bob")
+    print(json.dumps(bob_templates, indent=4))
+    
+    print("\n--- Getting Shared Templates for Dave (who has none) ---")
+    dave_templates = get_shared_templates("user_dave")
+    print(json.dumps(dave_templates, indent=4))
 
-    # Example Usage: Get peer connections
-    print("--- Peer Connections for user_alice ---")
-    print(get_peer_connections("user_alice"))
-    print("\n")
-
-    print("--- Peer Connections for user_charlie ---")
-    print(get_peer_connections("user_charlie"))
-    print("\n")
-
-    # Example Usage: Get community engagement metrics
-    print("--- Community Engagement Metrics ---")
-    print(get_community_engagement_metrics())
-    print("\n")
-
-    print("--- Final State (after sharing) ---")
-    print("All Data:", _read_data())
-    print("\n")
+    print("\n--- Getting Mock Network Effects Data ---")
+    network_data = get_mock_network_effects_data()
+    print(json.dumps(network_data, indent=4))

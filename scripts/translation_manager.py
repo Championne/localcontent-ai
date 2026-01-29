@@ -1,52 +1,38 @@
-import json
 
-def translate_content(content_text: str, source_lang: str, target_langs: list[str]) -> dict:
+import json
+import argparse
+
+def translate_content_mock(content_text: str, source_lang: str, target_langs: list[str]) -> dict:
     """
-    Simulates translating content into specified target languages.
+    Simulates translating content into multiple target languages.
 
     Args:
-        content_text: The original content to translate.
-        source_lang: The source language of the content (e.g., "en").
-        target_langs: A list of target languages (e.g., ["fr", "es"]).
+        content_text (str): The original content to translate.
+        source_lang (str): The source language of the content (e.g., "en").
+        target_langs (list[str]): A list of target languages (e.g., ["fr", "de"]).
 
     Returns:
-        A dictionary with the original content and its translations in JSON format.
-        Example: {
-            "original": "Hello World",
-            "translations": {
-                "fr": "Hello World[_translated_to_fr]",
-                "es": "Hello World[_translated_to_es]"
-            }
-        }
+        dict: A dictionary containing the original content and its translations.
+              Format: { "original": "...", "translations": { "lang1": "text1", "lang2": "text2" } }
     """
     translations = {}
-    # Ensure source_lang is used, though not directly in mock translation,
-    # it's part of the expected input arguments.
-    _ = source_lang 
-
     for lang in target_langs:
         # Simulate translation by adding a suffix
-        translated_text = f"{content_text}[_translated_to_{lang.lower()}]"
+        translated_text = f"{content_text}[_translated_to_{lang.upper()}]"
         translations[lang] = translated_text
-
-    result = {
+    
+    return {
         "original": content_text,
         "translations": translations
     }
-    return result
 
 if __name__ == "__main__":
-    # Example usage when run as a script
-    # In a real scenario, these would be passed from a calling function/script or CLI.
-    sample_content = "This is a test sentence."
-    sample_source_lang = "en"
-    sample_target_langs = ["fr", "es", "de"]
+    parser = argparse.ArgumentParser(description="Mock translation manager.")
+    parser.add_argument("--content_text", required=True, help="The original content text to translate.")
+    parser.add_argument("--source_lang", required=True, help="The source language of the content (e.g., 'en').")
+    parser.add_argument("--target_langs", nargs="+", required=True, help="A space-separated list of target languages (e.g., 'fr de es').")
 
-    translated_output = translate_content(sample_content, sample_source_lang, sample_target_langs)
-    print(json.dumps(translated_output, indent=2))
+    args = parser.parse_args()
 
-    sample_content_2 = "Another piece of content."
-    sample_source_lang_2 = "en"
-    sample_target_langs_2 = ["ja"]
-    translated_output_2 = translate_content(sample_content_2, sample_source_lang_2, sample_target_langs_2)
-    print(json.dumps(translated_output_2, indent=2))
+    result = translate_content_mock(args.content_text, args.source_lang, args.target_langs)
+    print(json.dumps(result, indent=2))
