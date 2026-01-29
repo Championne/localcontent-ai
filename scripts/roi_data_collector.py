@@ -2,6 +2,7 @@
 import json
 import random
 from datetime import datetime, timedelta
+import os
 
 def calculate_roi(revenue, cost):
     """Calculates Return on Investment (ROI)."""
@@ -75,15 +76,56 @@ def collect_roi_data():
         
     return all_roi_data
 
+def generate_baseline_user_metrics(user_id: str):
+    """
+    Generates and stores baseline metrics for a new user.
+    """
+    onboarding_date = datetime.now()
+    
+    baseline_metrics = {
+        "userId": user_id,
+        "onboardingDate": onboarding_date.strftime("%Y-%m-%d %H:%M:%S"),
+        "initialActivityMetrics": {
+            "dashboardViewsLast7Days": 0,
+            "reportsGeneratedLast7Days": 0,
+            "contentPiecesManaged": 0,
+            "integrationsSetup": 0,
+        },
+        "initialROISummary": {
+            "totalRevenueEver": 0.0,
+            "totalCostEver": 0.0,
+            "overallRoiPercentage": 0.0,
+        },
+        "onboardingProgress": {
+            "profileCompleted": False,
+            "firstCampaignCreated": False,
+            "dataSourceConnected": False,
+            "initialMetricsCaptured": True # This step is now complete
+        }
+    }
+
+    user_metrics_dir = "localcontent_ai/data/user_metrics"
+    os.makedirs(user_metrics_dir, exist_ok=True)
+    user_metrics_path = os.path.join(user_metrics_dir, f"{user_id}_baseline_metrics.json")
+
+    with open(user_metrics_path, "w") as f:
+        json.dump(baseline_metrics, f, indent=4)
+        
+    print(f"Baseline metrics for user {user_id} saved to {user_metrics_path}")
+    return baseline_metrics
+
 if __name__ == "__main__":
     roi_data = collect_roi_data()
     output_path = "localcontent_ai/data/roi_metrics.json"
     
     # Create the data directory if it doesn't exist
-    import os
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     with open(output_path, "w") as f:
         json.dump(roi_data, f, indent=4)
     
     print(f"ROI data successfully collected and saved to {output_path}")
+
+    # Example usage for generating baseline metrics for a new user
+    # This would be called by the user onboarding system
+    # generate_baseline_user_metrics("new_user_123")

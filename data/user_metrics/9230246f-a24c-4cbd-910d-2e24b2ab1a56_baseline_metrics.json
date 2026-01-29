@@ -1,0 +1,21 @@
+{
+    "userId": "9230246f-a24c-4cbd-910d-2e24b2ab1a56",
+    "onboardingDate": "2026-01-29 08:11:27",
+    "initialActivityMetrics": {
+        "dashboardViewsLast7Days": 0,
+        "reportsGeneratedLast7Days": 0,
+        "contentPiecesManaged": 0,
+        "integrationsSetup": 0
+    },
+    "initialROISummary": {
+        "totalRevenueEver": 0.0,
+        "totalCostEver": 0.0,
+        "overallRoiPercentage": 0.0
+    },
+    "onboardingProgress": {
+        "profileCompleted": false,
+        "firstCampaignCreated": false,
+        "dataSourceConnected": false,
+        "initialMetricsCaptured": true
+    }
+}

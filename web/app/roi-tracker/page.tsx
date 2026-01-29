@@ -140,7 +140,76 @@ export default function ROITrackerPage() {
   }, [allRoiMetrics, filterContentId, sortBy, sortOrder]);
 
   if (loading) {
-    return <div className="p-4">Loading ROI Metrics...</div>;
+    return (
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="max-w-6xl mx-auto bg-white shadow-lg rounded-lg p-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6 animate-pulse"></div> {/* Skeleton for title */}
+
+          {/* Skeleton for Filter and Sort Controls */}
+          <div className="mb-6 p-4 border rounded-md bg-gray-50 flex flex-wrap items-center gap-4">
+            <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-24 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-48 animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-28 animate-pulse"></div>
+            <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+          </div>
+
+          {/* Skeleton for multiple metric cards */}
+          {[...Array(2)].map((_, i) => ( // Show a couple of skeleton cards
+            <div key={i} className="mb-8 p-6 border rounded-lg shadow-sm bg-white">
+              <div className="h-7 bg-gray-200 rounded w-1/4 mb-4 animate-pulse"></div> {/* Skeleton for Content ID title */}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="bg-gray-50 p-4 rounded-md shadow">
+                    <div className="h-5 bg-gray-200 rounded w-1/2 mb-2 animate-pulse"></div>
+                    <div className="h-8 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-3 animate-pulse"></div> {/* Skeleton for Historical Data title */}
+              <div className="overflow-x-auto mb-4">
+                <table className="min-w-full bg-white">
+                  <thead>
+                    <tr>
+                      {[...Array(4)].map((_, k) => (
+                        <th key={k} className="py-2 px-4 border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-600">
+                          <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...Array(3)].map((_, l) => (
+                      <tr key={l} className="hover:bg-gray-50">
+                        {[...Array(4)].map((_, m) => (
+                          <td key={m} className="py-2 px-4 border-b border-gray-200 text-sm text-gray-800">
+                            <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Skeleton for ROI Trend Chart */}
+              <div className="mt-4 p-2 bg-gray-50 rounded-md">
+                <div className="h-6 bg-gray-200 rounded w-1/4 mb-2 animate-pulse"></div>
+                {[...Array(3)].map((_, n) => (
+                  <div key={n} className="flex items-center text-sm mb-1">
+                    <div className="w-20 mr-2 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="flex-grow h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
