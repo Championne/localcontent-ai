@@ -2,8 +2,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { exec } from 'child_process';
 import path from 'path';
 
-// Define the ROIMetrics interface for type safety
-export interface ROIMetrics {
+// Define the structure for individual content's ROI metrics
+export interface ContentROIMetrics {
+  contentId: string;
+  name: string; // Add a name for the content for better readability
   totalRevenue: number;
   totalCost: number;
   roiPercentage: number;
@@ -14,79 +16,87 @@ export interface ROIMetrics {
   }>;
 }
 
+// The API will now return an array of these content-specific metrics
+export type ROIMetricsResponse = ContentROIMetrics[];
+
+// Helper function to generate more realistic mock data
+const generateMockContentROIMetrics = (numContents: number = 3): ContentROIMetrics[] => {
+  const allContentMetrics: ContentROIMetrics[] = [];
+  const startDate = new Date('2023-01-01');
+
+  for (let i = 1; i <= numContents; i++) {
+    const contentId = `content_${String(i).padStart(3, '0')}`;
+    const contentName = `Marketing Campaign ${i}`;
+    let totalRevenue = 0;
+    let totalCost = 0;
+    const dataPoints: Array<{ date: string; revenue: number; cost: number }> = [];
+
+    // Simulate 8-12 months of historical data
+    const numMonths = 8 + Math.floor(Math.random() * 5); // 8 to 12 months
+
+    for (let month = 0; month < numMonths; month++) {
+      const currentDate = new Date(startDate);
+      currentDate.setMonth(startDate.getMonth() + month);
+      const dateString = currentDate.toISOString().split('T')[0];
+
+      // Simulate trending data for different content IDs
+      let revenue: number;
+      let cost: number;
+
+      if (i === 1) { // Steadily increasing ROI
+        revenue = 10000 + month * 2000 + Math.random() * 1000;
+        cost = 3000 + month * 500 + Math.random() * 200;
+      } else if (i === 2) { // Fluctuating but generally stable ROI
+        revenue = 15000 + Math.sin(month / 2) * 4000 + Math.random() * 1500;
+        cost = 4000 + Math.cos(month / 2) * 800 + Math.random() * 300;
+      } else if (i === 3) { // Initial high, then decreasing ROI post-peak
+        revenue = 25000 - month * 1500 + Math.random() * 2000;
+        cost = 6000 + month * 300 + Math.random() * 400;
+      } else { // Generic increasing trend for any additional content
+        revenue = 8000 + month * 1800 + Math.random() * 900;
+        cost = 2500 + month * 450 + Math.random() * 150;
+      }
+
+      revenue = Math.round(Math.max(0, revenue)); // Ensure non-negative
+      cost = Math.round(Math.max(0, cost)); // Ensure non-negative
+
+      dataPoints.push({
+        date: dateString,
+        revenue,
+        cost,
+      });
+      totalRevenue += revenue;
+      totalCost += cost;
+    }
+
+    const roiPercentage = totalCost > 0 ? ((totalRevenue - totalCost) / totalCost) * 100 : 0;
+
+    allContentMetrics.push({
+      contentId,
+      name: contentName,
+      totalRevenue: Math.round(totalRevenue),
+      totalCost: Math.round(totalCost),
+      roiPercentage: parseFloat(roiPercentage.toFixed(2)), // Round to 2 decimal places
+      dataPoints,
+    });
+  }
+  return allContentMetrics;
+};
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ROIMetrics | { error: string }>
+  res: NextApiResponse<ROIMetricsResponse | { error: string }>
 ) {
   if (req.method === 'GET') {
     try {
-      // Simulate Python script execution for now
-      // In a real scenario, you would execute the Python script like this:
-      // const pythonScriptPath = path.join(process.cwd(), 'localcontent_ai', 'scripts', 'roi_data_collector.py');
-      // exec(`python3 ${pythonScriptPath}`, (error, stdout, stderr) => {
-      //   if (error) {
-      //     console.error(`exec error: ${error}`);
-      //     return res.status(500).json({ error: 'Failed to execute Python script' });
-      //   }
-      //   if (stderr) {
-      //     console.error(`stderr: ${stderr}`);
-      //     // Depending on your script, stderr might not always be an error.
-      //     // For now, treat it as a warning or part of the output if expected.
-      //   }
-      //   try {
-      //     const pythonOutput: {
-      //       revenue: number;
-      //       cost: number;
-      //       roi: number;
-      //       historical_data: Array<{ date: string; revenue: number; cost: number }>;
-      //     } = JSON.parse(stdout);
+      // For now, we will always return mock data.
+      // In a real scenario, you would conditionally execute the Python script
+      // or fetch from a database.
 
-      //     const roiMetrics: ROIMetrics = {
-      //       totalRevenue: pythonOutput.revenue,
-      //       totalCost: pythonOutput.cost,
-      //       roiPercentage: pythonOutput.roi,
-      //       dataPoints: pythonOutput.historical_data.map(data => ({
-      //         date: data.date,
-      //         revenue: data.revenue,
-      //         cost: data.cost,
-      //       })),
-      //     };
-      //     res.status(200).json(roiMetrics);
-      //   } catch (parseError) {
-      //     console.error('Failed to parse Python script output:', parseError);
-      //     res.status(500).json({ error: 'Failed to parse ROI data' });
-      //   }
-      // });
+      // Generate mock data for multiple content items
+      const mockROIMetrics: ROIMetricsResponse = generateMockContentROIMetrics(5); // Generate data for 5 content items
 
-      // Mock data for demonstration
-      const mockPythonOutput = {
-        revenue: 150000,
-        cost: 50000,
-        roi: 200, // (150000 - 50000) / 50000 * 100
-        historical_data: [
-          { date: '2023-01-01', revenue: 10000, cost: 3000 },
-          { date: '2023-02-01', revenue: 12000, cost: 3500 },
-          { date: '2023-03-01', revenue: 15000, cost: 4000 },
-          { date: '2023-04-01', revenue: 18000, cost: 4500 },
-          { date: '2023-05-01', revenue: 20000, cost: 5000 },
-          { date: '2023-06-01', revenue: 25000, cost: 6000 },
-          { date: '2023-07-01', revenue: 30000, cost: 7000 },
-          { date: '2023-08-01', revenue: 35000, cost: 8000 },
-        ],
-      };
-
-      const roiMetrics: ROIMetrics = {
-        totalRevenue: mockPythonOutput.revenue,
-        totalCost: mockPythonOutput.cost,
-        roiPercentage: mockPythonOutput.roi,
-        dataPoints: mockPythonOutput.historical_data.map(data => ({
-          date: data.date,
-          revenue: data.revenue,
-          cost: data.cost,
-        })),
-      };
-      
-      res.status(200).json(roiMetrics);
+      res.status(200).json(mockROIMetrics);
 
     } catch (error) {
       console.error('API route error:', error);
