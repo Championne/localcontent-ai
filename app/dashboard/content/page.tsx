@@ -448,7 +448,7 @@ export default function CreateContentPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Writing Tone</label>
               <div className="grid grid-cols-2 gap-3">
-                {['professional', 'friendly', 'casual', 'formal'].map((t) => (
+                {['professional', 'friendly'].map((t) => (
                   <button
                     key={t}
                     type="button"
