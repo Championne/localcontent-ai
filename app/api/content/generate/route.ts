@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { generateContent, ContentTemplate } from '@/lib/openai'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -13,70 +14,141 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { template, businessName, industry, topic, tone = 'professional' } = body
+    const { 
+      template, 
+      businessName, 
+      industry, 
+      topic, 
+      tone = 'professional',
+      additionalContext,
+      saveAsDraft = false 
+    } = body
 
     // Validate required fields
     if (!template || !businessName || !industry || !topic) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: template, businessName, industry, topic' },
         { status: 400 }
       )
     }
 
-    // In production, this would call OpenAI API
-    // For now, we generate a mock response based on the template type
-    let content = ''
-    
-    switch (template) {
-      case 'blog-post':
-        content = generateBlogPost(businessName, industry, topic, tone)
-        break
-      case 'social-post':
-        content = generateSocialPost(businessName, industry, topic, tone)
-        break
-      case 'gmb-post':
-        content = generateGMBPost(businessName, industry, topic, tone)
-        break
-      case 'email':
-        content = generateEmail(businessName, industry, topic, tone)
-        break
-      default:
-        content = generateBlogPost(businessName, industry, topic, tone)
+    // Validate template type
+    const validTemplates: ContentTemplate[] = ['blog-post', 'social-post', 'gmb-post', 'email', 'review-response']
+    if (!validTemplates.includes(template)) {
+      return NextResponse.json(
+        { error: `Invalid template. Must be one of: ${validTemplates.join(', ')}` },
+        { status: 400 }
+      )
     }
 
-    // In production, save to database
-    // const { data, error } = await supabase.from('content').insert({
-    //   user_id: user.id,
-    //   template,
-    //   title: topic,
-    //   content,
-    //   status: 'draft'
-    // })
+    // Check usage limits (get subscription)
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('plan, content_generated_this_month')
+      .eq('user_id', user.id)
+      .single()
+
+    const plan = subscription?.plan || 'free'
+    const usedThisMonth = subscription?.content_generated_this_month || 0
+    
+    const limits: Record<string, number> = {
+      free: 5,
+      starter: 25,
+      growth: 100,
+      pro: -1, // unlimited
+    }
+
+    const limit = limits[plan] || 5
+    if (limit !== -1 && usedThisMonth >= limit) {
+      return NextResponse.json(
+        { error: 'Monthly content limit reached. Please upgrade your plan.' },
+        { status: 403 }
+      )
+    }
+
+    let content: string
+
+    // Check if OpenAI is configured
+    if (process.env.OPENAI_API_KEY) {
+      // Use real AI generation
+      content = await generateContent({
+        template,
+        businessName,
+        industry,
+        topic,
+        tone,
+        additionalContext,
+      })
+    } else {
+      // Fall back to mock content for development
+      content = generateMockContent(template, businessName, industry, topic, tone)
+    }
+
+    // Optionally save to database as draft
+    let savedContent = null
+    if (saveAsDraft) {
+      const { data, error } = await supabase
+        .from('content')
+        .insert({
+          user_id: user.id,
+          template,
+          title: topic,
+          content,
+          metadata: { businessName, industry, tone, additionalContext },
+          status: 'draft'
+        })
+        .select()
+        .single()
+
+      if (!error) {
+        savedContent = data
+
+        // Update usage counter
+        await supabase
+          .from('subscriptions')
+          .update({ 
+            content_generated_this_month: usedThisMonth + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+      }
+    }
 
     return NextResponse.json({
       success: true,
       content,
+      savedContent,
       template,
       metadata: {
         businessName,
         industry,
         topic,
         tone,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
+        aiGenerated: !!process.env.OPENAI_API_KEY
       }
     })
 
   } catch (error) {
     console.error('Content generation error:', error)
     return NextResponse.json(
-      { error: 'Failed to generate content' },
+      { error: 'Failed to generate content. Please try again.' },
       { status: 500 }
     )
   }
 }
 
-function generateBlogPost(business: string, industry: string, topic: string, tone: string): string {
-  return `# ${topic}
+// Mock content generator for development/demo
+function generateMockContent(
+  template: string, 
+  business: string, 
+  industry: string, 
+  topic: string, 
+  tone: string
+): string {
+  switch (template) {
+    case 'blog-post':
+      return `# ${topic}
 
 *Written for ${business} | ${industry}*
 
@@ -109,12 +181,10 @@ Ready to learn more about ${topic.toLowerCase()}? Contact ${business} today for 
 
 ---
 
-*${business} is your local ${industry} expert. Contact us today!*
-`
-}
+*${business} is your local ${industry} expert. Contact us today!*`
 
-function generateSocialPost(business: string, industry: string, topic: string, tone: string): string {
-  return `✨ ${topic}
+    case 'social-post':
+      return `✨ ${topic}
 
 At ${business}, we're passionate about helping our community with all their ${industry.toLowerCase()} needs!
 
@@ -123,12 +193,10 @@ Here's a quick tip: Taking care of ${topic.toLowerCase()} early can save you tim
 📞 Have questions? We're here to help!
 📍 Serving our local community with pride
 
-#${industry.replace(/\s+/g, '')} #Local${industry.replace(/\s+/g, '')} #${business.replace(/\s+/g, '')} #CommunityFirst #SmallBusiness
-`
-}
+#${industry.replace(/\s+/g, '')} #Local${industry.replace(/\s+/g, '')} #SmallBusiness`
 
-function generateGMBPost(business: string, industry: string, topic: string, tone: string): string {
-  return `📢 ${topic}
+    case 'gmb-post':
+      return `📢 ${topic}
 
 ${business} is excited to share important information about ${topic.toLowerCase()} with our valued customers!
 
@@ -138,44 +206,37 @@ As your trusted local ${industry.toLowerCase()} provider, we're committed to kee
 🔹 Local expertise  
 🔹 Customer satisfaction guaranteed
 
-Ready to learn more? Give us a call or visit our location today!
+Ready to learn more? Give us a call or visit our location today!`
 
-📞 Call us now
-📍 Visit us locally
-💬 Message for questions
-`
-}
-
-function generateEmail(business: string, industry: string, topic: string, tone: string): string {
-  return `Subject: ${topic} - Important Updates from ${business}
+    case 'email':
+      return `Subject: ${topic} - Important Updates from ${business}
 
 Dear Valued Customer,
 
-We hope this email finds you well! At ${business}, we're always looking for ways to better serve our community and keep you informed about important ${industry.toLowerCase()} topics.
+We hope this email finds you well! At ${business}, we're always looking for ways to better serve our community.
 
 **${topic}**
 
-We wanted to reach out today to share some valuable insights about ${topic.toLowerCase()}. As your trusted local ${industry.toLowerCase()} partner, we believe it's important to keep you in the loop about developments that may affect you.
-
-**What This Means For You:**
-
-• Stay informed about the latest trends
-• Make better decisions with expert guidance
-• Access exclusive tips from our experienced team
+We wanted to reach out today to share some valuable insights about ${topic.toLowerCase()}. As your trusted local ${industry.toLowerCase()} partner, we believe it's important to keep you in the loop.
 
 **How We Can Help:**
 
-Our team at ${business} is always here to answer your questions and provide personalized recommendations. Whether you need advice, service, or just want to chat about your options, we're just a call away.
+Our team at ${business} is always here to answer your questions and provide personalized recommendations.
 
-Ready to take the next step? Simply reply to this email or give us a call at your convenience.
-
-Thank you for being a valued member of our community!
+Ready to take the next step? Simply reply to this email or give us a call.
 
 Warm regards,
+The ${business} Team`
 
-The ${business} Team
+    case 'review-response':
+      return `Thank you so much for taking the time to share your feedback! At ${business}, we truly value our customers and are delighted to hear about your positive experience.
 
----
-${business} | Your Local ${industry} Experts
-`
+Your kind words mean the world to our team. We look forward to serving you again soon!
+
+Best regards,
+The ${business} Team`
+
+    default:
+      return `Content for ${topic} - ${business}`
+  }
 }
