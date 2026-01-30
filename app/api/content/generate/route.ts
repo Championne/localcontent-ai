@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { generateContent, ContentTemplate } from '@/lib/openai'
+import { generateContent, ContentTemplate, isOpenAIConfigured } from '@/lib/openai'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     let content: string
 
     // Check if OpenAI is configured
-    if (process.env.OPENAI_API_KEY) {
+    if (isOpenAIConfigured()) {
       // Use real AI generation
       content = await generateContent({
         template,
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
         topic,
         tone,
         generatedAt: new Date().toISOString(),
-        aiGenerated: !!process.env.OPENAI_API_KEY
+        aiGenerated: isOpenAIConfigured()
       }
     })
 

@@ -1,9 +1,19 @@
 import OpenAI from 'openai'
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy-initialize OpenAI client
+let openaiClient: OpenAI | null = null
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is not set')
+    }
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return openaiClient
+}
 
 export type ContentTemplate = 'blog-post' | 'social-post' | 'gmb-post' | 'email' | 'review-response'
 
@@ -113,6 +123,7 @@ Desired Tone: ${tone}
 export async function generateContent(params: GenerateContentParams): Promise<string> {
   const { template, maxTokens = 1000 } = params
   
+  const openai = getOpenAIClient()
   const systemPrompt = SYSTEM_PROMPTS[template]
   const userPrompt = buildPrompt(params)
 
@@ -137,6 +148,7 @@ export async function generateContent(params: GenerateContentParams): Promise<st
 export async function generateContentStream(params: GenerateContentParams) {
   const { template, maxTokens = 1000 } = params
   
+  const openai = getOpenAIClient()
   const systemPrompt = SYSTEM_PROMPTS[template]
   const userPrompt = buildPrompt(params)
 
@@ -154,4 +166,6 @@ export async function generateContentStream(params: GenerateContentParams) {
   return stream
 }
 
-export default openai
+export function isOpenAIConfigured(): boolean {
+  return !!process.env.OPENAI_API_KEY
+}
