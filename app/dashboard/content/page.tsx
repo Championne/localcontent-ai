@@ -8,8 +8,10 @@ export default function CreateContentPage() {
   const [businessName, setBusinessName] = useState('')
   const [industry, setIndustry] = useState('')
   const [topic, setTopic] = useState('')
+  const [tone, setTone] = useState('professional')
   const [generating, setGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState('')
+  const [error, setError] = useState('')
 
   const templates = [
     { id: 'blog-post', name: 'Blog Post', description: 'SEO-optimized blog article' },
@@ -20,22 +22,44 @@ export default function CreateContentPage() {
 
   const handleGenerate = async () => {
     setGenerating(true)
-    // Simulate AI generation
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setGeneratedContent(`# ${topic}
+    setError('')
+    
+    try {
+      const response = await fetch('/api/content/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template: selectedTemplate,
+          businessName,
+          industry,
+          topic,
+          tone,
+        }),
+      })
 
-Here is your AI-generated content for ${businessName} in the ${industry} industry.
+      const data = await response.json()
 
-This is a sample output. In production, this would call the OpenAI API to generate actual content based on your inputs.
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate content')
+      }
 
-## Key Points
-- Point 1 about your topic
-- Point 2 with industry-specific insights
-- Point 3 with a call to action
+      setGeneratedContent(data.content)
+      setStep(3)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
-Contact ${businessName} today to learn more!`)
-    setGenerating(false)
-    setStep(3)
+  const handleSave = async () => {
+    // In production, this would save to the database
+    alert('Content saved! (In production, this would save to your content library)')
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(generatedContent)
+    alert('Content copied to clipboard!')
   }
 
   return (
@@ -59,6 +83,12 @@ Contact ${businessName} today to learn more!`)
           <span className="ml-2 font-medium">Review & Edit</span>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-4">
+          {error}
+        </div>
+      )}
 
       {/* Step 1: Choose Template */}
       {step === 1 && (
@@ -107,13 +137,16 @@ Contact ${businessName} today to learn more!`)
                 className="w-full px-3 py-2 border rounded-md"
               >
                 <option value="">Select industry...</option>
-                <option value="restaurant">Restaurant</option>
-                <option value="plumber">Plumber</option>
-                <option value="electrician">Electrician</option>
-                <option value="salon">Salon</option>
-                <option value="dentist">Dentist</option>
-                <option value="real-estate">Real Estate</option>
-                <option value="other">Other</option>
+                <option value="Restaurant">Restaurant</option>
+                <option value="Plumber">Plumber</option>
+                <option value="Electrician">Electrician</option>
+                <option value="HVAC">HVAC</option>
+                <option value="Salon">Salon / Spa</option>
+                <option value="Dentist">Dentist</option>
+                <option value="Real Estate">Real Estate</option>
+                <option value="Landscaping">Landscaping</option>
+                <option value="Auto Repair">Auto Repair</option>
+                <option value="Other">Other</option>
               </select>
             </div>
             <div>
@@ -125,6 +158,19 @@ Contact ${businessName} today to learn more!`)
                 className="w-full px-3 py-2 border rounded-md"
                 placeholder="e.g., Spring cleaning tips, New menu items, Special promotion..."
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Tone</label>
+              <select
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="professional">Professional</option>
+                <option value="friendly">Friendly</option>
+                <option value="casual">Casual</option>
+                <option value="formal">Formal</option>
+              </select>
             </div>
             <div className="flex gap-4 pt-4">
               <button
@@ -153,8 +199,8 @@ Contact ${businessName} today to learn more!`)
             <textarea
               value={generatedContent}
               onChange={(e) => setGeneratedContent(e.target.value)}
-              rows={15}
-              className="w-full bg-transparent resize-none focus:outline-none"
+              rows={20}
+              className="w-full bg-transparent resize-none focus:outline-none font-mono text-sm"
             />
           </div>
           <div className="flex gap-4">
@@ -166,12 +212,19 @@ Contact ${businessName} today to learn more!`)
             </button>
             <button
               onClick={handleGenerate}
+              disabled={generating}
               className="px-4 py-2 border rounded-md hover:bg-muted"
             >
-              Regenerate
+              {generating ? 'Regenerating...' : 'Regenerate'}
             </button>
             <button
-              onClick={() => alert('Content saved! (In production, this would save to database)')}
+              onClick={handleCopy}
+              className="px-4 py-2 border rounded-md hover:bg-muted"
+            >
+              Copy to Clipboard
+            </button>
+            <button
+              onClick={handleSave}
               className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
             >
               Save Content
