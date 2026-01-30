@@ -98,27 +98,43 @@ export default function CreateContentPage() {
   const [generateImageFlag, setGenerateImageFlag] = useState(false)
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
   const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
+  
+  // Multi-business support
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
 
-  // Fetch user's business on mount (for pre-filling)
+  // Fetch user's businesses on mount
   useEffect(() => {
-    async function fetchBusiness() {
+    async function fetchBusinesses() {
       try {
         const response = await fetch('/api/business')
         if (response.ok) {
           const data = await response.json()
           if (data.businesses && data.businesses.length > 0) {
-            const business = data.businesses[0] as Business
-            setBusinessName(business.name || '')
-            setIndustry(business.industry || '')
+            setBusinesses(data.businesses)
+            // Auto-select first business
+            const firstBusiness = data.businesses[0] as Business
+            setSelectedBusinessId(firstBusiness.id)
+            setBusinessName(firstBusiness.name || '')
+            setIndustry(firstBusiness.industry || '')
           }
         }
       } catch (err) {
-        // Silently fail - user can enter manually
-        console.error('Failed to fetch business:', err)
+        console.error('Failed to fetch businesses:', err)
       }
     }
-    fetchBusiness()
+    fetchBusinesses()
   }, [])
+  
+  // Update business name/industry when selected business changes
+  const handleBusinessChange = (businessId: string) => {
+    setSelectedBusinessId(businessId)
+    const business = businesses.find(b => b.id === businessId)
+    if (business) {
+      setBusinessName(business.name || '')
+      setIndustry(business.industry || '')
+    }
+  }
 
   // Auto-detect best image style when topic changes
   useEffect(() => {
@@ -575,16 +591,33 @@ export default function CreateContentPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us about your {templates.find(t => t.id === selectedTemplate)?.name.toLowerCase() || 'content'}</h2>
           
-          {/* Business context line */}
-          {businessName && (
+          {/* Business Selection */}
+          {businesses.length > 1 ? (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Business</label>
+              <select
+                value={selectedBusinessId || ''}
+                onChange={(e) => handleBusinessChange(e.target.value)}
+                className="w-full max-w-md px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+              >
+                {businesses.map((biz) => (
+                  <option key={biz.id} value={biz.id}>
+                    {biz.name} {biz.industry ? `(${biz.industry})` : ''}
+                  </option>
+                ))}
+              </select>
+              <a href="/dashboard/settings" className="text-xs text-teal-600 hover:text-teal-700 mt-1 inline-block">
+                Manage businesses
+              </a>
+            </div>
+          ) : businessName ? (
             <div className="flex items-center gap-2 mb-6 text-sm text-gray-600">
               <span>Creating for:</span>
               <span className="font-medium text-gray-900">{businessName}</span>
               {industry && <span className="text-gray-400">({industry})</span>}
               <a href="/dashboard/settings" className="text-teal-600 hover:text-teal-700 ml-1">edit</a>
             </div>
-          )}
-          {!businessName && (
+          ) : (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
               <a href="/dashboard/settings" className="font-medium underline">Set up your business profile</a> to get personalized content
             </div>
