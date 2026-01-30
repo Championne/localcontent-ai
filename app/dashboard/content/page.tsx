@@ -634,16 +634,43 @@ export default function CreateContentPage() {
                 <div className="flex-1">
                   <label htmlFor="generateImage" className="block text-sm font-medium text-gray-700 cursor-pointer">
                     Generate matching image
-                    {imagesRemaining !== null && (
-                      <span className="ml-2 text-xs text-gray-500">
-                        ({imagesRemaining} remaining this month)
-                      </span>
-                    )}
                   </label>
+                  {/* Image Quota Counter */}
+                  {imagesRemaining !== null && (
+                    <div className="mt-2">
+                      {imagesRemaining === -1 ? (
+                        <span className="text-xs text-teal-600 font-medium">✨ Unlimited images</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[150px]">
+                            <div 
+                              className={`h-full rounded-full transition-all ${
+                                imagesRemaining <= 5 ? 'bg-red-500' : imagesRemaining <= 10 ? 'bg-amber-500' : 'bg-teal-500'
+                              }`}
+                              style={{ width: `${Math.min(100, (imagesRemaining / 30) * 100)}%` }}
+                            />
+                          </div>
+                          <span className={`text-xs font-medium ${
+                            imagesRemaining <= 5 ? 'text-red-600' : imagesRemaining <= 10 ? 'text-amber-600' : 'text-gray-600'
+                          }`}>
+                            {imagesRemaining} images left
+                          </span>
+                          {imagesRemaining <= 5 && imagesRemaining > 0 && (
+                            <a href="/pricing" className="text-xs text-teal-600 hover:underline">Upgrade</a>
+                          )}
+                        </div>
+                      )}
+                      {imagesRemaining === 0 && (
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                          You've used all your images this month. <a href="/pricing" className="font-medium underline">Upgrade for more</a>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               
-              {generateImageFlag && (
+              {generateImageFlag && imagesRemaining !== 0 && (
                 <div className="mt-4 ml-8">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Image Style</label>
                   <select

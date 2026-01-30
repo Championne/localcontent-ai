@@ -70,9 +70,9 @@ export async function POST(request: Request) {
     
     const limits: Record<string, number> = {
       free: 5,
-      starter: 25,
-      growth: 100,
-      pro: -1, // unlimited
+      starter: 30,
+      pro: 100,
+      premium: -1, // unlimited
     }
 
     const limit = limits[plan] || 5

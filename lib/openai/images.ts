@@ -48,10 +48,18 @@ export function getImageSizeForContentType(contentType: string): '1024x1024' | '
 
 // Plan limits for image generation
 export const IMAGE_LIMITS: Record<string, number> = {
-  free: 2,
-  starter: 10,
-  growth: 50,
-  pro: 200
+  free: 5,
+  starter: 30,
+  pro: 100,
+  premium: -1, // unlimited
+}
+
+// Content limits per plan
+export const CONTENT_LIMITS: Record<string, number> = {
+  free: 5,
+  starter: 30,
+  pro: 100,
+  premium: -1, // unlimited
 }
 
 // Detect the best style based on topic keywords
@@ -164,11 +172,13 @@ export function isImageGenerationConfigured(): boolean {
 // Check if user has remaining image quota
 export function hasImageQuota(plan: string, usedThisMonth: number): boolean {
   const limit = IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
+  if (limit === -1) return true // unlimited
   return usedThisMonth < limit
 }
 
 // Get remaining image quota
 export function getRemainingImageQuota(plan: string, usedThisMonth: number): number {
   const limit = IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
+  if (limit === -1) return -1 // unlimited
   return Math.max(0, limit - usedThisMonth)
 }
