@@ -1,0 +1,72 @@
+name: Ad Campaign - Promotion
+description: Generates ad copy for promotional campaigns, focusing on problem-solution,
+  local SEO, engagement, specific offers, and conversion.
+parameters:
+- name: product_service_name
+  type: string
+  description: The name of the product or service being advertised.
+- name: target_audience
+  type: string
+  description: Description of the target audience (demographics, psychographics, needs).
+- name: target_location
+  type: string
+  description: Specific geographic location(s) for local targeting (e.g., city, neighborhood,
+    region).
+- name: problem_statement
+  type: string
+  description: The core problem or pain point the target audience faces.
+- name: solution_offered
+  type: string
+  description: How the product/service uniquely solves the problem.
+- name: unique_selling_proposition
+  type: string
+  description: What makes this offer stand out from competitors.
+- name: specific_offer
+  type: string
+  description: The concrete offer or discount (e.g., '20% off', 'Buy One Get One Free',
+    'Free Consultation').
+- name: call_to_action
+  type: string
+  description: The desired immediate action (e.g., 'Shop Now', 'Get Your Free Quote',
+    'Book an Appointment').
+- name: ad_platform
+  type: string
+  description: The advertising platform (e.g., Google Ads, Facebook Ads, Instagram
+    Ads).
+- name: keywords
+  type: string
+  description: Relevant keywords for search engines and ad platforms (comma-separated).
+template: "## Ad Campaign Generator: {{ ad_platform }} - Promotion\n\n**Objective:**\
+  \ Create compelling ad copy that leverages problem-solution storytelling, local\
+  \ SEO for {{ target_location }}, engages {{ target_audience }}, promotes the specific\
+  \ offer of \"{{ specific_offer }}\", and drives immediate conversions via \"{{ call_to_action\
+  \ }}\".\n\n**Product/Service:** {{ product_service_name }}\n\n**Instructions:**\n\
+  \n1.  **Headline & Description (Problem-Solution):**\n    *   Highlight the user's\
+  \ {{ problem_statement }} directly.\n    *   Immediately present {{ product_service_name\
+  \ }} as the {{ solution_offered }}.\n    *   Incorporate the {{ specific_offer }}\
+  \ prominently.\n    *   Use strong, action-oriented language.\n\n2.  **Local SEO\
+  \ Integration:**\n    *   Naturally weave in {{ target_location }} mentions.\n \
+  \   *   Consider using power words relevant to {{ target_location }} if applicable.\n\
+  \    *   Suggest how local aspects of the service address the problem.\n\n3.  **Engagement\
+  \ & Urgency:**\n    *   Address {{ target_audience }}'s needs and desires.\n   \
+  \ *   Emphasize the {{ unique_selling_proposition }}.\n    *   Create a sense of\
+  \ urgency for the {{ specific_offer }}.\n\n4.  **Clear Call to Action:**\n    *\
+  \   End with a strong, unambiguous \"{{ call_to_action }}\" linked to the {{ specific_offer\
+  \ }}.\n\n5.  **Keywords (for search/targeting):**\n    *   Suggest relevant keywords\
+  \ including {{ keywords }} and location-specific terms.\n\n---\n\n**Ad Copy Structure\
+  \ for {{ ad_platform }}:**\n\n*   **Headline 1 (30 chars max):** [Problem/Benefit\
+  \ + Local]\n*   **Headline 2 (30 chars max):** [Solution + Offer]\n*   **Headline\
+  \ 3 (30 chars max):** [Benefit + CTA] (Optional, for platforms like Google Ads)\n\
+  *   **Description 1 (90 chars max):** [Elaborate on problem/solution, unique value,\
+  \ and specific offer, incorporating local elements.]\n*   **Description 2 (90 chars\
+  \ max):** [Reinforce urgency, benefits, and strong call to action.] (Optional)\n\
+  *   **Display Path/Sitelinks Idea:** [Relevant keywords, offer, location]\n*   **Target\
+  \ Audience / Interests:** [e.g., Parents of toddlers, Small business owners in {{\
+  \ target_location }}]\n\n**Example Generation based on inputs:**\n\n*   _Headline\
+  \ 1:_ Struggling with [Problem]? [Local] Fixes!\n*   _Headline 2:_ [Product/Service]\
+  \ - [Specific Offer]!\n*   _Description:_ Don't let [Problem] hold you back in [Local].\
+  \ Our [Product/Service] offers [Solution] + [Unique Selling Proposition]. Get [Specific\
+  \ Offer] Today! [Call to Action]!\n"
+metadata:
+  created_at: '2026-01-27T19:34:57.211478+00:00'
+  updated_at: '2026-01-27T20:04:56.757978+00:00'

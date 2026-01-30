@@ -1,0 +1,144 @@
+name: Salons - Website Description
+version: 1.0.0
+category: service_descriptions
+description: A prompt template for generating engaging and SEO-friendly website descriptions
+  for salons, focusing on client attraction, service highlights, ambiance, and booking
+  convenience.
+target_content_type: website_description
+metadata:
+  industry: Salons
+  content_goal: conversion
+  tone: luxurious, professional, welcoming, aspirational
+  keywords_to_inject:
+  - salon [city]
+  - hair salon [city]
+  - nail salon [city]
+  - spa [city]
+  - best salon in [city]
+  created_at: '2026-01-27T19:34:57.167108+00:00'
+  updated_at: '2026-01-27T20:04:56.698001+00:00'
+variables:
+- name: salon_name
+  description: The official name of the salon.
+- name: city
+  description: The city where the salon is located, crucial for local SEO.
+- name: unique_selling_proposition
+  description: What makes this salon distinct or superior (e.g., specialized techniques,
+    unique products, award-winning stylists).
+- name: primary_services
+  description: A comma-separated list or brief description of the salon's main services
+    offered (e.g., haircuts, color, nails, spa services, waxing).
+- name: ambiance_description
+  description: A descriptive phrase or sentence about the salon's atmosphere (e.g.,
+    'a serene, elegantly designed space', 'a vibrant and modern studio feeling').
+- name: booking_url
+  description: The direct URL for online booking or contact information for appointments.
+- name: target_audience_pain_points
+  description: Common problems, desires, or unmet needs of the target audience that
+    the salon addresses (e.g., 'feeling uninspired by their current look', 'stress
+    from daily life', 'seeking expert advice').
+- name: salon_solution
+  description: How the salon directly resolves the target audience's pain points,
+    offering relief, transformation, or a superior experience.
+structure:
+  guidelines: 'Generate a compelling website description for a salon, crafted to attract
+    new clients and convert visitors into appointments. The description must embody
+    a problem-solution storytelling approach and integrate strong local SEO principles.
+
+
+    **Core Components to Include:**
+
+
+    1.  **Engaging Hook with Problem Identification:** Begin by acknowledging and
+    validating common struggles or desires of potential clients related to beauty
+    and wellness. Use `{{target_audience_pain_points}}` as the foundation, framing
+    it as a question or relatable statement (e.g., "Tired of lackluster hair days?"
+    or "Seeking a peaceful escape from the everyday?").
+
+    2.  **Introduce the Solution (The Salon):** Immediately position `{{salon_name}}`
+    as the definitive answer, using `{{salon_solution}}`. Emphasize the unique benefits
+    and positive outcomes clients will experience.
+
+    3.  **Local SEO Optimization:** Integrate `{{city}}` and related local keywords
+    naturally throughout the text (e.g., "[city] hair salon", "best spa in [city]",
+    "[city]''s top stylists"). Ensure a prominent mention of the salon''s location
+    early on.
+
+    4.  **Highlight Key Services & Expertise:** Clearly describe `{{primary_services}}`,
+    focusing on the quality, craft, and personalized nature of each offering. If applicable,
+    incorporate `{{unique_selling_proposition}}` to stand out. Emphasize how these
+    services contribute to the client''s desired transformation.
+
+    5.  **Describe the Ambiance & Experience:** Use `{{ambiance_description}}` to
+    paint a vivid picture of the salon''s atmosphere. Describe it as a welcoming,
+    luxurious, relaxing, or invigorating sanctuary where clients can feel pampered,
+    comfortable, and confident. Focus on sensory details (e.g., "soft lighting," "aromatic
+    scents," "invigorating music").
+
+    6.  **Client-Centric Language:** Use "you" and "your" to directly address the
+    reader, fostering a sense of connection and understanding. Focus on the benefits
+    to the client, not just features of the salon.
+
+    7.  **Clear Call to Action for Booking:** Conclude with a strong, explicit call
+    to action. Direct visitors to `{{booking_url}}` for easy appointment scheduling,
+    highlighting convenience and inviting them to experience the difference.
+
+    8.  **Tone and Style:** Maintain a `{{tone}}` that is professional yet warm, aspirational,
+    and genuinely inviting. The language should convey luxury, care, and expertise.
+
+    9.  **Keyword Integration Guidelines:** Ensure keywords recommended in `metadata.keywords_to_inject`
+    are seamlessly integrated where appropriate to enhance search engine visibility
+    without sounding forced.
+
+    10. **Overall Flow:** The description should flow logically from problem to solution,
+    detailed offerings, experience, and a clear next step, making it easy for the
+    reader to follow and take action.
+
+    '
+  example_prompt: 'salon_name: "The Velvet Touch Salon"
+
+    city: "Harmonyville"
+
+    unique_selling_proposition: "Expert colorists specializing in balayage and vivids,
+    paired with a tranquil spa experience."
+
+    primary_services: "Custom Hair Coloring, Precision Haircuts, Organic Facials,
+    Luxurious Manicures & Pedicures."
+
+    ambiance_description: "A serene, elegantly designed space with calming music,
+    natural light, and plush seating."
+
+    booking_url: "https://www.thevelvettouchsalon.com/book-now"
+
+    target_audience_pain_points: "Feeling uninspired by their current look, struggling
+    to find a salon that offers both cutting-edge color and relaxing spa services,
+    desiring a personalized beauty experience."
+
+    salon_solution: "A bespoke beauty journey that transforms their look and rejuvenates
+    their spirit."
+
+    '
+  example_output: '"Tired of feeling uninspired by your current look or struggling
+    to find a salon that truly understands your unique beauty aspirations? At The
+    Velvet Touch Salon in Harmonyville, we believe every client deserves a bespoke
+    beauty journey that transforms their look and rejuvenates their spirit.
+
+
+    As the premier hair and nail salon in Harmonyville, we specialize in delivering
+    stunning results tailored just for you. Our expert colorists are renowned for
+    their balayage and vivid creations, while our precision haircut specialists ensure
+    you leave with a style that perfectly compliments your features. Beyond hair,
+    indulge in our organic facials and luxurious manicures & pedicures, offering a
+    complete head-to-toe pampering experience.
+
+
+    Step into our serene, elegantly designed space, where calming music, natural light,
+    and plush seating create an oasis of tranquility. The Velvet Touch Salon in Harmonyville
+    is more than just a salon; it''s your go-to destination for relaxation and rejuvenation.
+
+
+    Ready to rediscover your radiance? Booking your personalized beauty experience
+    is effortless. Visit https://www.thevelvettouchsalon.com/book-now to schedule
+    your appointment today and let us bring your vision to life!"
+
+    '

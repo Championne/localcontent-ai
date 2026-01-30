@@ -1,0 +1,114 @@
+name: Google My Business (GMB) Optimizations - Content Template
+description: Generates engaging content for Google My Business posts, Q&A, and business
+  descriptions to enhance local SEO.
+instructions: 'Use the provided business information and keywords to create compelling
+  content for Google My Business.
+
+  Focus on local SEO best practices, natural language, and engaging the target audience.
+
+  Ensure consistency in brand voice and messaging across all generated content.
+
+  '
+placeholders:
+- id: business_name
+  name: Business Name
+  description: The name of the business.
+  type: string
+  required: true
+- id: business_type
+  name: Business Type
+  description: e.g., local restaurant, plumbing service, retail store.
+  type: string
+  required: true
+- id: business_description_short
+  name: Short Business Description
+  description: A very brief overview of the business (1-2 sentences).
+  type: string
+  required: true
+- id: key_services_products
+  name: Key Services/Products
+  description: List of main services or products offered, comma-separated.
+  type: string
+  required: true
+- id: target_audience
+  name: Target Audience
+  description: Who is the primary customer demographic? e.g., young families, small
+    business owners.
+  type: string
+  required: true
+- id: unique_selling_proposition
+  name: Unique Selling Proposition (USP)
+  description: What makes this business stand out? e.g., 24/7 service, organic ingredients,
+    award-winning.
+  type: string
+  required: true
+- id: location_details
+  name: Location Details
+  description: City, State, or specific neighborhood relevant to the business.
+  type: string
+  required: true
+- id: recent_news_offers
+  name: Recent News/Offers
+  description: Any current promotions, events, or updates. (Optional)
+  type: string
+  required: false
+- id: keywords
+  name: SEO Keywords
+  description: Relevant keywords for local SEO, comma-separated.
+  type: string
+  required: false
+sections:
+- id: gmb_post_content
+  name: Google My Business Post Content
+  prompt: 'Create a compelling Google My Business post about a recent update or offer
+    for {{business_name}}.
+
+    Focus on engaging the local {{target_audience}} in {{location_details}}.
+
+    Mention {{key_services_products}} and highlight the {{unique_selling_proposition}}.
+
+    If provided, incorporate: "{{recent_news_offers}}".
+
+    Include relevant local SEO keywords: {{keywords}}.
+
+    The post should be concise (150-300 characters), informative, and encourage action
+    (e.g., ''Learn More'', ''Call Now'').
+
+    Suggest a call to action and a corresponding link (if applicable).
+
+    '
+- id: gmb_qa_pair
+  name: Google My Business Q&A Pair
+  prompt: 'Generate one relevant Question and Answer pair for {{business_name}} related
+    to {{key_services_products}}.
+
+    The question should anticipate a common customer inquiry in {{location_details}}
+    about {{business_type}}.
+
+    The answer should be clear, concise, helpful, and naturally incorporate relevant
+    local SEO keywords: {{keywords}}.
+
+    Ensure the answer subtly promotes {{unique_selling_proposition}}.
+
+    '
+- id: GMB_business_description
+  name: Google My Business Business Description
+  prompt: 'Write an optimized Google My Business description for {{business_name}}.
+
+    The description should be up to 750 characters, focusing on what the business
+    offers ({{key_services_products}}),
+
+    who it serves ({{target_audience}}) in {{location_details}}, and what makes it
+    unique ({{unique_selling_proposition}}).
+
+    Naturally integrate the following SEO keywords: {{keywords}}.
+
+    Start with a strong hook and maintain a professional yet inviting tone.
+
+    Summarize the essence of "{{business_description_short}}" but expand on it for
+    SEO and detail.
+
+    '
+metadata:
+  created_at: '2026-01-27T19:34:57.195451+00:00'
+  updated_at: '2026-01-27T20:04:56.739611+00:00'

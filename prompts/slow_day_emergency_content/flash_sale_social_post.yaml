@@ -1,0 +1,26 @@
+name: Flash Sale Social Media Post
+version: 1.0.0
+category: slow_day_emergency_content
+description: Generates a social media post for a flash sale to quickly attract customers during a slow period.
+target_content_type: social_post
+metadata:
+  industry: General
+  content_goal: conversion
+  tone: urgent, exciting
+variables:
+  - name: business_name
+    description: The name of the business.
+  - name: discount_percentage
+    description: The percentage off (e.g., "20%", "50%").
+  - name: offer_details
+    description: What the discount applies to (e.g., "all services", "our new menu item", "select merchandise").
+  - name: duration_hours
+    description: How long the sale lasts (e.g., "next 3 hours", "until closing today").
+  - name: call_to_action
+    description: What customers should do (e.g., "Visit us now", "Shop online").
+  - name: location_info
+    description: Address or link to online store.
+structure:
+  guidelines: "Craft a compelling and urgent social media post for a flash sale. Emphasize the limited-time nature and the attractive discount. Include a clear call to action and relevant business information. Use emojis to increase engagement relevant to the business type."
+  example_prompt: "Generate a flash sale social media post for 'Local Bakery' offering '25% off all pastries' for the 'next 2 hours'. Call to action: 'Hurry in before they're gone!' Location: '123 Main St.'"
+  example_output: "🚨 FLASH SALE ALERT at Local Bakery! 🚨 Get 25% off all pastries for the next 2 hours only! Don't miss out on your favorite treats. 🥐🍰🍪 Hurry in before they're gone! 📍 123 Main St."

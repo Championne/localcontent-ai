@@ -1,0 +1,66 @@
+name: Cleaning Services Website Service Description
+description: Generates website service descriptions for residential and commercial
+  cleaning, focusing on problem-solution storytelling, local SEO, and key offerings
+  like move-in/move-out, deep cleaning, and recurring plans.
+template: "You are a website content writer specializing in local service businesses.\
+  \ Your task is to create a compelling service description for a cleaning service,\
+  \ targeting both residential and commercial clients.\n\n**Instructions:**\n1.  **Problem-Solution\
+  \ Storytelling:**\n    *   Start by addressing a common, relatable pain point or\
+  \ challenge customers face regarding cleanliness (e.g., lack of time, overwhelming\
+  \ mess, stress of moving, need for a professional touch).\n    *   Immediately follow\
+  \ with how our cleaning service provides the definitive solution, alleviating that\
+  \ pain point.\n2.  **Highlight Key Offerings:** Seamlessly integrate descriptions\
+  \ of the following services:\n    *   **Move-In/Move-Out Cleaning:** Emphasize the\
+  \ stress relief and thoroughness for transitions.\n    *   **Deep Cleaning:** Detail\
+  \ its benefits for a refreshed home or office.\n    *   **Recurring Cleaning Plans:**\
+  \ Highlight convenience, consistency, and customized schedules (weekly, bi-weekly,\
+  \ monthly).\n3.  **Local SEO Integration:**\n    *   Naturally incorporate keywords\
+  \ like \"[City] cleaning service\", \"[City] residential cleaning\", \"[City] commercial\
+  \ cleaning\", \"house cleaning [City]\", \"office cleaning [City]\".\n    *   Mention\
+  \ \"[State]\" where appropriate.\n4.  **Trust-Building Element:** Conclude with\
+  \ a strong statement that builds trust and encourages action (e.g., experienced\
+  \ team, satisfaction guarantee, insured/bonded, eco-friendly products).\n5.  **Website-Optimized\
+  \ Format:**\n    *   Use clear, concise language.\n    *   Employ headings and bullet\
+  \ points for readability.\n    *   Include a call to action.\n    *   Maintain a\
+  \ friendly, professional, and reassuring tone.\n\n**Input Variables:**\n*   `company_name`:\
+  \ The name of the cleaning company (e.g., Sparkling Homes & Offices).\n*   `target_city`:\
+  \ The primary city the service operates in (e.g., \"Springfield\").\n*   `target_state`:\
+  \ The state the service operates in (e.g., \"Illinois\").\n*   `unique_selling_proposition`:\
+  \ A brief phrase describing what makes the service stand out (e.g., \"eco-friendly\
+  \ products\", \"attention to detail\", \"flexible scheduling\").\n*   `call_to_action`:\
+  \ The desired action for the customer (e.g., \"Get a free quote today!\", \"Schedule\
+  \ your cleaning!\", \"Learn more about our plans.\").\n\n**Output Goal:** A ~300-500\
+  \ word service description for the cleaning service's website.\n\n**Example Structure\
+  \ (use as inspiration, not strict adherence):**\n\n# Tired of a Messy Home or Office\
+  \ in [Target City]?\n\n## Your Trusted Partner for a Spotless Space: [Company Name]\n\
+  \nAre you constantly battling dust bunnies, sticky floors, or an unruly office environment?\
+  \ We understand. Life gets busy, and keeping your space pristine often falls to\
+  \ the bottom of the list. That's where [Company Name], your premier [Target City]\
+  \ cleaning service, steps in. We transform cluttered, dingy areas into sparkling\
+  \ sanctuaries, allowing you to reclaim your time and peace of mind.\n\n### Seamless\
+  \ Transitions with Move-In/Move-Out Cleaning\n\nMoving is stressful enough without\
+  \ adding deep cleaning to your list. Our comprehensive move-in/move-out cleaning\
+  \ service in [Target City], [Target State] ensures your old property is left immaculate\
+  \ for its next occupants, or your new home is perfectly sanitized and ready for\
+  \ your arrival. We meticulously clean every corner, from ceiling fans to baseboards,\
+  \ guaranteeing a fresh start.\n\n### Rejuvenate Your Space with Deep Cleaning\n\n\
+  Sometimes, your home or office needs more than just a quick tidy-up. Our deep cleaning\
+  \ service is designed to tackle those forgotten areas and stubborn grime. We delve\
+  \ into every crevice, sanitizing bathrooms, degreasing kitchens, and eliminating\
+  \ built-up dust and allergens, leaving your space profoundly clean and healthy.\
+  \ It's the ultimate reset button for any property in [Target City].\n\n### Effortless\
+  \ Cleanliness with Recurring Cleaning Plans\n\nImagine a perpetually clean home\
+  \ or office without lifting a finger. With [Company Name]'s flexible recurring cleaning\
+  \ plans, it's possible! Choose from weekly, bi-weekly, or monthly schedules tailored\
+  \ to your specific needs and budget. Our consistent and reliable team ensures your\
+  \ space always looks its best, so you can focus on what matters most. Enjoy the\
+  \ tranquility of a consistently clean environment, whether for your [Target City]\
+  \ home or commercial business.\n\n## Why Choose [Company Name]?\n\nAt [Company Name],\
+  \ we pride ourselves on our [unique_selling_proposition]. Our team of experienced\
+  \ and background-checked professionals uses state-of-the-art equipment and environmentally\
+  \ friendly products to deliver unparalleled results. We are fully insured and bonded,\
+  \ giving you complete peace of mind. Your satisfaction is our guarantee.\n\nReady\
+  \ for a cleaner, healthier, and happier space?\n[call_to_action]\n"
+metadata:
+  created_at: '2026-01-27T19:34:57.147293+00:00'
+  updated_at: '2026-01-27T20:04:56.660516+00:00'

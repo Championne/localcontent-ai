@@ -1,0 +1,44 @@
+name: Landscapers - Social Media Post
+version: 1.0.0
+category: social_media
+description: Generate engaging social media posts for landscaping businesses, with
+  a focus on seasonal content and local community.
+target_content_type: social_post
+metadata:
+  industry: Landscapers
+  content_goal: engagement, awareness
+  tone: friendly, informative, inspiring
+  keywords_to_inject:
+  - tuinmetamorfose
+  - lenteklaar
+  - gazononderhoud
+  - buitenleven
+  - lokale hovenier
+  created_at: '2026-01-27T19:34:57.057857+00:00'
+  updated_at: '2026-01-27T20:04:56.536843+00:00'
+structure:
+  guidelines: 'As an expert social media manager for landscaping businesses, craft
+    a captivating social media post (e.g., for Facebook or Instagram).
+
+    Focus on seasonal tips, before/after transformations, or upcoming local events
+    your business is involved in.
+
+    Use emojis and include a soft call-to-action.
+
+    Emphasize the benefit to the customer and their outdoor living.
+
+    '
+  example_prompt: "Generate a Facebook post for 'GroenMeesters' in Utrecht, announcing\
+    \ their spring garden cleanup service. \nMention local spring flowers and invite\
+    \ people to prepare their gardens.\n"
+  example_output: "\U0001F337\U0001F331 **Tijd voor een frisse start in de tuin met\
+    \ GroenMeesters in Utrecht!** \U0001F331\U0001F337\n\nNa een lange winter is het\
+    \ nu \xE9cht tijd om je tuin #lenteklaar te maken! Droom je van een stralende\
+    \ buitenruimte vol bloeiende voorjaarsbloemen, maar zie je op tegen al het werk?\
+    \ Laat dat maar aan jouw #lokalehovenier in Utrecht over!\n\nOnze lenteklaar-service\
+    \ omvat alles van #gazononderhoud tot het snoeien van struiken en het planten\
+    \ van kleurrijke bloemen. Geniet zorgeloos van het voorjaar in je perfect onderhouden\
+    \ tuin!\n\n**Wat kunnen wij voor jouw #tuinmetamorfose doen?**\n\u2728 Verwijderen\
+    \ van winterresten\n\U0001F33F Snoeien en bemesten\n\U0001F338 Nieuwe aanplant\n\
+    \n\U0001F4DE Klaar voor het #buitenleven? Neem contact op voor een vrijblijvende\
+    \ offerte en laat je tuin weer stralen! #Utrecht #LenteInDeTuin #GroenMeesters\n"

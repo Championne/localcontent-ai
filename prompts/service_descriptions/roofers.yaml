@@ -1,0 +1,57 @@
+name: Roofers - Website Service Description
+version: 1.0.0
+category: service_descriptions
+description: Generate compelling website service descriptions for roofing businesses,
+  focusing on problem-solution storytelling and urgent needs.
+target_content_type: website_description
+metadata:
+  industry: Roofers
+  content_goal: conversion
+  tone: authoritative, urgent, reassuring
+  keywords_to_inject:
+  - dakreparatie
+  - nieuw dak
+  - dakschade
+  - dakinspectie
+  - nokvorsten vervangen
+  - lekkage dak
+  created_at: '2026-01-27T19:34:57.157382+00:00'
+  updated_at: '2026-01-27T20:04:56.678184+00:00'
+structure:
+  guidelines: 'As an expert copywriter for roofing services, your task is to craft
+    a concise and impactful website service description.
+
+    Start by addressing common, urgent customer problems related to their roof (e.g.,
+    ''Lekkage?'', ''Stormschade?'', ''Oud dak?'').
+
+    Position the roofing service as the reliable and efficient solution, highlighting
+    expertise, quick response, and long-term peace of mind.
+
+    Naturally integrate relevant keywords.
+
+    Maintain an authoritative yet reassuring tone.
+
+    '
+  example_prompt: 'Generate a website service description for a roofing company named
+    ''DakVeilig'' based in Rotterdam, offering ''dakreparatie'' (roof repair).
+
+    Focus on customers experiencing urgent dakschade after a storm.
+
+    '
+  example_output: '**Stormschade of Lekkage aan uw Dak in Rotterdam? DakVeilig biedt
+    spoedige en deskundige dakreparatie.**
+
+
+    Een beschadigd dak is niet alleen vervelend, het kan leiden tot verdere waterschade
+    en hoge kosten. Woont u in Rotterdam en heeft u te maken met **stormschade**,
+    **lekkage dak**, of een dringend behoefte aan **dakreparatie**? Bij DakVeilig
+    begrijpen we de urgentie en staan we direct voor u klaar.
+
+
+    Onze ervaren dakspecialisten zijn gespecialiseerd in snelle en effectieve **dakschade**
+    herstel. We komen direct ter plaatse voor een grondige **dakinspectie** en zorgen
+    voor een duurzame oplossing, of het nu gaat om het vervangen van **nokvorsten**
+    of een complete **dakreparatie**. Kies voor gemoedsrust en een veilig dak boven
+    uw hoofd met DakVeilig!
+
+    '

@@ -1,0 +1,125 @@
+name: Restaurants - Website Description
+description: 'Generate a compelling website description for a restaurant. This template
+  incorporates problem-solution storytelling, local SEO principles, and focuses on
+  attracting diners by highlighting cuisine, ambiance, and special offers.
+
+  '
+fields:
+- name: restaurant_name
+  label: Restaurant Name
+  type: string
+  placeholder: e.g., The Golden Spoon
+  description: The full name of your restaurant.
+  required: true
+- name: cuisine_type
+  label: Cuisine Type(s)
+  type: string
+  placeholder: e.g., Italian, French, Vegan, Farm-to-Table
+  description: Describe the type of cuisine your restaurant offers.
+  required: true
+- name: ambiance
+  label: Ambiance/Atmosphere
+  type: string
+  placeholder: e.g., Cozy & rustic, vibrant & modern, romantic & intimate
+  description: Words that describe the general feel and atmosphere of your restaurant.
+  required: true
+- name: location
+  label: City/Neighborhood (for Local SEO)
+  type: string
+  placeholder: e.g., Downtown Nashville, West Village NYC
+  description: The primary city or neighborhood your restaurant is located in, for
+    local search optimization.
+  required: true
+- name: target_audience
+  label: Target Audience
+  type: string
+  placeholder: e.g., Young professionals, families, foodies, couples
+  description: Who is your ideal customer?
+  required: false
+- name: usp
+  label: Unique Selling Proposition (USP)
+  type: text
+  placeholder: e.g., Our pasta is handmade daily, we source ingredients from local
+    farms, award-winning chef
+  description: What makes your restaurant special or different from competitors?
+  required: true
+- name: special_offers
+  label: Special Offers/Promotions
+  type: text
+  placeholder: e.g., Happy hour specials, seasonal tasting menu, 10% off for first-time
+    diners
+  description: Any current deals or promotions you want to highlight.
+  required: false
+- name: problem_statement
+  label: Diner's Problem Statement (for storytelling)
+  type: text
+  placeholder: e.g., Tired of bland, uninspired meals? Looking for an authentic dining
+    experience?
+  description: A common problem or desire your target diners might have, which your
+    restaurant solves.
+  required: true
+- name: solution_statement
+  label: Restaurant's Solution (for storytelling)
+  type: text
+  placeholder: e.g., We offer a culinary journey that delights the senses, a haven
+    for food lovers seeking genuine flavors
+  description: How your restaurant uniquely addresses the diner's problem statement.
+  required: true
+template: 'Write a captivating website description for {restaurant_name}.
+
+
+  **Here''s the essential information:**
+
+  *   **Restaurant Name:** {restaurant_name}
+
+  *   **Cuisine Type(s):** {cuisine_type}
+
+  *   **Ambiance/Atmosphere:** {ambiance}
+
+  *   **Location:** {location} (Crucial for local SEO)
+
+  *   **Target Audience:** {target_audience}
+
+  *   **Unique Selling Proposition (USP):** {usp}
+
+  *   **Special Offers/Promotions:** {special_offers}
+
+  *   **Diner''s Problem:** {problem_statement}
+
+  *   **Our Solution:** {solution_statement}
+
+
+  **Instructions for the Website Description:**
+
+
+  1.  **Problem-Solution Storytelling:** Begin by addressing the "Diner''s Problem"
+  directly, then immediately position {restaurant_name} as the compelling "Our Solution."
+
+  2.  **Local SEO Integration:** Naturally weave in terms like "{location} dining,"
+  "{cuisine_type} restaurant in {location}," or similar phrases to optimize for local
+  search.
+
+  3.  **Attract Diners:** Use inviting language that evokes desire and curiosity.
+
+  4.  **Highlight Cuisine:** Showcase the delicious {cuisine_type} dishes, emphasizing
+  quality, freshness, or unique preparation methods.
+
+  5.  **Describe Ambiance:** Paint a vivid picture of the {ambiance}, making potential
+  diners feel they already know what to expect. Tailor it towards the {target_audience}.
+
+  6.  **Incorporate USP:** Clearly articulate what makes {restaurant_name} unique,
+  using the provided USP.
+
+  7.  **Feature Special Offers (if available):** If "Special Offers/Promotions" are
+  provided, integrate them smoothly to create a sense of urgency or added value. If
+  no special offers are provided, omit this section completely.
+
+  8.  **Call to Action:** Conclude with a clear call to action (e.g., "Book your table
+  today," "Visit us soon").
+
+
+  The description should be engaging, persuasive, and optimized to attract local diners
+  looking for an exceptional {cuisine_type} experience in {location}.'
+metadata:
+  created_at: '2026-01-27T19:34:57.116976+00:00'
+  updated_at: '2026-01-27T20:04:56.614822+00:00'

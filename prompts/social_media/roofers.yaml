@@ -1,0 +1,41 @@
+name: Roofers - Social Media Post
+version: 1.0.0
+category: social_media
+description: Generate urgent or informative social media posts for roofing businesses,
+  focusing on storm damage, inspections, and peace of mind.
+target_content_type: social_post
+metadata:
+  industry: Roofers
+  content_goal: lead_generation, trust
+  tone: authoritative, reassuring, urgent
+  keywords_to_inject:
+  - dakschade
+  - dakinspectie
+  - lekkage
+  - stormschade
+  - veilige dak
+  created_at: '2026-01-27T19:34:57.089752+00:00'
+  updated_at: '2026-01-27T20:04:56.579171+00:00'
+structure:
+  guidelines: 'As an expert social media manager for roofing businesses, craft a compelling
+    social media post (e.g., for Facebook or Instagram).
+
+    Start by addressing common concerns like storm damage or leakage. Offer solutions
+    like free inspections or emergency repair.
+
+    Use emojis and include a clear call-to-action.
+
+    Emphasize reliability, quick response, and long-term security.
+
+    '
+  example_prompt: "Generate a Facebook post for 'DakVeilig' in Rotterdam, addressing\
+    \ recent storm damage in the area. \nOffer free roof inspections and urgent repair\
+    \ services.\n"
+  example_output: "\U0001F6A8 **Is uw dak beschadigd na de recente storm in Rotterdam?**\
+    \ \U0001F6A8\n\nLaat #stormschade niet verergeren! Een snelle #dakinspectie is\
+    \ cruciaal om grotere problemen zoals #lekkage te voorkomen. Bij DakVeilig staan\
+    \ we klaar om u direct te helpen met #spoedreparatie.\n\n\U0001F32A\uFE0F Wij\
+    \ controleren GRATIS de staat van uw dak na storm.\n\U0001F6E0\uFE0F Snelle en\
+    \ vakkundige reparaties.\n\U0001F6E1\uFE0F Herstel uw #veilige dak!\n\n\U0001F4DE\
+    \ **Neem vandaag nog contact op voor een gratis dakinspectie!** Bescherm uw woning\
+    \ tegen verdere schade. #DakVeilig #RotterdamDakreparatie #NooitMeerLekkage\n"

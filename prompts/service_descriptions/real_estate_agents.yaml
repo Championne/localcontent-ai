@@ -1,0 +1,46 @@
+name: Real Estate Agents - Website Description
+description: Generate a compelling website description for a real estate agent, incorporating
+  problem-solution storytelling, local SEO, and emphasizing expertise in buying/selling
+  homes and client trust.
+variables:
+- name: agent_name
+  description: The name of the real estate agent or agency.
+  required: true
+  type: string
+- name: location
+  description: The primary service area/city for local SEO.
+  required: true
+  type: string
+- name: specialties
+  description: Comma-separated list of niches (e.g., luxury homes, first-time buyers,
+    commercial properties).
+  required: false
+  type: string
+template: "**Problem:** Are you tired of navigating the complex {{location}} real\
+  \ estate market alone? Whether you're a first-time homebuyer feeling overwhelmed,\
+  \ a seller struggling to stand out, or an investor seeking the next big opportunity,\
+  \ the journey can be daunting. Without local insight and a trusted partner, finding\
+  \ your dream home or achieving the best sale price can feel like an uphill battle.\n\
+  \n**Solution:** Look no further than {{agent_name}}! We are your dedicated real\
+  \ estate experts in {{location}}, committed to transforming your property goals\
+  \ into a seamless reality. With an unmatched understanding of the local market dynamics,\
+  \ from emerging neighborhoods to hidden gems, we offer personalized guidance that\
+  \ goes beyond transactions\u2014we build lasting relationships.\n\n**Why Choose\
+  \ Us:**\n*   **Unrivaled Local Expertise:** Specializing in {{location}}, we provide\
+  \ deep insights into market trends, property values, and community features, ensuring\
+  \ you make informed decisions.\n*   **Seamless Buying & Selling:** From meticulously\
+  \ staging and marketing your home to skillfully negotiating your purchase, we handle\
+  \ every detail. We help buyers discover the perfect residence and empower sellers\
+  \ to achieve top dollar for their properties.\n*   **Client Trust & Transparency:**\
+  \ Your peace of mind is our priority. We foster a transparent process, offering\
+  \ clear communication and unwavering support every step of the way. Read our testimonials\
+  \ and see why {{location}} residents trust {{agent_name}} for their most significant\
+  \ investments.\n*   **Our Specialties:** {{specialties | default 'Residential homes,\
+  \ condos, and investment properties'}}.\n\nReady to experience the difference? Partner\
+  \ with {{agent_name}} and unlock the full potential of your real estate journey\
+  \ in {{location}}. Contact us today for a free consultation!\n\n**Local SEO Keywords:**\
+  \ {{location}} real estate, homes for sale {{location}}, sell my house {{location}},\
+  \ real estate agent {{location}}, top realtor {{location}}, buy a home {{location}}.\n"
+metadata:
+  created_at: '2026-01-27T19:34:57.127543+00:00'
+  updated_at: '2026-01-27T20:04:56.630242+00:00'
