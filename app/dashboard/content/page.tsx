@@ -18,6 +18,12 @@ interface GeneratedImage {
   generatedAt: string
 }
 
+interface Business {
+  id: string
+  name: string
+  industry: string | null
+}
+
 // Image style definitions (must match backend)
 const IMAGE_STYLES = {
   promotional: {
@@ -75,6 +81,27 @@ export default function CreateContentPage() {
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
   const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
 
+  // Fetch user's business on mount (for pre-filling)
+  useEffect(() => {
+    async function fetchBusiness() {
+      try {
+        const response = await fetch('/api/business')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.businesses && data.businesses.length > 0) {
+            const business = data.businesses[0] as Business
+            setBusinessName(business.name || '')
+            setIndustry(business.industry || '')
+          }
+        }
+      } catch (err) {
+        // Silently fail - user can enter manually
+        console.error('Failed to fetch business:', err)
+      }
+    }
+    fetchBusiness()
+  }, [])
+
   // Auto-detect best image style when topic changes
   useEffect(() => {
     if (topic) {
@@ -87,26 +114,100 @@ export default function CreateContentPage() {
       id: 'blog-post', 
       name: 'Blog Post', 
       description: 'SEO-optimized blog article for your website',
-      color: 'teal'
+      color: 'teal',
+      time: '~30 sec',
+      preview: (
+        <div className="mt-3 p-2 bg-white/50 rounded-lg border border-gray-100">
+          <div className="h-2 w-3/4 bg-gray-200 rounded mb-1.5"></div>
+          <div className="flex gap-2">
+            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            <div className="flex-1 space-y-1">
+              <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+              <div className="h-1.5 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-1.5 bg-gray-200 rounded w-4/6"></div>
+            </div>
+          </div>
+        </div>
+      )
     },
     { 
       id: 'social-pack', 
       name: 'Social Media Pack', 
       description: '6 optimized posts: X, Facebook, Instagram, LinkedIn, TikTok, Nextdoor',
       color: 'orange',
-      badge: '6 platforms'
+      badge: '6 platforms',
+      popular: true,
+      time: '~45 sec',
+      preview: (
+        <div className="mt-3 flex gap-1.5 justify-center">
+          {['X', 'f', 'IG', 'in', 'TT', 'N'].map((p, i) => (
+            <div key={i} className="w-6 h-9 bg-white/50 rounded border border-gray-200 flex items-center justify-center">
+              <span className="text-[8px] font-bold text-gray-400">{p}</span>
+            </div>
+          ))}
+        </div>
+      )
     },
     { 
       id: 'gmb-post', 
       name: 'Google Business Post', 
       description: 'Updates, offers, or events for your GMB profile',
-      color: 'blue'
+      color: 'blue',
+      time: '~20 sec',
+      preview: (
+        <div className="mt-3 p-2 bg-white/50 rounded-lg border border-gray-100">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="w-4 h-4 rounded-full bg-blue-200"></div>
+            <div className="h-1.5 bg-gray-200 rounded w-16"></div>
+          </div>
+          <div className="space-y-1">
+            <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+            <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+          </div>
+        </div>
+      )
     },
     { 
       id: 'email', 
       name: 'Email Newsletter', 
       description: 'Professional email content for your customers',
-      color: 'purple'
+      color: 'purple',
+      time: '~30 sec',
+      preview: (
+        <div className="mt-3 p-2 bg-white/50 rounded-lg border border-gray-100">
+          <div className="h-1.5 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div className="border-t border-gray-200 pt-1.5 space-y-1">
+            <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+            <div className="h-1.5 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-1.5 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      )
+    },
+  ]
+
+  // Quick-start scenarios
+  const quickStarts = [
+    { 
+      id: 'promotion',
+      icon: '🏷️',
+      label: 'Running a promotion?',
+      template: 'social-pack',
+      topic: 'Special limited-time offer'
+    },
+    { 
+      id: 'traffic',
+      icon: '📈',
+      label: 'Need more website traffic?',
+      template: 'blog-post',
+      topic: 'Expert tips and advice'
+    },
+    { 
+      id: 'feedback',
+      icon: '⭐',
+      label: 'Got great feedback?',
+      template: 'gmb-post',
+      topic: 'Customer success story'
     },
   ]
 
@@ -179,6 +280,12 @@ export default function CreateContentPage() {
       }
     }
     return colors[color] || colors.teal
+  }
+
+  const handleQuickStart = (quickStart: typeof quickStarts[0]) => {
+    setSelectedTemplate(quickStart.template)
+    setTopic(quickStart.topic)
+    setStep(2)
   }
 
   const handleGenerate = async () => {
@@ -366,8 +473,38 @@ export default function CreateContentPage() {
       {/* Step 1: Choose Template */}
       {step === 1 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">What type of content do you want to create?</h2>
-          <p className="text-gray-500 mb-6">Choose a template to get started</p>
+          {/* Inspiring Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+              What will you spark today?
+              <svg className="w-7 h-7 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </h2>
+            <p className="text-gray-500">Create content that connects with your community</p>
+          </div>
+
+          {/* Quick Starts */}
+          <div className="mb-8">
+            <p className="text-sm font-medium text-gray-600 mb-3 flex items-center gap-2">
+              <span className="text-lg">💡</span> Quick starts
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {quickStarts.map((qs) => (
+                <button
+                  key={qs.id}
+                  onClick={() => handleQuickStart(qs)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-teal-400 hover:bg-teal-50 transition-all hover:shadow-md"
+                >
+                  <span>{qs.icon}</span>
+                  {qs.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Template Cards */}
+          <p className="text-sm text-gray-500 mb-4">Or choose a content type:</p>
           <div className="grid md:grid-cols-2 gap-4">
             {templates.map((template) => {
               const colors = getColorClasses(template.color, selectedTemplate === template.id)
@@ -378,18 +515,41 @@ export default function CreateContentPage() {
                     setSelectedTemplate(template.id)
                     setStep(2)
                   }}
-                  className={`p-5 border-2 rounded-xl text-left transition-all ${colors.bg} ${colors.border} relative`}
+                  className={`p-5 border-2 rounded-xl text-left transition-all duration-200 ${colors.bg} ${colors.border} relative hover:-translate-y-1 hover:shadow-lg`}
                 >
-                  {template.badge && (
-                    <span className="absolute top-3 right-3 px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
-                      {template.badge}
-                    </span>
-                  )}
+                  {/* Badges */}
+                  <div className="absolute top-3 right-3 flex gap-2">
+                    {template.popular && (
+                      <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-medium rounded-full flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        Most Popular
+                      </span>
+                    )}
+                    {template.badge && (
+                      <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
+                        {template.badge}
+                      </span>
+                    )}
+                  </div>
+
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 ${colors.icon}`}>
                     {getTemplateIcon(template.id)}
                   </div>
                   <h3 className="font-semibold text-gray-900">{template.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{template.description}</p>
+                  
+                  {/* Mini Preview */}
+                  {template.preview}
+                  
+                  {/* Time Estimate */}
+                  <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
+                    <svg className="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Ready in {template.time}
+                  </div>
                 </button>
               )
             })}
