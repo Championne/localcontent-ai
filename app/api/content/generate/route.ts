@@ -114,11 +114,13 @@ export async function POST(request: Request) {
             topic,
             businessName,
             industry,
-            style: finalImageStyle
+            style: finalImageStyle,
+            contentType: template
           })
           image = {
             url: imageResult.url,
             style: imageResult.style,
+            size: imageResult.size,
             generatedAt: new Date().toISOString()
           }
           
@@ -212,11 +214,13 @@ export async function POST(request: Request) {
           topic,
           businessName,
           industry,
-          style: finalImageStyle
+          style: finalImageStyle,
+          contentType: template
         })
         image = {
           url: imageResult.url,
           style: imageResult.style,
+          size: imageResult.size,
           generatedAt: new Date().toISOString()
         }
         

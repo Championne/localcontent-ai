@@ -30,6 +30,22 @@ export const IMAGE_STYLES = {
 
 export type ImageStyle = keyof typeof IMAGE_STYLES
 
+// Content type to image size mapping
+// DALL-E 3 supports: 1024x1024 (square), 1792x1024 (landscape), 1024x1792 (portrait)
+export const CONTENT_IMAGE_SIZES: Record<string, { size: '1024x1024' | '1792x1024' | '1024x1792'; label: string }> = {
+  'blog-post': { size: '1792x1024', label: 'Landscape (1792x1024)' },
+  'social-pack': { size: '1024x1024', label: 'Square (1024x1024)' },
+  'social-post': { size: '1024x1024', label: 'Square (1024x1024)' },
+  'gmb-post': { size: '1024x1024', label: 'Square (1024x1024)' },
+  'email': { size: '1792x1024', label: 'Landscape (1792x1024)' },
+  'review-response': { size: '1024x1024', label: 'Square (1024x1024)' },
+}
+
+// Get optimal image size for content type
+export function getImageSizeForContentType(contentType: string): '1024x1024' | '1792x1024' | '1024x1792' {
+  return CONTENT_IMAGE_SIZES[contentType]?.size || '1024x1024'
+}
+
 // Plan limits for image generation
 export const IMAGE_LIMITS: Record<string, number> = {
   free: 2,
@@ -70,26 +86,37 @@ export interface GenerateImageParams {
   businessName: string
   industry: string
   style: ImageStyle
+  contentType?: string // Added to determine image size
 }
 
 export interface GenerateImageResult {
   url: string
   style: ImageStyle
+  size: string
   revisedPrompt?: string
 }
 
 // Build the image generation prompt
 function buildImagePrompt(params: GenerateImageParams): string {
-  const { topic, businessName, industry, style } = params
+  const { topic, businessName, industry, style, contentType } = params
   const styleConfig = IMAGE_STYLES[style]
+  const imageSize = getImageSizeForContentType(contentType || 'social-post')
+  
+  // Determine format description based on size
+  let formatDesc = 'Square format'
+  if (imageSize === '1792x1024') {
+    formatDesc = 'Wide landscape format (16:9 aspect ratio)'
+  } else if (imageSize === '1024x1792') {
+    formatDesc = 'Tall portrait format (9:16 aspect ratio)'
+  }
   
   // Create a descriptive prompt that captures the essence without including text
   const prompt = `${styleConfig.promptPrefix}. 
 Create an image representing "${topic}" for a ${industry} business called "${businessName}". 
-The image should be suitable for social media marketing.
+The image should be suitable for ${contentType === 'blog-post' ? 'a blog header' : contentType === 'email' ? 'an email newsletter header' : 'social media marketing'}.
 Style: ${styleConfig.name} - ${styleConfig.description}.
 Important: Do NOT include any text, words, letters, or numbers in the image. The image should be purely visual.
-Square format, high quality, vibrant and engaging.`
+${formatDesc}, high quality, vibrant and engaging.`
 
   return prompt
 }
@@ -98,13 +125,14 @@ Square format, high quality, vibrant and engaging.`
 export async function generateImage(params: GenerateImageParams): Promise<GenerateImageResult> {
   const client = getOpenAIClient()
   const prompt = buildImagePrompt(params)
+  const imageSize = getImageSizeForContentType(params.contentType || 'social-post')
   
   try {
     const response = await client.images.generate({
       model: 'dall-e-3',
       prompt: prompt,
       n: 1,
-      size: '1024x1024',
+      size: imageSize,
       quality: 'standard',
       style: params.style === 'friendly' ? 'natural' : 'vivid',
     })
@@ -119,6 +147,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
     return {
       url: imageUrl,
       style: params.style,
+      size: imageSize,
       revisedPrompt: revisedPrompt
     }
   } catch (error) {
