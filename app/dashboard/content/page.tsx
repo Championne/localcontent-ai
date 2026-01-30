@@ -492,8 +492,8 @@ export default function CreateContentPage() {
 
           {/* Quick Starts */}
           <div className="mb-8">
-            <p className="text-sm font-medium text-gray-600 mb-3 flex items-center gap-2">
-              <span className="text-lg">💡</span> Quick starts
+            <p className="text-sm font-medium text-gray-600 mb-3">
+              Quick starts
             </p>
             <div className="flex flex-wrap gap-3">
               {quickStarts.map((qs) => (
