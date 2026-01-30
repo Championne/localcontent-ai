@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'LocalContent.ai - AI Content for Local Businesses',
-  description: 'Generate SEO-optimized content for your local business in minutes, not hours.',
+  title: 'GeoSpark - AI Content for Local Businesses',
+  description: 'Spark your local content. Generate SEO-optimized content for your local business in minutes, not hours.',
 }
 
 export default function RootLayout({

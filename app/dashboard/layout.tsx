@@ -22,8 +22,13 @@ export default async function DashboardLayout({
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}
         <div className="p-5 border-b border-gray-100">
-          <Link href="/dashboard" className="text-xl font-bold text-teal-600">
-            LocalContent.ai
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold text-gray-900">GeoSpark</span>
           </Link>
         </div>
         
@@ -103,7 +108,7 @@ export default async function DashboardLayout({
         {/* Header */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
           <div className="text-sm text-gray-500">
-            From hours to minutes
+            Spark your local content
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">

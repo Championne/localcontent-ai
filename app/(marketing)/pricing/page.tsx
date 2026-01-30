@@ -9,10 +9,10 @@ const PricingPage = () => {
       <div className='max-w-7xl mx-auto'>
         <div className='text-center'>
           <h2 className='text-3xl font-extrabold text-gray-900 sm:text-4xl'>
-            Flexible Pricing for Every Business
+            Simple pricing. Powerful results.
           </h2>
           <p className='mt-4 text-xl text-gray-600'>
-            Choose the plan that suits your needs best, from startups to enterprises.
+            From hours to minutes - generate a month of content for less than one freelance article.
           </p>
         </div>
 
@@ -30,7 +30,7 @@ const PricingPage = () => {
               </p>
               <a
                 href='#'
-                className='mt-8 block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-indigo-700'
+                className='mt-8 block w-full bg-orange-500 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-orange-600'
               >
                 Start your 7-day free trial
               </a>
@@ -77,7 +77,7 @@ const PricingPage = () => {
           </div>
 
           {/* Pro Tier */}
-          <div className='bg-white border-2 border-indigo-600 rounded-lg shadow-sm divide-y divide-gray-200 transform scale-105'>
+          <div className='bg-white border-2 border-teal-500 rounded-lg shadow-sm divide-y divide-gray-200 transform scale-105'>
             <div className='p-6'>
               <h2 className='text-lg leading-6 font-medium text-gray-900'>Pro</h2>
               <p className='mt-4 text-sm text-gray-500'>
@@ -89,7 +89,7 @@ const PricingPage = () => {
               </p>
               <a
                 href='#'
-                className='mt-8 block w-full bg-indigo-600 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-indigo-700'
+                className='mt-8 block w-full bg-orange-500 border border-transparent rounded-md py-2 text-sm font-semibold text-white text-center hover:bg-orange-600'
               >
                 Start your 7-day free trial
               </a>
