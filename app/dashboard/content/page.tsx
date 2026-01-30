@@ -647,7 +647,6 @@ export default function CreateContentPage() {
                       </span>
                     )}
                   </label>
-                  <p className="text-xs text-gray-500 mt-0.5">AI will create a custom image for your content</p>
                 </div>
               </div>
               
@@ -661,13 +660,10 @@ export default function CreateContentPage() {
                   >
                     {Object.entries(IMAGE_STYLES).map(([key, style]) => (
                       <option key={key} value={key}>
-                        {style.name} - {style.description}
+                        {style.name}
                       </option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Auto-selected based on your topic. Change if needed.
-                  </p>
                 </div>
               )}
             </div>
