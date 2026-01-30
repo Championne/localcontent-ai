@@ -32,8 +32,13 @@ export async function POST(request: Request) {
       additionalContext,
       saveAsDraft = false,
       generateImageFlag = false,
-      imageStyle
+      imageStyle,
+      regenerateMode = 'all' // 'all' | 'text' | 'image'
     } = body
+    
+    // Determine what to generate based on mode
+    const shouldGenerateText = regenerateMode === 'all' || regenerateMode === 'text'
+    const shouldGenerateImage = (regenerateMode === 'all' || regenerateMode === 'image') && generateImageFlag
 
     // Validate required fields
     if (!template || !businessName || !industry || !topic) {
@@ -91,24 +96,27 @@ export async function POST(request: Request) {
 
     // Handle social-pack separately
     if (template === 'social-pack') {
-      let socialPack: SocialPackResult
+      let socialPack: SocialPackResult | null = null
 
-      if (isOpenAIConfigured()) {
-        socialPack = await generateSocialPack({
-          businessName,
-          industry,
-          topic,
-          tone,
-          additionalContext,
-        })
-      } else {
-        // Mock social pack for development
-        socialPack = generateMockSocialPack(businessName, industry, topic)
+      // Only generate text if requested
+      if (shouldGenerateText) {
+        if (isOpenAIConfigured()) {
+          socialPack = await generateSocialPack({
+            businessName,
+            industry,
+            topic,
+            tone,
+            additionalContext,
+          })
+        } else {
+          // Mock social pack for development
+          socialPack = generateMockSocialPack(businessName, industry, topic)
+        }
       }
 
       // Generate image if requested
       let image = null
-      if (generateImageFlag && isImageGenerationConfigured()) {
+      if (shouldGenerateImage && isImageGenerationConfigured()) {
         try {
           const imageResult = await generateImage({
             topic,
@@ -191,24 +199,27 @@ export async function POST(request: Request) {
     }
 
     // Handle regular content templates
-    let content: string
+    let content: string | null = null
 
-    if (isOpenAIConfigured()) {
-      content = await generateContent({
-        template,
-        businessName,
-        industry,
-        topic,
-        tone,
-        additionalContext,
-      })
-    } else {
-      content = generateMockContent(template, businessName, industry, topic, tone)
+    // Only generate text if requested
+    if (shouldGenerateText) {
+      if (isOpenAIConfigured()) {
+        content = await generateContent({
+          template,
+          businessName,
+          industry,
+          topic,
+          tone,
+          additionalContext,
+        })
+      } else {
+        content = generateMockContent(template, businessName, industry, topic, tone)
+      }
     }
 
     // Generate image if requested
     let image = null
-    if (generateImageFlag && isImageGenerationConfigured()) {
+    if (shouldGenerateImage && isImageGenerationConfigured()) {
       try {
         const imageResult = await generateImage({
           topic,

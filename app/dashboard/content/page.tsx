@@ -81,6 +81,9 @@ export default function CreateContentPage() {
   const [viewMode, setViewMode] = useState<'preview' | 'edit'>('preview')
   const contentPreviewRef = useRef<HTMLDivElement>(null)
   
+  // Regenerate dropdown menu
+  const [regenerateMenuOpen, setRegenerateMenuOpen] = useState(false)
+  
   // Image generation options
   const [generateImageFlag, setGenerateImageFlag] = useState(false)
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
@@ -249,10 +252,16 @@ export default function CreateContentPage() {
     setStep(2)
   }
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (mode: 'all' | 'text' | 'image' = 'all') => {
     setGenerating(true)
     setError('')
-    setGeneratedImage(null)
+    setRegenerateMenuOpen(false)
+    
+    // Only clear image if regenerating all or image
+    if (mode === 'all' || mode === 'image') {
+      setGeneratedImage(null)
+    }
+    
     setViewMode('preview') // Reset to preview mode on new generation
     
     try {
@@ -265,8 +274,9 @@ export default function CreateContentPage() {
           industry,
           topic,
           tone,
-          generateImageFlag,
+          generateImageFlag: mode === 'text' ? false : generateImageFlag,
           imageStyle,
+          regenerateMode: mode,
         }),
       })
 
@@ -276,10 +286,13 @@ export default function CreateContentPage() {
         throw new Error(data.error || 'Failed to generate content')
       }
 
-      if (selectedTemplate === 'social-pack') {
-        setSocialPack(data.socialPack)
-      } else {
-        setGeneratedContent(data.content)
+      // Only update content if we're regenerating all or text
+      if (mode === 'all' || mode === 'text') {
+        if (selectedTemplate === 'social-pack') {
+          setSocialPack(data.socialPack)
+        } else {
+          setGeneratedContent(data.content)
+        }
       }
       
       if (data.image) {
@@ -667,7 +680,7 @@ export default function CreateContentPage() {
                 Back
               </button>
               <button
-                onClick={handleGenerate}
+                onClick={() => handleGenerate('all')}
                 disabled={!businessName || !industry || !topic || generating}
                 className="flex-1 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
@@ -812,16 +825,54 @@ export default function CreateContentPage() {
             >
               Back
             </button>
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="px-5 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {generating ? 'Regenerating...' : 'Regenerate All'}
-            </button>
+            {/* Regenerate Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setRegenerateMenuOpen(!regenerateMenuOpen)}
+                disabled={generating}
+                className="px-4 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {generating ? 'Regenerating...' : 'Regenerate'}
+                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {regenerateMenuOpen && !generating && (
+                <div className="absolute left-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={() => handleGenerate('all')}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Regenerate All
+                  </button>
+                  <button
+                    onClick={() => handleGenerate('text')}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Text Only
+                  </button>
+                  <button
+                    onClick={() => handleGenerate('image')}
+                    disabled={!generateImageFlag}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Image Only
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               onClick={handleSave}
               disabled={saving}
@@ -966,16 +1017,54 @@ export default function CreateContentPage() {
             >
               Back
             </button>
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="px-5 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              {generating ? 'Regenerating...' : 'Regenerate'}
-            </button>
+            {/* Regenerate Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setRegenerateMenuOpen(!regenerateMenuOpen)}
+                disabled={generating}
+                className="px-4 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {generating ? 'Regenerating...' : 'Regenerate'}
+                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {regenerateMenuOpen && !generating && (
+                <div className="absolute left-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={() => handleGenerate('all')}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Regenerate All
+                  </button>
+                  <button
+                    onClick={() => handleGenerate('text')}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Text Only
+                  </button>
+                  <button
+                    onClick={() => handleGenerate('image')}
+                    disabled={!generateImageFlag}
+                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Image Only
+                  </button>
+                </div>
+              )}
+            </div>
             
             {/* Main Copy Button */}
             <button
