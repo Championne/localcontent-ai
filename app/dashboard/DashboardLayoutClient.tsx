@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import WelcomeModal from '@/components/WelcomeModal'
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode
@@ -11,7 +12,34 @@ interface DashboardLayoutClientProps {
 
 export default function DashboardLayoutClient({ children, userName }: DashboardLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
+  const [checkingBusiness, setCheckingBusiness] = useState(true)
   const pathname = usePathname()
+
+  // Check if user has any businesses on mount
+  useEffect(() => {
+    async function checkBusiness() {
+      try {
+        const response = await fetch('/api/business')
+        if (response.ok) {
+          const data = await response.json()
+          // Show welcome modal if no businesses
+          if (!data.businesses || data.businesses.length === 0) {
+            setShowWelcome(true)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to check business:', err)
+      } finally {
+        setCheckingBusiness(false)
+      }
+    }
+    checkBusiness()
+  }, [])
+
+  const handleWelcomeComplete = () => {
+    setShowWelcome(false)
+  }
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -23,6 +51,11 @@ export default function DashboardLayoutClient({ children, userName }: DashboardL
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Welcome Modal for first-time users */}
+      {showWelcome && !checkingBusiness && (
+        <WelcomeModal onComplete={handleWelcomeComplete} />
+      )}
+
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40">
         <Link href="/dashboard" className="flex items-center gap-2">
