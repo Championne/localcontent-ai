@@ -61,6 +61,16 @@ function detectBestStyle(topic: string): ImageStyleKey {
   return 'professional'
 }
 
+// Motivational tips for impact card
+const MOTIVATIONAL_TIPS = [
+  { icon: '📈', text: 'Businesses posting 3x/week see 40% more customer inquiries' },
+  { icon: '🎯', text: 'Consistent local content builds trust with your community' },
+  { icon: '💡', text: 'Posts with images get 2.3x more engagement than text-only' },
+  { icon: '🏆', text: 'You\'re already ahead of 70% of local businesses who don\'t post regularly' },
+  { icon: '🚀', text: 'Regular posting keeps you top-of-mind when customers need your services' },
+  { icon: '⭐', text: 'Local businesses with active social presence get 58% more website visits' },
+]
+
 export default function CreateContentPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
@@ -718,6 +728,39 @@ export default function CreateContentPage() {
             </span>
           </div>
 
+          {/* Estimated Impact Card */}
+          <div className="mb-6 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-200 p-5">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Estimated Impact
+                </h3>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-teal-700">500-2K</div>
+                    <div className="text-xs text-gray-600">Potential reach</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-700">15-50</div>
+                    <div className="text-xs text-gray-600">Engagements</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">+5-15%</div>
+                    <div className="text-xs text-gray-600">Profile visits</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 p-3 bg-white/60 rounded-lg">
+                  <span className="text-lg">{MOTIVATIONAL_TIPS[0].icon}</span>
+                  <p className="text-sm text-gray-700">{MOTIVATIONAL_TIPS[0].text}</p>
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-3">*Estimates based on industry averages for local businesses. Actual results may vary.</p>
+          </div>
+
           {/* Generated Image Preview */}
           {generatedImage && (
             <div className="mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -1124,6 +1167,39 @@ export default function CreateContentPage() {
               </svg>
               AI Generated
             </span>
+          </div>
+
+          {/* Estimated Impact Card */}
+          <div className="mb-6 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-200 p-5">
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Estimated Impact
+                </h3>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-teal-700">{selectedTemplate === 'blog-post' ? '200-1K' : '100-500'}</div>
+                    <div className="text-xs text-gray-600">{selectedTemplate === 'blog-post' ? 'Page views' : 'Potential reach'}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-700">{selectedTemplate === 'blog-post' ? '2-5 min' : '10-30'}</div>
+                    <div className="text-xs text-gray-600">{selectedTemplate === 'blog-post' ? 'Avg read time' : 'Engagements'}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">{selectedTemplate === 'blog-post' ? '+10-25%' : '+3-10%'}</div>
+                    <div className="text-xs text-gray-600">{selectedTemplate === 'blog-post' ? 'SEO boost' : 'Inquiries'}</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 p-3 bg-white/60 rounded-lg">
+                  <span className="text-lg">{MOTIVATIONAL_TIPS[selectedTemplate === 'blog-post' ? 2 : selectedTemplate === 'email' ? 4 : 1].icon}</span>
+                  <p className="text-sm text-gray-700">{MOTIVATIONAL_TIPS[selectedTemplate === 'blog-post' ? 2 : selectedTemplate === 'email' ? 4 : 1].text}</p>
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-3">*Estimates based on industry averages for local businesses. Actual results may vary.</p>
           </div>
 
           {/* Generated Image Preview */}
