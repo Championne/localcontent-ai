@@ -761,54 +761,269 @@ export default function CreateContentPage() {
                 ? `${post.content}\n\n${(post as typeof socialPack.instagram).hashtags}`
                 : post.content
 
+              // Platform-specific mockup rendering
+              const renderPlatformMockup = () => {
+                switch (platform) {
+                  case 'twitter':
+                    return (
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        {/* X/Twitter Mockup */}
+                        <div className="p-4">
+                          <div className="flex gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+                              {businessName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="font-bold text-gray-900 text-sm truncate">{businessName}</span>
+                                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/></svg>
+                              </div>
+                              <span className="text-gray-500 text-sm">@{businessName.toLowerCase().replace(/\s+/g, '')} · 1m</span>
+                              <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                              {generatedImage && (
+                                <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
+                                  <img src={generatedImage.url} alt="" className="w-full" />
+                                </div>
+                              )}
+                              <div className="flex justify-between mt-3 text-gray-500 max-w-[300px]">
+                                <button className="flex items-center gap-1 hover:text-blue-500 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg><span className="text-xs">12</span></button>
+                                <button className="flex items-center gap-1 hover:text-green-500 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg><span className="text-xs">48</span></button>
+                                <button className="flex items-center gap-1 hover:text-pink-500 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg><span className="text-xs">156</span></button>
+                                <button className="flex items-center gap-1 hover:text-blue-500 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg></button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+
+                  case 'facebook':
+                    return (
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        {/* Facebook Mockup */}
+                        <div className="p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                              {businessName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900 text-[15px]">{businessName}</div>
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <span>Just now</span>
+                                <span>·</span>
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5c-.28.28-.72.28-1 0L12 13l-3.5 3.5c-.28.28-.72.28-1 0s-.28-.72 0-1L11 12 7.5 8.5c-.28-.28-.28-.72 0-1s.72-.28 1 0L12 11l3.5-3.5c.28-.28.72-.28 1 0s.28.72 0 1L13 12l3.5 3.5c.28.28.28.72 0 1z"/></svg>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
+                          {generatedImage && (
+                            <div className="-mx-4 mb-3">
+                              <img src={generatedImage.url} alt="" className="w-full" />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 text-sm text-gray-500 pb-2 border-b border-gray-100">
+                            <span className="flex -space-x-1">
+                              <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">👍</span>
+                              <span className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">❤️</span>
+                            </span>
+                            <span className="ml-1">24</span>
+                          </div>
+                          <div className="flex justify-around pt-2">
+                            <button className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg><span className="text-sm font-medium">Like</span></button>
+                            <button className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg><span className="text-sm font-medium">Comment</span></button>
+                            <button className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg><span className="text-sm font-medium">Share</span></button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+
+                  case 'instagram':
+                    return (
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        {/* Instagram Mockup */}
+                        <div className="flex items-center justify-between p-3 border-b border-gray-100">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
+                              <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-700">
+                                {businessName.charAt(0).toUpperCase()}
+                              </div>
+                            </div>
+                            <span className="font-semibold text-sm text-gray-900">{businessName.toLowerCase().replace(/\s+/g, '')}</span>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
+                        </div>
+                        {generatedImage ? (
+                          <img src={generatedImage.url} alt="" className="w-full aspect-square object-cover" />
+                        ) : (
+                          <div className="w-full aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
+                            <span className="text-4xl">📸</span>
+                          </div>
+                        )}
+                        <div className="p-3">
+                          <div className="flex justify-between mb-3">
+                            <div className="flex gap-4">
+                              <svg className="w-6 h-6 text-gray-900 hover:text-gray-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                              <svg className="w-6 h-6 text-gray-900 hover:text-gray-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                              <svg className="w-6 h-6 text-gray-900 hover:text-gray-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                            </div>
+                            <svg className="w-6 h-6 text-gray-900 hover:text-gray-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                          </div>
+                          <div className="font-semibold text-sm text-gray-900 mb-1">127 likes</div>
+                          <p className="text-sm text-gray-900"><span className="font-semibold">{businessName.toLowerCase().replace(/\s+/g, '')}</span> {post.content}</p>
+                          {(post as typeof socialPack.instagram).hashtags && (
+                            <p className="text-sm text-blue-900 mt-1">{(post as typeof socialPack.instagram).hashtags}</p>
+                          )}
+                        </div>
+                      </div>
+                    )
+
+                  case 'linkedin':
+                    return (
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        {/* LinkedIn Mockup */}
+                        <div className="p-4">
+                          <div className="flex gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold">
+                              {businessName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-semibold text-gray-900">{businessName}</div>
+                              <div className="text-xs text-gray-500">Local {industry} Expert</div>
+                              <div className="text-xs text-gray-400 flex items-center gap-1">
+                                <span>1h</span>
+                                <span>·</span>
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
+                          {generatedImage && (
+                            <div className="-mx-4 mb-3">
+                              <img src={generatedImage.url} alt="" className="w-full" />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-xs text-gray-500 pb-3 border-b border-gray-100">
+                            <span className="flex -space-x-1">
+                              <span className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-white text-[8px]">👍</span>
+                              <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px]">👏</span>
+                              <span className="w-4 h-4 rounded-full bg-red-400 flex items-center justify-center text-white text-[8px]">❤️</span>
+                            </span>
+                            <span>42</span>
+                            <span className="ml-auto">8 comments</span>
+                          </div>
+                          <div className="flex justify-around pt-2">
+                            <button className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded transition-colors text-sm font-medium"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>Like</button>
+                            <button className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded transition-colors text-sm font-medium"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Comment</button>
+                            <button className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded transition-colors text-sm font-medium"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>Repost</button>
+                            <button className="flex items-center gap-1 text-gray-600 hover:bg-gray-100 px-3 py-2 rounded transition-colors text-sm font-medium"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>Send</button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+
+                  case 'tiktok':
+                    return (
+                      <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+                        {/* TikTok Mockup - Vertical style */}
+                        <div className="relative">
+                          {generatedImage ? (
+                            <img src={generatedImage.url} alt="" className="w-full aspect-[9/12] object-cover" />
+                          ) : (
+                            <div className="w-full aspect-[9/12] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                              <span className="text-6xl">🎵</span>
+                            </div>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                            <div className="flex items-end gap-3">
+                              <div className="flex-1">
+                                <div className="font-semibold text-white text-sm mb-1">@{businessName.toLowerCase().replace(/\s+/g, '')}</div>
+                                <p className="text-white text-sm leading-relaxed">{post.content}</p>
+                                <div className="flex items-center gap-2 mt-2 text-white/80 text-xs">
+                                  <span>🎵</span>
+                                  <span className="truncate">Original sound - {businessName}</span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center gap-4 text-white">
+                                <div className="text-center"><svg className="w-8 h-8 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04 1 3.57 2.36h1.86C13.46 6 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg><span className="text-xs">2.4K</span></div>
+                                <div className="text-center"><svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg><span className="text-xs">89</span></div>
+                                <div className="text-center"><svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span className="text-xs">Share</span></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+
+                  case 'nextdoor':
+                    return (
+                      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        {/* Nextdoor Mockup */}
+                        <div className="bg-green-600 px-4 py-2 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/></svg>
+                          <span className="text-white font-semibold text-sm">Nextdoor</span>
+                        </div>
+                        <div className="p-4">
+                          <div className="flex gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+                              {businessName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900 text-sm">{businessName}</div>
+                              <div className="text-xs text-gray-500 flex items-center gap-1">
+                                <span className="text-green-600">✓ Verified Business</span>
+                                <span>·</span>
+                                <span>Your neighborhood</span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
+                          {generatedImage && (
+                            <div className="rounded-lg overflow-hidden mb-3">
+                              <img src={generatedImage.url} alt="" className="w-full" />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4 text-sm text-gray-500 pt-3 border-t border-gray-100">
+                            <button className="flex items-center gap-1 hover:text-green-600 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>Thank</button>
+                            <button className="flex items-center gap-1 hover:text-green-600 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Reply</button>
+                            <button className="flex items-center gap-1 hover:text-green-600 transition-colors ml-auto"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>Share</button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+
+                  default:
+                    return null
+                }
+              }
+
               return (
-                <div key={platform} className={`rounded-xl border border-gray-200 overflow-hidden ${info.bgColor}`}>
-                  <div className="p-4 border-b border-gray-200 bg-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${info.bgColor} ${info.color}`}>
-                        {info.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">{info.name}</h3>
-                        <p className="text-xs text-gray-500">{info.optimal}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleCopy(fullContent, platform)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                        copied === platform 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {copied === platform ? (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                          Copy
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{post.content}</p>
-                    {platform === 'instagram' && (post as typeof socialPack.instagram).hashtags && (
-                      <p className="mt-3 text-xs text-blue-600 break-all">
-                        {(post as typeof socialPack.instagram).hashtags}
-                      </p>
+                <div key={platform} className="relative group">
+                  {renderPlatformMockup()}
+                  {/* Copy button overlay */}
+                  <button
+                    onClick={() => handleCopy(fullContent, platform)}
+                    className={`absolute top-2 right-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 shadow-lg ${
+                      copied === platform 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-white/90 backdrop-blur text-gray-700 hover:bg-white opacity-0 group-hover:opacity-100'
+                    }`}
+                  >
+                    {copied === platform ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </>
                     )}
-                    <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                      <span>{post.charCount} characters</span>
-                    </div>
-                  </div>
+                  </button>
                 </div>
               )
             })}
