@@ -1,6 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, ContentTemplate, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
+import { 
+  generateImage, 
+  isImageGenerationConfigured, 
+  hasImageQuota, 
+  getRemainingImageQuota,
+  detectBestStyle,
+  IMAGE_LIMITS,
+  ImageStyle 
+} from '@/lib/openai/images'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -21,7 +30,9 @@ export async function POST(request: Request) {
       topic, 
       tone = 'professional',
       additionalContext,
-      saveAsDraft = false 
+      saveAsDraft = false,
+      generateImageFlag = false,
+      imageStyle
     } = body
 
     // Validate required fields
@@ -44,12 +55,13 @@ export async function POST(request: Request) {
     // Check usage limits (get subscription)
     const { data: subscription } = await supabase
       .from('subscriptions')
-      .select('plan, content_generated_this_month')
+      .select('plan, content_generated_this_month, images_generated_this_month')
       .eq('user_id', user.id)
       .single()
 
     const plan = subscription?.plan || 'free'
     const usedThisMonth = subscription?.content_generated_this_month || 0
+    const imagesUsedThisMonth = subscription?.images_generated_this_month || 0
     
     const limits: Record<string, number> = {
       free: 5,
@@ -65,6 +77,17 @@ export async function POST(request: Request) {
         { status: 403 }
       )
     }
+
+    // Check image quota if image generation is requested
+    if (generateImageFlag && !hasImageQuota(plan, imagesUsedThisMonth)) {
+      return NextResponse.json(
+        { error: 'Monthly image limit reached. Please upgrade your plan.' },
+        { status: 403 }
+      )
+    }
+
+    // Determine image style (use provided or auto-detect)
+    const finalImageStyle: ImageStyle = imageStyle || detectBestStyle(topic)
 
     // Handle social-pack separately
     if (template === 'social-pack') {
@@ -83,6 +106,36 @@ export async function POST(request: Request) {
         socialPack = generateMockSocialPack(businessName, industry, topic)
       }
 
+      // Generate image if requested
+      let image = null
+      if (generateImageFlag && isImageGenerationConfigured()) {
+        try {
+          const imageResult = await generateImage({
+            topic,
+            businessName,
+            industry,
+            style: finalImageStyle
+          })
+          image = {
+            url: imageResult.url,
+            style: imageResult.style,
+            generatedAt: new Date().toISOString()
+          }
+          
+          // Update image usage counter
+          await supabase
+            .from('subscriptions')
+            .update({ 
+              images_generated_this_month: imagesUsedThisMonth + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id)
+        } catch (imgError) {
+          console.error('Image generation failed:', imgError)
+          // Continue without image - don't fail the whole request
+        }
+      }
+
       // Optionally save to database
       let savedContent = null
       if (saveAsDraft) {
@@ -94,7 +147,9 @@ export async function POST(request: Request) {
             title: topic,
             content: JSON.stringify(socialPack),
             metadata: { businessName, industry, tone, additionalContext, type: 'social-pack' },
-            status: 'draft'
+            status: 'draft',
+            image_url: image?.url || null,
+            image_style: image?.style || null
           })
           .select()
           .single()
@@ -114,6 +169,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         socialPack,
+        image,
         savedContent,
         template: 'social-pack',
         metadata: {
@@ -122,7 +178,12 @@ export async function POST(request: Request) {
           topic,
           tone,
           generatedAt: new Date().toISOString(),
-          aiGenerated: isOpenAIConfigured()
+          aiGenerated: isOpenAIConfigured(),
+          imageGenerated: !!image
+        },
+        usage: {
+          imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image ? 1 : 0)),
+          imageLimit: IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
         }
       })
     }
@@ -143,6 +204,36 @@ export async function POST(request: Request) {
       content = generateMockContent(template, businessName, industry, topic, tone)
     }
 
+    // Generate image if requested
+    let image = null
+    if (generateImageFlag && isImageGenerationConfigured()) {
+      try {
+        const imageResult = await generateImage({
+          topic,
+          businessName,
+          industry,
+          style: finalImageStyle
+        })
+        image = {
+          url: imageResult.url,
+          style: imageResult.style,
+          generatedAt: new Date().toISOString()
+        }
+        
+        // Update image usage counter
+        await supabase
+          .from('subscriptions')
+          .update({ 
+            images_generated_this_month: imagesUsedThisMonth + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+      } catch (imgError) {
+        console.error('Image generation failed:', imgError)
+        // Continue without image - don't fail the whole request
+      }
+    }
+
     // Optionally save to database as draft
     let savedContent = null
     if (saveAsDraft) {
@@ -154,7 +245,9 @@ export async function POST(request: Request) {
           title: topic,
           content,
           metadata: { businessName, industry, tone, additionalContext },
-          status: 'draft'
+          status: 'draft',
+          image_url: image?.url || null,
+          image_style: image?.style || null
         })
         .select()
         .single()
@@ -174,6 +267,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       content,
+      image,
       savedContent,
       template,
       metadata: {
@@ -182,7 +276,12 @@ export async function POST(request: Request) {
         topic,
         tone,
         generatedAt: new Date().toISOString(),
-        aiGenerated: isOpenAIConfigured()
+        aiGenerated: isOpenAIConfigured(),
+        imageGenerated: !!image
+      },
+      usage: {
+        imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image ? 1 : 0)),
+        imageLimit: IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
       }
     })
 

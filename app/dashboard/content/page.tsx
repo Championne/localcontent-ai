@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface SocialPackResult {
@@ -10,6 +10,48 @@ interface SocialPackResult {
   linkedin: { content: string; charCount: number }
   tiktok: { content: string; charCount: number }
   nextdoor: { content: string; charCount: number }
+}
+
+interface GeneratedImage {
+  url: string
+  style: string
+  generatedAt: string
+}
+
+// Image style definitions (must match backend)
+const IMAGE_STYLES = {
+  promotional: {
+    name: 'Promotional',
+    description: 'Bold graphics for sales and offers',
+    keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free']
+  },
+  professional: {
+    name: 'Professional',
+    description: 'Clean, polished images',
+    keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service']
+  },
+  friendly: {
+    name: 'Friendly',
+    description: 'Warm, approachable illustrations',
+    keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love']
+  },
+  seasonal: {
+    name: 'Seasonal',
+    description: 'Holiday themed graphics',
+    keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween']
+  }
+} as const
+
+type ImageStyleKey = keyof typeof IMAGE_STYLES
+
+function detectBestStyle(topic: string): ImageStyleKey {
+  const topicLower = topic.toLowerCase()
+  for (const [style, config] of Object.entries(IMAGE_STYLES)) {
+    if (config.keywords.some(kw => topicLower.includes(kw))) {
+      return style as ImageStyleKey
+    }
+  }
+  return 'professional'
 }
 
 export default function CreateContentPage() {
@@ -24,8 +66,21 @@ export default function CreateContentPage() {
   const [saving, setSaving] = useState(false)
   const [generatedContent, setGeneratedContent] = useState('')
   const [socialPack, setSocialPack] = useState<SocialPackResult | null>(null)
+  const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
+  
+  // Image generation options
+  const [generateImageFlag, setGenerateImageFlag] = useState(false)
+  const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
+  const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
+
+  // Auto-detect best image style when topic changes
+  useEffect(() => {
+    if (topic) {
+      setImageStyle(detectBestStyle(topic))
+    }
+  }, [topic])
 
   const templates = [
     { 
@@ -129,6 +184,7 @@ export default function CreateContentPage() {
   const handleGenerate = async () => {
     setGenerating(true)
     setError('')
+    setGeneratedImage(null)
     
     try {
       const response = await fetch('/api/content/generate', {
@@ -140,6 +196,8 @@ export default function CreateContentPage() {
           industry,
           topic,
           tone,
+          generateImageFlag,
+          imageStyle,
         }),
       })
 
@@ -154,6 +212,15 @@ export default function CreateContentPage() {
       } else {
         setGeneratedContent(data.content)
       }
+      
+      if (data.image) {
+        setGeneratedImage(data.image)
+      }
+      
+      if (data.usage) {
+        setImagesRemaining(data.usage.imagesRemaining)
+      }
+      
       setStep(3)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -180,6 +247,8 @@ export default function CreateContentPage() {
           content,
           metadata: { businessName, industry, tone, type: selectedTemplate },
           status: 'draft',
+          image_url: generatedImage?.url || null,
+          image_style: generatedImage?.style || null,
         }),
       })
 
@@ -201,6 +270,18 @@ export default function CreateContentPage() {
     navigator.clipboard.writeText(text)
     setCopied(platform || 'main')
     setTimeout(() => setCopied(''), 2000)
+  }
+
+  const handleDownloadImage = () => {
+    if (generatedImage?.url) {
+      const link = document.createElement('a')
+      link.href = generatedImage.url
+      link.download = `geospark-image-${Date.now()}.png`
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
 
   const getTemplateIcon = (templateId: string) => {
@@ -383,6 +464,51 @@ export default function CreateContentPage() {
                 ))}
               </div>
             </div>
+
+            {/* Image Generation Option */}
+            <div className="border-t border-gray-100 pt-5 mt-5">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="generateImage"
+                  checked={generateImageFlag}
+                  onChange={(e) => setGenerateImageFlag(e.target.checked)}
+                  className="mt-1 w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <div className="flex-1">
+                  <label htmlFor="generateImage" className="block text-sm font-medium text-gray-700 cursor-pointer">
+                    Generate matching image
+                    {imagesRemaining !== null && (
+                      <span className="ml-2 text-xs text-gray-500">
+                        ({imagesRemaining} remaining this month)
+                      </span>
+                    )}
+                  </label>
+                  <p className="text-xs text-gray-500 mt-0.5">AI will create a custom image for your content</p>
+                </div>
+              </div>
+              
+              {generateImageFlag && (
+                <div className="mt-4 ml-8">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image Style</label>
+                  <select
+                    value={imageStyle}
+                    onChange={(e) => setImageStyle(e.target.value as ImageStyleKey)}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow bg-white"
+                  >
+                    {Object.entries(IMAGE_STYLES).map(([key, style]) => (
+                      <option key={key} value={key}>
+                        {style.name} - {style.description}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Auto-selected based on your topic. Change if needed.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-3 pt-4">
               <button
                 onClick={() => setStep(1)}
@@ -401,7 +527,7 @@ export default function CreateContentPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {selectedTemplate === 'social-pack' ? 'Generating 6 posts...' : 'Generating...'}
+                    {generateImageFlag ? 'Generating content & image...' : selectedTemplate === 'social-pack' ? 'Generating 6 posts...' : 'Generating...'}
                   </>
                 ) : (
                   <>
@@ -432,6 +558,41 @@ export default function CreateContentPage() {
               AI Generated
             </span>
           </div>
+
+          {/* Generated Image Preview */}
+          {generatedImage && (
+            <div className="mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Generated Image</h3>
+                    <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleDownloadImage}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download
+                </button>
+              </div>
+              <div className="p-4 flex justify-center bg-gray-50">
+                <img 
+                  src={generatedImage.url} 
+                  alt="Generated content image" 
+                  className="max-w-md w-full rounded-lg shadow-sm"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             {(Object.keys(socialPack) as Array<keyof SocialPackResult>).map((platform) => {
@@ -552,6 +713,42 @@ export default function CreateContentPage() {
               AI Generated
             </span>
           </div>
+
+          {/* Generated Image Preview */}
+          {generatedImage && (
+            <div className="mb-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Generated Image</h3>
+                    <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleDownloadImage}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download
+                </button>
+              </div>
+              <div className="p-4 flex justify-center bg-gray-50">
+                <img 
+                  src={generatedImage.url} 
+                  alt="Generated content image" 
+                  className="max-w-md w-full rounded-lg shadow-sm"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
             <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
               <span className="text-sm text-gray-500">Content Editor</span>
