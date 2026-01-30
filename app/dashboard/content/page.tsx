@@ -574,40 +574,23 @@ export default function CreateContentPage() {
       {step === 2 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us about your {templates.find(t => t.id === selectedTemplate)?.name.toLowerCase() || 'content'}</h2>
-          <p className="text-gray-500 mb-6">This helps our AI create personalized, locally-relevant content</p>
+          
+          {/* Business context line */}
+          {businessName && (
+            <div className="flex items-center gap-2 mb-6 text-sm text-gray-600">
+              <span>Creating for:</span>
+              <span className="font-medium text-gray-900">{businessName}</span>
+              {industry && <span className="text-gray-400">({industry})</span>}
+              <a href="/dashboard/settings" className="text-teal-600 hover:text-teal-700 ml-1">edit</a>
+            </div>
+          )}
+          {!businessName && (
+            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+              <a href="/dashboard/settings" className="font-medium underline">Set up your business profile</a> to get personalized content
+            </div>
+          )}
+          
           <div className="space-y-5 max-w-lg">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-              <input
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow"
-                placeholder="e.g., Joe's Plumbing"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-              <select
-                value={industry}
-                onChange={(e) => setIndustry(e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow bg-white"
-              >
-                <option value="">Select your industry...</option>
-                <option value="Restaurant">Restaurant / Food Service</option>
-                <option value="Plumber">Plumber</option>
-                <option value="Electrician">Electrician</option>
-                <option value="HVAC">HVAC / Heating & Cooling</option>
-                <option value="Salon">Salon / Spa / Beauty</option>
-                <option value="Dentist">Dentist / Dental Practice</option>
-                <option value="Real Estate">Real Estate</option>
-                <option value="Landscaping">Landscaping / Lawn Care</option>
-                <option value="Auto Repair">Auto Repair / Mechanic</option>
-                <option value="Fitness">Fitness / Gym</option>
-                <option value="Retail">Retail / Shop</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">What should the content be about?</label>
               <textarea
