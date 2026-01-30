@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { generateContent, ContentTemplate, isOpenAIConfigured } from '@/lib/openai'
+import { generateContent, generateSocialPack, ContentTemplate, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     // Validate template type
-    const validTemplates: ContentTemplate[] = ['blog-post', 'social-post', 'gmb-post', 'email', 'review-response']
+    const validTemplates: ContentTemplate[] = ['blog-post', 'social-post', 'social-pack', 'gmb-post', 'email', 'review-response']
     if (!validTemplates.includes(template)) {
       return NextResponse.json(
         { error: `Invalid template. Must be one of: ${validTemplates.join(', ')}` },
@@ -66,11 +66,71 @@ export async function POST(request: Request) {
       )
     }
 
+    // Handle social-pack separately
+    if (template === 'social-pack') {
+      let socialPack: SocialPackResult
+
+      if (isOpenAIConfigured()) {
+        socialPack = await generateSocialPack({
+          businessName,
+          industry,
+          topic,
+          tone,
+          additionalContext,
+        })
+      } else {
+        // Mock social pack for development
+        socialPack = generateMockSocialPack(businessName, industry, topic)
+      }
+
+      // Optionally save to database
+      let savedContent = null
+      if (saveAsDraft) {
+        const { data, error } = await supabase
+          .from('content')
+          .insert({
+            user_id: user.id,
+            template: 'social-pack',
+            title: topic,
+            content: JSON.stringify(socialPack),
+            metadata: { businessName, industry, tone, additionalContext, type: 'social-pack' },
+            status: 'draft'
+          })
+          .select()
+          .single()
+
+        if (!error) {
+          savedContent = data
+          await supabase
+            .from('subscriptions')
+            .update({ 
+              content_generated_this_month: usedThisMonth + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id)
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        socialPack,
+        savedContent,
+        template: 'social-pack',
+        metadata: {
+          businessName,
+          industry,
+          topic,
+          tone,
+          generatedAt: new Date().toISOString(),
+          aiGenerated: isOpenAIConfigured()
+        }
+      })
+    }
+
+    // Handle regular content templates
     let content: string
 
-    // Check if OpenAI is configured
     if (isOpenAIConfigured()) {
-      // Use real AI generation
       content = await generateContent({
         template,
         businessName,
@@ -80,7 +140,6 @@ export async function POST(request: Request) {
         additionalContext,
       })
     } else {
-      // Fall back to mock content for development
       content = generateMockContent(template, businessName, industry, topic, tone)
     }
 
@@ -102,8 +161,6 @@ export async function POST(request: Request) {
 
       if (!error) {
         savedContent = data
-
-        // Update usage counter
         await supabase
           .from('subscriptions')
           .update({ 
@@ -135,6 +192,37 @@ export async function POST(request: Request) {
       { error: 'Failed to generate content. Please try again.' },
       { status: 500 }
     )
+  }
+}
+
+// Mock social pack generator for development
+function generateMockSocialPack(business: string, industry: string, topic: string): SocialPackResult {
+  return {
+    twitter: {
+      content: `${topic} tip from ${business}! Quick wins for your ${industry.toLowerCase()} needs. Let's connect! #${industry.replace(/\s+/g, '')} #LocalBusiness`,
+      charCount: 95
+    },
+    facebook: {
+      content: `Hey neighbors! ${business} here with some thoughts on ${topic.toLowerCase()}. What's your experience been?`,
+      charCount: 78
+    },
+    instagram: {
+      content: `✨ ${topic} ✨\n\nAt ${business}, we're all about helping our community thrive. Here's what we've learned about ${topic.toLowerCase()} over the years...\n\nTap the link in bio to learn more! 💪`,
+      hashtags: `#${industry.replace(/\s+/g, '')} #Local${industry.replace(/\s+/g, '')} #SmallBusiness #SupportLocal #${topic.replace(/\s+/g, '')} #CommunityFirst #LocalExperts #TrustedPros`,
+      charCount: 180
+    },
+    linkedin: {
+      content: `Insight from ${business}: ${topic} is transforming how local ${industry.toLowerCase()} businesses serve their communities.\n\nHere's what we're seeing in the market and how it impacts you...\n\n#${industry.replace(/\s+/g, '')} #BusinessInsights #LocalBusiness`,
+      charCount: 195
+    },
+    tiktok: {
+      content: `POV: You finally found a ${industry.toLowerCase()} pro who actually gets it 😤✨ ${topic} tips coming your way! #${industry.replace(/\s+/g, '')}Tok #LocalBiz #SmallBusiness`,
+      charCount: 125
+    },
+    nextdoor: {
+      content: `Hi neighbors! ${business} here. We've been serving our community for years and wanted to share some helpful info about ${topic.toLowerCase()}. Feel free to reach out if you have any questions - always happy to help a neighbor!`,
+      charCount: 210
+    }
   }
 }
 

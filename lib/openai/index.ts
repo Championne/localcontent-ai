@@ -40,7 +40,7 @@ function getModel(): string {
   return process.env.OPENAI_MODEL || 'gpt-4o-mini'
 }
 
-export type ContentTemplate = 'blog-post' | 'social-post' | 'gmb-post' | 'email' | 'review-response'
+export type ContentTemplate = 'blog-post' | 'social-post' | 'social-pack' | 'gmb-post' | 'email' | 'review-response'
 
 export interface GenerateContentParams {
   template: ContentTemplate
@@ -53,6 +53,15 @@ export interface GenerateContentParams {
   maxTokens?: number
 }
 
+export interface SocialPackResult {
+  twitter: { content: string; charCount: number }
+  facebook: { content: string; charCount: number }
+  instagram: { content: string; hashtags: string; charCount: number }
+  linkedin: { content: string; charCount: number }
+  tiktok: { content: string; charCount: number }
+  nextdoor: { content: string; charCount: number }
+}
+
 // Base instruction to avoid placeholders
 const NO_PLACEHOLDERS = `
 IMPORTANT: Never use placeholder text like [City Name], [Phone Number], [Address], [Date], etc.
@@ -62,7 +71,7 @@ If specific information is not provided, write around it naturally. For example:
 - Instead of "valid until [Date]" write "for a limited time" or "while supplies last"
 Write complete, publication-ready content without any bracketed placeholders.`
 
-const SYSTEM_PROMPTS: Record<ContentTemplate, string> = {
+const SYSTEM_PROMPTS: Record<string, string> = {
   'blog-post': `You are an expert content writer specializing in SEO-optimized blog posts for local businesses.
 Your writing is engaging, informative, and naturally incorporates local SEO best practices.
 Write in a conversational yet professional tone that builds trust with local customers.
@@ -75,6 +84,11 @@ Create engaging, shareable content that connects with the local community.
 Keep posts concise and impactful. Use relevant emojis sparingly (2-3 max).
 Include appropriate hashtags (3-5) that mix branded, local, and industry tags.
 Focus on building community engagement and showcasing local expertise.
+${NO_PLACEHOLDERS}`,
+
+  'social-pack': `You are a social media expert who creates platform-optimized content for local businesses.
+You will generate posts for 6 different platforms, each optimized for that platform's best practices.
+Return your response in valid JSON format with the exact structure specified.
 ${NO_PLACEHOLDERS}`,
 
   'gmb-post': `You are a Google Business Profile optimization expert.
@@ -210,6 +224,83 @@ Write as if responding to a 5-star review praising great service.`
   return prompt
 }
 
+function buildSocialPackPrompt(params: GenerateContentParams): string {
+  const { 
+    businessName, 
+    industry, 
+    topic, 
+    tone = 'professional',
+    location,
+    additionalContext 
+  } = params
+
+  let context = `Create social media posts for a local business:
+
+**Business Name:** ${businessName}
+**Industry:** ${industry}
+**Topic/Subject:** ${topic}
+**Desired Tone:** ${tone}`
+
+  if (location) {
+    context += `\n**Location:** ${location}`
+  }
+
+  if (additionalContext) {
+    context += `\n**Additional Context:** ${additionalContext}`
+  }
+
+  return `${context}
+
+Generate optimized posts for ALL 6 platforms. Each post must be perfectly tailored to the platform's best practices:
+
+1. **Twitter/X** (71-100 characters optimal)
+   - Punchy, direct, attention-grabbing
+   - Maximum 3 hashtags
+   - No fluff, every word counts
+
+2. **Facebook** (40-80 characters optimal)
+   - Conversational, friendly tone
+   - NO hashtags (they hurt reach on Facebook)
+   - Encourage engagement (questions work well)
+
+3. **Instagram** 
+   - Short visible caption (138 characters before "...more")
+   - Full caption can be 300-500 characters with storytelling
+   - 15-30 hashtags (mix of popular and niche) - put these in a separate "hashtags" field
+   - Visual/lifestyle focused language
+   - Use 3-5 emojis
+
+4. **LinkedIn** (150 characters visible before "...see more")
+   - Professional, value-driven tone
+   - Industry-specific insights
+   - 3-5 professional hashtags integrated in content
+   - Thought leadership angle
+
+5. **TikTok** (100-150 characters)
+   - Hook-first, casual/trendy language
+   - Gen-Z friendly but authentic
+   - 3-5 trending hashtags
+   - Use 2-3 emojis
+
+6. **Nextdoor** (200-400 characters)
+   - Neighborly, community-focused tone
+   - NO hashtags (Nextdoor doesn't use them)
+   - Local/neighborhood angle
+   - Personal, helpful approach
+
+Return your response as a valid JSON object with this EXACT structure (no markdown, just JSON):
+{
+  "twitter": { "content": "your twitter post here" },
+  "facebook": { "content": "your facebook post here" },
+  "instagram": { "content": "your instagram caption here", "hashtags": "#hashtag1 #hashtag2 ..." },
+  "linkedin": { "content": "your linkedin post here" },
+  "tiktok": { "content": "your tiktok caption here" },
+  "nextdoor": { "content": "your nextdoor post here" }
+}
+
+IMPORTANT: Return ONLY the JSON object, no explanation or markdown code blocks.`
+}
+
 export async function generateContent(params: GenerateContentParams): Promise<string> {
   const { maxTokens = 1500 } = params
   
@@ -233,6 +324,70 @@ export async function generateContent(params: GenerateContentParams): Promise<st
   } catch (error) {
     console.error('AI API error:', error)
     throw new Error('Failed to generate content with AI')
+  }
+}
+
+export async function generateSocialPack(params: Omit<GenerateContentParams, 'template'>): Promise<SocialPackResult> {
+  const client = getAIClient()
+  const model = getModel()
+  const systemPrompt = SYSTEM_PROMPTS['social-pack']
+  const userPrompt = buildSocialPackPrompt({ ...params, template: 'social-pack' })
+
+  try {
+    const completion = await client.chat.completions.create({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      max_tokens: 2000,
+      temperature: 0.7,
+    })
+
+    const responseText = completion.choices[0]?.message?.content || '{}'
+    
+    // Parse the JSON response
+    let parsed
+    try {
+      // Remove any markdown code blocks if present
+      const cleanJson = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      parsed = JSON.parse(cleanJson)
+    } catch {
+      console.error('Failed to parse social pack JSON:', responseText)
+      throw new Error('Failed to parse AI response')
+    }
+
+    // Build the result with character counts
+    return {
+      twitter: {
+        content: parsed.twitter?.content || '',
+        charCount: (parsed.twitter?.content || '').length
+      },
+      facebook: {
+        content: parsed.facebook?.content || '',
+        charCount: (parsed.facebook?.content || '').length
+      },
+      instagram: {
+        content: parsed.instagram?.content || '',
+        hashtags: parsed.instagram?.hashtags || '',
+        charCount: (parsed.instagram?.content || '').length
+      },
+      linkedin: {
+        content: parsed.linkedin?.content || '',
+        charCount: (parsed.linkedin?.content || '').length
+      },
+      tiktok: {
+        content: parsed.tiktok?.content || '',
+        charCount: (parsed.tiktok?.content || '').length
+      },
+      nextdoor: {
+        content: parsed.nextdoor?.content || '',
+        charCount: (parsed.nextdoor?.content || '').length
+      }
+    }
+  } catch (error) {
+    console.error('AI API error:', error)
+    throw new Error('Failed to generate social pack with AI')
   }
 }
 
