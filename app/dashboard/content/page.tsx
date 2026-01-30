@@ -573,7 +573,7 @@ export default function CreateContentPage() {
       {/* Step 2: Add Details */}
       {step === 2 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us about your content</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us about your {templates.find(t => t.id === selectedTemplate)?.name.toLowerCase() || 'content'}</h2>
           <p className="text-gray-500 mb-6">This helps our AI create personalized, locally-relevant content</p>
           <div className="space-y-5 max-w-lg">
             <div>
