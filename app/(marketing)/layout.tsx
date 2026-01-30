@@ -17,7 +17,9 @@ export default function MarketingLayout({
             </div>
             <span className='text-xl font-bold text-gray-900'>GeoSpark</span>
           </Link>
-          <div className='flex gap-6 items-center'>
+          
+          {/* Desktop Nav */}
+          <div className='hidden md:flex gap-6 items-center'>
             <Link href='/pricing' className='text-sm text-gray-600 hover:text-teal-600 transition-colors'>
               Pricing
             </Link>
@@ -37,12 +39,27 @@ export default function MarketingLayout({
               Get Started Free
             </Link>
           </div>
+
+          {/* Mobile Nav */}
+          <div className='flex md:hidden items-center gap-3'>
+            <Link href='/auth/login' className='text-sm font-medium text-gray-700'>
+              Sign In
+            </Link>
+            <Link 
+              href='/auth/signup' 
+              className='bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors'
+            >
+              Start Free
+            </Link>
+          </div>
         </nav>
       </header>
+      
       <main className='flex-1'>{children}</main>
-      <footer className='border-t border-gray-100 bg-gray-50 py-12'>
+      
+      <footer className='border-t border-gray-100 bg-gray-50 py-8 md:py-12'>
         <div className='container mx-auto px-4'>
-          <div className='flex flex-col md:flex-row justify-between items-center gap-4'>
+          <div className='flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left'>
             <div className='flex items-center gap-2'>
               <div className='w-6 h-6 bg-gradient-to-br from-teal-500 to-teal-600 rounded flex items-center justify-center'>
                 <svg className='w-4 h-4 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -57,7 +74,7 @@ export default function MarketingLayout({
               <Link href='/contact' className='hover:text-teal-600 transition-colors'>Contact</Link>
             </div>
             <div className='text-sm text-gray-400'>
-              © 2026 GeoSpark. All rights reserved.
+              © 2026 GeoSpark
             </div>
           </div>
         </div>
