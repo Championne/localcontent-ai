@@ -1557,8 +1557,8 @@ export default function CreateContentPage() {
             </span>
           </div>
 
-          {/* Generated Image Preview */}
-          {generatedImage && (
+          {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
+          {generatedImage && selectedTemplate !== 'blog-post' && (
             <div className="mb-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
