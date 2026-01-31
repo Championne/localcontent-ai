@@ -121,7 +121,7 @@ export default async function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
               </svg>
             </div>
-            <h3 className="font-medium text-gray-900 mb-1">Browse Templates</h3>
+            <h3 className="font-medium text-gray-900 mb-1">Browse Ideas</h3>
             <p className="text-sm text-gray-500">Pre-built content frameworks</p>
           </Link>
         </div>

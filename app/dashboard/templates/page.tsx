@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Business {
@@ -30,19 +29,18 @@ const getUpcomingEvents = () => {
   return events
     .filter(e => {
       const daysUntil = Math.ceil((e.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-      return daysUntil > 0 && daysUntil <= 30
+      return daysUntil > 0 && daysUntil <= 60
     })
     .map(e => ({
       ...e,
       daysUntil: Math.ceil((e.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     }))
     .sort((a, b) => a.daysUntil - b.daysUntil)
-    .slice(0, 3)
 }
 
 // Industry-specific trending topics
 const getIndustryTrends = (industry: string | null) => {
-  const trends: Record<string, Array<{ emoji: string; title: string; topic: string; urgency?: string }>> = {
+  const trends: Record<string, Array<{ emoji: string; title: string; topic: string; badge?: string }>> = {
     'Restaurant': [
       { emoji: '📸', title: 'Behind-the-scenes kitchen tour', topic: 'Behind the scenes in our kitchen' },
       { emoji: '👨‍🍳', title: 'Meet the chef', topic: 'Meet our head chef and their story' },
@@ -50,7 +48,7 @@ const getIndustryTrends = (industry: string | null) => {
       { emoji: '🥗', title: 'New menu item tease', topic: 'Sneak peek of our new menu item' },
     ],
     'Plumber': [
-      { emoji: '❄️', title: 'Winter pipe protection tips', topic: 'How to prevent frozen pipes this winter', urgency: 'Seasonal' },
+      { emoji: '❄️', title: 'Winter pipe protection tips', topic: 'How to prevent frozen pipes this winter', badge: 'Seasonal' },
       { emoji: '🚿', title: 'Water heater maintenance', topic: 'Signs your water heater needs attention' },
       { emoji: '💧', title: 'Leak detection guide', topic: 'How to spot hidden water leaks' },
     ],
@@ -91,16 +89,13 @@ const getIndustryTrends = (industry: string | null) => {
   return trends[industry || ''] || defaultTrends
 }
 
-// Goal-based actions
+// Goal-based actions - harmonized colors (all use subtle gray/white with teal accents)
 const goals = [
   {
     id: 'promo',
     emoji: '🎁',
     title: 'Promote an Offer',
     description: 'Drive sales with a special deal',
-    color: 'from-orange-500 to-red-500',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
     topic: 'Special limited-time offer for our customers',
     template: 'social-pack',
   },
@@ -109,9 +104,6 @@ const goals = [
     emoji: '⭐',
     title: 'Get More Reviews',
     description: 'Boost your online reputation',
-    color: 'from-yellow-500 to-amber-500',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
     topic: 'We would love to hear your feedback',
     template: 'social-pack',
   },
@@ -120,9 +112,6 @@ const goals = [
     emoji: '📢',
     title: 'Share News',
     description: 'Announce something exciting',
-    color: 'from-blue-500 to-cyan-500',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
     topic: 'Exciting announcement from our business',
     template: 'social-pack',
   },
@@ -131,9 +120,6 @@ const goals = [
     emoji: '📸',
     title: 'Show Off Your Work',
     description: 'Display your best results',
-    color: 'from-purple-500 to-pink-500',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
     topic: 'Check out our latest work',
     template: 'social-pack',
   },
@@ -142,9 +128,6 @@ const goals = [
     emoji: '👋',
     title: 'Welcome Customers',
     description: 'Make newcomers feel at home',
-    color: 'from-teal-500 to-green-500',
-    bgColor: 'bg-teal-50',
-    borderColor: 'border-teal-200',
     topic: 'Welcome to our business family',
     template: 'social-pack',
   },
@@ -153,21 +136,43 @@ const goals = [
     emoji: '💡',
     title: 'Share Tips & Advice',
     description: 'Position yourself as an expert',
-    color: 'from-indigo-500 to-violet-500',
-    bgColor: 'bg-indigo-50',
-    borderColor: 'border-indigo-200',
     topic: 'Helpful tips and advice from our experts',
     template: 'blog-post',
   },
 ]
 
-export default function TemplatesPage() {
+export default function IdeasPage() {
   const router = useRouter()
   const [business, setBusiness] = useState<Business | null>(null)
   const [loading, setLoading] = useState(true)
+  const [scrollIndex, setScrollIndex] = useState(0)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   
+  // Combine events and trends for the scrollable section
   const upcomingEvents = getUpcomingEvents()
   const industryTrends = getIndustryTrends(business?.industry || null)
+  
+  // All timely items combined
+  const timelyItems = [
+    ...upcomingEvents.map(e => ({
+      type: 'event' as const,
+      emoji: e.emoji,
+      title: e.name,
+      subtitle: e.daysUntil === 1 ? 'Tomorrow!' : `${e.daysUntil} days away`,
+      description: 'Create a post to celebrate',
+      topic: e.topic,
+    })),
+    ...industryTrends.map(t => ({
+      type: 'trend' as const,
+      emoji: t.emoji,
+      title: t.title,
+      subtitle: t.badge || 'Trending',
+      description: 'Popular in your industry',
+      topic: t.topic,
+    }))
+  ]
+
+  const maxScrollIndex = Math.max(0, timelyItems.length - 3)
 
   useEffect(() => {
     async function fetchBusiness() {
@@ -196,168 +201,141 @@ export default function TemplatesPage() {
     router.push(`/dashboard/content?${params.toString()}`)
   }
 
+  const scrollLeft = () => {
+    setScrollIndex(prev => Math.max(0, prev - 1))
+  }
+
+  const scrollRight = () => {
+    setScrollIndex(prev => Math.min(maxScrollIndex, prev + 1))
+  }
+
   if (loading) {
     return (
-      <div className="animate-pulse space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-40 bg-gray-200 rounded"></div>
-        <div className="h-60 bg-gray-200 rounded"></div>
+      <div className="animate-pulse space-y-8 max-w-4xl mx-auto">
+        <div className="h-8 bg-gray-100 rounded w-1/4"></div>
+        <div className="h-4 bg-gray-100 rounded w-1/3"></div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="h-40 bg-gray-100 rounded-xl"></div>
+          <div className="h-40 bg-gray-100 rounded-xl"></div>
+          <div className="h-40 bg-gray-100 rounded-xl"></div>
+        </div>
       </div>
     )
   }
 
+  const visibleItems = timelyItems.slice(scrollIndex, scrollIndex + 3)
+
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Content Inspiration</h1>
-        <p className="text-gray-600">
-          {business ? `Ideas tailored for ${business.name}` : 'Discover what to post today'}
+      <div className="mb-10">
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1">Ideas</h1>
+        <p className="text-gray-500">
+          {business ? `Content suggestions for ${business.name}` : 'Find inspiration for your next post'}
         </p>
       </div>
 
-      {/* Section B: Timely/Trending - Perfect Right Now */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl">🔥</span>
-          <h2 className="text-lg font-semibold text-gray-900">Perfect for You Right Now</h2>
+      {/* Timely Section with Scroll Arrows */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Perfect for you right now</h2>
+          <div className="flex gap-2">
+            <button
+              onClick={scrollLeft}
+              disabled={scrollIndex === 0}
+              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
+                scrollIndex === 0 
+                  ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
+                  : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={scrollRight}
+              disabled={scrollIndex >= maxScrollIndex}
+              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
+                scrollIndex >= maxScrollIndex 
+                  ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
+                  : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {/* Upcoming Events */}
-          {upcomingEvents.map((event, idx) => (
-            <div 
-              key={idx}
-              className="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-200 rounded-xl p-4 hover:shadow-md transition-shadow"
+        <div ref={scrollContainerRef} className="grid grid-cols-3 gap-4">
+          {visibleItems.map((item, idx) => (
+            <button
+              key={`${item.type}-${scrollIndex}-${idx}`}
+              onClick={() => handleCreateContent(item.topic)}
+              className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:shadow-lg hover:border-teal-300 transition-all group"
             >
               <div className="flex items-start justify-between mb-3">
-                <span className="text-3xl">{event.emoji}</span>
-                <span className="text-xs font-medium text-rose-600 bg-rose-100 px-2 py-1 rounded-full">
-                  {event.daysUntil === 1 ? 'Tomorrow!' : `${event.daysUntil} days`}
+                <span className="text-2xl">{item.emoji}</span>
+                <span className="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-full">
+                  {item.subtitle}
                 </span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{event.name}</h3>
-              <p className="text-sm text-gray-600 mb-3">Create a post to celebrate!</p>
-              <button
-                onClick={() => handleCreateContent(event.topic)}
-                className="w-full py-2 bg-white border border-rose-200 rounded-lg text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
-              >
-                Create Post
-              </button>
-            </div>
-          ))}
-          
-          {/* Industry Trends */}
-          {industryTrends.slice(0, 3 - upcomingEvents.length).map((trend, idx) => (
-            <div 
-              key={idx}
-              className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-xl p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-3xl">{trend.emoji}</span>
-                {trend.urgency && (
-                  <span className="text-xs font-medium text-teal-600 bg-teal-100 px-2 py-1 rounded-full">
-                    {trend.urgency}
-                  </span>
-                )}
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-1">{trend.title}</h3>
-              <p className="text-sm text-gray-600 mb-3">Trending in your industry</p>
-              <button
-                onClick={() => handleCreateContent(trend.topic)}
-                className="w-full py-2 bg-white border border-teal-200 rounded-lg text-sm font-medium text-teal-600 hover:bg-teal-50 transition-colors"
-              >
-                Create Post
-              </button>
-            </div>
+              <h3 className="font-medium text-gray-900 mb-1 group-hover:text-teal-700 transition-colors">{item.title}</h3>
+              <p className="text-sm text-gray-500">{item.description}</p>
+            </button>
           ))}
         </div>
-
-        {/* More trending ideas */}
-        {industryTrends.length > (3 - upcomingEvents.length) && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="text-sm text-gray-500">More ideas:</span>
-            {industryTrends.slice(3 - upcomingEvents.length).map((trend, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleCreateContent(trend.topic)}
-                className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 transition-colors"
-              >
-                {trend.emoji} {trend.title}
-              </button>
+        
+        {/* Scroll indicators */}
+        {timelyItems.length > 3 && (
+          <div className="flex justify-center gap-1.5 mt-4">
+            {Array.from({ length: Math.ceil(timelyItems.length / 3) }).map((_, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  Math.floor(scrollIndex / 3) === i ? 'bg-teal-500' : 'bg-gray-200'
+                }`}
+              />
             ))}
           </div>
         )}
       </div>
 
-      {/* Section A: Goal-Based Actions */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl">🎯</span>
-          <h2 className="text-lg font-semibold text-gray-900">What Do You Want to Achieve?</h2>
-        </div>
+      {/* Divider */}
+      <div className="border-t border-gray-100 my-8"></div>
+
+      {/* Goal-Based Actions */}
+      <div className="mb-10">
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">What do you want to achieve?</h2>
         
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {goals.map((goal) => (
             <button
               key={goal.id}
               onClick={() => handleCreateContent(goal.topic, goal.template)}
-              className={`${goal.bgColor} ${goal.borderColor} border rounded-xl p-4 text-left hover:shadow-md transition-all hover:scale-[1.02] group`}
+              className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:shadow-lg hover:border-teal-300 transition-all group"
             >
-              <span className="text-3xl mb-3 block group-hover:scale-110 transition-transform">{goal.emoji}</span>
-              <h3 className="font-semibold text-gray-900 mb-1">{goal.title}</h3>
-              <p className="text-sm text-gray-600">{goal.description}</p>
+              <span className="text-2xl mb-3 block">{goal.emoji}</span>
+              <h3 className="font-medium text-gray-900 mb-1 group-hover:text-teal-700 transition-colors">{goal.title}</h3>
+              <p className="text-sm text-gray-500">{goal.description}</p>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Quick Links to Traditional Templates */}
-      <div className="border-t border-gray-200 pt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl">📚</span>
-          <h2 className="text-lg font-semibold text-gray-900">Or Create by Type</h2>
-        </div>
-        
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard/content?template=social-pack"
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          >
-            📱 Social Media Pack
-          </Link>
-          <Link
-            href="/dashboard/content?template=blog-post"
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          >
-            📝 Blog Post
-          </Link>
-          <Link
-            href="/dashboard/content?template=gmb-post"
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          >
-            📍 Google Business Post
-          </Link>
-          <Link
-            href="/dashboard/content?template=email"
-            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors"
-          >
-            ✉️ Email Newsletter
-          </Link>
-        </div>
-      </div>
-
-      {/* Start Fresh CTA */}
-      <div className="mt-8 text-center">
-        <Link
-          href="/dashboard/content"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-semibold hover:from-teal-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg"
+      {/* Simple CTA */}
+      <div className="text-center pt-4">
+        <button
+          onClick={() => router.push('/dashboard/content')}
+          className="inline-flex items-center gap-2 px-5 py-2.5 text-teal-600 font-medium hover:text-teal-700 transition-colors"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Start Fresh - Create Any Content
-        </Link>
+          Or start from scratch
+        </button>
       </div>
     </div>
   )
