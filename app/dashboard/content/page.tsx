@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import LogoPositioner from '@/components/LogoPositioner'
+import ImageOverlayEditor from '@/components/ImageOverlayEditor'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -219,7 +219,7 @@ export default function CreateContentPage() {
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
   
   // Logo positioning
-  const [showLogoPositioner, setShowLogoPositioner] = useState(false)
+  const [showOverlayEditor, setShowOverlayEditor] = useState(false)
   const [applyingLogo, setApplyingLogo] = useState(false)
   const [logoSkipped, setLogoSkipped] = useState(false)
   
@@ -310,7 +310,7 @@ export default function CreateContentPage() {
           ...generatedImage,
           url: data.url,
         })
-        setShowLogoPositioner(false)
+        setShowOverlayEditor(false)
         // Show profile photo positioner next if available
         if (currentBusinessPhoto && !photoSkipped) {
           setShowPhotoPositioner(true)
@@ -324,10 +324,54 @@ export default function CreateContentPage() {
       setApplyingLogo(false)
     }
   }
+
+  // Handle applying multiple overlays from the drag-drop editor
+  const handleApplyOverlays = async (overlays: Array<{ id: string; url: string; x: number; y: number; scale: number; type: 'logo' | 'photo' }>) => {
+    if (!generatedImage || overlays.length === 0) return
+    
+    setApplyingLogo(true)
+    try {
+      // Apply each overlay sequentially
+      let currentImageUrl = generatedImage.url
+      
+      for (const overlay of overlays) {
+        const response = await fetch('/api/image/composite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: currentImageUrl,
+            logoUrl: overlay.url,
+            position: { x: overlay.x, y: overlay.y, scale: overlay.scale },
+            isCircular: overlay.type === 'photo',
+          }),
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          currentImageUrl = data.url
+        } else {
+          console.error('Failed to apply overlay:', overlay.type)
+        }
+      }
+      
+      setGeneratedImage({
+        ...generatedImage,
+        url: currentImageUrl,
+      })
+      setShowOverlayEditor(false)
+      setLogoSkipped(true)
+      setPhotoSkipped(true)
+    } catch (error) {
+      console.error('Overlay apply error:', error)
+    } finally {
+      setApplyingLogo(false)
+    }
+  }
+
   
   // Handle logo skip
   const handleSkipLogo = () => {
-    setShowLogoPositioner(false)
+    setShowOverlayEditor(false)
     setLogoSkipped(true)
     // Show profile photo positioner if available
     if (currentBusinessPhoto && !photoSkipped) {
@@ -565,7 +609,7 @@ export default function CreateContentPage() {
         // Show logo positioner if business has a logo
         const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
         if (businessLogo && !logoSkipped) {
-          setShowLogoPositioner(true)
+          setShowOverlayEditor(true)
         }
       }
       
@@ -1099,30 +1143,16 @@ export default function CreateContentPage() {
 
           
 
-          {/* Logo/Photo Positioner or Generated Image Preview */}
-          {generatedImage && showLogoPositioner && currentBusinessLogo ? (
+          {/* Image Overlay Editor - Drag & Drop Logo/Photo */}
+          {generatedImage && showOverlayEditor && (currentBusinessLogo || currentBusinessPhoto) ? (
             <div className="mb-6">
-              <LogoPositioner
+              <ImageOverlayEditor
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
-                onApply={handleApplyLogo}
-                onSkip={handleSkipLogo}
+                photoUrl={currentBusinessPhoto}
+                onApply={handleApplyOverlays}
+                onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
                 applying={applyingLogo}
-                title="Add Your Logo"
-                subtitle="Drag to position or use quick buttons"
-              />
-            </div>
-          ) : generatedImage && showPhotoPositioner && currentBusinessPhoto ? (
-            <div className="mb-6">
-              <LogoPositioner
-                imageUrl={generatedImage.url}
-                logoUrl={currentBusinessPhoto}
-                onApply={handleApplyPhoto}
-                onSkip={handleSkipPhoto}
-                applying={applyingPhoto}
-                title="Add Your Photo"
-                subtitle="Position your profile photo on the image"
-                isCircular={true}
               />
             </div>
           ) : generatedImage && (
@@ -1140,26 +1170,15 @@ export default function CreateContentPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {currentBusinessLogo && !logoSkipped && (
+                  {(currentBusinessLogo || currentBusinessPhoto) && (!logoSkipped || !photoSkipped) && (
                     <button
-                      onClick={() => setShowLogoPositioner(true)}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-600 hover:bg-purple-200 flex items-center gap-1.5"
+                      onClick={() => setShowOverlayEditor(true)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1.5"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Add Logo
-                    </button>
-                  )}
-                  {currentBusinessPhoto && !photoSkipped && (
-                    <button
-                      onClick={() => setShowPhotoPositioner(true)}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1.5"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      Add Photo
+                      Add Logo/Photo
                     </button>
                   )}
                   <button
