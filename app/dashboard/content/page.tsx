@@ -85,6 +85,86 @@ const OFFER_EXPIRATION_OPTIONS = [
   { value: 'custom', label: 'Custom date' },
 ]
 
+// Character limits for platforms
+const PLATFORM_LIMITS: Record<string, { optimal: { min: number; max: number }; max: number }> = {
+  twitter: { optimal: { min: 71, max: 100 }, max: 280 },
+  facebook: { optimal: { min: 40, max: 80 }, max: 63206 },
+  instagram: { optimal: { min: 100, max: 150 }, max: 2200 },
+  linkedin: { optimal: { min: 100, max: 200 }, max: 3000 },
+  tiktok: { optimal: { min: 80, max: 150 }, max: 2200 },
+  nextdoor: { optimal: { min: 100, max: 200 }, max: 2000 },
+  gmb: { optimal: { min: 150, max: 300 }, max: 1500 },
+  email: { optimal: { min: 200, max: 400 }, max: 2000 },
+}
+
+// Character count indicator component
+function CharacterCount({ count, platform }: { count: number; platform: string }) {
+  const limits = PLATFORM_LIMITS[platform]
+  if (!limits) return null
+  
+  const { optimal, max } = limits
+  
+  let status: 'optimal' | 'okay' | 'warning' | 'error' = 'okay'
+  let label = ''
+  
+  if (count >= optimal.min && count <= optimal.max) {
+    status = 'optimal'
+    label = 'Optimal'
+  } else if (count < optimal.min) {
+    status = 'okay'
+    label = 'Short'
+  } else if (count > max) {
+    status = 'error'
+    label = 'Too long!'
+  } else if (count > optimal.max) {
+    status = 'warning'
+    label = 'Long'
+  }
+  
+  const colors: Record<string, string> = {
+    optimal: 'text-green-600 bg-green-50',
+    okay: 'text-gray-500 bg-gray-50',
+    warning: 'text-amber-600 bg-amber-50',
+    error: 'text-red-600 bg-red-50',
+  }
+  
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${colors[status]}`}>
+      {count} chars · {label}
+    </span>
+  )
+}
+
+// Word count for blog posts
+function WordCount({ count }: { count: number }) {
+  let status: 'optimal' | 'okay' | 'warning' = 'okay'
+  let label = ''
+  
+  if (count >= 800 && count <= 1500) {
+    status = 'optimal'
+    label = 'Great for SEO'
+  } else if (count < 800) {
+    status = 'okay'
+    label = count < 400 ? 'Short' : 'Good'
+  } else {
+    status = 'warning'
+    label = 'Detailed'
+  }
+  
+  const colors: Record<string, string> = {
+    optimal: 'text-green-600 bg-green-50',
+    okay: 'text-gray-500 bg-gray-50',
+    warning: 'text-amber-600 bg-amber-50',
+  }
+  
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${colors[status]}`}>
+      {count} words · {label}
+    </span>
+  )
+}
+
+
 
 function detectBestStyle(topic: string): ImageStyleKey {
   const topicLower = topic.toLowerCase()
@@ -194,6 +274,10 @@ export default function CreateContentPage() {
   const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
 
   // Calculate expiration date for offers
+  
+  // Count words in text
+  const countWords = (text: string) => text.trim().split(/\s+/).filter(w => w.length > 0).length
+
   const getExpirationDate = () => {
     if (offerExpiration === 'custom' && offerCustomDate) {
       return offerCustomDate
