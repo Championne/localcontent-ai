@@ -684,7 +684,7 @@ export default function CreateContentPage() {
         )
       case 'gmb-post':
         return (
-          <span className="w-6 h-6 flex items-center justify-center text-teal-600 font-bold text-xl leading-none">G</span>
+          <span className="w-6 h-6 flex items-center justify-center text-teal-600 font-bold text-2xl leading-none">G</span>
         )
       case 'email':
         return (
