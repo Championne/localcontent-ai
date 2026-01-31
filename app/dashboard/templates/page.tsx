@@ -229,7 +229,7 @@ export default function IdeasPage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">Ideas</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-1 flex items-center gap-2"><svg className="w-6 h-6 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Need a spark?</h1>
         <p className="text-gray-500">
           {business ? `Content suggestions for ${business.name}` : 'Find inspiration for your next post'}
         </p>
@@ -237,39 +237,26 @@ export default function IdeasPage() {
 
       {/* Timely Section with Scroll Arrows */}
       <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide">Perfect for you right now</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={scrollLeft}
-              disabled={scrollIndex === 0}
-              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
-                scrollIndex === 0 
-                  ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
-                  : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={scrollRight}
-              disabled={scrollIndex >= maxScrollIndex}
-              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${
-                scrollIndex >= maxScrollIndex 
-                  ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
-                  : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Perfect for you right now</h2>
         
-        <div ref={scrollContainerRef} className="grid grid-cols-3 gap-4">
+        <div className="flex items-center gap-4">
+          {/* Left Arrow */}
+          <button
+            onClick={scrollLeft}
+            disabled={scrollIndex === 0}
+            className={`flex-shrink-0 w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+              scrollIndex === 0 
+                ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
+                : 'border-gray-300 text-gray-500 hover:bg-teal-50 hover:border-teal-400 hover:text-teal-600'
+            }`}
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          {/* Cards */}
+          <div ref={scrollContainerRef} className="flex-1 grid grid-cols-3 gap-4">
           {visibleItems.map((item, idx) => (
             <button
               key={`${item.type}-${scrollIndex}-${idx}`}
@@ -286,6 +273,22 @@ export default function IdeasPage() {
               <p className="text-sm text-gray-500">{item.description}</p>
             </button>
           ))}
+          </div>
+          
+          {/* Right Arrow */}
+          <button
+            onClick={scrollRight}
+            disabled={scrollIndex >= maxScrollIndex}
+            className={`flex-shrink-0 w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+              scrollIndex >= maxScrollIndex 
+                ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
+                : 'border-gray-300 text-gray-500 hover:bg-teal-50 hover:border-teal-400 hover:text-teal-600'
+            }`}
+          >
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
         
         {/* Scroll indicators */}
@@ -329,12 +332,12 @@ export default function IdeasPage() {
       <div className="text-center pt-4">
         <button
           onClick={() => router.push('/dashboard/content')}
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-teal-600 font-medium hover:text-teal-700 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-xl transition-colors shadow-lg shadow-teal-500/25"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Or start from scratch
+          Spark new content
         </button>
       </div>
     </div>
