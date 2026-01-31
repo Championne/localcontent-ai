@@ -103,7 +103,7 @@ export default function ContentLibraryPage() {
   return (
     <div>
       <div className='flex justify-between items-center mb-6'>
-        <h1 className='text-2xl font-bold'>Content Library</h1>
+        <h1 className='text-2xl font-bold'>Spark Library</h1>
         <Link
           href='/dashboard/content'
           className='px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90'
