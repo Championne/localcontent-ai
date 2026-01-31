@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
+import LogoPositioner from '@/components/LogoPositioner'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -23,6 +24,7 @@ interface Business {
   id: string
   name: string
   industry: string | null
+  logo_url: string | null
 }
 
 // Image style definitions (must match backend)
@@ -102,6 +104,11 @@ export default function CreateContentPage() {
   // Multi-business support
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  
+  // Logo positioning
+  const [showLogoPositioner, setShowLogoPositioner] = useState(false)
+  const [applyingLogo, setApplyingLogo] = useState(false)
+  const [logoSkipped, setLogoSkipped] = useState(false)
 
   // Fetch user's businesses on mount
   useEffect(() => {
@@ -134,6 +141,49 @@ export default function CreateContentPage() {
       setBusinessName(business.name || '')
       setIndustry(business.industry || '')
     }
+  }
+  
+  // Get current business logo
+  const currentBusinessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url || null
+  
+  // Handle logo apply
+  const handleApplyLogo = async (position: { x: number; y: number; scale: number }) => {
+    if (!generatedImage || !currentBusinessLogo) return
+    
+    setApplyingLogo(true)
+    try {
+      const response = await fetch('/api/image/composite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: generatedImage.url,
+          logoUrl: currentBusinessLogo,
+          position,
+        }),
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        // Update the generated image with the branded version
+        setGeneratedImage({
+          ...generatedImage,
+          url: data.url,
+        })
+        setShowLogoPositioner(false)
+      } else {
+        console.error('Failed to apply logo')
+      }
+    } catch (error) {
+      console.error('Logo apply error:', error)
+    } finally {
+      setApplyingLogo(false)
+    }
+  }
+  
+  // Handle logo skip
+  const handleSkipLogo = () => {
+    setShowLogoPositioner(false)
+    setLogoSkipped(true)
   }
 
   // Auto-detect best image style when topic changes
@@ -323,6 +373,11 @@ export default function CreateContentPage() {
       
       if (data.image) {
         setGeneratedImage(data.image)
+        // Show logo positioner if business has a logo
+        const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
+        if (businessLogo && !logoSkipped) {
+          setShowLogoPositioner(true)
+        }
       }
       
       if (data.usage) {
@@ -804,8 +859,18 @@ export default function CreateContentPage() {
             <p className="text-[10px] text-gray-500 mt-3">*Estimates based on industry averages for local businesses. Actual results may vary.</p>
           </div>
 
-          {/* Generated Image Preview */}
-          {generatedImage && (
+          {/* Logo Positioner or Generated Image Preview */}
+          {generatedImage && showLogoPositioner && currentBusinessLogo ? (
+            <div className="mb-6">
+              <LogoPositioner
+                imageUrl={generatedImage.url}
+                logoUrl={currentBusinessLogo}
+                onApply={handleApplyLogo}
+                onSkip={handleSkipLogo}
+                applying={applyingLogo}
+              />
+            </div>
+          ) : generatedImage && (
             <div className="mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -819,15 +884,28 @@ export default function CreateContentPage() {
                     <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
                   </div>
                 </div>
-                <button
-                  onClick={handleDownloadImage}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download
-                </button>
+                <div className="flex items-center gap-2">
+                  {currentBusinessLogo && !logoSkipped && (
+                    <button
+                      onClick={() => setShowLogoPositioner(true)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-600 hover:bg-purple-200 flex items-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                      </svg>
+                      Add Logo
+                    </button>
+                  )}
+                  <button
+                    onClick={handleDownloadImage}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download
+                  </button>
+                </div>
               </div>
               <div className="p-4 flex justify-center bg-gray-50">
                 <img 

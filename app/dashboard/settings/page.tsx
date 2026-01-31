@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 interface Business {
@@ -8,8 +8,7 @@ interface Business {
   name: string
   industry: string | null
   location: string | null
-  website: string | null
-  phone: string | null
+  logo_url: string | null
   created_at: string
 }
 
@@ -30,6 +29,8 @@ const INDUSTRIES = [
   { value: 'Auto Repair', label: 'Auto Repair / Mechanic' },
   { value: 'Fitness', label: 'Fitness / Gym' },
   { value: 'Retail', label: 'Retail / Shop' },
+  { value: 'Contractor', label: 'General Contractor' },
+  { value: 'Cleaning', label: 'Cleaning Service' },
   { value: 'Other', label: 'Other' },
 ]
 
@@ -46,6 +47,10 @@ export default function SettingsPage() {
   
   // Edit business
   const [editingBusiness, setEditingBusiness] = useState<string | null>(null)
+  
+  // Logo upload
+  const [uploadingLogo, setUploadingLogo] = useState<string | null>(null)
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   useEffect(() => {
     fetchData()
@@ -53,14 +58,12 @@ export default function SettingsPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch profile
       const profileRes = await fetch('/api/auth/profile')
       if (profileRes.ok) {
         const profileData = await profileRes.json()
         setProfile(profileData)
       }
 
-      // Fetch businesses
       const bizRes = await fetch('/api/business')
       if (bizRes.ok) {
         const bizData = await bizRes.json()
@@ -75,7 +78,7 @@ export default function SettingsPage() {
 
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text })
-    setTimeout(() => setMessage(null), 3000)
+    setTimeout(() => setMessage(null), 4000)
   }
 
   const handleSaveProfile = async () => {
@@ -174,6 +177,76 @@ export default function SettingsPage() {
     }
   }
 
+  const handleLogoUpload = async (businessId: string, file: File) => {
+    if (!file) return
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showMessage('error', 'Please upload an image file')
+      return
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showMessage('error', 'Logo must be under 2MB')
+      return
+    }
+
+    setUploadingLogo(businessId)
+    
+    try {
+      const formData = new FormData()
+      formData.append('logo', file)
+      formData.append('businessId', businessId)
+
+      const res = await fetch('/api/business/logo', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setBusinesses(businesses.map(b => 
+          b.id === businessId ? { ...b, logo_url: data.logo_url } : b
+        ))
+        showMessage('success', 'Logo uploaded successfully!')
+      } else {
+        const err = await res.json()
+        showMessage('error', err.error || 'Failed to upload logo')
+      }
+    } catch {
+      showMessage('error', 'Failed to upload logo')
+    } finally {
+      setUploadingLogo(null)
+    }
+  }
+
+  const handleRemoveLogo = async (businessId: string) => {
+    if (!confirm('Remove logo from this business?')) return
+    
+    setUploadingLogo(businessId)
+    try {
+      const res = await fetch('/api/business/logo', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId }),
+      })
+
+      if (res.ok) {
+        setBusinesses(businesses.map(b => 
+          b.id === businessId ? { ...b, logo_url: null } : b
+        ))
+        showMessage('success', 'Logo removed')
+      } else {
+        showMessage('error', 'Failed to remove logo')
+      }
+    } catch {
+      showMessage('error', 'Failed to remove logo')
+    } finally {
+      setUploadingLogo(null)
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto py-8">
@@ -198,11 +271,11 @@ export default function SettingsPage() {
             : 'bg-red-50 text-red-800 border border-red-200'
         }`}>
           {message.type === 'success' ? (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           )}
@@ -332,7 +405,7 @@ export default function SettingsPage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {businesses.map((business) => (
               <div key={business.id} className="p-4 border border-gray-200 rounded-lg">
                 {editingBusiness === business.id ? (
@@ -377,7 +450,7 @@ export default function SettingsPage() {
                       <button
                         onClick={() => {
                           setEditingBusiness(null)
-                          fetchData() // Reset to original values
+                          fetchData()
                         }}
                         className="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 text-sm"
                       >
@@ -386,33 +459,102 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">{business.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {business.industry || 'No industry set'}
-                        {business.location && ` • ${business.location}`}
-                      </p>
+                  <>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        {/* Logo Display */}
+                        {business.logo_url ? (
+                          <div className="relative group">
+                            <img 
+                              src={business.logo_url} 
+                              alt={`${business.name} logo`}
+                              className="w-12 h-12 rounded-lg object-contain border border-gray-200 bg-white"
+                            />
+                            <button
+                              onClick={() => handleRemoveLogo(business.id)}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                              title="Remove logo"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-medium text-gray-900">{business.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {business.industry || 'No industry set'}
+                            {business.location && ` • ${business.location}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setEditingBusiness(business.id)}
+                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBusiness(business.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+                    
+                    {/* Logo Upload Section */}
+                    <div className="pt-3 border-t border-gray-100">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={el => { fileInputRefs.current[business.id] = el }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) handleLogoUpload(business.id, file)
+                          e.target.value = ''
+                        }}
+                        className="hidden"
+                      />
                       <button
-                        onClick={() => setEditingBusiness(business.id)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => fileInputRefs.current[business.id]?.click()}
+                        disabled={uploadingLogo === business.id}
+                        className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1.5 disabled:text-gray-400"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
+                        {uploadingLogo === business.id ? (
+                          <>
+                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            {business.logo_url ? 'Change logo' : 'Upload logo'}
+                          </>
+                        )}
                       </button>
-                      <button
-                        onClick={() => handleDeleteBusiness(business.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 2MB. Used on generated images.</p>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             ))}

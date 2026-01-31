@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import WelcomeModal from '@/components/WelcomeModal'
 
 interface DashboardLayoutClientProps {
@@ -15,6 +15,7 @@ export default function DashboardLayoutClient({ children, userName }: DashboardL
   const [showWelcome, setShowWelcome] = useState(false)
   const [checkingBusiness, setCheckingBusiness] = useState(true)
   const pathname = usePathname()
+  const router = useRouter()
 
   // Check if user has any businesses on mount
   useEffect(() => {
@@ -39,6 +40,9 @@ export default function DashboardLayoutClient({ children, userName }: DashboardL
 
   const handleWelcomeComplete = () => {
     setShowWelcome(false)
+    // Redirect to Create Content page after onboarding
+    // Use window.location for a full page reload to ensure fresh data
+    window.location.href = '/dashboard/content'
   }
 
   const navItems = [

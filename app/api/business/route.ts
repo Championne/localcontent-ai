@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { name, industry, description, location, website, phone } = body
+    const { name, industry, description, location, website, phone, referral_source } = body
 
     if (!name) {
       return NextResponse.json(
@@ -62,13 +62,18 @@ export async function POST(request: Request) {
         location: location || null,
         website: website || null,
         phone: phone || null,
+        referral_source: referral_source || null,
       })
       .select()
       .single()
 
     if (error) {
       console.error('Error creating business:', error)
-      return NextResponse.json({ error: 'Failed to create business' }, { status: 500 })
+      // Return more details for debugging
+      return NextResponse.json({ 
+        error: 'Failed to create business',
+        details: error.message 
+      }, { status: 500 })
     }
 
     return NextResponse.json({
