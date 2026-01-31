@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { generateContent, generateSocialPack, ContentTemplate, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
+import { generateContent, generateSocialPack, ContentTemplate, isOpenAIConfigured, SocialPackResult, GbpPostType } from '@/lib/openai'
 import { 
   generateImage, 
   isImageGenerationConfigured, 
@@ -33,7 +33,12 @@ export async function POST(request: Request) {
       saveAsDraft = false,
       generateImageFlag = false,
       imageStyle,
-      regenerateMode = 'all' // 'all' | 'text' | 'image'
+      regenerateMode = 'all', // 'all' | 'text' | 'image'
+      // GBP-specific fields
+      gbpPostType,
+      gbpExpiration,
+      gbpEventDate,
+      gbpEventTime,
     } = body
     
     // Determine what to generate based on mode
@@ -211,9 +216,14 @@ export async function POST(request: Request) {
           topic,
           tone,
           additionalContext,
+          // Pass GBP-specific fields
+          gbpPostType: template === 'gmb-post' ? (gbpPostType as GbpPostType || 'update') : undefined,
+          gbpExpiration: template === 'gmb-post' && gbpPostType === 'offer' ? gbpExpiration : undefined,
+          gbpEventDate: template === 'gmb-post' && gbpPostType === 'event' ? gbpEventDate : undefined,
+          gbpEventTime: template === 'gmb-post' && gbpPostType === 'event' ? gbpEventTime : undefined,
         })
       } else {
-        content = generateMockContent(template, businessName, industry, topic, tone)
+        content = generateMockContent(template, businessName, industry, topic, tone, gbpPostType)
       }
     }
 
@@ -259,7 +269,13 @@ export async function POST(request: Request) {
           template,
           title: topic,
           content,
-          metadata: { businessName, industry, tone, additionalContext },
+          metadata: { 
+            businessName, 
+            industry, 
+            tone, 
+            additionalContext,
+            gbpPostType: template === 'gmb-post' ? gbpPostType : undefined,
+          },
           status: 'draft',
           image_url: image?.url || null,
           image_style: image?.style || null
@@ -290,6 +306,7 @@ export async function POST(request: Request) {
         industry,
         topic,
         tone,
+        gbpPostType: template === 'gmb-post' ? gbpPostType : undefined,
         generatedAt: new Date().toISOString(),
         aiGenerated: isOpenAIConfigured(),
         imageGenerated: !!image
@@ -346,7 +363,8 @@ function generateMockContent(
   business: string, 
   industry: string, 
   topic: string, 
-  tone: string
+  tone: string,
+  gbpPostType?: string
 ): string {
   switch (template) {
     case 'blog-post':
@@ -398,17 +416,38 @@ Here's a quick tip: Taking care of ${topic.toLowerCase()} early can save you tim
 #${industry.replace(/\s+/g, '')} #Local${industry.replace(/\s+/g, '')} #SmallBusiness`
 
     case 'gmb-post':
-      return `📢 ${topic}
+      // Generate different mock content based on GBP post type
+      if (gbpPostType === 'offer') {
+        return `🎁 Special Offer: ${topic}!
+
+${business} is offering this exclusive deal for a limited time. Don't miss out on this opportunity to save.
+
+✅ Quality service guaranteed
+✅ Local expertise you can trust
+
+Tap "Get Offer" to claim yours today!`
+      } else if (gbpPostType === 'event') {
+        return `📅 Upcoming Event: ${topic}
+
+Join ${business} for this special event! We're excited to share our ${industry.toLowerCase()} expertise with the community.
+
+🔹 Learn from the experts
+🔹 Meet your neighbors
+🔹 Limited spots available
+
+Tap "Book" to reserve your spot!`
+      } else {
+        return `📢 ${topic}
 
 ${business} is excited to share important information about ${topic.toLowerCase()} with our valued customers!
 
-As your trusted local ${industry.toLowerCase()} provider, we're committed to keeping you informed and helping you make the best decisions for your needs.
+As your trusted local ${industry.toLowerCase()} provider, we're committed to keeping you informed.
 
 🔹 Professional service
 🔹 Local expertise  
-🔹 Customer satisfaction guaranteed
 
-Ready to learn more? Give us a call or visit our location today!`
+Tap "Learn More" to get all the details!`
+      }
 
     case 'email':
       return `Subject: ${topic} - Important Updates from ${business}

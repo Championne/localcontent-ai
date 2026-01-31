@@ -53,6 +53,38 @@ const IMAGE_STYLES = {
 } as const
 
 type ImageStyleKey = keyof typeof IMAGE_STYLES
+// GBP Post Types with descriptions
+const GBP_POST_TYPES = {
+  offer: {
+    name: 'Special Offer',
+    emoji: '🏷️',
+    description: 'Promotions, discounts, or deals with an expiration. Best for driving immediate action.',
+    cta: 'Get Offer',
+  },
+  event: {
+    name: 'Event',
+    emoji: '📅',
+    description: 'Workshops, open days, or limited-time happenings. Include date and time.',
+    cta: 'Book',
+  },
+  update: {
+    name: 'Update / News',
+    emoji: '📢',
+    description: 'Announcements, new services, team news, or helpful tips. Great for staying visible.',
+    cta: 'Learn More',
+  },
+} as const
+
+type GbpPostType = keyof typeof GBP_POST_TYPES
+
+// Offer expiration options
+const OFFER_EXPIRATION_OPTIONS = [
+  { value: '3', label: '3 days' },
+  { value: '7', label: '7 days' },
+  { value: '14', label: '14 days' },
+  { value: 'custom', label: 'Custom date' },
+]
+
 
 function detectBestStyle(topic: string): ImageStyleKey {
   const topicLower = topic.toLowerCase()
@@ -116,6 +148,13 @@ export default function CreateContentPage() {
   const [applyingPhoto, setApplyingPhoto] = useState(false)
   const [photoSkipped, setPhotoSkipped] = useState(false)
 
+  // GBP-specific state
+  const [gbpPostType, setGbpPostType] = useState<GbpPostType>('update')
+  const [offerExpiration, setOfferExpiration] = useState('7')
+  const [offerCustomDate, setOfferCustomDate] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const [eventTime, setEventTime] = useState('')
+
   // Fetch user's businesses on mount
   useEffect(() => {
     async function fetchBusinesses() {
@@ -153,6 +192,17 @@ export default function CreateContentPage() {
   const currentBusiness = businesses.find(b => b.id === selectedBusinessId)
   const currentBusinessLogo = currentBusiness?.logo_url || null
   const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
+
+  // Calculate expiration date for offers
+  const getExpirationDate = () => {
+    if (offerExpiration === 'custom' && offerCustomDate) {
+      return offerCustomDate
+    }
+    const days = parseInt(offerExpiration)
+    const date = new Date()
+    date.setDate(date.getDate() + days)
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  }
   
   // Handle logo apply
   const handleApplyLogo = async (position: { x: number; y: number; scale: number }) => {
@@ -735,7 +785,91 @@ export default function CreateContentPage() {
           
           <div className="space-y-5 max-w-lg">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">What should the content be about?</label>
+              {/* GBP Post Type Selector */}
+            {selectedTemplate === 'gmb-post' && (
+              <>
+                {/* Info tip */}
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 -mt-2 mb-4">
+                  💡 GBP posts are optimized for searchers ready to act — short, direct, benefit-first.
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Post Type</label>
+                  <select
+                    value={gbpPostType}
+                    onChange={(e) => setGbpPostType(e.target.value as GbpPostType)}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                  >
+                    {Object.entries(GBP_POST_TYPES).map(([key, type]) => (
+                      <option key={key} value={key}>
+                        {type.emoji} {type.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    {GBP_POST_TYPES[gbpPostType].description}
+                  </p>
+                </div>
+                
+                {/* Offer Expiration */}
+                {gbpPostType === 'offer' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Offer Expires In</label>
+                    <select
+                      value={offerExpiration}
+                      onChange={(e) => setOfferExpiration(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                    >
+                      {OFFER_EXPIRATION_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {offerExpiration === 'custom' && (
+                      <input
+                        type="date"
+                        value={offerCustomDate}
+                        onChange={(e) => setOfferCustomDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="mt-2 w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                      />
+                    )}
+                    <p className="mt-1.5 text-xs text-gray-500">
+                      Expires: {getExpirationDate()}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Event Date/Time */}
+                {gbpPostType === 'event' && (
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Event Date *</label>
+                      <input
+                        type="date"
+                        value={eventDate}
+                        onChange={(e) => setEventDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Event Time</label>
+                      <input
+                        type="time"
+                        value={eventTime}
+                        onChange={(e) => setEventTime(e.target.value)}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            
+            <label className="block text-sm font-medium text-gray-700 mb-2">What should the content be about?</label>
               <textarea
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
@@ -840,7 +974,7 @@ export default function CreateContentPage() {
               </button>
               <button
                 onClick={() => handleGenerate('all')}
-                disabled={!businessName || !industry || !topic || generating}
+                disabled={!businessName || !industry || !topic || generating || (selectedTemplate === 'gmb-post' && gbpPostType === 'event' && !eventDate)}
                 className="flex-1 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {generating ? (

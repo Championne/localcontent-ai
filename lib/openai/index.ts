@@ -11,7 +11,6 @@ function getAIClient(): OpenAI {
       throw new Error('No AI API key configured. Set OPENROUTER_API_KEY or OPENAI_API_KEY.')
     }
 
-    // Use OpenRouter if OPENROUTER_API_KEY is set, otherwise fall back to OpenAI
     if (process.env.OPENROUTER_API_KEY) {
       openrouterClient = new OpenAI({
         apiKey: process.env.OPENROUTER_API_KEY,
@@ -30,17 +29,15 @@ function getAIClient(): OpenAI {
   return openrouterClient
 }
 
-// Get the appropriate model based on configuration
 function getModel(): string {
-  // If using OpenRouter, prefer Claude
   if (process.env.OPENROUTER_API_KEY) {
     return process.env.AI_MODEL || 'anthropic/claude-3-5-sonnet-20241022'
   }
-  // Fall back to OpenAI model
   return process.env.OPENAI_MODEL || 'gpt-4o-mini'
 }
 
 export type ContentTemplate = 'blog-post' | 'social-post' | 'social-pack' | 'gmb-post' | 'email' | 'review-response'
+export type GbpPostType = 'offer' | 'event' | 'update'
 
 export interface GenerateContentParams {
   template: ContentTemplate
@@ -51,6 +48,11 @@ export interface GenerateContentParams {
   location?: string
   additionalContext?: string
   maxTokens?: number
+  // GBP-specific fields
+  gbpPostType?: GbpPostType
+  gbpExpiration?: string
+  gbpEventDate?: string
+  gbpEventTime?: string
 }
 
 export interface SocialPackResult {
@@ -68,8 +70,74 @@ IMPORTANT: Never use placeholder text like [City Name], [Phone Number], [Address
 If specific information is not provided, write around it naturally. For example:
 - Instead of "located in [City Name]" write "in your local area" or "conveniently located nearby"
 - Instead of "call [Phone Number]" write "give us a call" or "contact us today"
-- Instead of "valid until [Date]" write "for a limited time" or "while supplies last"
 Write complete, publication-ready content without any bracketed placeholders.`
+
+// GBP Post Type specific prompts - optimized for HIGH-INTENT searchers
+const GBP_POST_TYPE_PROMPTS: Record<GbpPostType, string> = {
+  offer: `You are creating a Google Business Profile OFFER post.
+
+CRITICAL CONTEXT: People seeing this are ACTIVELY SEARCHING for this type of business on Google. They have HIGH INTENT to buy/book NOW.
+
+Write for searchers ready to act:
+- Lead with the BENEFIT and the OFFER prominently
+- Include specific discount/deal details
+- Create urgency with the expiration
+- Keep it 150-250 characters (short, punchy, action-oriented)
+- Use 2-3 emojis strategically (not excessive)
+- End with clear action
+
+CTA Button: "Get Offer" (Google will show this button)
+
+GOOD EXAMPLE:
+"🎁 20% OFF first visit! New customers welcome — same-day appointments available. Offer ends Friday. Tap 'Get Offer' to claim!"
+
+BAD EXAMPLE (don't write like this):
+"We are excited to announce a special promotion for our valued customers! We're offering a discount on our services because we appreciate you..."
+
+${NO_PLACEHOLDERS}`,
+
+  event: `You are creating a Google Business Profile EVENT post.
+
+CRITICAL CONTEXT: People seeing this are ACTIVELY SEARCHING for this type of business on Google. They have HIGH INTENT.
+
+Write for searchers ready to act:
+- Lead with WHAT and WHEN clearly upfront
+- Highlight the key benefit/takeaway for attendees
+- Create urgency (limited spots, free, exclusive)
+- Keep it 150-250 characters
+- Use 2-3 emojis strategically
+
+CTA Button: "Book" (Google will show this button)
+
+GOOD EXAMPLE:
+"📅 FREE Workshop: Home Maintenance 101 — Saturday, Feb 8 at 10am. Learn money-saving tips from our experts. Limited spots! Tap to reserve."
+
+BAD EXAMPLE (don't write like this):
+"We are pleased to invite you to join us for an exciting event that we have been planning..."
+
+${NO_PLACEHOLDERS}`,
+
+  update: `You are creating a Google Business Profile UPDATE post.
+
+CRITICAL CONTEXT: People seeing this are ACTIVELY SEARCHING for this type of business on Google. They have HIGH INTENT.
+
+Write for searchers ready to act:
+- Lead with the most interesting/valuable information
+- Focus on what matters to the CUSTOMER, not self-promotion
+- Include a reason to act now
+- Keep it 150-250 characters
+- Use 2-3 emojis strategically
+
+CTA Button: "Learn More" (Google will show this button)
+
+GOOD EXAMPLE:
+"✨ Now offering same-day appointments! No more waiting weeks. Quick, quality service when you need it. Tap to learn more or book today."
+
+BAD EXAMPLE (don't write like this):
+"We are thrilled to share some exciting news with our wonderful community! Our team has been working hard to..."
+
+${NO_PLACEHOLDERS}`
+}
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   'blog-post': `You are an expert content writer specializing in SEO-optimized blog posts for local businesses.
@@ -91,13 +159,8 @@ You will generate posts for 6 different platforms, each optimized for that platf
 Return your response in valid JSON format with the exact structure specified.
 ${NO_PLACEHOLDERS}`,
 
-  'gmb-post': `You are a Google Business Profile optimization expert.
-Create posts that improve local search visibility and drive customer engagement.
-Keep posts between 150-300 words with a clear structure.
-Include a compelling hook, valuable information, and strong call-to-action.
-Write in a friendly, approachable tone that encourages customers to visit or contact the business.
-Use 2-3 relevant emojis to increase engagement.
-${NO_PLACEHOLDERS}`,
+  // Default GMB prompt (used if no specific post type)
+  'gmb-post': GBP_POST_TYPE_PROMPTS.update,
 
   'email': `You are an email marketing specialist for local businesses.
 Write compelling emails that nurture customer relationships and drive action.
@@ -114,6 +177,14 @@ Keep responses concise (50-100 words) but meaningful.
 ${NO_PLACEHOLDERS}`
 }
 
+// Get the appropriate system prompt for GBP posts based on type
+function getGbpSystemPrompt(postType?: GbpPostType): string {
+  if (postType && GBP_POST_TYPE_PROMPTS[postType]) {
+    return GBP_POST_TYPE_PROMPTS[postType]
+  }
+  return GBP_POST_TYPE_PROMPTS.update // Default to update
+}
+
 function buildPrompt(params: GenerateContentParams): string {
   const { 
     template, 
@@ -122,7 +193,11 @@ function buildPrompt(params: GenerateContentParams): string {
     topic, 
     tone = 'professional',
     location,
-    additionalContext 
+    additionalContext,
+    gbpPostType,
+    gbpExpiration,
+    gbpEventDate,
+    gbpEventTime
   } = params
   
   let prompt = `Create a ${template.replace('-', ' ')} for the following local business:
@@ -176,16 +251,54 @@ Remember: Do NOT use any placeholder text. Write ready-to-post content.`
       break
 
     case 'gmb-post':
-      prompt += `
+      // Build GBP-specific prompt based on post type
+      if (gbpPostType === 'offer') {
+        prompt += `
 
-Write a Google Business Profile post (150-300 words) that:
-- Opens with an attention-grabbing statement or question
-- Provides valuable information about the topic
-- Highlights what makes this business special
-- Has a clear call-to-action (like "Call us today!" or "Stop by and visit!")
-- Uses 2-3 emojis to increase visual appeal
+**Post Type:** Special Offer
+**Offer Expires:** ${gbpExpiration || 'Limited time'}
+**CTA Button:** Get Offer
 
-Remember: Do NOT use placeholders like [Phone Number] or [Address]. Write naturally around any missing details.`
+Write a Google Business Profile OFFER post (150-250 characters) that:
+- Opens with the offer/discount prominently
+- Creates urgency with the expiration date
+- Tells them exactly what to do next
+- Uses 2-3 emojis
+- Is direct and benefit-focused (remember: searchers are ready to buy!)
+
+Write short and punchy. No fluff. Every word should drive action.`
+      } else if (gbpPostType === 'event') {
+        prompt += `
+
+**Post Type:** Event
+**Event Date:** ${gbpEventDate || 'Coming soon'}
+**Event Time:** ${gbpEventTime || ''}
+**CTA Button:** Book
+
+Write a Google Business Profile EVENT post (150-250 characters) that:
+- States WHAT and WHEN clearly upfront
+- Highlights the key benefit for attendees
+- Creates urgency (limited spots, free, etc.)
+- Uses 2-3 emojis
+- Ends with clear call to reserve/book
+
+Write short and punchy. Lead with the event details.`
+      } else {
+        // Update/News type
+        prompt += `
+
+**Post Type:** Update/News
+**CTA Button:** Learn More
+
+Write a Google Business Profile UPDATE post (150-250 characters) that:
+- Leads with the most newsworthy/interesting information
+- Focuses on what matters to the customer
+- Includes a reason to learn more or act
+- Uses 2-3 emojis
+- Is helpful and informative, not salesy
+
+Write short and punchy. Focus on customer benefit.`
+      }
       break
 
     case 'email':
@@ -302,11 +415,16 @@ IMPORTANT: Return ONLY the JSON object, no explanation or markdown code blocks.`
 }
 
 export async function generateContent(params: GenerateContentParams): Promise<string> {
-  const { maxTokens = 1500 } = params
+  const { maxTokens = 1500, template, gbpPostType } = params
   
   const client = getAIClient()
   const model = getModel()
-  const systemPrompt = SYSTEM_PROMPTS[params.template]
+  
+  // Use GBP-specific system prompt if it's a GMB post
+  const systemPrompt = template === 'gmb-post' 
+    ? getGbpSystemPrompt(gbpPostType)
+    : SYSTEM_PROMPTS[template]
+    
   const userPrompt = buildPrompt(params)
 
   try {
@@ -346,10 +464,8 @@ export async function generateSocialPack(params: Omit<GenerateContentParams, 'te
 
     const responseText = completion.choices[0]?.message?.content || '{}'
     
-    // Parse the JSON response
     let parsed
     try {
-      // Remove any markdown code blocks if present
       const cleanJson = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
       parsed = JSON.parse(cleanJson)
     } catch {
@@ -357,7 +473,6 @@ export async function generateSocialPack(params: Omit<GenerateContentParams, 'te
       throw new Error('Failed to parse AI response')
     }
 
-    // Build the result with character counts
     return {
       twitter: {
         content: parsed.twitter?.content || '',
@@ -392,11 +507,15 @@ export async function generateSocialPack(params: Omit<GenerateContentParams, 'te
 }
 
 export async function generateContentStream(params: GenerateContentParams) {
-  const { maxTokens = 1500 } = params
+  const { maxTokens = 1500, template, gbpPostType } = params
   
   const client = getAIClient()
   const model = getModel()
-  const systemPrompt = SYSTEM_PROMPTS[params.template]
+  
+  const systemPrompt = template === 'gmb-post' 
+    ? getGbpSystemPrompt(gbpPostType)
+    : SYSTEM_PROMPTS[template]
+    
   const userPrompt = buildPrompt(params)
 
   const stream = await client.chat.completions.create({
@@ -417,5 +536,4 @@ export function isAIConfigured(): boolean {
   return !!(process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY)
 }
 
-// Keep backward compatibility
 export const isOpenAIConfigured = isAIConfigured
