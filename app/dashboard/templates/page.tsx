@@ -239,24 +239,24 @@ export default function IdeasPage() {
       <div className="mb-10">
         <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-4">Perfect for you right now</h2>
         
-        <div className="flex items-center gap-4">
-          {/* Left Arrow */}
+        <div className="relative">
+          {/* Left Arrow - positioned outside */}
           <button
             onClick={scrollLeft}
             disabled={scrollIndex === 0}
-            className={`flex-shrink-0 w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+            className={`absolute -left-16 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
               scrollIndex === 0 
                 ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
                 : 'border-gray-300 text-gray-500 hover:bg-teal-50 hover:border-teal-400 hover:text-teal-600'
             }`}
           >
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           
-          {/* Cards */}
-          <div ref={scrollContainerRef} className="flex-1 grid grid-cols-3 gap-4">
+          {/* Cards - full width grid aligned with bottom section */}
+          <div ref={scrollContainerRef} className="grid grid-cols-3 gap-4">
           {visibleItems.map((item, idx) => (
             <button
               key={`${item.type}-${scrollIndex}-${idx}`}
@@ -275,17 +275,17 @@ export default function IdeasPage() {
           ))}
           </div>
           
-          {/* Right Arrow */}
+          {/* Right Arrow - positioned outside */}
           <button
             onClick={scrollRight}
             disabled={scrollIndex >= maxScrollIndex}
-            className={`flex-shrink-0 w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
+            className={`absolute -right-16 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
               scrollIndex >= maxScrollIndex 
                 ? 'border-gray-200 text-gray-300 cursor-not-allowed' 
                 : 'border-gray-300 text-gray-500 hover:bg-teal-50 hover:border-teal-400 hover:text-teal-600'
             }`}
           >
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
