@@ -1200,9 +1200,13 @@ export default function CreateContentPage() {
                         {/* X/Twitter Mockup */}
                         <div className="p-4">
                           <div className="flex gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
-                              {businessName.charAt(0).toUpperCase()}
-                            </div>
+                            {currentBusinessLogo ? (
+                              <img src={currentBusinessLogo} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+                                {businessName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1">
                                 <span className="font-bold text-gray-900 text-sm truncate">{businessName}</span>
@@ -1233,9 +1237,13 @@ export default function CreateContentPage() {
                         {/* Facebook Mockup */}
                         <div className="p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                              {businessName.charAt(0).toUpperCase()}
-                            </div>
+                            {currentBusinessLogo ? (
+                              <img src={currentBusinessLogo} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                                {businessName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
                             <div>
                               <div className="font-semibold text-gray-900 text-[15px]">{businessName}</div>
                               <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -1273,11 +1281,15 @@ export default function CreateContentPage() {
                         {/* Instagram Mockup */}
                         <div className="flex items-center justify-between p-3 border-b border-gray-100">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
-                              <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-700">
-                                {businessName.charAt(0).toUpperCase()}
+                            {currentBusinessLogo ? (
+                              <img src={currentBusinessLogo} alt="" className="w-8 h-8 rounded-full object-cover ring-2 ring-pink-500" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
+                                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-700">
+                                  {businessName.charAt(0).toUpperCase()}
+                                </div>
                               </div>
-                            </div>
+                            )}
                             <span className="font-semibold text-sm text-gray-900">{businessName.toLowerCase().replace(/\s+/g, '')}</span>
                           </div>
                           <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
@@ -1313,9 +1325,13 @@ export default function CreateContentPage() {
                         {/* LinkedIn Mockup */}
                         <div className="p-4">
                           <div className="flex gap-3 mb-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold">
-                              {businessName.charAt(0).toUpperCase()}
-                            </div>
+                            {currentBusinessLogo ? (
+                              <img src={currentBusinessLogo} alt="" className="w-12 h-12 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold">
+                                {businessName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
                             <div className="flex-1">
                               <div className="font-semibold text-gray-900">{businessName}</div>
                               <div className="text-xs text-gray-500">Local {industry} Expert</div>
@@ -1428,6 +1444,11 @@ export default function CreateContentPage() {
 
               return (
                 <div key={platform} className="relative group">
+                  {/* Platform Badge */}
+                  <div className={`absolute -top-3 left-4 z-10 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-sm ${info.bgColor} ${info.color} border border-white`}>
+                    {info.icon}
+                    <span>{info.name}</span>
+                  </div>
                   {renderPlatformMockup()}
                   {/* Copy button overlay */}
                   <button
