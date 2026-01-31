@@ -261,7 +261,7 @@ export default function IdeasPage() {
             <button
               key={`${item.type}-${scrollIndex}-${idx}`}
               onClick={() => handleCreateContent(item.topic)}
-              className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:shadow-lg hover:border-teal-300 hover:-translate-y-1 transition-all group"
+              className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:shadow-lg hover:border-teal-300 hover:-translate-y-1 transition-all group min-h-[140px]"
             >
               <div className="flex items-start justify-between mb-3">
                 <span className="text-2xl">{item.emoji}</span>
@@ -318,7 +318,7 @@ export default function IdeasPage() {
             <button
               key={goal.id}
               onClick={() => handleCreateContent(goal.topic, goal.template)}
-              className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:shadow-lg hover:border-teal-300 hover:-translate-y-1 transition-all group"
+              className="bg-white border border-gray-200 rounded-xl p-5 text-left hover:shadow-lg hover:border-teal-300 hover:-translate-y-1 transition-all group min-h-[140px]"
             >
               <span className="text-2xl mb-3 block">{goal.emoji}</span>
               <h3 className="font-medium text-gray-900 mb-1 group-hover:text-teal-700 transition-colors">{goal.title}</h3>
