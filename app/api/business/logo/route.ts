@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-// POST /api/business/logo - Upload logo
+// POST /api/business/logo - Upload logo or profile photo
 export async function POST(request: Request) {
   const supabase = createClient()
   
@@ -13,17 +13,21 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData()
-    const logo = formData.get('logo') as File
     const businessId = formData.get('businessId') as string
+    const type = (formData.get('type') as string) || 'logo' // 'logo' or 'profile_photo'
+    const file = formData.get(type) as File || formData.get('logo') as File
 
-    if (!logo || !businessId) {
-      return NextResponse.json({ error: 'Logo and businessId are required' }, { status: 400 })
+    if (!file || !businessId) {
+      return NextResponse.json({ error: 'File and businessId are required' }, { status: 400 })
     }
+
+    // Determine field name based on type
+    const fieldName = type === 'profile_photo' ? 'profile_photo_url' : 'logo_url'
 
     // Verify business belongs to user
     const { data: business, error: bizError } = await supabase
       .from('businesses')
-      .select('id, logo_url')
+      .select('id, logo_url, profile_photo_url')
       .eq('id', businessId)
       .eq('user_id', user.id)
       .single()
@@ -32,29 +36,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
 
-    // Delete old logo if exists
-    if (business.logo_url) {
-      const oldPath = business.logo_url.split('/logos/')[1]
+    // Delete old file if exists
+    const oldUrl = type === 'profile_photo' ? business.profile_photo_url : business.logo_url
+    if (oldUrl) {
+      const oldPath = oldUrl.split('/logos/')[1]
       if (oldPath) {
         await supabase.storage.from('logos').remove([oldPath])
       }
     }
 
     // Generate unique filename
-    const ext = logo.name.split('.').pop() || 'png'
-    const filename = `${user.id}/${businessId}_${Date.now()}.${ext}`
+    const ext = file.name.split('.').pop() || 'png'
+    const prefix = type === 'profile_photo' ? 'photo' : 'logo'
+    const filename = `${user.id}/${prefix}_${businessId}_${Date.now()}.${ext}`
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('logos')
-      .upload(filename, logo, {
+      .upload(filename, file, {
         cacheControl: '3600',
         upsert: true,
       })
 
     if (uploadError) {
       console.error('Upload error:', uploadError)
-      return NextResponse.json({ error: 'Failed to upload logo' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to upload' }, { status: 500 })
     }
 
     // Get public URL
@@ -62,29 +68,29 @@ export async function POST(request: Request) {
       .from('logos')
       .getPublicUrl(filename)
 
-    const logoUrl = urlData.publicUrl
+    const fileUrl = urlData.publicUrl
 
-    // Update business with logo URL
+    // Update business with URL
     const { error: updateError } = await supabase
       .from('businesses')
-      .update({ logo_url: logoUrl })
+      .update({ [fieldName]: fileUrl })
       .eq('id', businessId)
       .eq('user_id', user.id)
 
     if (updateError) {
       console.error('Update error:', updateError)
-      return NextResponse.json({ error: 'Failed to save logo' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
     }
 
-    return NextResponse.json({ logo_url: logoUrl })
+    return NextResponse.json({ url: fileUrl })
 
   } catch (error) {
-    console.error('Logo upload error:', error)
+    console.error('Upload error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// DELETE /api/business/logo - Remove logo
+// DELETE /api/business/logo - Remove logo or profile photo
 export async function DELETE(request: Request) {
   const supabase = createClient()
   
@@ -95,16 +101,19 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { businessId } = await request.json()
+    const { businessId, type = 'logo' } = await request.json()
 
     if (!businessId) {
       return NextResponse.json({ error: 'businessId is required' }, { status: 400 })
     }
 
-    // Get business with logo
+    // Determine field name based on type
+    const fieldName = type === 'profile_photo' ? 'profile_photo_url' : 'logo_url'
+
+    // Get business with file URL
     const { data: business, error: bizError } = await supabase
       .from('businesses')
-      .select('id, logo_url')
+      .select('id, logo_url, profile_photo_url')
       .eq('id', businessId)
       .eq('user_id', user.id)
       .single()
@@ -114,29 +123,30 @@ export async function DELETE(request: Request) {
     }
 
     // Delete from storage if exists
-    if (business.logo_url) {
-      const path = business.logo_url.split('/logos/')[1]
+    const fileUrl = type === 'profile_photo' ? business.profile_photo_url : business.logo_url
+    if (fileUrl) {
+      const path = fileUrl.split('/logos/')[1]
       if (path) {
         await supabase.storage.from('logos').remove([path])
       }
     }
 
-    // Clear logo_url in database
+    // Clear URL in database
     const { error: updateError } = await supabase
       .from('businesses')
-      .update({ logo_url: null })
+      .update({ [fieldName]: null })
       .eq('id', businessId)
       .eq('user_id', user.id)
 
     if (updateError) {
       console.error('Update error:', updateError)
-      return NextResponse.json({ error: 'Failed to remove logo' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to remove' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
 
   } catch (error) {
-    console.error('Logo delete error:', error)
+    console.error('Delete error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -25,6 +25,7 @@ interface Business {
   name: string
   industry: string | null
   logo_url: string | null
+  profile_photo_url: string | null
 }
 
 // Image style definitions (must match backend)
@@ -109,6 +110,11 @@ export default function CreateContentPage() {
   const [showLogoPositioner, setShowLogoPositioner] = useState(false)
   const [applyingLogo, setApplyingLogo] = useState(false)
   const [logoSkipped, setLogoSkipped] = useState(false)
+  
+  // Profile photo positioning
+  const [showPhotoPositioner, setShowPhotoPositioner] = useState(false)
+  const [applyingPhoto, setApplyingPhoto] = useState(false)
+  const [photoSkipped, setPhotoSkipped] = useState(false)
 
   // Fetch user's businesses on mount
   useEffect(() => {
@@ -143,8 +149,10 @@ export default function CreateContentPage() {
     }
   }
   
-  // Get current business logo
-  const currentBusinessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url || null
+  // Get current business logo and profile photo
+  const currentBusiness = businesses.find(b => b.id === selectedBusinessId)
+  const currentBusinessLogo = currentBusiness?.logo_url || null
+  const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
   
   // Handle logo apply
   const handleApplyLogo = async (position: { x: number; y: number; scale: number }) => {
@@ -164,12 +172,15 @@ export default function CreateContentPage() {
       
       if (response.ok) {
         const data = await response.json()
-        // Update the generated image with the branded version
         setGeneratedImage({
           ...generatedImage,
           url: data.url,
         })
         setShowLogoPositioner(false)
+        // Show profile photo positioner next if available
+        if (currentBusinessPhoto && !photoSkipped) {
+          setShowPhotoPositioner(true)
+        }
       } else {
         console.error('Failed to apply logo')
       }
@@ -184,6 +195,50 @@ export default function CreateContentPage() {
   const handleSkipLogo = () => {
     setShowLogoPositioner(false)
     setLogoSkipped(true)
+    // Show profile photo positioner if available
+    if (currentBusinessPhoto && !photoSkipped) {
+      setShowPhotoPositioner(true)
+    }
+  }
+  
+  // Handle profile photo apply
+  const handleApplyPhoto = async (position: { x: number; y: number; scale: number }) => {
+    if (!generatedImage || !currentBusinessPhoto) return
+    
+    setApplyingPhoto(true)
+    try {
+      const response = await fetch('/api/image/composite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl: generatedImage.url,
+          logoUrl: currentBusinessPhoto,
+          position,
+          isCircular: true, // Profile photos are circular
+        }),
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setGeneratedImage({
+          ...generatedImage,
+          url: data.url,
+        })
+        setShowPhotoPositioner(false)
+      } else {
+        console.error('Failed to apply photo')
+      }
+    } catch (error) {
+      console.error('Photo apply error:', error)
+    } finally {
+      setApplyingPhoto(false)
+    }
+  }
+  
+  // Handle profile photo skip
+  const handleSkipPhoto = () => {
+    setShowPhotoPositioner(false)
+    setPhotoSkipped(true)
   }
 
   // Auto-detect best image style when topic changes
@@ -859,7 +914,7 @@ export default function CreateContentPage() {
             <p className="text-[10px] text-gray-500 mt-3">*Estimates based on industry averages for local businesses. Actual results may vary.</p>
           </div>
 
-          {/* Logo Positioner or Generated Image Preview */}
+          {/* Logo/Photo Positioner or Generated Image Preview */}
           {generatedImage && showLogoPositioner && currentBusinessLogo ? (
             <div className="mb-6">
               <LogoPositioner
@@ -868,6 +923,21 @@ export default function CreateContentPage() {
                 onApply={handleApplyLogo}
                 onSkip={handleSkipLogo}
                 applying={applyingLogo}
+                title="Add Your Logo"
+                subtitle="Drag to position or use quick buttons"
+              />
+            </div>
+          ) : generatedImage && showPhotoPositioner && currentBusinessPhoto ? (
+            <div className="mb-6">
+              <LogoPositioner
+                imageUrl={generatedImage.url}
+                logoUrl={currentBusinessPhoto}
+                onApply={handleApplyPhoto}
+                onSkip={handleSkipPhoto}
+                applying={applyingPhoto}
+                title="Add Your Photo"
+                subtitle="Position your profile photo on the image"
+                isCircular={true}
               />
             </div>
           ) : generatedImage && (
@@ -894,6 +964,17 @@ export default function CreateContentPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                       </svg>
                       Add Logo
+                    </button>
+                  )}
+                  {currentBusinessPhoto && !photoSkipped && (
+                    <button
+                      onClick={() => setShowPhotoPositioner(true)}
+                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1.5"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Add Photo
                     </button>
                   )}
                   <button

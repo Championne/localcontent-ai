@@ -8,11 +8,23 @@ interface LogoPositionerProps {
   onApply: (position: { x: number; y: number; scale: number }) => void
   onSkip: () => void
   applying?: boolean
+  title?: string
+  subtitle?: string
+  isCircular?: boolean
 }
 
 type CornerPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
-export default function LogoPositioner({ imageUrl, logoUrl, onApply, onSkip, applying }: LogoPositionerProps) {
+export default function LogoPositioner({ 
+  imageUrl, 
+  logoUrl, 
+  onApply, 
+  onSkip, 
+  applying,
+  title = "Add Your Logo",
+  subtitle = "Drag to position or use quick buttons",
+  isCircular = false
+}: LogoPositionerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ x: 85, y: 85 }) // % from top-left
   const [scale, setScale] = useState(15) // Logo size as % of image width
@@ -90,16 +102,22 @@ export default function LogoPositioner({ imageUrl, logoUrl, onApply, onSkip, app
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
+      <div className={`p-4 border-b border-gray-200 ${isCircular ? 'bg-gradient-to-r from-blue-50 to-cyan-50' : 'bg-gradient-to-r from-purple-50 to-pink-50'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-            </svg>
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isCircular ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+            {isCircular ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+            )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">Add Your Logo</h3>
-            <p className="text-xs text-gray-500">Drag to position or use quick buttons</p>
+            <h3 className="font-medium text-gray-900">{title}</h3>
+            <p className="text-xs text-gray-500">{subtitle}</p>
           </div>
         </div>
       </div>
@@ -119,7 +137,7 @@ export default function LogoPositioner({ imageUrl, logoUrl, onApply, onSkip, app
             draggable={false}
           />
           
-          {/* Logo Overlay */}
+          {/* Logo/Photo Overlay */}
           {imageLoaded && (
             <div
               className="absolute cursor-grab active:cursor-grabbing"
@@ -133,12 +151,12 @@ export default function LogoPositioner({ imageUrl, logoUrl, onApply, onSkip, app
             >
               <img 
                 src={logoUrl} 
-                alt="Your logo" 
-                className="w-full h-auto drop-shadow-lg"
+                alt={isCircular ? "Your photo" : "Your logo"}
+                className={`w-full h-auto drop-shadow-lg ${isCircular ? 'rounded-full aspect-square object-cover' : ''}`}
                 draggable={false}
               />
               {/* Drag indicator ring */}
-              <div className="absolute inset-0 border-2 border-dashed border-white/70 rounded pointer-events-none" />
+              <div className={`absolute inset-0 border-2 border-dashed border-white/70 pointer-events-none ${isCircular ? 'rounded-full' : 'rounded'}`} />
             </div>
           )}
         </div>

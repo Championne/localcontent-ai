@@ -9,6 +9,7 @@ interface Business {
   industry: string | null
   location: string | null
   logo_url: string | null
+  profile_photo_url: string | null
   created_at: string
 }
 
@@ -48,9 +49,11 @@ export default function SettingsPage() {
   // Edit business
   const [editingBusiness, setEditingBusiness] = useState<string | null>(null)
   
-  // Logo upload
+  // File uploads
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null)
-  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
+  const logoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
+  const photoInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   useEffect(() => {
     fetchData()
@@ -177,27 +180,30 @@ export default function SettingsPage() {
     }
   }
 
-  const handleLogoUpload = async (businessId: string, file: File) => {
+  const handleFileUpload = async (businessId: string, file: File, type: 'logo' | 'profile_photo') => {
     if (!file) return
     
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       showMessage('error', 'Please upload an image file')
       return
     }
     
-    // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      showMessage('error', 'Logo must be under 2MB')
+      showMessage('error', 'Image must be under 2MB')
       return
     }
 
-    setUploadingLogo(businessId)
+    if (type === 'logo') {
+      setUploadingLogo(businessId)
+    } else {
+      setUploadingPhoto(businessId)
+    }
     
     try {
       const formData = new FormData()
-      formData.append('logo', file)
+      formData.append(type, file)
       formData.append('businessId', businessId)
+      formData.append('type', type)
 
       const res = await fetch('/api/business/logo', {
         method: 'POST',
@@ -207,43 +213,60 @@ export default function SettingsPage() {
       if (res.ok) {
         const data = await res.json()
         setBusinesses(businesses.map(b => 
-          b.id === businessId ? { ...b, logo_url: data.logo_url } : b
+          b.id === businessId 
+            ? { ...b, [type === 'logo' ? 'logo_url' : 'profile_photo_url']: data.url } 
+            : b
         ))
-        showMessage('success', 'Logo uploaded successfully!')
+        showMessage('success', `${type === 'logo' ? 'Logo' : 'Profile photo'} uploaded successfully!`)
       } else {
         const err = await res.json()
-        showMessage('error', err.error || 'Failed to upload logo')
+        showMessage('error', err.error || 'Failed to upload')
       }
     } catch {
-      showMessage('error', 'Failed to upload logo')
+      showMessage('error', 'Failed to upload')
     } finally {
-      setUploadingLogo(null)
+      if (type === 'logo') {
+        setUploadingLogo(null)
+      } else {
+        setUploadingPhoto(null)
+      }
     }
   }
 
-  const handleRemoveLogo = async (businessId: string) => {
-    if (!confirm('Remove logo from this business?')) return
+  const handleRemoveFile = async (businessId: string, type: 'logo' | 'profile_photo') => {
+    if (!confirm(`Remove ${type === 'logo' ? 'logo' : 'profile photo'}?`)) return
     
-    setUploadingLogo(businessId)
+    if (type === 'logo') {
+      setUploadingLogo(businessId)
+    } else {
+      setUploadingPhoto(businessId)
+    }
+    
     try {
       const res = await fetch('/api/business/logo', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId }),
+        body: JSON.stringify({ businessId, type }),
       })
 
       if (res.ok) {
         setBusinesses(businesses.map(b => 
-          b.id === businessId ? { ...b, logo_url: null } : b
+          b.id === businessId 
+            ? { ...b, [type === 'logo' ? 'logo_url' : 'profile_photo_url']: null } 
+            : b
         ))
-        showMessage('success', 'Logo removed')
+        showMessage('success', `${type === 'logo' ? 'Logo' : 'Profile photo'} removed`)
       } else {
-        showMessage('error', 'Failed to remove logo')
+        showMessage('error', 'Failed to remove')
       }
     } catch {
-      showMessage('error', 'Failed to remove logo')
+      showMessage('error', 'Failed to remove')
     } finally {
-      setUploadingLogo(null)
+      if (type === 'logo') {
+        setUploadingLogo(null)
+      } else {
+        setUploadingPhoto(null)
+      }
     }
   }
 
@@ -460,40 +483,14 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        {/* Logo Display */}
-                        {business.logo_url ? (
-                          <div className="relative group">
-                            <img 
-                              src={business.logo_url} 
-                              alt={`${business.name} logo`}
-                              className="w-12 h-12 rounded-lg object-contain border border-gray-200 bg-white"
-                            />
-                            <button
-                              onClick={() => handleRemoveLogo(business.id)}
-                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                              title="Remove logo"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        )}
-                        <div>
-                          <h3 className="font-medium text-gray-900">{business.name}</h3>
-                          <p className="text-sm text-gray-500">
-                            {business.industry || 'No industry set'}
-                            {business.location && ` • ${business.location}`}
-                          </p>
-                        </div>
+                    {/* Business Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{business.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {business.industry || 'No industry set'}
+                          {business.location && ` • ${business.location}`}
+                        </p>
                       </div>
                       <div className="flex gap-1">
                         <button
@@ -517,42 +514,105 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     
-                    {/* Logo Upload Section */}
-                    <div className="pt-3 border-t border-gray-100">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={el => { fileInputRefs.current[business.id] = el }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) handleLogoUpload(business.id, file)
-                          e.target.value = ''
-                        }}
-                        className="hidden"
-                      />
-                      <button
-                        onClick={() => fileInputRefs.current[business.id]?.click()}
-                        disabled={uploadingLogo === business.id}
-                        className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1.5 disabled:text-gray-400"
-                      >
-                        {uploadingLogo === business.id ? (
-                          <>
-                            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                            </svg>
-                            {business.logo_url ? 'Change logo' : 'Upload logo'}
-                          </>
-                        )}
-                      </button>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 2MB. Used on generated images.</p>
+                    {/* Logo and Profile Photo Section */}
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-100">
+                      {/* Logo Upload */}
+                      <div className="text-center">
+                        <div className="mb-2">
+                          {business.logo_url ? (
+                            <div className="relative inline-block group">
+                              <img 
+                                src={business.logo_url} 
+                                alt="Logo"
+                                className="w-16 h-16 rounded-lg object-contain border border-gray-200 bg-white mx-auto"
+                              />
+                              <button
+                                onClick={() => handleRemoveFile(business.id, 'logo')}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                title="Remove"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto">
+                              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={el => { logoInputRefs.current[business.id] = el }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) handleFileUpload(business.id, file, 'logo')
+                            e.target.value = ''
+                          }}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={() => logoInputRefs.current[business.id]?.click()}
+                          disabled={uploadingLogo === business.id}
+                          className="text-xs text-teal-600 hover:text-teal-700 font-medium disabled:text-gray-400"
+                        >
+                          {uploadingLogo === business.id ? 'Uploading...' : (business.logo_url ? 'Change logo' : 'Upload logo')}
+                        </button>
+                        <p className="text-[10px] text-gray-400 mt-1">Business logo</p>
+                      </div>
+
+                      {/* Profile Photo Upload */}
+                      <div className="text-center">
+                        <div className="mb-2">
+                          {business.profile_photo_url ? (
+                            <div className="relative inline-block group">
+                              <img 
+                                src={business.profile_photo_url} 
+                                alt="Profile"
+                                className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 mx-auto"
+                              />
+                              <button
+                                onClick={() => handleRemoveFile(business.id, 'profile_photo')}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                title="Remove"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto">
+                              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={el => { photoInputRefs.current[business.id] = el }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) handleFileUpload(business.id, file, 'profile_photo')
+                            e.target.value = ''
+                          }}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={() => photoInputRefs.current[business.id]?.click()}
+                          disabled={uploadingPhoto === business.id}
+                          className="text-xs text-teal-600 hover:text-teal-700 font-medium disabled:text-gray-400"
+                        >
+                          {uploadingPhoto === business.id ? 'Uploading...' : (business.profile_photo_url ? 'Change photo' : 'Upload photo')}
+                        </button>
+                        <p className="text-[10px] text-gray-400 mt-1">Your photo for posts</p>
+                      </div>
                     </div>
                   </>
                 )}

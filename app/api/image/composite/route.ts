@@ -13,8 +13,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { imageUrl, logoUrl, position } = await request.json()
+    const { imageUrl, logoUrl, position, isCircular = false } = await request.json()
     // position: { x: number, y: number, scale: number } - all in percentages
+    // isCircular: boolean - if true, crop overlay image to circle (for profile photos)
 
     if (!imageUrl || !logoUrl || !position) {
       return NextResponse.json(
@@ -46,9 +47,25 @@ export async function POST(request: Request) {
     const logoWidth = Math.round((position.scale / 100) * imgWidth)
     
     // Resize logo maintaining aspect ratio
-    const resizedLogo = await sharp(logoBuffer)
-      .resize({ width: logoWidth, withoutEnlargement: false })
+    let resizedLogo = await sharp(logoBuffer)
+      .resize({ width: logoWidth, height: isCircular ? logoWidth : undefined, fit: isCircular ? 'cover' : 'inside', withoutEnlargement: false })
       .toBuffer()
+
+    // If circular, apply circular mask
+    if (isCircular) {
+      const circleSize = logoWidth
+      const circleSvg = Buffer.from(
+        `<svg><circle cx="${circleSize/2}" cy="${circleSize/2}" r="${circleSize/2}" fill="white"/></svg>`
+      )
+      resizedLogo = await sharp(resizedLogo)
+        .resize(circleSize, circleSize, { fit: 'cover' })
+        .composite([{
+          input: circleSvg,
+          blend: 'dest-in'
+        }])
+        .png()
+        .toBuffer()
+    }
 
     // Get resized logo dimensions
     const logoMeta = await sharp(resizedLogo).metadata()
