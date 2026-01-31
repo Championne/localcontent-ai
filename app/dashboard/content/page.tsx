@@ -1686,13 +1686,40 @@ export default function CreateContentPage() {
               <span className="text-xs text-gray-400">{generatedContent.length} characters</span>
             </div>
 
-            {/* Preview Mode */}
+            {/* Preview Mode - Enhanced Blog Style */}
             {viewMode === 'preview' && (
-              <div 
-                ref={contentPreviewRef}
-                className="p-6 prose prose-gray max-w-none prose-headings:text-gray-900 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-gray-600 prose-strong:text-gray-900 prose-ul:text-gray-600 prose-li:marker:text-gray-400"
-              >
-                <ReactMarkdown>{generatedContent}</ReactMarkdown>
+              <div ref={contentPreviewRef} className="overflow-hidden">
+                {/* Hero Image for Blog Posts */}
+                {selectedTemplate === 'blog-post' && generatedImage && (
+                  <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200">
+                    <img 
+                      src={generatedImage.url} 
+                      alt="Blog hero" 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  </div>
+                )}
+                
+                {/* Enhanced Typography Content */}
+                <div className={selectedTemplate === 'blog-post' ? "px-8 py-6" : "p-6"}>
+                  <article className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-3xl prose-h1:mb-6 prose-h1:leading-tight prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-xl prose-h3:mt-6 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-5 prose-strong:text-gray-900 prose-ul:my-4 prose-ul:space-y-2 prose-li:text-gray-600 prose-li:marker:text-teal-500 prose-a:text-teal-600">
+                    <ReactMarkdown>{generatedContent}</ReactMarkdown>
+                  </article>
+                  
+                  {/* Author Footer for Blog */}
+                  {selectedTemplate === 'blog-post' && (
+                    <div className="mt-8 pt-6 border-t border-gray-100 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-semibold">
+                        {businessName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{businessName}</p>
+                        <p className="text-sm text-gray-500">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
