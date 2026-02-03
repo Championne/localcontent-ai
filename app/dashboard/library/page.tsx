@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface ContentItem {
   id: string
@@ -19,6 +20,7 @@ interface ContentItem {
 }
 
 export default function ContentLibraryPage() {
+  const router = useRouter()
   const [content, setContent] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -167,7 +169,8 @@ export default function ContentLibraryPage() {
           {filteredContent.map((item) => (
             <div
               key={item.id}
-              className='p-4 flex items-center gap-4 hover:bg-muted/50'
+              onClick={() => router.push(`/dashboard/content/${item.id}`)}
+              className='p-4 flex items-center gap-4 hover:bg-muted/50 cursor-pointer transition-colors'
             >
               {/* Thumbnail */}
               {item.metadata?.image_url ? (
@@ -203,14 +206,11 @@ export default function ContentLibraryPage() {
                 >
                   {item.status}
                 </span>
-                <Link 
-                  href={`/dashboard/content/${item.id}`}
-                  className='text-sm text-primary hover:underline'
-                >
-                  Edit
-                </Link>
                 <button 
-                  onClick={() => handleDelete(item.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(item.id)
+                  }}
                   className='text-sm text-destructive hover:underline'
                 >
                   Delete
