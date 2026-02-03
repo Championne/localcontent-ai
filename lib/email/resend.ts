@@ -1,7 +1,17 @@
 import { Resend } from 'resend'
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy-initialize Resend client to avoid build-time errors
+let resendClient: Resend | null = null
+
+function getResendClient(): Resend | null {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendClient
+}
 
 // Default sender - update domain after verifying in Resend
 const DEFAULT_FROM = process.env.RESEND_FROM_EMAIL || 'GeoSpark <noreply@geospark.app>'
@@ -26,7 +36,8 @@ export interface EmailResult {
  */
 export async function sendEmail(options: SendEmailOptions): Promise<EmailResult> {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    const resend = getResendClient()
+    if (!resend) {
       console.error('RESEND_API_KEY not configured')
       return { success: false, error: 'Email service not configured' }
     }
