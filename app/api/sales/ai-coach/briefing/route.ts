@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Fetch relevant feedback/objections
     const { data: feedback } = await supabase
       .from('feedback')
-      .select('type, title, description, client_quote')
+      .select('type, title, description, client_quote, lead_id')
       .or(`lead_id.eq.${lead_id},type.eq.objection`)
       .order('upvotes', { ascending: false })
       .limit(10)
