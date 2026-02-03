@@ -1,0 +1,8 @@
+{
+  "test_name": "test_name_2",
+  "variant_id": "control",
+  "parameters": {
+    "content_length": "short",
+    "image_count": 0
+  }
+}

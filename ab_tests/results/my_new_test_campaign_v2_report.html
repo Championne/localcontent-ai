@@ -1,0 +1,60 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>A/B Test Report: my_new_test_campaign_v2</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+            .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            h1, h2 { color: #0056b3; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+            th { background-color: #e9e9e9; font-weight: bold; }
+            .green { color: #28a745; font-weight: bold; }
+            .red { color: #dc3545; font-weight: bold; }
+            .neutral { color: #6c757d; }
+            .recommendations { margin-top: 30px; padding: 15px; background-color: #e6f7ff; border-left: 5px solid #007bff; }
+            .bar-chart { margin-top: 20px; }
+            .bar-chart-row { display: flex; align-items: center; margin-bottom: 5px; }
+            .bar-chart-label { width: 150px; flex-shrink: 0; }
+            .bar { height: 20px; background-color: #007bff; margin-right: 10px; }
+            .bar-value { font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>A/B Test Report: my_new_test_campaign_v2</h1>
+    <h2>Summary of Results</h2><table><thead><tr><th>Metric</th><th>variant_A</th><th>variant_B</th></tr></thead><tbody><tr><td>Views</td><td>49</td><td>51</td></tr><tr><td>CTA Clicks</td><td>4</td><td>7</td></tr><tr><td>Conversion Rate</td><td class='red'>8.16%</td><td class='green'>13.73%</td></tr></tbody></table><h2>Visualizations</h2><h3>Views Comparison</h3><div class='bar-chart'>
+            <div class="bar-chart-row">
+                <span class="bar-chart-label">variant_A</span>
+                <div class="bar" style="width: 96.08%;"></div>
+                <span class="bar-value">49</span>
+            </div>
+            
+            <div class="bar-chart-row">
+                <span class="bar-chart-label">variant_B</span>
+                <div class="bar" style="width: 100.00%;"></div>
+                <span class="bar-value">51</span>
+            </div>
+            </div><h3>Conversion Rate Comparison</h3><div class='bar-chart'>
+            <div class="bar-chart-row">
+                <span class="bar-chart-label">variant_A</span>
+                <div class="bar" style="width: 59.48%;"></div>
+                <span class="bar-value">8.16%</span>
+            </div>
+            
+            <div class="bar-chart-row">
+                <span class="bar-chart-label">variant_B</span>
+                <div class="bar" style="width: 100.00%;"></div>
+                <span class="bar-value">13.73%</span>
+            </div>
+            </div>
+            <div class="recommendations">
+                <h2>Recommendations</h2>
+        <p>Based on conversion rate, '<strong>variant_B</strong>' is the best-performing variant with a conversion rate of <strong>13.73%</strong>.</p><p>Consider deploying this variant or further investigating its characteristics (e.g., CTA phrasing, content length, tone of voice) to understand why it performed better.</p><p><em>Important Note: These are simulated results based on mock data. In a real-world A/B test, proper statistical significance testing would be crucial before making any deployment decisions.</em></p></div>
+        </div>
+    </body>
+    </html>
+    

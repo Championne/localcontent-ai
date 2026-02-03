@@ -1,0 +1,7 @@
+name: "Short Story Producer"
+description: "Produces a short story."
+model: "gpt-3.5-turbo"
+temperature: "high" # Should be a number
+categories:
+  content_type: ["short_story"]
+  purpose: ["creative_writing"]

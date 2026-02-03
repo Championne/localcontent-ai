@@ -1,0 +1,58 @@
+{
+    "shared_templates": [
+        {
+            "template_id": "template_001",
+            "recipient": "user_alice",
+            "permissions": "view",
+            "shared_by": "user_bob",
+            "timestamp": 1769651818.5424643
+        },
+        {
+            "template_id": "template_002",
+            "recipient": "user_bob",
+            "permissions": "edit",
+            "shared_by": "user_charlie",
+            "timestamp": 1769651818.5434642
+        },
+        {
+            "template_id": "template_003",
+            "recipient": "user_alice",
+            "permissions": "comment",
+            "shared_by": "user_david",
+            "timestamp": 1769651818.5444643
+        }
+    ],
+    "peer_connections": [
+        {
+            "user_id": "user_alice",
+            "connections": [
+                "user_bob",
+                "user_charlie"
+            ]
+        },
+        {
+            "user_id": "user_bob",
+            "connections": [
+                "user_alice",
+                "user_david"
+            ]
+        },
+        {
+            "user_id": "user_charlie",
+            "connections": [
+                "user_alice"
+            ]
+        },
+        {
+            "user_id": "user_david",
+            "connections": [
+                "user_bob"
+            ]
+        }
+    ],
+    "community_engagement_metrics": {
+        "total_shares": 3,
+        "active_users": 10,
+        "new_templates_this_week": 0
+    }
+}

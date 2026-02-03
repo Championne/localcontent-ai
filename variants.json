@@ -1,0 +1,29 @@
+{
+  "test_name_1": {
+    "control": {
+      "keyword_density": 0.03,
+      "tone_of_voice": "neutral",
+      "cta_phrasing": "Vraag offerte aan"
+    },
+    "variant_A": {
+      "keyword_density": 0.05,
+      "tone_of_voice": "neutral",
+      "cta_phrasing": "Ontdek Meer Nu!"
+    },
+    "variant_B": {
+      "keyword_density": 0.03,
+      "tone_of_voice": "friendly",
+      "cta_phrasing": "Vraag offerte aan"
+    }
+  },
+  "test_name_2": {
+    "control": {
+        "content_length": "short",
+        "image_count": 0
+    },
+    "variant_A": {
+        "content_length": "long",
+        "image_count": 1
+    }
+  }
+}

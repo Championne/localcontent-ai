@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 13% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 18%;
+    /* Brand Primary: Teal #0D9488 = hsl(175, 84%, 32%) */
+    --primary: 175 84% 32%;
+    --primary-foreground: 0 0% 100%;
+    /* Brand Secondary: Gray */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 13% 18%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    /* Brand Accent: Orange #F97316 = hsl(25, 95%, 53%) */
+    --accent: 25 95% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 175 84% 32%;
+    --radius: 0.75rem;
+    /* Brand Success: Green #22C55E */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 220 13% 8%;
+    --foreground: 0 0% 98%;
+    --card: 220 13% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 13% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 175 72% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 13% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 220 13% 16%;
+    --muted-foreground: 220 9% 60%;
+    --accent: 25 90% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 20%;
+    --input: 220 13% 20%;
+    --ring: 175 72% 40%;
+    --success: 142 64% 40%;
+    --success-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* Custom utility classes for brand colors */
+@layer utilities {
+  .text-brand-primary {
+    color: hsl(var(--primary));
+  }
+  .text-brand-accent {
+    color: hsl(var(--accent));
+  }
+  .bg-brand-primary {
+    background-color: hsl(var(--primary));
+  }
+  .bg-brand-accent {
+    background-color: hsl(var(--accent));
+  }
+  .border-brand-primary {
+    border-color: hsl(var(--primary));
+  }
+  .ring-brand-primary {
+    --tw-ring-color: hsl(var(--primary));
+  }
+}

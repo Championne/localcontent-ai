@@ -1,0 +1,256 @@
+// app/(marketing)/pricing/page.tsx
+
+import React from 'react'
+import Link from 'next/link'
+
+const tiers = [
+  {
+    name: 'Free',
+    price: 0,
+    annual: 0,
+    description: 'Try it out, no credit card required',
+    cta: 'Get Started Free',
+    ctaLink: '/auth/signup',
+    highlighted: false,
+    features: [
+      { text: '1 business', included: true },
+      { text: '5 content pieces/month', included: true },
+      { text: '5 AI images/month', included: true },
+      { text: '2 platforms', included: true },
+      { text: '1 user', included: true },
+      { text: 'All content types', included: true },
+      { text: 'Platform mockup previews', included: true },
+      { text: 'Saved content library', included: false },
+      { text: 'Analytics dashboard', included: false },
+    ],
+  },
+  {
+    name: 'Starter',
+    price: 29,
+    annual: 23,
+    description: 'Perfect for solo business owners',
+    cta: 'Start 7-Day Free Trial',
+    ctaLink: '/auth/signup?plan=starter',
+    highlighted: false,
+    features: [
+      { text: '1 business', included: true },
+      { text: '30 content pieces/month', included: true },
+      { text: '30 AI images/month', included: true },
+      { text: 'All 6 platforms', included: true },
+      { text: '1 user', included: true },
+      { text: 'All content types', included: true },
+      { text: 'Platform mockup previews', included: true },
+      { text: 'Saved content library', included: true },
+      { text: 'Analytics dashboard', included: false },
+    ],
+  },
+  {
+    name: 'Pro',
+    price: 79,
+    annual: 63,
+    description: 'For growing businesses with multiple locations',
+    cta: 'Start 7-Day Free Trial',
+    ctaLink: '/auth/signup?plan=pro',
+    highlighted: true,
+    badge: 'Most Popular',
+    features: [
+      { text: '3 businesses', included: true },
+      { text: '100 content pieces/month', included: true },
+      { text: '100 AI images/month', included: true },
+      { text: 'All 6 platforms', included: true },
+      { text: '1 user', included: true },
+      { text: 'All content types', included: true },
+      { text: 'Platform mockup previews', included: true },
+      { text: 'Saved content library', included: true },
+      { text: 'Analytics dashboard', included: true },
+    ],
+  },
+  {
+    name: 'Premium',
+    price: 179,
+    annual: 143,
+    description: 'For agencies and multi-location businesses',
+    cta: 'Start 7-Day Free Trial',
+    ctaLink: '/auth/signup?plan=premium',
+    highlighted: false,
+    features: [
+      { text: '10 businesses', included: true },
+      { text: 'Unlimited content', included: true },
+      { text: 'Unlimited AI images', included: true },
+      { text: 'All 6 platforms', included: true },
+      { text: '3 users', included: true },
+      { text: 'All content types', included: true },
+      { text: 'Platform mockup previews', included: true },
+      { text: 'Saved content library', included: true },
+      { text: 'Analytics dashboard', included: true },
+      { text: 'Priority support', included: true },
+    ],
+  },
+]
+
+export default function PricingPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
+            Simple pricing. Powerful results.
+          </h1>
+          <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
+            From hours to minutes — generate a month of content for less than one freelance article.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Save 20% with annual billing
+          </div>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
+          {tiers.map((tier) => (
+            <div
+              key={tier.name}
+              className={`relative bg-white rounded-2xl shadow-sm border-2 transition-all hover:shadow-lg ${
+                tier.highlighted
+                  ? 'border-teal-500 scale-105 shadow-lg'
+                  : 'border-gray-200'
+              }`}
+            >
+              {tier.badge && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    {tier.badge}
+                  </span>
+                </div>
+              )}
+
+              <div className="p-6">
+                <h2 className="text-xl font-bold text-gray-900">{tier.name}</h2>
+                <p className="mt-1 text-sm text-gray-500 h-10">{tier.description}</p>
+
+                <div className="mt-4">
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-bold text-gray-900">
+                      ${tier.price}
+                    </span>
+                    <span className="ml-1 text-gray-500">/month</span>
+                  </div>
+                  {tier.price > 0 && (
+                    <p className="mt-1 text-sm text-teal-600 font-medium">
+                      ${tier.annual}/mo billed annually
+                    </p>
+                  )}
+                </div>
+
+                <Link
+                  href={tier.ctaLink}
+                  className={`mt-6 block w-full text-center py-3 px-4 rounded-lg font-semibold transition-colors ${
+                    tier.highlighted
+                      ? 'bg-teal-600 text-white hover:bg-teal-700'
+                      : tier.price === 0
+                      ? 'bg-gray-900 text-white hover:bg-gray-800'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
+                  }`}
+                >
+                  {tier.cta}
+                </Link>
+              </div>
+
+              <div className="border-t border-gray-100 p-6">
+                <ul className="space-y-3">
+                  {tier.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3">
+                      {feature.included ? (
+                        <svg
+                          className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      )}
+                      <span
+                        className={`text-sm ${
+                          feature.included ? 'text-gray-700' : 'text-gray-400'
+                        }`}
+                      >
+                        {feature.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mt-20 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+            Frequently Asked Questions
+          </h2>
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+              <h3 className="font-semibold text-gray-900">What counts as a content piece?</h3>
+              <p className="mt-2 text-gray-600 text-sm">
+                Each generation counts as 1 piece — whether it's a blog post, email, Google Business post, 
+                or a Social Media Pack (which gives you 6 platform-optimized posts in one generation).
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+              <h3 className="font-semibold text-gray-900">Can I upgrade or downgrade anytime?</h3>
+              <p className="mt-2 text-gray-600 text-sm">
+                Yes! You can change your plan at any time. Upgrades take effect immediately, 
+                and downgrades apply at the end of your billing cycle.
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+              <h3 className="font-semibold text-gray-900">What happens if I run out of content or images?</h3>
+              <p className="mt-2 text-gray-600 text-sm">
+                You can upgrade to a higher tier anytime, or wait until your limits reset at the start 
+                of your next billing cycle. We'll notify you when you're running low.
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+              <h3 className="font-semibold text-gray-900">Do you offer refunds?</h3>
+              <p className="mt-2 text-gray-600 text-sm">
+                We offer a 7-day free trial on all paid plans so you can try before you commit. 
+                If you're not satisfied within the first 30 days of a paid subscription, contact us for a full refund.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="mt-20 text-center">
+          <p className="text-gray-600">
+            Questions? <Link href="/contact" className="text-teal-600 font-medium hover:text-teal-700">Contact us</Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

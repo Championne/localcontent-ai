@@ -1,0 +1,11 @@
+name: "Article Generator"
+description: "Generates a blog article based on a topic."
+model: "gpt-4"
+temperature: 0.7
+template: |
+  Write a blog article about {{topic}} for {{audience}}.
+categories:
+  content_type: ["blog_post"]
+  industry: ["marketing"]
+  platform: []
+  purpose: ["content_creation"]

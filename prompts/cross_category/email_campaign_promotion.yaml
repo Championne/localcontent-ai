@@ -1,0 +1,124 @@
+name: Email Campaign - Promotion
+description: A promotional email template designed for high engagement and conversion,
+  utilizing problem-solution storytelling and local SEO principles. Ideal for businesses
+  looking to promote offers to their subscriber base.
+category: Email Campaigns
+tags:
+- promotion
+- email
+- marketing
+- sales
+- local SEO
+- storytelling
+- conversion
+- offer
+- discount
+variables:
+- name: company_name
+  description: The name of your company or brand.
+  type: string
+- name: product_service
+  description: The specific product or service being promoted.
+  type: string
+- name: target_audience_identifier
+  description: A brief phrase or word to identify your target audience in the email
+    (e.g., 'fellow residents', 'local businesses', 'savvy shoppers').
+  type: string
+- name: problem
+  description: A common pain point or challenge your target audience faces that your
+    product/service solves.
+  type: string
+- name: solution_benefit
+  description: The direct benefit or solution your product/service offers to the 'problem'.
+  type: string
+- name: offer_details
+  description: Clear and concise details of the promotion (e.g., '20% off all services',
+    'buy one get one free', 'free consultation').
+  type: string
+- name: discount_code
+  description: (Optional) The specific discount code to use, if applicable.
+  type: string
+- name: call_to_action
+  description: The main call to action for the email (e.g., 'Shop Now', 'Book Your
+    Spot', 'Learn More').
+  type: string
+- name: location_specific_advantage
+  description: A unique advantage or detail that appeals specifically to your local
+    audience (e.g., 'conveniently located in downtown [City]', 'our expert local team').
+  type: string
+- name: city_or_region
+  description: The specific city or region your email campaign targets for local SEO.
+  type: string
+- name: website_link
+  description: The URL where the subscriber can redeem the offer or find more information.
+  type: string
+- name: urgency_scarcity_message
+  description: (Optional) A sentence creating urgency or scarcity (e.g., 'This offer
+    ends soon!', 'Limited spots available!').
+  type: string
+- name: social_proof_snippet
+  description: (Optional) A short testimonial, stat, or trust signal to build confidence.
+  type: string
+- name: sender_name
+  description: The name of the person or team sending the email.
+  type: string
+template: 'Subject: [COMPANY_NAME] in [CITY_OR_REGION]: Solve Your [PROBLEM] & Get
+  [OFFER_DETAILS]!
+
+
+  Hi there, [TARGET_AUDIENCE_IDENTIFIER]!
+
+
+  Are you tired of dealing with [PROBLEM]? We understand that finding the right [PRODUCT_SERVICE]
+  in [CITY_OR_REGION] can be a challenge. You deserve a solution that genuinely offers
+  [SOLUTION_BENEFIT].
+
+
+  That''s where [COMPANY_NAME] comes in. We''ve been serving the [CITY_OR_REGION]
+  community with [PRODUCT_SERVICE] designed to make your life easier and better. Our
+  [LOCATION_SPECIFIC_ADVANTAGE] means you get top-notch service right here where you
+  live.
+
+
+  For a limited time, we''re excited to offer you [OFFER_DETAILS] on our [PRODUCT_SERVICE]!
+
+
+  Why keep struggling with [PROBLEM] when you can experience the [SOLUTION_BENEFIT]
+  that everyone in [CITY_OR_REGION] is talking about?
+
+
+  Here''s how to claim your exclusive offer:
+
+
+  1.  Click the link below.
+
+  2.  (Optional) Use code **[DISCOUNT_CODE]** at checkout.
+
+
+  [CALL_TO_ACTION]: [WEBSITE_LINK]
+
+
+  [URGENCY_SCARCITY_MESSAGE]
+
+
+  [SOCIAL_PROOF_SNIPPET]
+
+
+  Don''t miss out on this opportunity to enhance your [PRODUCT_SERVICE related area]
+  with [COMPANY_NAME]. We''re proud to be your local [PRODUCT_SERVICE provider] in
+  [CITY_OR_REGION].
+
+
+  Warmly,
+
+
+  [SENDER_NAME]
+
+  The Team at [COMPANY_NAME]
+
+  [WEBSITE_LINK]
+
+  '
+metadata:
+  created_at: '2026-01-27T19:34:57.227589+00:00'
+  updated_at: '2026-01-27T20:04:56.777651+00:00'

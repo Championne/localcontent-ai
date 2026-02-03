@@ -1,0 +1,9 @@
+{
+  "test_name": "test_name_1",
+  "variant_id": "variant_A",
+  "parameters": {
+    "keyword_density": 0.05,
+    "tone_of_voice": "neutral",
+    "cta_phrasing": "Ontdek Meer Nu!"
+  }
+}

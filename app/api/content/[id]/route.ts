@@ -1,0 +1,136 @@
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
+
+// GET /api/content/[id] - Get single content item
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const supabase = createClient()
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('content')
+      .select('*')
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'Content not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ content: data })
+
+  } catch (error) {
+    console.error('Get content error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// PATCH /api/content/[id] - Update content
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const supabase = createClient()
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const body = await request.json()
+    const { title, content, status, scheduled_for, metadata } = body
+
+    // Verify ownership
+    const { data: existing } = await supabase
+      .from('content')
+      .select('id')
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Content not found' }, { status: 404 })
+    }
+
+    const updates: Record<string, unknown> = {
+      updated_at: new Date().toISOString()
+    }
+
+    if (title !== undefined) updates.title = title
+    if (content !== undefined) updates.content = content
+    if (status !== undefined) updates.status = status
+    if (scheduled_for !== undefined) updates.scheduled_for = scheduled_for
+    if (metadata !== undefined) updates.metadata = metadata
+
+    // If publishing, set published_at
+    if (status === 'published') {
+      updates.published_at = new Date().toISOString()
+    }
+
+    const { data, error } = await supabase
+      .from('content')
+      .update(updates)
+      .eq('id', params.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating content:', error)
+      return NextResponse.json({ error: 'Failed to update content' }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      content: data
+    })
+
+  } catch (error) {
+    console.error('Update content error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// DELETE /api/content/[id] - Delete content
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const supabase = createClient()
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  
+  if (authError || !user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    // Verify ownership and delete
+    const { error } = await supabase
+      .from('content')
+      .delete()
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      console.error('Error deleting content:', error)
+      return NextResponse.json({ error: 'Failed to delete content' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+
+  } catch (error) {
+    console.error('Delete content error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

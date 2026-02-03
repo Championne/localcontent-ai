@@ -1,0 +1,73 @@
+name: Personal Trainer Social Media Post
+description: Generate a social media post for a personal trainer or fitness coach,
+  focusing on problem-solution storytelling, local SEO, personalized programs, transformation
+  stories, and local sessions.
+parameters:
+- name: client_pain_point
+  type: string
+  description: A specific, relatable pain point a potential client might be experiencing
+    (e.g., "feeling stuck with your fitness goals," "can't find time to work out,"
+    "unhappy with your current progress").
+  required: true
+- name: trainer_name_or_brand
+  type: string
+  description: The name of the personal trainer or their fitness coaching brand.
+  required: true
+- name: location
+  type: string
+  description: The specific city, town, or neighborhood the trainer serves for local
+    SEO (e.g., "downtown Seattle," "North London," "Sydney's Eastern Suburbs").
+  required: true
+- name: niche_or_specialty
+  type: string
+  description: (Optional) The trainer's specific niche or specialty (e.g., "weight
+    loss for busy professionals," "strength training for seniors," "pre-natal fitness").
+  required: false
+- name: call_to_action
+  type: string
+  description: The desired action for the audience to take (e.g., "DM us for a free
+    consultation," "Visit our website to learn more," "Sign up today!").
+  required: true
+- name: tone
+  type: string
+  description: The desired tone for the social media post (e.g., "inspirational,"
+    "empathetic," "direct," "motivational").
+  default: inspirational and empathetic
+- name: length
+  type: string
+  description: Desired length of the post (e.g., "short," "medium," "long").
+  default: medium
+template: 'As a {{trainer_name_or_brand}} coach, I know how frustrating it can be
+  to be {{client_pain_point}}. You''ve tried various diets, endless generic workouts,
+  and still feel miles away from your goals. It''s time to stop feeling invisible
+  in your own fitness journey and start seeing real, lasting transformation right
+  here in {{location}}.
+
+
+  We specialize in crafting *personalized* fitness programs that are built around
+  YOUR unique body, goals, and lifestyle. Forget one-size-fits-all solutions. Whether
+  you''re looking for dynamic gym sessions at [Local Gym Name suggestion] or invigorating
+  outdoor workouts in beautiful [Local Park/Area suggestion], we bring expert guidance
+  directly to you in {{location}}.
+
+
+  Imagine: finally breaking through plateaus, feeling stronger and more confident,
+  and celebrating *your* personal victories. We''re not just about reps and sets;
+  we''re about guiding you through your own incredible transformation story, just
+  like many of our clients in {{location}} have already experienced. Their success
+  is your potential!
+
+
+  Ready to stop wishing and start doing? Let''s build a healthier, happier you, together.
+
+
+  {{call_to_action}}
+
+
+  #{{trainer_name_or_brand}} #{{location}}Fitness #PersonalTrainer{{location}} #[NicheOrSpecialtyIfProvided]
+  #FitnessCoach #TransformationTuesday #LocalFitness #WorkoutMotivation #AchieveYourGoals
+
+  '
+metadata:
+  created_at: '2026-01-27T19:34:57.068740+00:00'
+  updated_at: '2026-01-27T20:04:56.551770+00:00'

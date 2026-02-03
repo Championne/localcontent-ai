@@ -1,0 +1,31 @@
+name: "Landscapers - Website Service Description"
+version: "1.0.0"
+category: "service_descriptions"
+description: "Generate compelling website service descriptions for landscaping businesses, focusing on problem-solution storytelling."
+target_content_type: "website_description"
+metadata:
+  industry: "Landscapers"
+  content_goal: "conversion"
+  tone: "professional, reassuring"
+  keywords_to_inject:
+    - "tuinaanleg"
+    - "tuinonderhoud"
+    - "bestrating"
+    - "groenvoorziening"
+    - "landschapsarchitectuur"
+structure:
+  guidelines: |
+    As an expert copywriter for landscaping services, your task is to craft a concise and appealing website service description.
+    Always start by identifying a common customer problem or desire related to their outdoor space (e.g., 'Overwoekerde tuin?', 'Droomt u van een perfecte buitenruimte?').
+    Then, introduce the landscaping service as the ideal solution, emphasizing expertise, quality, and the benefits the customer will experience.
+    Include relevant keywords naturally.
+    Keep the tone professional and reassuring.
+  example_prompt: |
+    Generate a website service description for a landscaping company named 'GroenMeesters' based in Utrecht, offering 'tuinaanleg' (garden construction).
+    Focus on customers who want a beautiful, low-maintenance garden but lack the time or expertise.
+  example_output: |
+    **Overwoekerde Tuin of Onvervulde Tuindroom in Utrecht? GroenMeesters creëert uw ideale buitenruimte door middel van professionele tuinaanleg.**
+
+    Bij GroenMeesters begrijpen we dat een prachtige tuin begint met een visie en deskundige uitvoering. Woont u in Utrecht en droomt u van een perfect ontworpen, onderhoudsvriendelijke tuin, maar ontbreekt het u aan tijd of kennis om dit te realiseren? Onze specialisten in **tuinaanleg** nemen al uw zorgen uit handen.
+
+    Van concept tot realisatie zorgen wij voor een naadloze transformatie van uw buitenleven. Wij blinken uit in **groenvoorziening** en **landschapsarchitectuur**, en werken met u samen om een tuin te ontwerpen die niet alleen esthetisch is, maar ook functioneel en duurzaam. Laat GroenMeesters uw **tuindroom** werkelijkheid maken!
