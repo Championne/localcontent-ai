@@ -1,10 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function AcceptInvitePage() {
+// Loading fallback for Suspense
+function LoadingState() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4" />
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+// Main component that uses useSearchParams
+function AcceptInviteContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -159,5 +172,14 @@ export default function AcceptInvitePage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Main page component with Suspense wrapper
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <AcceptInviteContent />
+    </Suspense>
   )
 }
