@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       assigned_to: lead.assigned_to,
       sent_by: access.salesMember?.id,
       inbox_type: 'lead',
-      tracking_id: result.trackingId || trackingId,
+      tracking_id: 'trackingId' in result ? result.trackingId : trackingId,
       template_id: template_id || null,
       status: 'read', // Outbound emails are already "read"
       sent_at: new Date().toISOString()
