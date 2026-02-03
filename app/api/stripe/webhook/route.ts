@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { stripe, getPlanByPriceId } from '@/lib/stripe/stripe'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 
-// Create admin client for webhook (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Lazy-initialize admin client for webhook (bypasses RLS)
+let supabaseAdmin: SupabaseClient | null = null
+
+function getSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdmin) {
+    supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+  }
+  return supabaseAdmin
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -41,7 +48,7 @@ export async function POST(request: NextRequest) {
             ? await stripe.subscriptions.retrieve(session.subscription as string)
             : null
 
-          await supabaseAdmin.from('subscriptions').update({
+          await getSupabaseAdmin().from('subscriptions').update({
             stripe_subscription_id: session.subscription as string,
             plan: plan,
             status: subscription?.status === 'trialing' ? 'trialing' : 'active',
@@ -52,7 +59,7 @@ export async function POST(request: NextRequest) {
           }).eq('user_id', userId)
 
           // Mark onboarding payment complete
-          await supabaseAdmin.from('profiles').update({
+          await getSupabaseAdmin().from('profiles').update({
             onboarding_completed: true,
           }).eq('id', userId)
         }
@@ -67,14 +74,14 @@ export async function POST(request: NextRequest) {
         const priceId = subscription.items.data[0]?.price.id
         const plan = priceId ? getPlanByPriceId(priceId) : null
 
-        const { data: sub } = await supabaseAdmin
+        const { data: sub } = await getSupabaseAdmin()
           .from('subscriptions')
           .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single()
 
         if (sub) {
-          await supabaseAdmin.from('subscriptions').update({
+          await getSupabaseAdmin().from('subscriptions').update({
             status: subscription.status,
             plan: plan || undefined,
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
@@ -91,14 +98,14 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription
         const customerId = subscription.customer as string
 
-        const { data: sub } = await supabaseAdmin
+        const { data: sub } = await getSupabaseAdmin()
           .from('subscriptions')
           .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single()
 
         if (sub) {
-          await supabaseAdmin.from('subscriptions').update({
+          await getSupabaseAdmin().from('subscriptions').update({
             plan: 'free',
             status: 'cancelled',
             stripe_subscription_id: null,
@@ -119,14 +126,14 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as Stripe.Invoice
         const customerId = invoice.customer as string
 
-        const { data: sub } = await supabaseAdmin
+        const { data: sub } = await getSupabaseAdmin()
           .from('subscriptions')
           .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single()
 
         if (sub) {
-          await supabaseAdmin.from('subscriptions').update({
+          await getSupabaseAdmin().from('subscriptions').update({
             status: 'past_due',
           }).eq('user_id', sub.user_id)
         }
