@@ -35,6 +35,13 @@ interface UnreadCounts {
   total: number
 }
 
+interface Lead {
+  id: string
+  company_name: string
+  contact_name: string | null
+  contact_email: string | null
+}
+
 export default function SalesInboxPage() {
   const [emails, setEmails] = useState<Email[]>([])
   const [loading, setLoading] = useState(true)
@@ -43,6 +50,10 @@ export default function SalesInboxPage() {
   const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>({ my: 0, shared: 0, total: 0 })
   const [showComposer, setShowComposer] = useState(false)
   const [replyTo, setReplyTo] = useState<Email | null>(null)
+  const [leads, setLeads] = useState<Lead[]>([])
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [leadSearch, setLeadSearch] = useState('')
+  const [loadingLeads, setLoadingLeads] = useState(false)
 
   useEffect(() => {
     fetchEmails()
@@ -98,6 +109,34 @@ export default function SalesInboxPage() {
     fetchEmails()
   }
 
+  const fetchLeads = async () => {
+    setLoadingLeads(true)
+    try {
+      const res = await fetch('/api/sales/leads?limit=100')
+      const data = await res.json()
+      // Filter leads with email addresses
+      const leadsWithEmail = (data.data || []).filter((l: Lead) => l.contact_email)
+      setLeads(leadsWithEmail)
+    } catch (e) {
+      console.error('Failed to fetch leads:', e)
+    } finally {
+      setLoadingLeads(false)
+    }
+  }
+
+  const handleOpenComposer = () => {
+    setShowComposer(true)
+    setSelectedLead(null)
+    setLeadSearch('')
+    fetchLeads()
+  }
+
+  const filteredLeads = leads.filter(lead => 
+    lead.company_name.toLowerCase().includes(leadSearch.toLowerCase()) ||
+    (lead.contact_name?.toLowerCase() || '').includes(leadSearch.toLowerCase()) ||
+    (lead.contact_email?.toLowerCase() || '').includes(leadSearch.toLowerCase())
+  )
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     const now = new Date()
@@ -124,7 +163,7 @@ export default function SalesInboxPage() {
           <p className="text-gray-500">Manage all your email communications</p>
         </div>
         <button
-          onClick={() => setShowComposer(true)}
+          onClick={handleOpenComposer}
           className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700"
         >
           ✉️ Compose
@@ -337,16 +376,17 @@ export default function SalesInboxPage() {
           <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg font-semibold">
-                {replyTo ? `Reply to: ${replyTo.subject}` : 'New Email'}
+                {replyTo ? `Reply to: ${replyTo.subject}` : selectedLead ? `Email to ${selectedLead.contact_name || selectedLead.company_name}` : 'New Email'}
               </h2>
               <button 
-                onClick={() => { setShowComposer(false); setReplyTo(null); }}
+                onClick={() => { setShowComposer(false); setReplyTo(null); setSelectedLead(null); }}
                 className="text-gray-400 hover:text-gray-600"
               >
                 ✕
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto">
+              {/* Reply to existing email */}
               {replyTo && replyTo.lead ? (
                 <EmailComposer
                   leadId={replyTo.lead.id}
@@ -360,15 +400,76 @@ export default function SalesInboxPage() {
                     fetchEmails()
                   }}
                 />
+              ) : selectedLead ? (
+                /* Compose to selected lead */
+                <EmailComposer
+                  leadId={selectedLead.id}
+                  leadName={selectedLead.contact_name || selectedLead.company_name}
+                  leadEmail={selectedLead.contact_email!}
+                  companyName={selectedLead.company_name}
+                  onClose={() => { setShowComposer(false); setSelectedLead(null); }}
+                  onSent={() => {
+                    setShowComposer(false)
+                    setSelectedLead(null)
+                    fetchEmails()
+                  }}
+                />
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>To compose a new email, go to a lead's profile or select an email to reply to.</p>
-                  <button
-                    onClick={() => setShowComposer(false)}
-                    className="mt-4 px-4 py-2 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
-                  >
-                    Close
-                  </button>
+                /* Lead selector */
+                <div>
+                  <p className="text-sm text-gray-600 mb-4">Select a lead to send an email to:</p>
+                  
+                  {/* Search */}
+                  <input
+                    type="text"
+                    placeholder="Search leads by name, company, or email..."
+                    value={leadSearch}
+                    onChange={(e) => setLeadSearch(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+
+                  {/* Lead list */}
+                  {loadingLeads ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600" />
+                    </div>
+                  ) : filteredLeads.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No leads with email addresses found.</p>
+                      <a 
+                        href="/dashboard/sales/leads"
+                        className="text-teal-600 hover:underline text-sm mt-2 inline-block"
+                      >
+                        Go to Leads →
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg divide-y">
+                      {filteredLeads.map(lead => (
+                        <button
+                          key={lead.id}
+                          onClick={() => setSelectedLead(lead)}
+                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                        >
+                          <p className="font-medium text-gray-900">
+                            {lead.contact_name || lead.company_name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {lead.company_name} • {lead.contact_email}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => setShowComposer(false)}
+                      className="px-4 py-2 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
