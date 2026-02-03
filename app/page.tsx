@@ -482,160 +482,224 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Pricing</span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
-              Choose Your Plan
+              Simple Pricing. Powerful Results.
             </h2>
             <p className="text-xl text-gray-600">
-              All plans include AI-powered content generation, local SEO optimization, and performance analytics.
+              From hours to minutes — generate a month of content for less than one freelance article.
             </p>
+            <div className="mt-6 inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Save 20% with annual billing
+            </div>
           </div>
 
-          <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-            {/* Starter Plan */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Starter</h3>
-              <p className="text-gray-500 text-sm mb-4">Ideal for single-location small businesses</p>
+          <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-6">
+            {/* Free Plan */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
+              <p className="text-gray-500 text-sm mb-4 h-10">Try it out, no credit card required</p>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">$29</span>
+                <span className="text-4xl font-bold text-gray-900">$0</span>
                 <span className="text-gray-500">/month</span>
               </div>
-              <ul className="space-y-3 mb-8 text-gray-600">
+              <ul className="space-y-3 mb-8 text-gray-600 text-sm">
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  5 AI-generated posts/month
+                  1 business
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  1 location
+                  5 content pieces/month
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Basic analytics dashboard
+                  5 AI images/month
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Email support
+                  2 platforms
                 </li>
               </ul>
               <Link 
                 href="/auth/signup" 
-                className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-medium transition-colors"
+                className="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Start Free Trial
+                Get Started Free
               </Link>
             </div>
 
-            {/* Growth Plan - Most Popular */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-teal-500 relative">
+            {/* Starter Plan */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Starter</h3>
+              <p className="text-gray-500 text-sm mb-4 h-10">Perfect for solo business owners</p>
+              <div className="mb-1">
+                <span className="text-4xl font-bold text-gray-900">$29</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <p className="text-sm text-teal-600 font-medium mb-5">$23/mo billed annually</p>
+              <ul className="space-y-3 mb-8 text-gray-600 text-sm">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  1 business
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  30 content pieces/month
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  30 AI images/month
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  All 6 platforms
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved content library
+                </li>
+              </ul>
+              <Link 
+                href="/auth/signup?plan=starter" 
+                className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+              >
+                Start 7-Day Free Trial
+              </Link>
+            </div>
+
+            {/* Pro Plan - Most Popular */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-teal-500 relative scale-105">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                   Most Popular
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Growth</h3>
-              <p className="text-gray-500 text-sm mb-4">For growing businesses & services</p>
-              <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
+              <p className="text-gray-500 text-sm mb-4 h-10">For growing businesses with multiple locations</p>
+              <div className="mb-1">
                 <span className="text-4xl font-bold text-gray-900">$79</span>
                 <span className="text-gray-500">/month</span>
               </div>
-              <ul className="space-y-3 mb-8 text-gray-600">
+              <p className="text-sm text-teal-600 font-medium mb-5">$63/mo billed annually</p>
+              <ul className="space-y-3 mb-8 text-gray-600 text-sm">
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  15 AI-generated posts/month
+                  3 businesses
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Up to 3 locations
+                  100 content pieces/month
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Competitor analysis
+                  100 AI images/month
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  AI image generation
+                  All 6 platforms
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Priority email & chat support
+                  Analytics dashboard
                 </li>
               </ul>
               <Link 
-                href="/auth/signup" 
-                className="block w-full text-center bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+                href="/auth/signup?plan=pro" 
+                className="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Start Free Trial
+                Start 7-Day Free Trial
               </Link>
             </div>
 
-            {/* Enterprise Plan */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
-              <p className="text-gray-500 text-sm mb-4">For multi-location businesses & franchises</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">Custom</span>
+            {/* Premium Plan */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Premium</h3>
+              <p className="text-gray-500 text-sm mb-4 h-10">For agencies and multi-location businesses</p>
+              <div className="mb-1">
+                <span className="text-4xl font-bold text-gray-900">$179</span>
+                <span className="text-gray-500">/month</span>
               </div>
-              <ul className="space-y-3 mb-8 text-gray-600">
+              <p className="text-sm text-teal-600 font-medium mb-5">$143/mo billed annually</p>
+              <ul className="space-y-3 mb-8 text-gray-600 text-sm">
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Unlimited AI content
+                  10 businesses
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Unlimited locations
+                  Unlimited content
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Dedicated account manager
+                  Unlimited AI images
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  API access & custom integrations
+                  3 team members
                 </li>
                 <li className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  24/7 premium support
+                  Priority support
                 </li>
               </ul>
               <Link 
-                href="/contact" 
-                className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-medium transition-colors"
+                href="/auth/signup?plan=premium" 
+                className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Contact Sales
+                Start 7-Day Free Trial
               </Link>
             </div>
           </div>
 
           <p className="text-center text-gray-500 mt-8">
-            All plans include a 7-day free trial. Cancel anytime. No credit card required.
+            All paid plans include a 7-day free trial. Cancel anytime. 30-day money-back guarantee.
           </p>
+          
+          <div className="text-center mt-4">
+            <Link href="/pricing" className="text-teal-600 font-medium hover:text-teal-700">
+              View full pricing details →
+            </Link>
+          </div>
         </div>
       </section>
 
