@@ -20,6 +20,9 @@ export default function HomePage() {
           
           {/* Desktop Nav */}
           <div className="hidden md:flex gap-6 items-center">
+            <Link href="#examples" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
+              Examples
+            </Link>
             <Link href="#features" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               Features
             </Link>
@@ -286,8 +289,209 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Content Examples Section */}
+      <section id="examples" className="container mx-auto px-4 py-20">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">See It In Action</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+            Content Created by GeoSpark
+          </h2>
+          <p className="text-xl text-gray-600">
+            Real examples of AI-generated content for local businesses. Click, generate, publish — it's that simple.
+          </p>
+        </div>
+
+        {/* Social Media Pack - 6 Posts */}
+        <div className="max-w-6xl mx-auto mb-16">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
+            📱 Social Media Pack — 6 Platform-Optimized Posts in One Click
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Facebook */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-[#1877F2] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                Facebook
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  ☕ Nothing beats a fresh cup from your neighborhood cafe! Stop by The Daily Grind on Main Street this weekend — we're featuring our new seasonal Maple Pecan Latte. 🍁
+                </p>
+                <p className="text-xs text-gray-400 mt-2">#LocalCoffee #MainStreet</p>
+              </div>
+            </div>
+
+            {/* Instagram */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                Instagram
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  That first sip feeling ✨ Our baristas craft every cup with love at The Daily Grind. Tag someone who needs their coffee fix! ☕️
+                </p>
+                <p className="text-xs text-gray-400 mt-2">#CoffeeLovers #CafeLife</p>
+              </div>
+            </div>
+
+            {/* LinkedIn */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-[#0A66C2] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  Supporting local businesses isn't just good ethics — it's good business. The Daily Grind has been serving our community for 15 years...
+                </p>
+                <p className="text-xs text-gray-400 mt-2">#SmallBusiness #Community</p>
+              </div>
+            </div>
+
+            {/* X/Twitter */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-black text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                X
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  Monday motivation starts with great coffee ☕ Who else needs their local cafe fix today? 🙋‍♀️
+                </p>
+                <p className="text-xs text-gray-400 mt-2">#MondayMotivation</p>
+              </div>
+            </div>
+
+            {/* Google Business */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-[#4285F4] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Google
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  🎉 New seasonal menu alert! Visit The Daily Grind at 123 Main Street to try our Maple Pecan Latte. Open 7am-7pm daily.
+                </p>
+              </div>
+            </div>
+
+            {/* NextDoor */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-[#00B246] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                Nextdoor
+              </div>
+              <div className="p-3">
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  Hey neighbors! 👋 We're offering 10% off for Riverside residents this week at The Daily Grind. Just mention this post!
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="text-center text-gray-500 text-sm mt-4">
+            ↑ Generated in seconds — tailored for each platform's style and audience
+          </p>
+        </div>
+
+        {/* Other Content Types */}
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+          {/* Blog Post Example */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-4 py-3 font-semibold flex items-center gap-2">
+              <span className="text-lg">📝</span> Blog Post
+            </div>
+            <div className="p-5">
+              <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg mb-4 flex items-center justify-center">
+                <span className="text-4xl">☕</span>
+              </div>
+              <h4 className="font-bold text-gray-900 mb-2">
+                5 Reasons Why The Daily Grind is Riverside's Favorite Coffee Spot
+              </h4>
+              <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                When it comes to finding the perfect cup of coffee in Riverside, locals know there's one place that stands above the rest. Here's why The Daily Grind has become our neighborhood's go-to cafe...
+              </p>
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span>📍 Riverside, CA</span>
+                <span>•</span>
+                <span>~800 words</span>
+                <span>•</span>
+                <span>SEO optimized</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Newsletter Example */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 font-semibold flex items-center gap-2">
+              <span className="text-lg">📧</span> Email Newsletter
+            </div>
+            <div className="p-5">
+              <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
+                <p className="text-xs text-gray-400 mb-1">Subject:</p>
+                <p className="font-semibold text-gray-900 text-sm">Your October Coffee Fix Awaits ☕🍁</p>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                <strong>Hey [First Name],</strong><br/><br/>
+                Fall is here, and so is our new seasonal menu! Stop by The Daily Grind this week to try our limited-time Maple Pecan Latte...
+              </p>
+              <div className="bg-orange-500 text-white text-center py-2 rounded-lg text-sm font-medium">
+                Order Online →
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3">
+                <span>Personalized</span>
+                <span>•</span>
+                <span>Mobile-friendly</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Google Business Post Example */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 font-semibold flex items-center gap-2">
+              <span className="text-lg">🏪</span> Google Business Update
+            </div>
+            <div className="p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                  <span className="text-lg">☕</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">The Daily Grind Cafe</p>
+                  <p className="text-xs text-gray-500">Just now • Update</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                🎃 <strong>Fall Special!</strong> Our Maple Pecan Latte is back by popular demand. Made with locally-roasted beans and real maple syrup. Available now through November!
+              </p>
+              <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg mb-3 flex items-center justify-center">
+                <span className="text-4xl">🍂☕</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span>📍 Shows in local search</span>
+                <span>•</span>
+                <span>Maps ready</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center mt-12">
+          <Link 
+            href="/auth/signup" 
+            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+          >
+            Try It Yourself — Free for 14 Days
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
+      </section>
+
       {/* Features */}
-      <section id="features" className="container mx-auto px-4 py-20">
+      <section id="features" className="bg-gray-50 py-20">
+        <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Features & Benefits</span>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
@@ -361,6 +565,7 @@ export default function HomePage() {
               <p className="text-gray-600">{feature.description}</p>
             </div>
           ))}
+        </div>
         </div>
       </section>
 
