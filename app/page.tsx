@@ -89,7 +89,7 @@ export default function HomePage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Start Your Free 7-Day Trial
+              Start Your Free 14-Day Trial
             </Link>
             <Link 
               href="#how-it-works" 
@@ -583,7 +583,7 @@ export default function HomePage() {
                 href="/auth/signup?plan=starter" 
                 className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Start 7-Day Free Trial
+                Start 14-Day Free Trial
               </Link>
             </div>
 
@@ -637,7 +637,7 @@ export default function HomePage() {
                 href="/auth/signup?plan=pro" 
                 className="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Start 7-Day Free Trial
+                Start 14-Day Free Trial
               </Link>
             </div>
 
@@ -686,13 +686,13 @@ export default function HomePage() {
                 href="/auth/signup?plan=premium" 
                 className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Start 7-Day Free Trial
+                Start 14-Day Free Trial
               </Link>
             </div>
           </div>
 
           <p className="text-center text-gray-500 mt-8">
-            All paid plans include a 7-day free trial. Cancel anytime. 30-day money-back guarantee.
+            All paid plans include a 14-day free trial. Cancel anytime. 30-day money-back guarantee.
           </p>
           
           <div className="text-center mt-4">
@@ -778,7 +778,7 @@ export default function HomePage() {
             href="/auth/signup" 
             className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
           >
-            Start Your Free 7-Day Trial
+            Start Your Free 14-Day Trial
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>

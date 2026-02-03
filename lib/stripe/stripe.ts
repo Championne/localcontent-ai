@@ -5,6 +5,9 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   typescript: true,
 })
 
+// Trial period configuration
+export const TRIAL_PERIOD_DAYS = 14
+
 export const PLANS = {
   starter: {
     name: 'Starter',
@@ -54,3 +57,13 @@ export const PLANS = {
 } as const
 
 export type PlanKey = keyof typeof PLANS
+
+// Helper to get plan by Stripe price ID
+export function getPlanByPriceId(priceId: string): PlanKey | null {
+  for (const [key, plan] of Object.entries(PLANS)) {
+    if (plan.priceId === priceId) {
+      return key as PlanKey
+    }
+  }
+  return null
+}

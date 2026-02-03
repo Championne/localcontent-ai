@@ -29,7 +29,7 @@ const tiers = [
     price: 29,
     annual: 23,
     description: 'Perfect for solo business owners',
-    cta: 'Start 7-Day Free Trial',
+    cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=starter',
     highlighted: false,
     features: [
@@ -49,7 +49,7 @@ const tiers = [
     price: 79,
     annual: 63,
     description: 'For growing businesses with multiple locations',
-    cta: 'Start 7-Day Free Trial',
+    cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=pro',
     highlighted: true,
     badge: 'Most Popular',
@@ -70,7 +70,7 @@ const tiers = [
     price: 179,
     annual: 143,
     description: 'For agencies and multi-location businesses',
-    cta: 'Start 7-Day Free Trial',
+    cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=premium',
     highlighted: false,
     features: [
@@ -237,7 +237,7 @@ export default function PricingPage() {
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <h3 className="font-semibold text-gray-900">Do you offer refunds?</h3>
               <p className="mt-2 text-gray-600 text-sm">
-                We offer a 7-day free trial on all paid plans so you can try before you commit. 
+                We offer a 14-day free trial on all paid plans so you can try before you commit. 
                 If you're not satisfied within the first 30 days of a paid subscription, contact us for a full refund.
               </p>
             </div>
