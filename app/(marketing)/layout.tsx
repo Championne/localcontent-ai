@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function MarketingLayout({
   children,
@@ -9,13 +10,14 @@ export default function MarketingLayout({
     <div className='min-h-screen flex flex-col'>
       <header className='border-b border-gray-100 bg-white'>
         <nav className='container mx-auto px-4 py-4 flex justify-between items-center'>
-          <Link href='/' className='flex items-center gap-2'>
-            <div className='w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center'>
-              <svg className='w-5 h-5 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
-              </svg>
-            </div>
-            <span className='text-xl font-bold text-gray-900'>GeoSpark</span>
+          <Link href='/' className='flex items-center'>
+            <Image 
+              src="/Logo GeoSpark.png" 
+              alt="GeoSpark" 
+              width={140} 
+              height={36} 
+              className="h-9 w-auto"
+            />
           </Link>
           
           {/* Desktop Nav */}
@@ -60,13 +62,14 @@ export default function MarketingLayout({
       <footer className='border-t border-gray-100 bg-gray-50 py-8 md:py-12'>
         <div className='container mx-auto px-4'>
           <div className='flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left'>
-            <div className='flex items-center gap-2'>
-              <div className='w-6 h-6 bg-gradient-to-br from-teal-500 to-teal-600 rounded flex items-center justify-center'>
-                <svg className='w-4 h-4 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13 10V3L4 14h7v7l9-11h-7z' />
-                </svg>
-              </div>
-              <span className='font-bold text-gray-900'>GeoSpark</span>
+            <div className='flex items-center'>
+              <Image 
+                src="/Logo GeoSpark.png" 
+                alt="GeoSpark" 
+                width={120} 
+                height={32} 
+                className="h-8 w-auto"
+              />
             </div>
             <div className='flex gap-6 text-sm text-gray-500'>
               <Link href='/pricing' className='hover:text-teal-600 transition-colors'>Pricing</Link>

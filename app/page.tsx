@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function HomePage() {
   return (
@@ -6,13 +7,15 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-900">GeoSpark</span>
+          <Link href="/" className="flex items-center">
+            <Image 
+              src="/Logo GeoSpark.png" 
+              alt="GeoSpark" 
+              width={150} 
+              height={40} 
+              className="h-10 w-auto"
+              priority
+            />
           </Link>
           
           {/* Desktop Nav */}
@@ -792,13 +795,14 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold text-white">GeoSpark</span>
+              <div className="mb-4">
+                <Image 
+                  src="/Logo GeoSpark.png" 
+                  alt="GeoSpark" 
+                  width={140} 
+                  height={36} 
+                  className="h-9 w-auto brightness-0 invert"
+                />
               </div>
               <p className="text-sm">
                 AI-powered content marketing for local businesses. Generate hyper-local content that ranks and converts.

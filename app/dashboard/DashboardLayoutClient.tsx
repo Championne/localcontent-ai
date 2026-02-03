@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import WelcomeModal from '@/components/WelcomeModal'
 
@@ -84,13 +85,14 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
 
       {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <span className="text-lg font-bold text-gray-900">GeoSpark</span>
+        <Link href="/dashboard" className="flex items-center">
+          <Image 
+            src="/Logo GeoSpark.png" 
+            alt="GeoSpark" 
+            width={120} 
+            height={32} 
+            className="h-8 w-auto"
+          />
         </Link>
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -123,13 +125,14 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
       `}>
         {/* Logo */}
         <div className="p-5 border-b border-gray-100">
-          <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setSidebarOpen(false)}>
-            <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold text-gray-900">GeoSpark</span>
+          <Link href="/dashboard" className="flex items-center" onClick={() => setSidebarOpen(false)}>
+            <Image 
+              src="/Logo GeoSpark.png" 
+              alt="GeoSpark" 
+              width={140} 
+              height={36} 
+              className="h-9 w-auto"
+            />
           </Link>
         </div>
         
