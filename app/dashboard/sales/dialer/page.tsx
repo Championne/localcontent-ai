@@ -336,10 +336,9 @@ export default function PowerDialerPage() {
                   {currentQueueItem.lead.contact_email && (
                     <button
                       onClick={() => setEmailLead(currentQueueItem.lead!)}
-                      className="px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                      title="Send Email"
+                      className="px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5"
                     >
-                      📧
+                      📧 Email
                     </button>
                   )}
                 </div>

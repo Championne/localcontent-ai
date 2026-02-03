@@ -158,7 +158,7 @@ export function EmailComposer({
                 Fill in the template variables:
               </p>
               {selectedTemplateData.variables
-                .filter(v => !['contact_name', 'company_name', 'rep_name'].includes(v))
+                .filter(v => !['contact_name', 'company_name', 'rep_name', 'calendar_link'].includes(v))
                 .map(variable => (
                   <div key={variable}>
                     <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
