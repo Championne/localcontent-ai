@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true,
-      email_id: storedEmail?.id || result.messageId
+      email_id: storedEmail?.id || ('messageId' in result ? result.messageId : undefined)
     })
   } catch (error) {
     console.error('Send email error:', error)
