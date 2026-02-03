@@ -12,7 +12,7 @@ export default function MarketingLayout({
         <nav className='container mx-auto px-4 py-4 flex justify-between items-center'>
           <Link href='/' className='flex items-center'>
             <Image 
-              src="/Logo GeoSpark.png" 
+              src="/logo-geospark.png" 
               alt="GeoSpark" 
               width={140} 
               height={36} 
@@ -67,7 +67,7 @@ export default function MarketingLayout({
           <div className='flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left'>
             <div className='flex items-center'>
               <Image 
-                src="/Logo GeoSpark.png" 
+                src="/logo-geospark.png" 
                 alt="GeoSpark" 
                 width={120} 
                 height={32} 

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'GeoSpark - AI Content for Local Businesses',
     description: 'Dominate your local market with AI-powered content. Generate hyper-local, SEO-optimized posts in minutes.',
-    images: ['/Logo GeoSpark.png'],
+    images: ['/logo-geospark.png'],
   },
 }
 

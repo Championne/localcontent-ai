@@ -87,7 +87,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
       <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-40">
         <Link href="/dashboard" className="flex items-center">
           <Image 
-            src="/Logo GeoSpark.png" 
+            src="/logo-geospark.png" 
             alt="GeoSpark" 
             width={120} 
             height={32} 
@@ -127,7 +127,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         <div className="p-5 border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center" onClick={() => setSidebarOpen(false)}>
             <Image 
-              src="/Logo GeoSpark.png" 
+              src="/logo-geospark.png" 
               alt="GeoSpark" 
               width={140} 
               height={36} 

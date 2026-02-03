@@ -9,7 +9,7 @@ export default function HomePage() {
         <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <Image 
-              src="/Logo GeoSpark.png" 
+              src="/logo-geospark.png" 
               alt="GeoSpark" 
               width={150} 
               height={40} 
@@ -932,7 +932,7 @@ export default function HomePage() {
             <div>
               <div className="mb-4">
                 <Image 
-                  src="/Logo GeoSpark.png" 
+                  src="/logo-geospark.png" 
                   alt="GeoSpark" 
                   width={140} 
                   height={36} 
