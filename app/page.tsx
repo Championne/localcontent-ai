@@ -394,98 +394,28 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* Other Content Types */}
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-          {/* Blog Post Example */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-4 py-3 font-semibold flex items-center gap-2">
-              <span className="text-lg">📝</span> Blog Post
-            </div>
-            <div className="p-5">
-              <div className="aspect-video bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg mb-4 flex items-center justify-center">
-                <span className="text-4xl">☕</span>
-              </div>
-              <h4 className="font-bold text-gray-900 mb-2">
-                5 Reasons Why The Daily Grind is Riverside's Favorite Coffee Spot
-              </h4>
-              <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                When it comes to finding the perfect cup of coffee in Riverside, locals know there's one place that stands above the rest. Here's why The Daily Grind has become our neighborhood's go-to cafe...
-              </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <span>📍 Riverside, CA</span>
-                <span>•</span>
-                <span>~800 words</span>
-                <span>•</span>
-                <span>SEO optimized</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Newsletter Example */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 font-semibold flex items-center gap-2">
-              <span className="text-lg">📧</span> Email Newsletter
-            </div>
-            <div className="p-5">
-              <div className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50">
-                <p className="text-xs text-gray-400 mb-1">Subject:</p>
-                <p className="font-semibold text-gray-900 text-sm">Your October Coffee Fix Awaits ☕🍁</p>
-              </div>
-              <p className="text-sm text-gray-600 mb-3">
-                <strong>Hey [First Name],</strong><br/><br/>
-                Fall is here, and so is our new seasonal menu! Stop by The Daily Grind this week to try our limited-time Maple Pecan Latte...
-              </p>
-              <div className="bg-orange-500 text-white text-center py-2 rounded-lg text-sm font-medium">
-                Order Online →
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3">
-                <span>Personalized</span>
-                <span>•</span>
-                <span>Mobile-friendly</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Google Business Post Example */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-3 font-semibold flex items-center gap-2">
-              <span className="text-lg">🏪</span> Google Business Update
-            </div>
-            <div className="p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-lg">☕</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">The Daily Grind Cafe</p>
-                  <p className="text-xs text-gray-500">Just now • Update</p>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600 mb-3">
-                🎃 <strong>Fall Special!</strong> Our Maple Pecan Latte is back by popular demand. Made with locally-roasted beans and real maple syrup. Available now through November!
-              </p>
-              <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg mb-3 flex items-center justify-center">
-                <span className="text-4xl">🍂☕</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <span>📍 Shows in local search</span>
-                <span>•</span>
-                <span>Maps ready</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center mt-12">
+        {/* CTA and Link to Full Examples */}
+        <div className="text-center mt-12 space-y-4">
           <Link 
-            href="/auth/signup" 
-            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+            href="/examples" 
+            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-semibold text-lg"
           >
-            Try It Yourself — Free for 14 Days
+            See all examples: Blog Posts, Newsletters, Google Business & more
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
+          <div>
+            <Link 
+              href="/auth/signup" 
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+            >
+              Try It Yourself — Free for 14 Days
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </section>
 
