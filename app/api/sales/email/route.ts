@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
         : 'Sent custom email',
       outcome: 'sent',
       metadata: {
-        email_id: storedEmail?.id || result.messageId,
+        email_id: storedEmail?.id || ('messageId' in result ? result.messageId : undefined),
         template_id,
         recipient: lead.contact_email
       }
