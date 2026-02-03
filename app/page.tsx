@@ -23,7 +23,7 @@ export default function HomePage() {
             <Link href="#how-it-works" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               How It Works
             </Link>
-            <Link href="/pricing" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
+            <Link href="#pricing" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               Pricing
             </Link>
             <Link href="/auth/login" className="text-sm font-medium text-gray-700 hover:text-teal-600 transition-colors">
@@ -70,14 +70,14 @@ export default function HomePage() {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Dominate Your Local Market with{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-600">
-              AI-Powered Content
+              AI for Local SEO
             </span>
           </h1>
           
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            Generate hyper-targeted, SEO-optimized content that resonates with your local community. 
-            Save 10+ hours per month while driving more customers to your business.
+            Generate hyper-targeted, <strong>localized content</strong> — including SEO articles, social posts, and website copy — 
+            that resonates with your community. Drive local engagement and <strong>improve local search rankings</strong> with our powerful AI local content writer.
           </p>
 
           {/* CTA Buttons */}
@@ -140,7 +140,7 @@ export default function HomePage() {
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-green-400">4.9/5</p>
-              <p className="text-sm text-gray-400">Average Rating</p>
+              <p className="text-sm text-gray-400">Average Rating (1,200+ reviews)</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-purple-400">10+ hrs</p>
@@ -159,22 +159,30 @@ export default function HomePage() {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-6">
                 Local Businesses Are Invisible Online
               </h2>
+              <p className="text-gray-600 mb-6">
+                Local businesses struggle to stand out online. Generic content, lack of local SEO expertise, and limited resources 
+                make it nearly impossible to attract nearby customers actively searching for your services.
+              </p>
               <div className="space-y-4 text-gray-600">
                 <p className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">✗</span>
-                  <span><strong>No time for marketing</strong> — You're too busy running your business to create content consistently.</span>
+                  <span><strong>Time constraints</strong> — You're too busy running your business to create content consistently.</span>
                 </p>
                 <p className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">✗</span>
-                  <span><strong>Generic content doesn't work</strong> — Cookie-cutter posts fail to connect with your local community.</span>
+                  <span><strong>No marketing expertise</strong> — No staff or in-depth knowledge to handle content marketing.</span>
                 </p>
                 <p className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">✗</span>
-                  <span><strong>Agencies are too expensive</strong> — Professional marketing costs $2,000-5,000/month or more.</span>
+                  <span><strong>Agencies are too expensive</strong> — Traditional marketing costs $2,000-5,000/month or more.</span>
                 </p>
                 <p className="flex items-start gap-3">
                   <span className="text-red-500 mt-1">✗</span>
-                  <span><strong>Lost customers to competitors</strong> — Businesses with strong local SEO capture your potential customers.</span>
+                  <span><strong>Generic content doesn't work</strong> — Cookie-cutter posts fail to connect with local audiences.</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-red-500 mt-1">✗</span>
+                  <span><strong>ROI uncertainty</strong> — Hard to measure if marketing efforts are actually working.</span>
                 </p>
               </div>
             </div>
@@ -183,14 +191,18 @@ export default function HomePage() {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-6">
                 Your AI-Powered Local Marketing Team
               </h2>
+              <p className="text-gray-600 mb-6">
+                GeoSpark generates hyper-local, SEO-optimized content, automates distribution, and transforms your online presence 
+                into a local lead-generation machine. Stop being invisible; start being the go-to local expert.
+              </p>
               <div className="space-y-4 text-gray-600">
                 <p className="flex items-start gap-3">
                   <span className="text-teal-500 mt-1">✓</span>
-                  <span><strong>Generate content in minutes</strong> — AI creates a month of posts while you finish your coffee.</span>
+                  <span><strong>Reclaim your time</strong> — AI creates a month of content while you finish your coffee.</span>
                 </p>
                 <p className="flex items-start gap-3">
                   <span className="text-teal-500 mt-1">✓</span>
-                  <span><strong>Hyper-local relevance</strong> — Content that mentions your neighborhood, local events, and community.</span>
+                  <span><strong>No marketing degree needed</strong> — Enterprise-level strategy made simple for any business owner.</span>
                 </p>
                 <p className="flex items-start gap-3">
                   <span className="text-teal-500 mt-1">✓</span>
@@ -198,7 +210,11 @@ export default function HomePage() {
                 </p>
                 <p className="flex items-start gap-3">
                   <span className="text-teal-500 mt-1">✓</span>
-                  <span><strong>Rank higher locally</strong> — SEO-optimized content that helps you dominate local search.</span>
+                  <span><strong>Hyper-local relevance</strong> — Content that mentions your neighborhood, events, and community.</span>
+                </p>
+                <p className="flex items-start gap-3">
+                  <span className="text-teal-500 mt-1">✓</span>
+                  <span><strong>Measurable results</strong> — Track rankings, traffic, and leads from one dashboard.</span>
                 </p>
               </div>
             </div>
@@ -212,47 +228,53 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">How It Works</span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
-              From Zero to Local Hero in 4 Steps
+              From Zero to Local Hero in 5 Steps
             </h2>
             <p className="text-xl text-gray-600">
               Start generating professional, locally-relevant content in minutes — no marketing experience needed.
             </p>
           </div>
 
-          <div className="max-w-5xl mx-auto grid md:grid-cols-4 gap-8">
+          <div className="max-w-5xl mx-auto grid md:grid-cols-5 gap-6">
             {[
               {
                 step: '1',
-                title: 'Tell Us About Your Business',
-                description: 'Enter your business details, location, and target customers. Our AI learns your unique value.',
+                title: 'Onboard & Personalize',
+                description: 'Tell us about your business, target customers, and service area. Our AI learns your unique value.',
                 icon: '🏪'
               },
               {
                 step: '2',
-                title: 'Choose Your Content',
-                description: 'Select from social posts, blog articles, Google Business updates, or email campaigns.',
-                icon: '📝'
-              },
-              {
-                step: '3',
-                title: 'AI Generates Magic',
-                description: 'Our AI creates hyper-local, SEO-optimized content with matching images in seconds.',
+                title: 'Generate Hyper-Local Content',
+                description: 'Our AI crafts blog posts, service pages, and local guides with relevant keywords and geographic references.',
                 icon: '✨'
               },
               {
-                step: '4',
-                title: 'Publish & Grow',
-                description: 'Review, edit if needed, and publish. Watch your local visibility and customers grow.',
+                step: '3',
+                title: 'Automate SEO & Distribution',
+                description: 'We optimize for local search and distribute across your website, directories, and social platforms.',
                 icon: '🚀'
+              },
+              {
+                step: '4',
+                title: 'Attract & Convert Leads',
+                description: 'As local rankings climb, more nearby customers discover you — driving inquiries and sales.',
+                icon: '🎯'
+              },
+              {
+                step: '5',
+                title: 'Analyze & Refine',
+                description: 'Gain insights into performance. Our AI continually learns and adapts to maximize results.',
+                icon: '📈'
               }
             ].map((item) => (
               <div key={item.step} className="relative">
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-full">
-                  <div className="text-4xl mb-4">{item.icon}</div>
+                  <div className="text-3xl mb-4">{item.icon}</div>
                   <div className="inline-flex items-center justify-center w-8 h-8 bg-teal-100 text-teal-700 rounded-full text-sm font-bold mb-3">
                     {item.step}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                  <h3 className="text-base font-bold text-gray-900 mb-2">{item.title}</h3>
                   <p className="text-gray-600 text-sm">{item.description}</p>
                 </div>
               </div>
@@ -264,7 +286,7 @@ export default function HomePage() {
       {/* Features */}
       <section id="features" className="container mx-auto px-4 py-20">
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Features</span>
+          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Features & Benefits</span>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
             Everything You Need to Win Locally
           </h2>
@@ -273,43 +295,61 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
             {
-              icon: '🎯',
-              title: 'Hyper-Local Content',
-              description: 'AI that understands your neighborhood, mentions local landmarks, events, and community references.',
+              icon: '🤖',
+              title: 'AI-Powered Local Content Generation',
+              description: 'Automatically create high-quality, relevant content tailored to your specific location and services. Save countless hours and resources on content creation.',
               color: 'teal'
             },
             {
-              icon: '📱',
-              title: 'Multi-Platform Ready',
-              description: 'Content formatted perfectly for Facebook, Instagram, Google Business, LinkedIn, and your blog.',
+              icon: '📍',
+              title: 'Hyper-Local SEO Optimization',
+              description: 'Rank higher in local search results (Google Maps, Google Search) for crucial "near me" and service-specific queries, driving qualified local leads directly to you.',
               color: 'orange'
+            },
+            {
+              icon: '📢',
+              title: 'Automated Content Distribution',
+              description: 'Seamlessly publish content across your website, Google Business Profile, and key local directories without manual effort. Ensure consistent online presence.',
+              color: 'purple'
+            },
+            {
+              icon: '🔍',
+              title: 'Competitor Analysis & Keyword Research',
+              description: 'Stay ahead of the curve with insights into what your local competitors are doing right and discover untapped keyword opportunities in your area.',
+              color: 'green'
+            },
+            {
+              icon: '📊',
+              title: 'Performance Analytics Dashboard',
+              description: 'Track your local search rankings, website traffic, and lead generation from one intuitive dashboard. Make data-driven decisions easily.',
+              color: 'blue'
+            },
+            {
+              icon: '🏢',
+              title: 'Multi-Location Management',
+              description: 'Effortlessly manage and optimize local content strategies for multiple business locations from a single platform. Perfect for franchises and chains.',
+              color: 'yellow'
+            },
+            {
+              icon: '⭐',
+              title: 'Reputation Management Integration',
+              description: 'Enhance your online credibility by integrating with review platforms, improving your local SEO and building customer trust.',
+              color: 'pink'
             },
             {
               icon: '🖼️',
               title: 'AI Image Generation',
-              description: 'Matching visuals generated automatically — no design skills or stock photos needed.',
-              color: 'purple'
-            },
-            {
-              icon: '📈',
-              title: 'SEO Optimization',
-              description: 'Every post is optimized for local search to help you rank higher in your area.',
-              color: 'green'
+              description: 'Matching visuals generated automatically for every post — no design skills or expensive stock photos needed.',
+              color: 'indigo'
             },
             {
               icon: '⚡',
-              title: 'Lightning Fast',
-              description: 'Generate a month of content in under 10 minutes. Bulk create and schedule ahead.',
-              color: 'yellow'
-            },
-            {
-              icon: '🎨',
-              title: 'Brand Customization',
-              description: 'Add your logo, brand colors, and voice. Every post looks and sounds like you.',
-              color: 'pink'
+              title: 'Lightning Fast Creation',
+              description: 'Generate a month of content in under 10 minutes. Bulk create and schedule ahead so you never miss a beat.',
+              color: 'red'
             }
           ].map((feature) => (
             <div key={feature.title} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
@@ -321,55 +361,281 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="bg-gray-900 py-20">
+      {/* Why GeoSpark Section */}
+      <section className="bg-gradient-to-br from-gray-900 to-gray-800 py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Trusted by Local Businesses
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="text-teal-400 font-semibold text-sm uppercase tracking-wide">Why GeoSpark?</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mt-2 mb-4">
+              What Makes Us Different
             </h2>
             <p className="text-xl text-gray-400">
-              See what business owners like you are saying
+              We're not just another AI content tool — we're built specifically for local business success.
+            </p>
+          </div>
+
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: 'Built for Local',
+                description: 'We understand the unique challenges and opportunities of local businesses, providing a solution specifically designed for your success.',
+                icon: '🏠'
+              },
+              {
+                title: 'Beyond Generic SEO',
+                description: 'Our AI goes deeper, crafting content that resonates with local communities and satisfies the specific intent of local searches.',
+                icon: '🎯'
+              },
+              {
+                title: 'Time & Cost-Efficient',
+                description: 'Get the power of a full marketing team at a fraction of the cost. Free up your time to focus on running your business.',
+                icon: '💰'
+              },
+              {
+                title: 'Tangible Results',
+                description: 'Witness a measurable increase in your local search visibility, website traffic, phone calls, and in-store visits.',
+                icon: '📈'
+              },
+              {
+                title: 'Easy to Use',
+                description: 'Our platform is designed for busy business owners — no complex SEO knowledge required. If you can fill out a form, you can use GeoSpark.',
+                icon: '✨'
+              },
+              {
+                title: 'Dedicated Support',
+                description: 'Our team is here to support you every step of the way, ensuring you get the most out of GeoSpark.',
+                icon: '🤝'
+              }
+            ].map((item) => (
+              <div key={item.title} className="bg-gray-800/50 backdrop-blur rounded-2xl p-6 border border-gray-700">
+                <div className="text-3xl mb-4">{item.icon}</div>
+                <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                <p className="text-gray-400">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="container mx-auto px-4 py-20">
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Success Stories</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+            Trusted by Local Businesses
+          </h2>
+          <p className="text-xl text-gray-600">
+            See what business owners like you are saying about GeoSpark
+          </p>
+        </div>
+
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+          {[
+            {
+              quote: "Before GeoSpark, our small cafe rarely appeared in local searches. Within three months, our Google Maps visibility exploded, and we're now consistently ranking for 'best coffee near me.' Our foot traffic has increased by 30%!",
+              name: "Sarah M.",
+              role: "Owner, The Daily Grind Cafe",
+              metric: "+30% foot traffic",
+              rating: 5
+            },
+            {
+              quote: "Managing content for our three plumbing locations was a nightmare. GeoSpark streamlined everything, giving each branch its own hyper-local content strategy. We've seen a significant uptick in service requests from new clients.",
+              name: "David L.",
+              role: "Marketing Manager, Rapid Plumbers Inc.",
+              metric: "3 locations managed",
+              rating: 5
+            },
+            {
+              quote: "As a solo real estate agent, I needed a way to compete with larger agencies. GeoSpark helped me establish myself as the go-to expert for homes in my area. The quality of leads has been incredible.",
+              name: "Emily R.",
+              role: "Real Estate Agent",
+              metric: "Top local expert",
+              rating: 5
+            }
+          ].map((testimonial, i) => (
+            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex gap-1 mb-4">
+                {[...Array(testimonial.rating)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <p className="text-gray-600 mb-4 italic">"{testimonial.quote}"</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                  <p className="text-sm text-gray-500">{testimonial.role}</p>
+                </div>
+                <div className="bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {testimonial.metric}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="bg-gray-50 py-20">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Pricing</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+              Choose Your Plan
+            </h2>
+            <p className="text-xl text-gray-600">
+              All plans include AI-powered content generation, local SEO optimization, and performance analytics.
             </p>
           </div>
 
           <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "GeoSpark cut my content creation time from 5 hours to 20 minutes per week. The posts actually mention our neighborhood — customers love it!",
-                name: "Sarah M.",
-                role: "Owner, Riverside Bakery",
-                rating: 5
-              },
-              {
-                quote: "As a plumber, I have zero time for social media. GeoSpark creates posts that bring in local leads while I'm out on jobs.",
-                name: "Mike T.",
-                role: "Owner, Mike's Plumbing",
-                rating: 5
-              },
-              {
-                quote: "We tried 3 other tools before GeoSpark. None understood 'local' like this. Our Google visibility jumped 40% in 2 months.",
-                name: "Jennifer L.",
-                role: "Manager, Downtown Fitness",
-                rating: 5
-              }
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-gray-800 rounded-2xl p-6">
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-300 mb-4">"{testimonial.quote}"</p>
-                <div>
-                  <p className="font-semibold text-white">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500">{testimonial.role}</p>
-                </div>
+            {/* Starter Plan */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Starter</h3>
+              <p className="text-gray-500 text-sm mb-4">Ideal for single-location small businesses</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">$29</span>
+                <span className="text-gray-500">/month</span>
               </div>
-            ))}
+              <ul className="space-y-3 mb-8 text-gray-600">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  5 AI-generated posts/month
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  1 location
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Basic analytics dashboard
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Email support
+                </li>
+              </ul>
+              <Link 
+                href="/auth/signup" 
+                className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-medium transition-colors"
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Growth Plan - Most Popular */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-teal-500 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  Most Popular
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Growth</h3>
+              <p className="text-gray-500 text-sm mb-4">For growing businesses & services</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">$79</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8 text-gray-600">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  15 AI-generated posts/month
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Up to 3 locations
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Competitor analysis
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  AI image generation
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Priority email & chat support
+                </li>
+              </ul>
+              <Link 
+                href="/auth/signup" 
+                className="block w-full text-center bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
+              <p className="text-gray-500 text-sm mb-4">For multi-location businesses & franchises</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">Custom</span>
+              </div>
+              <ul className="space-y-3 mb-8 text-gray-600">
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Unlimited AI content
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Unlimited locations
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Dedicated account manager
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  API access & custom integrations
+                </li>
+                <li className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  24/7 premium support
+                </li>
+              </ul>
+              <Link 
+                href="/contact" 
+                className="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 px-6 py-3 rounded-xl font-medium transition-colors"
+              >
+                Contact Sales
+              </Link>
+            </div>
           </div>
+
+          <p className="text-center text-gray-500 mt-8">
+            All plans include a 7-day free trial. Cancel anytime. No credit card required.
+          </p>
         </div>
       </section>
 
@@ -386,30 +652,42 @@ export default function HomePage() {
           <div className="space-y-4">
             {[
               {
+                q: "What kind of content does GeoSpark generate?",
+                a: "We generate a variety of hyper-local content including blog posts (e.g., 'Best Italian Restaurants in [Your City]'), service pages optimized for specific local keywords (e.g., 'Emergency Plumbing Services in [Your Neighborhood]'), social media posts, Google Business Profile updates, local guides, and responses to common local queries."
+              },
+              {
+                q: "How does GeoSpark improve my local SEO?",
+                a: "Our platform identifies high-value local keywords, integrates geographic markers into your content, optimizes your Google Business Profile with fresh content, and helps with local directory submissions — all crucial factors for ranking higher in local search results."
+              },
+              {
+                q: "Do I need any technical skills to use GeoSpark?",
+                a: "Not at all! GeoSpark is designed to be user-friendly for business owners of all technical levels. Our intuitive dashboard makes content generation and management simple. If you can fill out a form, you can use GeoSpark."
+              },
+              {
+                q: "Can I approve or edit the content before it goes live?",
+                a: "Yes, absolutely. You have full control. All generated content is queued for your review and approval. You can make any edits or request revisions before publishing."
+              },
+              {
+                q: "How long does it take to see results?",
+                a: "While SEO is a continuous process, many of our clients start seeing noticeable improvements in local search rankings and website traffic within 4-8 weeks, with more significant impact over 3-6 months of consistent posting."
+              },
+              {
+                q: "Is GeoSpark suitable for businesses with multiple locations?",
+                a: "Yes! Our Growth and Enterprise plans are perfectly suited for businesses with multiple locations, offering tools for centralized management and customized local strategies for each branch."
+              },
+              {
+                q: "What if I already have a marketing team or an SEO agency?",
+                a: "GeoSpark can complement your existing marketing efforts by significantly boosting your content output and local SEO efficiency, allowing your team to focus on broader strategies or other initiatives. It's a powerful tool to enhance their capabilities."
+              },
+              {
                 q: "What types of businesses is GeoSpark best for?",
-                a: "GeoSpark works great for any local business that wants to attract nearby customers — restaurants, salons, contractors, dentists, fitness studios, retail stores, professional services, and more. If you serve a local area, GeoSpark can help."
-              },
-              {
-                q: "Do I need marketing experience to use GeoSpark?",
-                a: "Not at all! GeoSpark is designed for busy business owners with zero marketing background. Just tell us about your business, and our AI handles the rest. If you can fill out a form, you can use GeoSpark."
-              },
-              {
-                q: "What makes GeoSpark different from other AI content tools?",
-                a: "Most AI tools create generic content. GeoSpark is specifically built for local businesses — it understands neighborhoods, local SEO, community events, and what makes local customers tick. Plus, we generate matching images automatically."
-              },
-              {
-                q: "Can I try GeoSpark before paying?",
-                a: "Yes! We offer a free 7-day trial with full access to all features. No credit card required. Generate as much content as you want and see the results for yourself."
-              },
-              {
-                q: "How quickly can I start seeing results?",
-                a: "You can generate your first month of content within minutes of signing up. Most businesses see increased engagement within the first week and improved local search visibility within 30-60 days of consistent posting."
+                a: "GeoSpark works great for any local business that wants to attract nearby customers — restaurants, salons, contractors, dentists, fitness studios, retail stores, professional services, real estate agents, and more. If you serve a local area, GeoSpark can help."
               }
             ].map((faq, i) => (
               <details key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden group">
                 <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50">
-                  <span className="font-semibold text-gray-900">{faq.q}</span>
-                  <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="font-semibold text-gray-900 pr-4">{faq.q}</span>
+                  <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </summary>
@@ -429,7 +707,8 @@ export default function HomePage() {
             Ready to Dominate Your Local Market?
           </h2>
           <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
-            Join 5,000+ local businesses already using GeoSpark to attract more customers with less effort.
+            Join 5,000+ local businesses already using GeoSpark to attract more customers with less effort. 
+            Turn content into customers today.
           </p>
           <Link 
             href="/auth/signup" 
@@ -465,7 +744,7 @@ export default function HomePage() {
               <h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="#features" className="hover:text-teal-400">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-teal-400">Pricing</Link></li>
+                <li><Link href="#pricing" className="hover:text-teal-400">Pricing</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-teal-400">How It Works</Link></li>
               </ul>
             </div>
