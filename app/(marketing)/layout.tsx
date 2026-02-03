@@ -22,6 +22,9 @@ export default function MarketingLayout({
           
           {/* Desktop Nav */}
           <div className='hidden md:flex gap-6 items-center'>
+            <Link href='/examples' className='text-sm text-gray-600 hover:text-teal-600 transition-colors'>
+              Examples
+            </Link>
             <Link href='/pricing' className='text-sm text-gray-600 hover:text-teal-600 transition-colors'>
               Pricing
             </Link>
@@ -72,6 +75,7 @@ export default function MarketingLayout({
               />
             </div>
             <div className='flex gap-6 text-sm text-gray-500'>
+              <Link href='/examples' className='hover:text-teal-600 transition-colors'>Examples</Link>
               <Link href='/pricing' className='hover:text-teal-600 transition-colors'>Pricing</Link>
               <Link href='/about' className='hover:text-teal-600 transition-colors'>About</Link>
               <Link href='/contact' className='hover:text-teal-600 transition-colors'>Contact</Link>
