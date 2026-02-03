@@ -90,6 +90,7 @@ export default function PowerDialerPage() {
 
   // Load pre-call briefing
   const loadBriefing = async (leadId: string) => {
+    console.log('[Briefing] Starting load for lead:', leadId)
     setLoadingBriefing(true)
     setBriefing(null)
     setBriefingError(null)
@@ -99,15 +100,22 @@ export default function PowerDialerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: leadId })
       })
+      console.log('[Briefing] Response status:', res.status)
       const data = await res.json()
-      if (res.ok) {
+      console.log('[Briefing] Response data:', data)
+      if (res.ok && data.briefing) {
         setBriefing(data)
       } else {
-        setBriefingError(data.error || 'Failed to generate briefing')
+        const errorMsg = data.error || 'Failed to generate briefing - no content returned'
+        console.error('[Briefing] Error:', errorMsg)
+        setBriefingError(errorMsg)
+        alert(`Briefing Error: ${errorMsg}`)
       }
     } catch (error) {
-      console.error('Failed to load briefing:', error)
-      setBriefingError('Network error - please try again')
+      console.error('[Briefing] Network error:', error)
+      const errorMsg = 'Network error - please try again'
+      setBriefingError(errorMsg)
+      alert(`Briefing Error: ${errorMsg}`)
     } finally {
       setLoadingBriefing(false)
     }
@@ -161,6 +169,30 @@ export default function PowerDialerPage() {
           {dialerError}
         </div>
       )}
+
+      {/* Debug Panel - shows state info */}
+      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+        <p className="font-semibold text-yellow-800 mb-2">Debug Info:</p>
+        <ul className="text-yellow-700 space-y-1">
+          <li>Queue items: {queue.length}</li>
+          <li>Current queue item: {currentQueueItem ? `${currentQueueItem.lead?.company_name} (${currentQueueItem.lead?.id})` : 'None'}</li>
+          <li>Loading briefing: {loadingBriefing ? 'Yes' : 'No'}</li>
+          <li>Has briefing: {briefing ? 'Yes' : 'No'}</li>
+          <li>Briefing error: {briefingError || 'None'}</li>
+        </ul>
+        {currentQueueItem?.lead && (
+          <button
+            onClick={() => loadBriefing(currentQueueItem.lead!.id)}
+            disabled={loadingBriefing}
+            className="mt-3 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 disabled:opacity-50"
+          >
+            {loadingBriefing ? 'Loading...' : 'Test Prepare Button'}
+          </button>
+        )}
+        {!currentQueueItem?.lead && (
+          <p className="mt-3 text-yellow-800 font-medium">⚠️ Add a lead to the queue first to test the Prepare button</p>
+        )}
+      </div>
 
       {/* Pre-Call Briefing Panel */}
       {(briefing || loadingBriefing) && !activeCall && (
