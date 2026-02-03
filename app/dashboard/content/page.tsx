@@ -210,7 +210,7 @@ export default function CreateContentPage() {
   const [regenerateMenuOpen, setRegenerateMenuOpen] = useState(false)
   
   // Image generation options
-  const [generateImageFlag, setGenerateImageFlag] = useState(false)
+  const [generateImageFlag] = useState(true) // Always generate images
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
   const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
   
@@ -1024,56 +1024,45 @@ export default function CreateContentPage() {
               </div>
             </div>
 
-            {/* Image Generation Option */}
+            {/* Image Generation Settings */}
             <div className="border-t border-gray-100 pt-5 mt-5">
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id="generateImage"
-                  checked={generateImageFlag}
-                  onChange={(e) => setGenerateImageFlag(e.target.checked)}
-                  className="mt-1 w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                />
-                <div className="flex-1">
-                  <label htmlFor="generateImage" className="block text-sm font-medium text-gray-700 cursor-pointer">
-                    Generate matching image
-                  </label>
-                  {/* Image Quota Counter */}
-                  {imagesRemaining !== null && (
-                    <div className="mt-2">
-                      {imagesRemaining === -1 ? (
-                        <span className="text-xs text-teal-600 font-medium">✨ Unlimited images</span>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[150px]">
-                            <div 
-                              className={`h-full rounded-full transition-all ${
-                                imagesRemaining <= 5 ? 'bg-red-500' : imagesRemaining <= 10 ? 'bg-amber-500' : 'bg-teal-500'
-                              }`}
-                              style={{ width: `${Math.min(100, (imagesRemaining / 30) * 100)}%` }}
-                            />
-                          </div>
-                          <span className={`text-xs font-medium ${
-                            imagesRemaining <= 5 ? 'text-red-600' : imagesRemaining <= 10 ? 'text-amber-600' : 'text-gray-600'
-                          }`}>
-                            {imagesRemaining} images left
-                          </span>
-                          {imagesRemaining <= 5 && imagesRemaining > 0 && (
-                            <a href="/pricing" className="text-xs text-teal-600 hover:underline">Upgrade</a>
-                          )}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-gray-700">Image Generation</span>
+                {/* Image Quota Counter */}
+                {imagesRemaining !== null && (
+                  <div>
+                    {imagesRemaining === -1 ? (
+                      <span className="text-xs text-teal-600 font-medium">✨ Unlimited images</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[100px]">
+                          <div 
+                            className={`h-full rounded-full transition-all ${
+                              imagesRemaining <= 5 ? 'bg-red-500' : imagesRemaining <= 10 ? 'bg-amber-500' : 'bg-teal-500'
+                            }`}
+                            style={{ width: `${Math.min(100, (imagesRemaining / 30) * 100)}%` }}
+                          />
                         </div>
-                      )}
-                      {imagesRemaining === 0 && (
-                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                          You've used all your images this month. <a href="/pricing" className="font-medium underline">Upgrade for more</a>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                        <span className={`text-xs font-medium ${
+                          imagesRemaining <= 5 ? 'text-red-600' : imagesRemaining <= 10 ? 'text-amber-600' : 'text-gray-600'
+                        }`}>
+                          {imagesRemaining} left
+                        </span>
+                        {imagesRemaining <= 5 && imagesRemaining > 0 && (
+                          <a href="/pricing" className="text-xs text-teal-600 hover:underline">Upgrade</a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
+              {imagesRemaining === 0 && (
+                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                  You've used all your images this month. <a href="/pricing" className="font-medium underline">Upgrade for more</a>
+                </div>
+              )}
               
-              {generateImageFlag && imagesRemaining !== 0 && (
+              {imagesRemaining !== 0 && (
                 <div className="mt-4 ml-8">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Image Style</label>
                   <select
@@ -1109,7 +1098,7 @@ export default function CreateContentPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {generateImageFlag ? 'Generating content & image...' : selectedTemplate === 'social-pack' ? 'Generating 6 posts...' : 'Generating...'}
+                    {selectedTemplate === 'social-pack' ? 'Generating 6 posts & images...' : 'Generating content & image...'}
                   </>
                 ) : (
                   <>
@@ -1544,7 +1533,7 @@ export default function CreateContentPage() {
                   </button>
                   <button
                     onClick={() => handleGenerate('image')}
-                    disabled={!generateImageFlag}
+                    disabled={imagesRemaining === 0}
                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1763,7 +1752,7 @@ export default function CreateContentPage() {
                   </button>
                   <button
                     onClick={() => handleGenerate('image')}
-                    disabled={!generateImageFlag}
+                    disabled={imagesRemaining === 0}
                     className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
