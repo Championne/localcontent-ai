@@ -8,6 +8,7 @@ export interface SalesApiAccess {
     id: string
     role: 'admin' | 'manager' | 'sales_rep'
     name?: string
+    email?: string
   } | null
   errorResponse?: NextResponse
 }
@@ -33,7 +34,7 @@ export async function checkSalesApiAccess(): Promise<SalesApiAccess> {
   // Check if user exists in sales_team table
   const { data: salesMember } = await supabase
     .from('sales_team')
-    .select('id, role, status, name')
+    .select('id, role, status, name, email')
     .eq('user_id', user.id)
     .eq('status', 'active')
     .single()
@@ -53,7 +54,8 @@ export async function checkSalesApiAccess(): Promise<SalesApiAccess> {
     salesMember: {
       id: salesMember.id,
       role: salesMember.role as 'admin' | 'manager' | 'sales_rep',
-      name: salesMember.name || undefined
+      name: salesMember.name || undefined,
+      email: salesMember.email || undefined
     }
   }
 }
