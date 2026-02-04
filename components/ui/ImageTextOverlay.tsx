@@ -102,18 +102,14 @@ async function analyzeImageBrightness(imageUrl: string): Promise<{
 }
 
 // Get optimal text styling based on background brightness
-function getTextStyle(brightness: number, industry?: string): {
-  color: string
-  shadowColor: string
-  fontWeight: 'normal' | 'bold'
-} {
+function getTextStyle(brightness: number, industry?: string) {
   // Use white text on dark backgrounds, dark text on light backgrounds
   const isDark = brightness < 128
   
   return {
     color: isDark ? '#FFFFFF' : '#1F2937',
     shadowColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)',
-    fontWeight: 'bold'
+    fontWeight: 'bold' as const
   }
 }
 
