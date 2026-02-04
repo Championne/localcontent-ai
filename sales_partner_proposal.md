@@ -29,16 +29,90 @@ Our AI writes and schedules engaging posts about their services, local events, a
 
 ---
 
+## Available Markets
+
+We're expanding globally. Native speakers preferred for each market.
+
+| Market | Language |
+|--------|----------|
+| 🇺🇸 USA | English |
+| 🇬🇧 United Kingdom | English |
+| 🇨🇦 Canada | English |
+| 🇦🇺 Australia | English |
+| 🇳🇱 Netherlands | Dutch |
+| 🇩🇪 Germany | German |
+| 🇦🇹 Austria | German |
+| 🇮🇹 Italy | Italian |
+| 🇪🇸 Spain | Spanish |
+| 🇲🇽 Mexico | Spanish |
+| 🇫🇷 France | French |
+| 🇷🇺 Russia | Russian |
+
+---
+
 ## The Partnership Model
 
 You are a **partner**, not an employee. No manager. No clock. No office.
 
 | You Own | We Provide |
 |---------|------------|
-| Your schedule | Sales tools (AI coach, scripts, CRM) |
-| Your client relationships | Product demos & training |
-| Your strategy | Technical support for clients |
-| Your growth pace | Recurring commission infrastructure |
+| Your schedule | Full CRM access with lead scoring |
+| Your client relationships | AI-powered sales coach |
+| Your strategy | Pre-written email templates (in your language) |
+| Your growth pace | Cold email infrastructure (optional) |
+| Your market | Demo scripts and objection handling |
+| | Weekly training calls |
+| | Slack/WhatsApp support group |
+
+---
+
+## Commission Structure
+
+### Early Partner Rates (Locked Forever)
+
+| Partner Slot | Commission Rate |
+|--------------|-----------------|
+| **First 15 partners** | **40%** of client revenue |
+| Partners 16-50 | **35%** of client revenue |
+| Partners 51+ | **30%** of client revenue |
+
+**Your rate is locked forever.** Join as partner #8, you keep 40% for life.
+
+### How It Works
+
+- Commission paid monthly when client pays
+- Client cancels = commission stops
+- Client comes back = commission restarts
+- **You only get paid when we get paid. Zero risk for you.**
+
+### Performance Bonuses
+
+Hit these monthly targets for extra rewards:
+
+| Clients Closed (Month) | Bonus |
+|------------------------|-------|
+| 30+ clients | **$200** |
+| 50+ clients | **$500** |
+| 100+ clients | **$1,000** |
+
+---
+
+## Sales Channels
+
+Choose your style—or combine both:
+
+### Option A: Phone Sales
+- Make outbound calls to local businesses
+- Use our AI coach for real-time guidance
+- Scripts and objection handlers provided
+
+### Option B: Cold Email (We Provide Infrastructure)
+- We set up email accounts and warm them
+- Pre-written sequences in your language
+- CRM tracks opens, clicks, replies automatically
+- You handle interested replies
+
+**Most partners use both:** Cold email to warm up leads, phone to close.
 
 ---
 
@@ -61,22 +135,41 @@ You are a **partner**, not an employee. No manager. No clock. No office.
 
 ---
 
-## 5-Month Income Projection
+## 5-Month Income Projection (Early Partner at 40%)
 
-**Commission: 30% recurring on all active clients**
+**Commission: 40% recurring on all active clients**
 **Average deal: $60/month (mix of Starter $29 & Pro $79 plans)**
 **Churn assumption: 5% monthly after month 2**
 
-| Month | New Clients | Lost | Portfolio | Commission (30%) | Cumulative |
+| Month | New Clients | Lost | Portfolio | Commission (40%) | Cumulative |
 |-------|-------------|------|-----------|------------------|------------|
-| **1** | 8 | 0 | 8 | **$144** | $144 |
-| **2** | 15 | 0 | 23 | **$414** | $558 |
-| **3** | 20 | 1 | 42 | **$756** | $1,314 |
-| **4** | 23 | 2 | 63 | **$1,134** | $2,448 |
-| **5** | 26 | 3 | 86 | **$1,548** | $3,996 |
+| **1** | 8 | 0 | 8 | **$192** | $192 |
+| **2** | 15 | 0 | 23 | **$552** | $744 |
+| **3** | 20 | 1 | 42 | **$1,008** | $1,752 |
+| **4** | 23 | 2 | 63 | **$1,512** | $3,264 |
+| **5** | 26 | 3 | 86 | **$2,064** | $5,328 |
 
-**Month 5: $1,548/month recurring income**
-**Month 12 projection (same pace): $3,000+/month with 150+ clients**
+**Month 5: $2,064/month recurring income**
+**Month 12 projection (same pace): $4,000+/month with 150+ clients**
+
+---
+
+## 12-Month Projection (Early Partner at 40%)
+
+Assuming continued growth and 5% monthly churn:
+
+| Month | Portfolio | Monthly Commission |
+|-------|-----------|-------------------|
+| 6 | 108 | $2,592 |
+| 7 | 129 | $3,096 |
+| 8 | 149 | $3,576 |
+| 9 | 168 | $4,032 |
+| 10 | 186 | $4,464 |
+| 11 | 203 | $4,872 |
+| 12 | 219 | $5,256 |
+
+**Year 1 total earnings: ~$35,000**
+**Monthly recurring at month 12: $5,256**
 
 ---
 
@@ -94,10 +187,22 @@ You are a **partner**, not an employee. No manager. No clock. No office.
 ## Partnership Terms
 
 - **No upfront cost** – We provide everything
-- **No quotas** – Grow at your pace
+- **No quotas** – Grow at your pace (we may remove inactive partners)
 - **No boss** – You manage yourself
-- **30% recurring commission** – Paid monthly, for life of client
+- **40% recurring commission** – For first 15 partners, locked forever
 - **Your clients, your relationships** – You own the book of business
+- **Performance bonuses** – Extra rewards for high performers
+
+---
+
+## Onboarding Timeline
+
+| Week | What Happens |
+|------|--------------|
+| Week 1 | Training: Product, CRM, scripts, objection handling |
+| Week 2 | Shadow calls, practice demos, email setup |
+| Week 3 | Start outreach (calls + emails) |
+| Week 4 | First clients closing, weekly coaching call |
 
 ---
 
@@ -105,6 +210,8 @@ You are a **partner**, not an employee. No manager. No clock. No office.
 
 **Ready to build recurring income helping local businesses grow?**
 
-Contact: [Your Email] | geospark.app
+**Only 15 spots available at 40% commission rate.**
+
+Contact: gjvanstraalen@gmail.com | geospark.app
 
 </div>
