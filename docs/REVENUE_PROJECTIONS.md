@@ -184,5 +184,171 @@ Assumes gradual scaling of email accounts and 5% monthly churn.
 
 ---
 
+---
+
+## Sales Department Expansion Plan
+
+### Agent Workload Capacity
+
+| Task | Time per Lead | Notes |
+|------|---------------|-------|
+| Reply to email | 5 min | Personalized response |
+| Follow-up call | 10 min | Including prep |
+| Demo | 30 min | Full presentation |
+| Onboarding call | 20 min | New customer setup |
+| Admin/CRM updates | 2 min/lead | Logging activities |
+
+### Per Agent Daily Capacity
+
+| Activity | Max per Day | Per Month |
+|----------|-------------|-----------|
+| Email replies | 40 | 800 |
+| Calls | 25 | 500 |
+| Demos | 8 | 160 |
+| Onboarding | 10 | 200 |
+
+---
+
+### Staffing by Growth Phase
+
+#### Phase 1: Launch (9 accounts, 450 emails/day)
+
+| Metric | Monthly Volume | Agent Hours |
+|--------|----------------|-------------|
+| Replies to handle | 675 | ~56 hrs |
+| Demos to conduct | 162 | ~81 hrs |
+| New customers to onboard | 40 | ~13 hrs |
+| **Total** | | **~150 hrs** |
+
+**Agents needed: 1 (founder)**
+
+#### Phase 2: Growth (18 accounts, 900 emails/day)
+
+| Metric | Monthly Volume | Agent Hours |
+|--------|----------------|-------------|
+| Replies to handle | 1,350 | ~112 hrs |
+| Demos to conduct | 324 | ~162 hrs |
+| New customers to onboard | 80 | ~27 hrs |
+| **Total** | | **~300 hrs** |
+
+**Agents needed: 2**
+
+#### Phase 3: Scale (45 accounts, 2,250 emails/day)
+
+| Metric | Monthly Volume | Agent Hours |
+|--------|----------------|-------------|
+| Replies to handle | 3,375 | ~280 hrs |
+| Demos to conduct | 810 | ~405 hrs |
+| New customers to onboard | 200 | ~67 hrs |
+| **Total** | | **~750 hrs** |
+
+**Agents needed: 5**
+
+#### Phase 4: Enterprise (90 accounts, 4,500 emails/day)
+
+| Metric | Monthly Volume | Agent Hours |
+|--------|----------------|-------------|
+| Replies to handle | 6,750 | ~560 hrs |
+| Demos to conduct | 1,620 | ~810 hrs |
+| New customers to onboard | 400 | ~133 hrs |
+| **Total** | | **~1,500 hrs** |
+
+**Agents needed: 10**
+
+---
+
+### Staffing Roadmap
+
+| Phase | Email Accounts | Emails/Day | Customers/Month | Agents |
+|-------|----------------|------------|-----------------|--------|
+| Launch | 9 | 450 | 40 | **1** |
+| Month 3 | 18 | 900 | 80 | **2** |
+| Month 6 | 27 | 1,350 | 120 | **3** |
+| Month 9 | 45 | 2,250 | 200 | **5** |
+| Month 12 | 60 | 3,000 | 270 | **7** |
+| Year 2 | 90+ | 4,500+ | 400+ | **10+** |
+
+---
+
+### Multi-Market Expansion
+
+| Market | Language | Hire When | Accounts |
+|--------|----------|-----------|----------|
+| 🇺🇸 USA | English | Day 1 (founder) | 9 |
+| 🇳🇱 Netherlands | Dutch | Month 3 | 6 |
+| 🇩🇪 Germany | German | Month 4 | 9 |
+| 🇮🇹 Italy | Italian | Month 5 | 6 |
+| 🇪🇸 Spain | Spanish | Month 6 | 6 |
+| 🇷🇺 Russia | Russian | Month 8 | 6 |
+| 🇫🇷 France | French | Month 10 | 6 |
+
+**Rule: 1 dedicated agent minimum per market/language**
+
+---
+
+### Team Structure Evolution
+
+#### Year 1 (Building)
+
+```
+Founder (CEO + Sales)
+├── 1-2 Sales Agents (Month 3+)
+└── Customer Support (outsource/part-time)
+```
+
+#### Year 2 (Scaling)
+
+```
+CEO
+├── Sales Manager
+│   ├── 2-3 US Sales Agents
+│   ├── 1-2 EU Sales Agents (multi-lingual)
+│   └── 1 LATAM Agent (Spanish)
+├── Customer Success Manager
+│   └── 2-3 Support Agents
+└── Operations
+```
+
+---
+
+### Agent Cost Projections
+
+| Role | Monthly Cost | When to Hire |
+|------|--------------|--------------|
+| Sales Agent (US) | $3,000-5,000 | Month 3+ |
+| Sales Agent (EU) | €2,500-4,000 | Month 4+ |
+| Sales Partner (Commission) | 20-30% of deal | Anytime |
+| Customer Support | $2,000-3,000 | Month 6+ |
+
+### Partner Model (Lower Risk Alternative)
+
+Instead of employees, use commission-based partners:
+- No base salary required
+- 20-30% commission on closed deals
+- They bring market expertise
+- Easy to scale up/down
+- Lower financial risk
+
+---
+
+### Hiring Milestones
+
+| MRR Milestone | Agents | Action |
+|---------------|--------|--------|
+| $0-2K | 1 | Founder handles all sales |
+| $5K | 2 | First sales hire |
+| $10K | 3 | Add second market |
+| $15K | 4 | Dedicated EU agent |
+| $25K | 5-6 | Add more markets |
+| $35K | 7-8 | Team leads emerge |
+| $50K+ | 10+ | Full sales organization |
+
+**Rule of thumb:** 
+- 1 agent per $5-7K MRR
+- 1 agent per 50-80 new customers/month
+- 1 agent per market/language minimum
+
+---
+
 *Projections created: February 2025*
 *Review and update quarterly based on actual performance*
