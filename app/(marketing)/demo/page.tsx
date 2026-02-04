@@ -113,12 +113,11 @@ export default function ExamplesPage() {
               <span className="font-semibold">Blog Post</span>
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Restaurant</span>
             </div>
-            <div className="aspect-video bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center">
-              <div className="text-center p-4">
-                <span className="text-5xl mb-2 block">🍽️</span>
-                <span className="text-sm text-gray-500">Farm-to-table dining</span>
-              </div>
-            </div>
+            <img 
+              src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=600&h=400&fit=crop" 
+              alt="Fresh vegetables on wooden table" 
+              className="w-full aspect-video object-cover"
+            />
             <div className="p-5">
               <h4 className="font-bold text-gray-900 mb-2">5 Reasons to Try Farm-to-Table Dining in Austin This Spring</h4>
               <p className="text-sm text-gray-600 leading-relaxed mb-3">
@@ -142,12 +141,11 @@ export default function ExamplesPage() {
               <span className="font-semibold">Google Business</span>
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Fitness</span>
             </div>
-            <div className="aspect-video bg-gradient-to-br from-green-100 to-teal-50 flex items-center justify-center">
-              <div className="text-center p-4">
-                <span className="text-5xl mb-2 block">💪</span>
-                <span className="text-sm text-gray-500">New Year fitness goals</span>
-              </div>
-            </div>
+            <img 
+              src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=400&fit=crop" 
+              alt="Modern gym with exercise equipment" 
+              className="w-full aspect-video object-cover"
+            />
             <div className="p-5">
               <h4 className="font-bold text-gray-900 mb-2">🎉 New Year, New You — January Special!</h4>
               <p className="text-sm text-gray-600 leading-relaxed mb-3">
@@ -173,12 +171,11 @@ export default function ExamplesPage() {
               <span className="font-semibold">Email Newsletter</span>
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Real Estate</span>
             </div>
-            <div className="aspect-video bg-gradient-to-br from-blue-100 to-indigo-50 flex items-center justify-center">
-              <div className="text-center p-4">
-                <span className="text-5xl mb-2 block">🏠</span>
-                <span className="text-sm text-gray-500">Housing market update</span>
-              </div>
-            </div>
+            <img 
+              src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&h=400&fit=crop" 
+              alt="Modern home exterior" 
+              className="w-full aspect-video object-cover"
+            />
             <div className="p-5">
               <div className="text-xs text-gray-500 mb-2">Subject: Seattle Housing Market Update — What Buyers Need to Know</div>
               <h4 className="font-bold text-gray-900 mb-2">February Market Insights</h4>
