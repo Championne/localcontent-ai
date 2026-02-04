@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import ImageOverlayEditor from '@/components/ImageOverlayEditor'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { ImageTextOverlay } from '@/components/ui/ImageTextOverlay'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -228,6 +229,9 @@ export default function CreateContentPage() {
   const [showPhotoPositioner, setShowPhotoPositioner] = useState(false)
   const [applyingPhoto, setApplyingPhoto] = useState(false)
   const [photoSkipped, setPhotoSkipped] = useState(false)
+  
+  // Text overlay editor
+  const [showTextOverlay, setShowTextOverlay] = useState(false)
 
   // GBP-specific state
   const [gbpPostType, setGbpPostType] = useState<GbpPostType>('update')
@@ -1145,6 +1149,23 @@ export default function CreateContentPage() {
                 applying={applyingLogo}
               />
             </div>
+          ) : generatedImage && showTextOverlay ? (
+            <div className="mb-6">
+              <ImageTextOverlay
+                imageUrl={generatedImage.url}
+                suggestedTexts={[
+                  topic || 'Your headline here',
+                  businessName || 'Business Name',
+                  `${topic} - ${businessName}`,
+                  selectedTemplate === 'gmb-post' ? 'Learn More' : 
+                  selectedTemplate === 'social-pack' ? 'Follow Us' : 
+                  'Contact Us Today'
+                ].filter(Boolean)}
+                industry={industry}
+                businessName={businessName}
+                onClose={() => setShowTextOverlay(false)}
+              />
+            </div>
           ) : generatedImage && (
             <div className="mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
@@ -1160,6 +1181,15 @@ export default function CreateContentPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowTextOverlay(true)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Add Text
+                  </button>
                   {(currentBusinessLogo || currentBusinessPhoto) && (!logoSkipped || !photoSkipped) && (
                     <button
                       onClick={() => setShowOverlayEditor(true)}
@@ -1589,7 +1619,23 @@ export default function CreateContentPage() {
           </div>
 
           {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
-          {generatedImage && selectedTemplate !== 'blog-post' && (
+          {generatedImage && selectedTemplate !== 'blog-post' && showTextOverlay && (
+            <div className="mb-4">
+              <ImageTextOverlay
+                imageUrl={generatedImage.url}
+                suggestedTexts={[
+                  topic || 'Your headline here',
+                  businessName || 'Business Name',
+                  selectedTemplate === 'gmb-post' ? 'Learn More' : 'Contact Us Today',
+                  `${topic} - ${businessName}`
+                ].filter(Boolean)}
+                industry={industry}
+                businessName={businessName}
+                onClose={() => setShowTextOverlay(false)}
+              />
+            </div>
+          )}
+          {generatedImage && selectedTemplate !== 'blog-post' && !showTextOverlay && (
             <div className="mb-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1603,15 +1649,26 @@ export default function CreateContentPage() {
                     <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
                   </div>
                 </div>
-                <button
-                  onClick={handleDownloadImage}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowTextOverlay(true)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Add Text
+                  </button>
+                  <button
+                    onClick={handleDownloadImage}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download
+                  </button>
+                </div>
               </div>
               <div className="p-4 flex justify-center bg-gray-50">
                 <SafeImage 
