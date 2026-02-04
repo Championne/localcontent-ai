@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import ImageOverlayEditor from '@/components/ImageOverlayEditor'
+import { SafeImage } from '@/components/ui/SafeImage'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -1182,10 +1183,11 @@ export default function CreateContentPage() {
                 </div>
               </div>
               <div className="p-4 flex justify-center bg-gray-50">
-                <img 
+                <SafeImage 
                   src={generatedImage.url} 
                   alt="Generated content image" 
                   className="max-w-md w-full rounded-lg shadow-sm"
+                  fallbackClassName="max-w-md w-full h-48 rounded-lg"
                 />
               </div>
             </div>
@@ -1612,10 +1614,11 @@ export default function CreateContentPage() {
                 </button>
               </div>
               <div className="p-4 flex justify-center bg-gray-50">
-                <img 
+                <SafeImage 
                   src={generatedImage.url} 
                   alt="Generated content image" 
                   className="max-w-md w-full rounded-lg shadow-sm"
+                  fallbackClassName="max-w-md w-full h-48 rounded-lg"
                 />
               </div>
             </div>
