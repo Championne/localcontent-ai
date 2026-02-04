@@ -93,8 +93,8 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900">Email Us</h3>
                     <p className="text-gray-600 text-sm mt-1">For general inquiries and support</p>
-                    <a href="mailto:hello@geospark.app" className="text-teal-600 font-medium hover:text-teal-700 mt-1 inline-block">
-                      hello@geospark.app
+                    <a href="mailto:sales@geospark.app" className="text-teal-600 font-medium hover:text-teal-700 mt-1 inline-block">
+                      sales@geospark.app
                     </a>
                   </div>
                 </div>
