@@ -39,6 +39,9 @@ CREATE TABLE IF NOT EXISTS outreach_leads (
   emails_sent INTEGER DEFAULT 0,
   emails_opened INTEGER DEFAULT 0,
   
+  -- Link to sales CRM
+  sales_lead_id UUID, -- Links to leads table when converted
+  
   -- Source tracking
   source TEXT DEFAULT 'manual', -- manual, csv_import, apollo, outscraper, google_maps
   source_details JSONB,
@@ -131,7 +134,7 @@ CREATE TABLE IF NOT EXISTS outreach_activities (
   email_id UUID REFERENCES outreach_emails(id) ON DELETE SET NULL,
   
   -- Activity type
-  type TEXT NOT NULL CHECK (type IN ('email_sent', 'email_opened', 'email_clicked', 'email_replied', 'email_bounced', 'status_changed', 'note_added', 'demo_scheduled', 'converted')),
+  type TEXT NOT NULL CHECK (type IN ('email_sent', 'email_opened', 'email_clicked', 'email_replied', 'email_bounced', 'status_changed', 'note_added', 'demo_scheduled', 'converted', 'call_made')),
   
   -- Activity details
   details JSONB,

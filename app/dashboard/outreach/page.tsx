@@ -16,6 +16,7 @@ interface Lead {
   google_reviews_count: number | null
   created_at: string
   last_contacted_at: string | null
+  sales_lead_id: string | null
 }
 
 interface Campaign {
@@ -116,6 +117,33 @@ export default function OutreachDashboard() {
       fetchData()
     } catch (error) {
       console.error('Error updating lead:', error)
+    }
+  }
+
+  async function convertToSalesLead(leadId: string) {
+    if (!confirm('Convert this lead to a Sales lead?')) return
+    
+    try {
+      const res = await fetch(`/api/outreach/leads/${leadId}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      
+      const data = await res.json()
+      
+      if (res.ok) {
+        alert(data.was_existing 
+          ? 'Linked to existing sales lead!' 
+          : 'Successfully converted to sales lead!'
+        )
+        fetchData()
+      } else {
+        alert(data.error || 'Failed to convert lead')
+      }
+    } catch (error) {
+      console.error('Error converting lead:', error)
+      alert('Failed to convert lead')
     }
   }
 
@@ -273,12 +301,29 @@ export default function OutreachDashboard() {
                         </select>
                       </td>
                       <td className="px-4 py-3">
-                        <Link
-                          href={`/dashboard/outreach/leads/${lead.id}`}
-                          className="text-teal-600 hover:text-teal-700 text-sm"
-                        >
-                          View
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/dashboard/outreach/leads/${lead.id}`}
+                            className="text-teal-600 hover:text-teal-700 text-sm"
+                          >
+                            View
+                          </Link>
+                          {lead.sales_lead_id ? (
+                            <Link
+                              href={`/dashboard/sales/leads/${lead.sales_lead_id}`}
+                              className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200"
+                            >
+                              In Sales
+                            </Link>
+                          ) : ['replied', 'interested', 'demo_scheduled'].includes(lead.status) && (
+                            <button
+                              onClick={() => convertToSalesLead(lead.id)}
+                              className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+                            >
+                              → Sales
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
