@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { GenerationProgress } from '@/components/ui/GenerationProgress'
 
 // Reusable Demo Image component with loading/error handling
 function DemoImage({ 
@@ -773,6 +774,17 @@ export function SingleContentDemo({ contentType, title, description, compact = f
           </div>
         </div>
 
+        {/* Progress Bar - Shown while generating */}
+        {isGenerating && (
+          <div className="mt-4">
+            <GenerationProgress 
+              isGenerating={isGenerating} 
+              contentType={contentType}
+              size="md"
+            />
+          </div>
+        )}
+
         {/* Generated Content - Shown below the card */}
         {demo && (
           <div ref={resultRef} className="mt-6">
@@ -1004,6 +1016,17 @@ export function LandingPageDemo() {
           {usage && (
             <div className="mt-4">
               <DemoCounter usage={usage} />
+            </div>
+          )}
+          
+          {/* Progress Bar */}
+          {isGenerating && (
+            <div className="mt-6 max-w-md mx-auto">
+              <GenerationProgress 
+                isGenerating={isGenerating} 
+                contentType="social-pack"
+                size="lg"
+              />
             </div>
           )}
           

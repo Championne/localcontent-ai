@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import ImageOverlayEditor from '@/components/ImageOverlayEditor'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ImageTextOverlay } from '@/components/ui/ImageTextOverlay'
+import { GenerationProgress } from '@/components/ui/GenerationProgress'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -1115,6 +1116,17 @@ export default function CreateContentPage() {
                 )}
               </button>
             </div>
+            
+            {/* Progress Bar */}
+            {generating && (
+              <div className="mt-6">
+                <GenerationProgress 
+                  isGenerating={generating} 
+                  contentType={selectedTemplate || 'general'}
+                  size="lg"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1597,6 +1609,17 @@ export default function CreateContentPage() {
               )}
             </button>
           </div>
+          
+          {/* Progress Bar for Regeneration */}
+          {generating && (
+            <div className="mt-4">
+              <GenerationProgress 
+                isGenerating={generating} 
+                contentType="social-pack"
+                size="md"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -1871,6 +1894,17 @@ export default function CreateContentPage() {
               )}
             </button>
           </div>
+          
+          {/* Progress Bar for Regeneration */}
+          {generating && (
+            <div className="mt-4">
+              <GenerationProgress 
+                isGenerating={generating} 
+                contentType={selectedTemplate || 'general'}
+                size="md"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
