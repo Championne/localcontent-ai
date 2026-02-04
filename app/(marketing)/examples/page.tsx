@@ -1,19 +1,331 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState, useEffect, useRef } from 'react'
+
+// Types for generated content
+interface SocialPackContent {
+  twitter: { content: string; charCount: number }
+  facebook: { content: string; charCount: number }
+  instagram: { content: string; hashtags: string; charCount: number }
+  linkedin: { content: string; charCount: number }
+  tiktok: { content: string; charCount: number }
+  nextdoor: { content: string; charCount: number }
+}
+
+interface GeneratedDemo {
+  success: boolean
+  businessName: string
+  industry: string
+  topic: string
+  contentType: string
+  displayType: string
+  content: string | SocialPackContent
+  aiPowered: boolean
+}
+
+// Typing effect component
+function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
+  const [displayedText, setDisplayedText] = useState('')
+  const [isComplete, setIsComplete] = useState(false)
+  
+  useEffect(() => {
+    setDisplayedText('')
+    setIsComplete(false)
+    let i = 0
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(text.slice(0, i + 1))
+        i++
+      } else {
+        setIsComplete(true)
+        clearInterval(timer)
+      }
+    }, speed)
+    return () => clearInterval(timer)
+  }, [text, speed])
+  
+  return (
+    <span>
+      {displayedText}
+      {!isComplete && <span className="animate-pulse">|</span>}
+    </span>
+  )
+}
+
+// Live Demo Component
+function LiveDemoSection() {
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [demo, setDemo] = useState<GeneratedDemo | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [customMode, setCustomMode] = useState(false)
+  const [customBusiness, setCustomBusiness] = useState('')
+  const [customIndustry, setCustomIndustry] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
+
+  const generateDemo = async () => {
+    setIsGenerating(true)
+    setError(null)
+    
+    try {
+      const body = customMode && customBusiness && customIndustry
+        ? { businessName: customBusiness, industry: customIndustry }
+        : {}
+      
+      const response = await fetch('/api/demo/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setDemo(data)
+        // Scroll to result
+        setTimeout(() => {
+          resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 100)
+      } else {
+        setError(data.error || 'Something went wrong')
+      }
+    } catch (err) {
+      setError('Failed to generate. Please try again.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const formatContent = (content: string | SocialPackContent, type: string) => {
+    if (type === 'social-pack' && typeof content === 'object') {
+      const pack = content as SocialPackContent
+      return (
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Twitter */}
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-black rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </div>
+              <span className="font-semibold text-sm">X/Twitter</span>
+            </div>
+            <p className="text-sm text-gray-700"><TypeWriter text={pack.twitter.content} /></p>
+          </div>
+          
+          {/* Facebook */}
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-[#1877F2] rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </div>
+              <span className="font-semibold text-sm">Facebook</span>
+            </div>
+            <p className="text-sm text-gray-700"><TypeWriter text={pack.facebook.content} speed={15} /></p>
+          </div>
+          
+          {/* Instagram */}
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </div>
+              <span className="font-semibold text-sm">Instagram</span>
+            </div>
+            <p className="text-sm text-gray-700"><TypeWriter text={pack.instagram.content} speed={15} /></p>
+            <p className="text-xs text-blue-500 mt-2">{pack.instagram.hashtags}</p>
+          </div>
+          
+          {/* LinkedIn */}
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 bg-[#0A66C2] rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              </div>
+              <span className="font-semibold text-sm">LinkedIn</span>
+            </div>
+            <p className="text-sm text-gray-700"><TypeWriter text={pack.linkedin.content} speed={15} /></p>
+          </div>
+        </div>
+      )
+    }
+    
+    // String content (blog, email, gmb)
+    return (
+      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+        <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
+          <TypeWriter text={content as string} speed={10} />
+        </pre>
+      </div>
+    )
+  }
+
+  return (
+    <section className="bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 py-16 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-48 h-48 bg-orange-400 rounded-full blur-3xl" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <span className="animate-pulse w-2 h-2 bg-green-400 rounded-full" />
+            Live AI Demo
+          </div>
+          
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Watch AI Create Content in Real-Time
+          </h2>
+          <p className="text-xl text-teal-100 mb-8">
+            Click the button below and watch GeoSpark generate professional marketing content instantly.
+          </p>
+
+          {/* Custom business toggle */}
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <button
+              onClick={() => setCustomMode(false)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                !customMode 
+                  ? 'bg-white text-teal-700' 
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              Random Business
+            </button>
+            <button
+              onClick={() => setCustomMode(true)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                customMode 
+                  ? 'bg-white text-teal-700' 
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              Try Your Business
+            </button>
+          </div>
+
+          {/* Custom inputs */}
+          {customMode && (
+            <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mb-6">
+              <input
+                type="text"
+                placeholder="Your business name"
+                value={customBusiness}
+                onChange={(e) => setCustomBusiness(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white placeholder-white/60 focus:outline-none focus:border-white"
+              />
+              <input
+                type="text"
+                placeholder="Industry (e.g., Plumber)"
+                value={customIndustry}
+                onChange={(e) => setCustomIndustry(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white placeholder-white/60 focus:outline-none focus:border-white"
+              />
+            </div>
+          )}
+
+          {/* Generate button */}
+          <button
+            onClick={generateDemo}
+            disabled={isGenerating || (customMode && (!customBusiness || !customIndustry))}
+            className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-2xl ${
+              isGenerating
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-orange-500 hover:bg-orange-600 text-white hover:scale-105 hover:shadow-orange-500/25'
+            }`}
+          >
+            {isGenerating ? (
+              <>
+                <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                AI is writing...
+              </>
+            ) : (
+              <>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Generate Random Content
+              </>
+            )}
+          </button>
+
+          {error && (
+            <p className="mt-4 text-red-300">{error}</p>
+          )}
+        </div>
+
+        {/* Generated result */}
+        {demo && (
+          <div ref={resultRef} className="mt-12 max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                        demo.contentType === 'social-pack' ? 'bg-purple-100 text-purple-700' :
+                        demo.contentType === 'blog-post' ? 'bg-blue-100 text-blue-700' :
+                        demo.contentType === 'gmb-post' ? 'bg-green-100 text-green-700' :
+                        'bg-orange-100 text-orange-700'
+                      }`}>
+                        {demo.displayType}
+                      </span>
+                      {demo.aiPowered && (
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-700">
+                          AI Generated
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-gray-900">{demo.businessName}</h3>
+                    <p className="text-sm text-gray-500">{demo.industry} • {demo.topic}</p>
+                  </div>
+                  <button
+                    onClick={generateDemo}
+                    disabled={isGenerating}
+                    className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Regenerate
+                  </button>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6">
+                {formatContent(demo.content, demo.contentType)}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
 
 export default function ExamplesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      {/* Live Demo Section - NEW! */}
+      <LiveDemoSection />
+      
       {/* Hero */}
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto text-center">
-          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Real Examples</span>
+          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">More Examples</span>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-2 mb-6">
-            Content Created by GeoSpark
+            See What GeoSpark Can Create
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            See what AI-generated local content looks like. Every example below was created in seconds — 
-            tailored for a local coffee shop called "The Daily Grind."
+            Below are sample outputs showing the range of content GeoSpark generates. 
+            Every example was created by AI in seconds.
           </p>
           <Link 
             href="/auth/signup" 
