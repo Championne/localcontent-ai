@@ -165,9 +165,36 @@ export default function ContactPage() {
                       </svg>
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                    <p className="text-gray-600 mb-6">
-                      Thank you for reaching out. We'll get back to you within 24 hours.
+                    <p className="text-gray-600 mb-4">
+                      Thank you for reaching out!
                     </p>
+                    
+                    {/* Confirmation details */}
+                    <div className="bg-teal-50 border border-teal-200 rounded-xl p-6 text-left max-w-md mx-auto mb-6">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Confirmation email sent</p>
+                          <p className="text-sm text-gray-600">Check your inbox for a copy of your message</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">Response within 24 hours</p>
+                          <p className="text-sm text-gray-600">Usually much faster during business hours!</p>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <button
                       onClick={() => setStatus('idle')}
                       className="text-teal-600 font-medium hover:text-teal-700"
