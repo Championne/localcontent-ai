@@ -1,7 +1,28 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { SingleContentDemo } from '@/components/marketing/LiveContentDemo'
 
+// Industry options
+const INDUSTRY_OPTIONS = [
+  { value: 'random', label: '🎲 Surprise Me (Random)' },
+  { value: 'restaurant', label: '🍽️ Restaurant / Cafe' },
+  { value: 'fitness', label: '💪 Fitness / Gym' },
+  { value: 'salon', label: '💇 Salon / Beauty' },
+  { value: 'real-estate', label: '🏠 Real Estate' },
+  { value: 'plumbing', label: '🔧 Plumbing / HVAC' },
+  { value: 'dental', label: '🦷 Dental / Medical' },
+  { value: 'legal', label: '⚖️ Legal Services' },
+  { value: 'retail', label: '🛍️ Retail / Shop' },
+  { value: 'automotive', label: '🚗 Automotive' },
+  { value: 'pet', label: '🐕 Pet Services' },
+  { value: 'cleaning', label: '🧹 Cleaning Services' },
+]
+
 export default function ExamplesPage() {
+  const [selectedIndustry, setSelectedIndustry] = useState('random')
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Hero */}
@@ -12,9 +33,26 @@ export default function ExamplesPage() {
             Watch GeoSpark Create Content
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Click any button below to see our AI generate real content in real-time. 
-            Each demo uses a random local business — try them all!
+            Select your industry and click any button to see our AI generate real content in real-time.
           </p>
+          
+          {/* Industry Selector */}
+          <div className="max-w-xs mx-auto">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Choose your industry:
+            </label>
+            <select
+              value={selectedIndustry}
+              onChange={(e) => setSelectedIndustry(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-700 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none cursor-pointer"
+            >
+              {INDUSTRY_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </section>
 
@@ -26,6 +64,7 @@ export default function ExamplesPage() {
             contentType="social-pack"
             title="📱 Social Media Pack"
             description="6 platform-optimized posts (Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor) generated in one click"
+            industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
           />
 
           {/* Blog Post Demo */}
@@ -33,6 +72,7 @@ export default function ExamplesPage() {
             contentType="blog-post"
             title="📝 Blog Post"
             description="SEO-optimized, 600-800 word articles that help you rank for local searches"
+            industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
           />
 
           {/* Google Business Post Demo */}
@@ -40,6 +80,7 @@ export default function ExamplesPage() {
             contentType="gmb-post"
             title="📍 Google Business Post"
             description="Engaging updates for your Google Business Profile that drive local traffic"
+            industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
           />
 
           {/* Email Newsletter Demo */}
@@ -47,6 +88,7 @@ export default function ExamplesPage() {
             contentType="email"
             title="📧 Email Newsletter"
             description="Professional newsletters with compelling subject lines and clear CTAs"
+            industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
           />
         </div>
       </section>
