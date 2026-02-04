@@ -54,11 +54,14 @@ export async function GET(request: Request) {
         })
         
         // Mark welcome email as sent
-        await supabase
-          .from('profiles')
-          .update({ welcome_email_sent: true })
-          .eq('id', user.id)
-          .catch(() => {}) // Ignore if column doesn't exist
+        try {
+          await supabase
+            .from('profiles')
+            .update({ welcome_email_sent: true })
+            .eq('id', user.id)
+        } catch {
+          // Ignore if column doesn't exist
+        }
       }
     }
   }
