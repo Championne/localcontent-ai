@@ -207,56 +207,61 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* FAQ Section */}
-        <div className="mt-20 max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">FAQ</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
-              Common Questions
-            </h2>
-          </div>
-          
-          <div className="space-y-4">
-            {[
-              {
-                q: "What counts as a content piece?",
-                a: "Each generation counts as 1 piece — whether it's a blog post, email, Google Business post, or a Social Media Pack (which gives you 6 platform-optimized posts in one generation)."
-              },
-              {
-                q: "Can I upgrade or downgrade anytime?",
-                a: "Yes! You can change your plan at any time. Upgrades take effect immediately, and downgrades apply at the end of your billing cycle."
-              },
-              {
-                q: "What happens if I run out of content or images?",
-                a: "You can upgrade to a higher tier anytime, or wait until your limits reset at the start of your next billing cycle. We'll notify you when you're running low."
-              },
-              {
-                q: "Do you offer refunds?",
-                a: "We offer a 14-day free trial on all paid plans so you can try before you commit. If you're not satisfied within the first 30 days of a paid subscription, contact us for a full refund."
-              }
-            ].map((faq, i) => (
-              <details key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden group">
-                <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50">
-                  <span className="font-semibold text-gray-900 pr-4">{faq.q}</span>
-                  <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </summary>
-                <div className="px-6 pb-6 text-gray-600">
-                  {faq.a}
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="mt-20 text-center">
-          <p className="text-gray-600">
-            Questions? <Link href="/contact" className="text-teal-600 font-medium hover:text-teal-700">Contact us</Link>
-          </p>
-        </div>
       </div>
+      
+      {/* FAQ Section */}
+      <section className="bg-gray-50 py-20 mt-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">FAQ</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
+                Pricing Questions
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                {
+                  q: "What counts as a content piece?",
+                  a: "Each generation counts as 1 piece — whether it's a blog post, email, Google Business post, or a Social Media Pack (which gives you 6 platform-optimized posts in one generation)."
+                },
+                {
+                  q: "Can I upgrade or downgrade anytime?",
+                  a: "Yes! You can change your plan at any time. Upgrades take effect immediately, and downgrades apply at the end of your billing cycle."
+                },
+                {
+                  q: "What happens if I run out of content or images?",
+                  a: "You can upgrade to a higher tier anytime, or wait until your limits reset at the start of your next billing cycle. We'll notify you when you're running low."
+                },
+                {
+                  q: "Do you offer refunds?",
+                  a: "We offer a 14-day free trial on all paid plans so you can try before you commit. If you're not satisfied within the first 30 days of a paid subscription, contact us for a full refund."
+                }
+              ].map((faq, i) => (
+                <details key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden group">
+                  <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50">
+                    <span className="font-semibold text-gray-900 pr-4">{faq.q}</span>
+                    <svg className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="px-6 pb-6 text-gray-600">
+                    {faq.a}
+                  </div>
+                </details>
+              ))}
+            </div>
+            
+            {/* CTA */}
+            <div className="mt-12 text-center">
+              <p className="text-gray-600">
+                More questions? <Link href="/contact" className="text-teal-600 font-medium hover:text-teal-700">Contact us</Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }
