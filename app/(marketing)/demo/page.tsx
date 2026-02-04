@@ -114,7 +114,7 @@ export default function ExamplesPage() {
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Restaurant</span>
             </div>
             <img 
-              src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=600&h=400&fit=crop" 
+              src="/examples/restaurant-farm-to-table.png" 
               alt="Fresh vegetables on wooden table" 
               className="w-full aspect-video object-cover"
             />
@@ -142,7 +142,7 @@ export default function ExamplesPage() {
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Fitness</span>
             </div>
             <img 
-              src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=400&fit=crop" 
+              src="/examples/fitness-gym.png" 
               alt="Modern gym with exercise equipment" 
               className="w-full aspect-video object-cover"
             />
@@ -172,7 +172,7 @@ export default function ExamplesPage() {
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Real Estate</span>
             </div>
             <img 
-              src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&h=400&fit=crop" 
+              src="/examples/real-estate-home.png" 
               alt="Modern home exterior" 
               className="w-full aspect-video object-cover"
             />
