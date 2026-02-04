@@ -108,26 +108,28 @@ export default function ExamplesPage() {
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Blog Post Example - Restaurant */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-blue-600/70 text-white px-4 py-3 flex items-center gap-2">
-              <span className="text-lg">📝</span>
-              <span className="font-semibold">Blog Post</span>
-              <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Restaurant</span>
+            {/* Hero Image */}
+            <div className="relative h-40 bg-gradient-to-br from-blue-100 to-blue-50">
+              <img 
+                src="/examples/restaurant-farm-to-table.png" 
+                alt="Fresh vegetables on wooden table" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              <span className="absolute top-3 left-3 bg-blue-600/70 text-white px-2 py-1 rounded text-xs font-semibold">Blog Post • Restaurant</span>
             </div>
-            <img 
-              src="/examples/restaurant-farm-to-table.png" 
-              alt="Fresh vegetables on wooden table" 
-              className="w-full aspect-video object-cover"
-            />
-            <div className="p-5 max-h-80 overflow-y-auto">
-              <h4 className="font-bold text-gray-900 mb-2">Savor the Season: Discover Harvest Kitchen&apos;s New Farm-to-Table Spring Menu</h4>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+            
+            {/* Content */}
+            <div className="p-5 max-h-72 overflow-y-auto">
+              <h4 className="font-bold text-gray-900 text-lg mb-3">Savor the Season: Discover Harvest Kitchen&apos;s New Farm-to-Table Spring Menu</h4>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
                 As the flowers bloom and the weather warms up, nothing excites food lovers quite like the arrival of spring! At Harvest Kitchen in Austin, TX, we&apos;re thrilled to announce our new farm-to-table spring menu...
               </p>
-              <p className="text-sm text-gray-700 font-semibold mb-1">## Fresh Ingredients, Bold Flavors</p>
+              <h5 className="text-sm font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-100">Fresh Ingredients, Bold Flavors</h5>
               <p className="text-sm text-gray-600 leading-relaxed mb-2">
                 This spring, we&apos;ve partnered with local farmers to bring you the freshest produce and meats:
               </p>
-              <ul className="text-sm text-gray-600 mb-2 ml-4 list-disc">
+              <ul className="text-sm text-gray-600 mb-3 ml-4 list-disc space-y-1">
                 <li>Seasonal Vegetables: asparagus, radishes, and spring peas</li>
                 <li>Locally-Sourced Proteins: grass-fed beef, sustainable seafood</li>
                 <li>House-Made Sauces and Dressings</li>
@@ -135,80 +137,136 @@ export default function ExamplesPage() {
               <p className="text-sm text-gray-500 italic">
                 Book your table today and let the flavors of spring inspire your dining experience!
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
-                <span>~500 words</span>
-                <span>•</span>
-                <span>SEO optimized</span>
-                <span>•</span>
-                <span className="text-green-600">Ready to publish</span>
+            </div>
+            
+            {/* Author Footer */}
+            <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">H</div>
+              <div>
+                <p className="font-medium text-gray-900 text-sm">Harvest Kitchen</p>
+                <p className="text-xs text-gray-500">Feb 2, 2026</p>
               </div>
+            </div>
+            
+            {/* Stats */}
+            <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+              <span>~500 words</span>
+              <span>•</span>
+              <span>SEO optimized</span>
+              <span>•</span>
+              <span className="text-green-600 font-medium">Ready to publish</span>
             </div>
           </div>
 
           {/* Google Business Post Example - Fitness */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-green-600/70 text-white px-4 py-3 flex items-center gap-2">
-              <span className="text-lg">📍</span>
-              <span className="font-semibold">Google Business</span>
-              <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Fitness</span>
+            {/* GMB Header */}
+            <div className="bg-white border-b border-gray-100 p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold">I</div>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-900 text-sm">Iron Peak Gym</div>
+                <div className="text-xs text-gray-500 flex items-center gap-1">
+                  <span className="text-green-600">✓ Verified</span>
+                  <span>•</span>
+                  <span>Just now</span>
+                </div>
+              </div>
+              <span className="bg-green-600/70 text-white px-2 py-1 rounded text-xs font-semibold">Fitness</span>
             </div>
+            
+            {/* Image */}
             <img 
               src="/examples/fitness-gym.png" 
               alt="Modern gym with exercise equipment" 
               className="w-full aspect-video object-cover"
             />
-            <div className="p-5">
+            
+            {/* Content */}
+            <div className="p-4">
               <p className="text-sm text-gray-700 leading-relaxed">
                 🎉 Kickstart your fitness journey with a FREE personal training session at Iron Peak Gym! 💪 Limited spots available—don&apos;t miss out! Claim yours now by calling us or visiting our website!
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
-                <span>186 characters</span>
-                <span>•</span>
-                <span>CTA: Learn More</span>
-                <span>•</span>
-                <span className="text-green-600">Ready to post</span>
+              
+              {/* CTA Button */}
+              <button className="mt-4 w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium text-sm">
+                Learn More
+              </button>
+            </div>
+            
+            {/* Engagement */}
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                  Like
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                  Share
+                </span>
               </div>
+              <span className="text-green-600 font-medium">Ready to post</span>
             </div>
           </div>
 
           {/* Email Newsletter Example - Real Estate */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-orange-600/70 text-white px-4 py-3 flex items-center gap-2">
-              <span className="text-lg">📧</span>
-              <span className="font-semibold">Email Newsletter</span>
-              <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Real Estate</span>
+            {/* Email Header */}
+            <div className="bg-gray-50 border-b border-gray-200 p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold">W</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 text-sm">Westside Realty</div>
+                  <div className="text-xs text-gray-500 truncate">to: subscriber@email.com</div>
+                </div>
+                <span className="bg-orange-600/70 text-white px-2 py-1 rounded text-xs font-semibold">Real Estate</span>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                <span className="text-xs text-gray-500">Subject: </span>
+                <span className="text-sm font-medium text-gray-900">What&apos;s Happening in Seattle&apos;s Housing Market This February?</span>
+              </div>
             </div>
+            
+            {/* Image */}
             <img 
               src="/examples/real-estate-home.png" 
               alt="Modern home exterior" 
               className="w-full aspect-video object-cover"
             />
-            <div className="p-5 max-h-80 overflow-y-auto">
-              <div className="bg-gray-100 rounded px-2 py-1 text-xs text-gray-600 mb-3 inline-block">
-                Subject: What&apos;s Happening in Seattle&apos;s Housing Market This February?
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Hi there,
+            
+            {/* Email Body */}
+            <div className="p-5 max-h-60 overflow-y-auto">
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">Hi there,</p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                As we step into February, we&apos;re excited to share some intriguing insights about the Seattle housing market.
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                As we step into February, we&apos;re excited to share some intriguing insights about the Seattle housing market. Whether you&apos;re considering buying, selling, or simply curious about local trends, staying informed can help you make the best decisions.
-              </p>
-              <ul className="text-sm text-gray-600 mb-2 ml-4 list-disc">
-                <li><strong>Inventory Levels:</strong> More homes for sale, giving buyers more options</li>
-                <li><strong>Home Prices:</strong> Stabilizing after steady growth</li>
-                <li><strong>Interest Rates:</strong> Still competitive, but expected to fluctuate</li>
+              <ul className="text-sm text-gray-600 mb-3 ml-4 list-disc space-y-1">
+                <li><strong>Inventory Levels:</strong> More homes for sale</li>
+                <li><strong>Home Prices:</strong> Stabilizing after growth</li>
+                <li><strong>Interest Rates:</strong> Still competitive</li>
               </ul>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Ready to explore your options? Reach out to us today!
-              </p>
-              <p className="text-sm text-gray-500 italic">
-                Warm regards,<br/>The Westside Realty Team
-              </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
-                <span>~250 words</span>
-                <span>•</span>
-                <span className="text-green-600">Ready to send</span>
+              <p className="text-sm text-gray-600 leading-relaxed">Ready to explore your options?</p>
+              
+              {/* CTA Button */}
+              <div className="mt-4 text-center">
+                <button className="px-5 py-2 bg-orange-500 text-white rounded-lg font-medium text-sm">
+                  Learn More
+                </button>
               </div>
+              
+              {/* Footer */}
+              <div className="mt-4 pt-3 border-t border-gray-100 text-center text-xs text-gray-400">
+                <p>Sent with ❤️ from Westside Realty</p>
+              </div>
+            </div>
+            
+            {/* Stats */}
+            <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+              <span>~250 words</span>
+              <span>•</span>
+              <span>Mobile optimized</span>
+              <span>•</span>
+              <span className="text-green-600 font-medium">Ready to send</span>
             </div>
           </div>
         </div>

@@ -430,6 +430,182 @@ function SocialPackDisplay({ pack, imageUrl }: { pack: SocialPackContent; imageU
   )
 }
 
+// Blog Post Display Component - Matches dashboard styling
+function BlogPostDisplay({ content, imageUrl, businessName }: { content: string; imageUrl?: string; businessName: string }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Hero Image */}
+      {imageUrl && (
+        <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-50">
+          <DemoImage 
+            src={imageUrl} 
+            className="w-full h-full object-cover"
+            containerClassName="w-full h-full"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        </div>
+      )}
+      
+      {/* Content */}
+      <div className="p-6">
+        <div className="prose prose-sm max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-2xl prose-h1:mb-4 prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-4 prose-strong:text-gray-900 prose-ul:my-3 prose-li:text-gray-600">
+          <TypeWriter text={content} speed={3} />
+        </div>
+        
+        {/* Author Footer */}
+        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+            {businessName.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="font-medium text-gray-900 text-sm">{businessName}</p>
+            <p className="text-xs text-gray-500">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer Stats */}
+      <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-3 text-xs text-gray-500">
+        <span>~600 words</span>
+        <span>•</span>
+        <span>SEO optimized</span>
+        <span>•</span>
+        <span className="text-green-600 font-medium">Ready to publish</span>
+      </div>
+    </div>
+  )
+}
+
+// Google Business Post Display Component - Matches dashboard styling
+function GMBPostDisplay({ content, imageUrl, businessName }: { content: string; imageUrl?: string; businessName: string }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Google Business Header */}
+      <div className="bg-white border-b border-gray-100 p-4 flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold text-lg">
+          {businessName.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1">
+          <div className="font-semibold text-gray-900">{businessName}</div>
+          <div className="text-xs text-gray-500 flex items-center gap-1">
+            <span className="text-green-600">✓ Verified</span>
+            <span>•</span>
+            <span>Just now</span>
+          </div>
+        </div>
+        <img src="/google-g.svg" alt="" className="w-6 h-6 opacity-60" onError={(e) => e.currentTarget.style.display = 'none'} />
+      </div>
+      
+      {/* Image */}
+      {imageUrl && (
+        <DemoImage 
+          src={imageUrl} 
+          className="w-full aspect-video object-cover"
+          containerClassName="w-full"
+        />
+      )}
+      
+      {/* Content */}
+      <div className="p-4">
+        <p className="text-gray-700 leading-relaxed text-sm">
+          <TypeWriter text={content} speed={8} />
+        </p>
+        
+        {/* CTA Button */}
+        <button className="mt-4 w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors">
+          Learn More
+        </button>
+      </div>
+      
+      {/* Engagement */}
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            Like
+          </span>
+          <span className="flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            Share
+          </span>
+        </div>
+        <span className="text-green-600 font-medium">Ready to post</span>
+      </div>
+    </div>
+  )
+}
+
+// Email Newsletter Display Component - Matches dashboard styling
+function EmailDisplay({ content, imageUrl, businessName }: { content: string; imageUrl?: string; businessName: string }) {
+  // Extract subject line from content if it starts with "Subject:"
+  const lines = content.split('\n')
+  const subjectLine = lines[0]?.toLowerCase().startsWith('subject:') 
+    ? lines[0].replace(/^subject:\s*/i, '') 
+    : `Update from ${businessName}`
+  const bodyContent = lines[0]?.toLowerCase().startsWith('subject:') 
+    ? lines.slice(1).join('\n').trim() 
+    : content
+  
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Email Header */}
+      <div className="bg-gray-50 border-b border-gray-200 p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold">
+            {businessName.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-900 text-sm">{businessName}</div>
+            <div className="text-xs text-gray-500 truncate">to: subscriber@email.com</div>
+          </div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+          <span className="text-xs text-gray-500">Subject: </span>
+          <span className="text-sm font-medium text-gray-900">{subjectLine}</span>
+        </div>
+      </div>
+      
+      {/* Image */}
+      {imageUrl && (
+        <DemoImage 
+          src={imageUrl} 
+          className="w-full aspect-video object-cover"
+          containerClassName="w-full"
+        />
+      )}
+      
+      {/* Email Body */}
+      <div className="p-6">
+        <div className="prose prose-sm max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-3 prose-strong:text-gray-900 prose-ul:my-3 prose-li:text-gray-600">
+          <TypeWriter text={bodyContent} speed={5} />
+        </div>
+        
+        {/* CTA Button */}
+        <div className="mt-6 text-center">
+          <button className="px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium text-sm hover:bg-orange-600 transition-colors">
+            Learn More
+          </button>
+        </div>
+        
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
+          <p>Sent with ❤️ from {businessName}</p>
+          <p className="mt-1">Unsubscribe | Update preferences</p>
+        </div>
+      </div>
+      
+      {/* Stats Footer */}
+      <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-3 text-xs text-gray-500">
+        <span>~250 words</span>
+        <span>•</span>
+        <span>Mobile optimized</span>
+        <span>•</span>
+        <span className="text-green-600 font-medium">Ready to send</span>
+      </div>
+    </div>
+  )
+}
+
 // Single content type demo props
 interface SingleDemoProps {
   contentType: 'social-pack' | 'blog-post' | 'gmb-post' | 'email'
@@ -599,37 +775,38 @@ export function SingleContentDemo({ contentType, title, description, compact = f
 
         {/* Generated Content - Shown below the card */}
         {demo && (
-          <div ref={resultRef} className="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles.badge}`}>
-                {demo.displayType}
-              </span>
-              <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
-            </div>
-            <div className="p-4">
-              {contentType === 'social-pack' && typeof demo.content === 'object' ? (
-                <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
-              ) : (
-                <div className="space-y-4">
-                  {/* Generated Image */}
-                  <div className="flex justify-center">
-                    <DemoImage 
-                      src={demo.imageUrl}
-                      alt="AI Generated Marketing Image"
-                      className="w-full h-auto rounded-xl"
-                      containerClassName="rounded-xl overflow-hidden shadow-lg max-w-lg"
-                      showBadge={true}
-                    />
-                  </div>
-                  {/* Content */}
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
-                      <TypeWriter text={demo.content as string} speed={8} />
-                    </pre>
-                  </div>
+          <div ref={resultRef} className="mt-6">
+            {contentType === 'social-pack' && typeof demo.content === 'object' ? (
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles.badge}`}>
+                    {demo.displayType}
+                  </span>
+                  <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
                 </div>
-              )}
-            </div>
+                <div className="p-4">
+                  <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
+                </div>
+              </div>
+            ) : contentType === 'blog-post' ? (
+              <BlogPostDisplay 
+                content={demo.content as string} 
+                imageUrl={demo.imageUrl} 
+                businessName={demo.businessName}
+              />
+            ) : contentType === 'gmb-post' ? (
+              <GMBPostDisplay 
+                content={demo.content as string} 
+                imageUrl={demo.imageUrl} 
+                businessName={demo.businessName}
+              />
+            ) : contentType === 'email' ? (
+              <EmailDisplay 
+                content={demo.content as string} 
+                imageUrl={demo.imageUrl} 
+                businessName={demo.businessName}
+              />
+            ) : null}
           </div>
         )}
       </div>
