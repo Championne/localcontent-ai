@@ -29,11 +29,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       authors: ['GeoSpark'],
       tags: post.keywords,
       url: `https://geospark.app/blog/${slug}`,
+      images: post.image ? [`https://geospark.app${post.image}`] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: post.image ? [`https://geospark.app${post.image}`] : undefined,
     },
     alternates: {
       canonical: `https://geospark.app/blog/${slug}`,
@@ -87,6 +89,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.excerpt,
+    image: post.image ? `https://geospark.app${post.image}` : 'https://geospark.app/logo-geospark.png',
     author: {
       '@type': 'Organization',
       name: 'GeoSpark',
@@ -119,8 +122,20 @@ export default async function BlogPostPage({ params }: PageProps) {
       />
       
       <article className="min-h-screen bg-white">
-        {/* Hero */}
-        <header className="bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 py-16 px-4">
+        {/* Hero Image */}
+        {post.image && (
+          <div className="relative h-64 md:h-96 w-full">
+            <img 
+              src={post.image} 
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
+          </div>
+        )}
+        
+        {/* Hero Text */}
+        <header className={`${post.image ? 'relative -mt-32 z-10' : 'bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900'} py-16 px-4`}>
           <div className="container mx-auto max-w-3xl">
             <Link 
               href="/blog" 

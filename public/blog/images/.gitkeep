@@ -1,0 +1,3 @@
+# This directory contains AI-generated blog images
+# Run: npx ts-node scripts/generate-blog-images.ts
+# Or use the API: POST /api/blog/generate-image

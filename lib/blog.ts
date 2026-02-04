@@ -13,6 +13,7 @@ export interface BlogPost {
   publishedAt: string
   readingTime: number
   keywords: string[]
+  image: string | null
 }
 
 // Category mapping based on article content
@@ -92,6 +93,24 @@ function extractTitle(content: string, filename: string): string {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
+// Check if blog image exists
+function getBlogImage(slug: string): string | null {
+  const imagePath = path.join(process.cwd(), 'public', 'blog', 'images', `${slug}.webp`)
+  if (fs.existsSync(imagePath)) {
+    return `/blog/images/${slug}.webp`
+  }
+  // Also check for jpg/png
+  const jpgPath = path.join(process.cwd(), 'public', 'blog', 'images', `${slug}.jpg`)
+  if (fs.existsSync(jpgPath)) {
+    return `/blog/images/${slug}.jpg`
+  }
+  const pngPath = path.join(process.cwd(), 'public', 'blog', 'images', `${slug}.png`)
+  if (fs.existsSync(pngPath)) {
+    return `/blog/images/${slug}.png`
+  }
+  return null
+}
+
 export function getAllPosts(): BlogPost[] {
   if (!fs.existsSync(BLOG_DIR)) {
     return []
@@ -122,7 +141,8 @@ export function getAllPosts(): BlogPost[] {
       category: data.category || detectCategory(title, content),
       publishedAt: data.publishedAt || publishDate.toISOString().split('T')[0],
       readingTime: calculateReadingTime(content),
-      keywords: data.keywords || extractKeywords(title, content)
+      keywords: data.keywords || extractKeywords(title, content),
+      image: data.image || getBlogImage(slug)
     }
   })
   
