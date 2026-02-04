@@ -1,0 +1,11 @@
+{
+  "frontPageSocialPack": null,
+  "examples": {
+    "blogPost": null,
+    "socialPack": null,
+    "googleBusinessPost": null,
+    "emailNewsletter": null
+  },
+  "generatedAt": null,
+  "_note": "This file will be populated by running: /api/examples/generate?secret=generate-examples-2024"
+}
