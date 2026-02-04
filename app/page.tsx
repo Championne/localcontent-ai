@@ -533,13 +533,13 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="mb-4">
+              <div className="mb-4 bg-white/10 rounded-lg p-3 inline-block">
                 <Image 
                   src="/logo-geospark.png" 
                   alt="GeoSpark" 
-                  width={200} 
-                  height={52} 
-                  className="h-12 w-auto brightness-0 invert"
+                  width={180} 
+                  height={48} 
+                  className="h-10 w-auto"
                 />
               </div>
               <p className="text-sm">
