@@ -1122,7 +1122,7 @@ export default function CreateContentPage() {
               <div className="mt-6">
                 <GenerationProgress 
                   isGenerating={generating} 
-                  contentType={selectedTemplate || 'general'}
+                  contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
                   size="lg"
                 />
               </div>
@@ -1900,7 +1900,7 @@ export default function CreateContentPage() {
             <div className="mt-4">
               <GenerationProgress 
                 isGenerating={generating} 
-                contentType={selectedTemplate || 'general'}
+                contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
                 size="md"
               />
             </div>
