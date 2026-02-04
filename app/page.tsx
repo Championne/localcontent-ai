@@ -12,9 +12,9 @@ export default function HomePage() {
             <Image 
               src="/logo-geospark.png" 
               alt="GeoSpark" 
-              width={150} 
-              height={40} 
-              className="h-10 w-auto"
+              width={240} 
+              height={64} 
+              className="h-16 w-auto"
               priority
             />
           </Link>
@@ -804,9 +804,9 @@ export default function HomePage() {
                 <Image 
                   src="/logo-geospark.png" 
                   alt="GeoSpark" 
-                  width={140} 
-                  height={36} 
-                  className="h-9 w-auto brightness-0 invert"
+                  width={200} 
+                  height={52} 
+                  className="h-12 w-auto brightness-0 invert"
                 />
               </div>
               <p className="text-sm">
