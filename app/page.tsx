@@ -83,8 +83,8 @@ export default function HomePage() {
             complete with <strong>AI-generated images</strong>.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+          {/* CTA Button */}
+          <div className="flex justify-center mb-10">
             <Link 
               href="/auth/signup" 
               className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30"
@@ -93,15 +93,6 @@ export default function HomePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Start Sparking — Free 14-Day Trial
-            </Link>
-            <Link 
-              href="#examples" 
-              className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-teal-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-medium transition-colors"
-            >
-              Watch the Live Demo
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
             </Link>
           </div>
 
