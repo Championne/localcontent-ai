@@ -546,13 +546,14 @@ export function SingleContentDemo({ contentType, title, description, compact = f
 
   return (
     <>
-      <div className={`bg-gradient-to-br ${styles.bg} rounded-2xl overflow-hidden`}>
-        <div className={`${compact ? 'p-6' : 'p-8'} text-center`}>
-          <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-          <p className="text-white/80 text-sm mb-4">{description}</p>
-          
-          <div className="flex flex-col items-center gap-3">
-            {!demo ? (
+      <div className="flex flex-col h-full">
+        {/* Card - Always visible */}
+        <div className={`bg-gradient-to-br ${styles.bg} rounded-2xl overflow-hidden`}>
+          <div className={`${compact ? 'p-6' : 'p-8'} text-center`}>
+            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+            <p className="text-white/80 text-sm mb-4">{description}</p>
+            
+            <div className="flex flex-col items-center gap-3">
               <button
                 onClick={() => generateDemo()}
                 disabled={isGenerating}
@@ -570,6 +571,13 @@ export function SingleContentDemo({ contentType, title, description, compact = f
                     </svg>
                     Generating...
                   </>
+                ) : demo ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Regenerate
+                  </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -579,53 +587,49 @@ export function SingleContentDemo({ contentType, title, description, compact = f
                   </>
                 )}
               </button>
-            ) : (
-              <RegenerateButton 
-                onClick={() => generateDemo()} 
-                isGenerating={isGenerating}
-                hasContent={true}
-              />
-            )}
-          </div>
-          {usage && (
-            <div className="mt-3">
-              <DemoCounter usage={usage} />
             </div>
-          )}
-          {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
+            {usage && (
+              <div className="mt-3">
+                <DemoCounter usage={usage} />
+              </div>
+            )}
+            {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
+          </div>
         </div>
 
+        {/* Generated Content - Shown below the card */}
         {demo && (
-          <div ref={resultRef} className="bg-white p-6">
-            <div className="flex items-center gap-2 mb-4">
+          <div ref={resultRef} className="mt-4 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-gray-100 flex items-center gap-2">
               <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles.badge}`}>
                 {demo.displayType}
               </span>
               <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
             </div>
-            
-            {contentType === 'social-pack' && typeof demo.content === 'object' ? (
-              <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
-            ) : (
-              <div className="space-y-4">
-                {/* Generated Image */}
-                <div className="flex justify-center">
-                  <DemoImage 
-                    src={demo.imageUrl}
-                    alt="AI Generated Marketing Image"
-                    className="w-full h-auto rounded-xl"
-                    containerClassName="rounded-xl overflow-hidden shadow-lg max-w-lg"
-                    showBadge={true}
-                  />
+            <div className="p-4">
+              {contentType === 'social-pack' && typeof demo.content === 'object' ? (
+                <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
+              ) : (
+                <div className="space-y-4">
+                  {/* Generated Image */}
+                  <div className="flex justify-center">
+                    <DemoImage 
+                      src={demo.imageUrl}
+                      alt="AI Generated Marketing Image"
+                      className="w-full h-auto rounded-xl"
+                      containerClassName="rounded-xl overflow-hidden shadow-lg max-w-lg"
+                      showBadge={true}
+                    />
+                  </div>
+                  {/* Content */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
+                      <TypeWriter text={demo.content as string} speed={8} />
+                    </pre>
+                  </div>
                 </div>
-                {/* Content */}
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
-                    <TypeWriter text={demo.content as string} speed={8} />
-                  </pre>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>
