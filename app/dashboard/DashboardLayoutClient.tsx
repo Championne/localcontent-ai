@@ -89,9 +89,10 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
           <Image 
             src="/logo-geospark.png" 
             alt="GeoSpark" 
-            width={120} 
-            height={32} 
-            className="h-8 w-auto"
+            width={160} 
+            height={48} 
+            className="h-10 w-auto"
+            priority
           />
         </Link>
         <button 
@@ -124,14 +125,15 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Logo */}
-        <div className="p-5 border-b border-gray-100">
-          <Link href="/dashboard" className="flex items-center" onClick={() => setSidebarOpen(false)}>
+        <div className="p-4 border-b border-gray-100">
+          <Link href="/dashboard" className="flex items-center justify-center" onClick={() => setSidebarOpen(false)}>
             <Image 
               src="/logo-geospark.png" 
               alt="GeoSpark" 
-              width={140} 
-              height={36} 
-              className="h-9 w-auto"
+              width={200} 
+              height={60} 
+              className="h-14 w-auto"
+              priority
             />
           </Link>
         </div>
