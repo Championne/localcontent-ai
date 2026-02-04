@@ -108,7 +108,7 @@ export default function ExamplesPage() {
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Blog Post Example - Restaurant */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-blue-600 text-white px-4 py-3 flex items-center gap-2">
+            <div className="bg-blue-600/70 text-white px-4 py-3 flex items-center gap-2">
               <span className="text-lg">📝</span>
               <span className="font-semibold">Blog Post</span>
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Restaurant</span>
@@ -147,7 +147,7 @@ export default function ExamplesPage() {
 
           {/* Google Business Post Example - Fitness */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-green-600 text-white px-4 py-3 flex items-center gap-2">
+            <div className="bg-green-600/70 text-white px-4 py-3 flex items-center gap-2">
               <span className="text-lg">📍</span>
               <span className="font-semibold">Google Business</span>
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Fitness</span>
@@ -173,7 +173,7 @@ export default function ExamplesPage() {
 
           {/* Email Newsletter Example - Real Estate */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="bg-orange-600 text-white px-4 py-3 flex items-center gap-2">
+            <div className="bg-orange-600/70 text-white px-4 py-3 flex items-center gap-2">
               <span className="text-lg">📧</span>
               <span className="font-semibold">Email Newsletter</span>
               <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Real Estate</span>

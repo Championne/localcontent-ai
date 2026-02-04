@@ -535,10 +535,10 @@ export function SingleContentDemo({ contentType, title, description, compact = f
 
   const getTypeStyles = () => {
     switch (contentType) {
-      case 'social-pack': return { bg: 'from-purple-600 to-purple-700', badge: 'bg-purple-100 text-purple-700' }
-      case 'blog-post': return { bg: 'from-blue-600 to-blue-700', badge: 'bg-blue-100 text-blue-700' }
-      case 'gmb-post': return { bg: 'from-green-600 to-green-700', badge: 'bg-green-100 text-green-700' }
-      case 'email': return { bg: 'from-orange-600 to-orange-700', badge: 'bg-orange-100 text-orange-700' }
+      case 'social-pack': return { bg: 'from-purple-600/70 to-purple-700/70', badge: 'bg-purple-100 text-purple-700' }
+      case 'blog-post': return { bg: 'from-blue-600/70 to-blue-700/70', badge: 'bg-blue-100 text-blue-700' }
+      case 'gmb-post': return { bg: 'from-green-600/70 to-green-700/70', badge: 'bg-green-100 text-green-700' }
+      case 'email': return { bg: 'from-orange-600/70 to-orange-700/70', badge: 'bg-orange-100 text-orange-700' }
     }
   }
 
