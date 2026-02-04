@@ -13,6 +13,16 @@ interface SocialPackContent {
   nextdoor: { content: string; charCount: number }
 }
 
+interface UsageInfo {
+  demoCount: number
+  remainingDemos: number
+  hasEmail: boolean
+  requiresEmail?: boolean
+  requiresSignup?: boolean
+  freeLimit: number
+  emailLimit: number
+}
+
 interface GeneratedDemo {
   success: boolean
   businessName: string
@@ -22,6 +32,183 @@ interface GeneratedDemo {
   displayType: string
   content: string | SocialPackContent
   aiPowered: boolean
+  usage?: UsageInfo
+}
+
+interface DemoError {
+  error: string
+  limitReached?: boolean
+  requiresEmail?: boolean
+  requiresSignup?: boolean
+  demoCount?: number
+  message?: string
+}
+
+// Email Capture Modal Component
+function EmailCaptureModal({ 
+  isOpen, 
+  onClose, 
+  onSubmit,
+  remainingAfterEmail = 5 
+}: { 
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (email: string) => Promise<void>
+  remainingAfterEmail?: number
+}) {
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  if (!isOpen) return null
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address')
+      return
+    }
+    setIsSubmitting(true)
+    setError('')
+    try {
+      await onSubmit(email)
+    } catch {
+      setError('Failed to save. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Unlock {remainingAfterEmail} More Demos</h3>
+          <p className="text-gray-600">
+            You've seen what GeoSpark can do! Enter your email to get {remainingAfterEmail} more free demos.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            />
+            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+          </div>
+          
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:bg-gray-300"
+          >
+            {isSubmitting ? 'Saving...' : 'Unlock More Demos'}
+          </button>
+          
+          <p className="text-xs text-gray-500 text-center">
+            We'll send you tips on local marketing. Unsubscribe anytime.
+          </p>
+        </form>
+
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Signup Prompt Modal
+function SignupPromptModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">You've Used All Free Demos!</h3>
+          <p className="text-gray-600 mb-4">
+            Sign up free to generate <strong>unlimited content</strong> for your business. No credit card required.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <Link
+            href="/auth/signup"
+            className="block w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-semibold text-center transition-colors"
+          >
+            Start Free 14-Day Trial
+          </Link>
+          <button
+            onClick={onClose}
+            className="block w-full text-gray-500 hover:text-gray-700 py-2 text-sm"
+          >
+            Maybe later
+          </button>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Demo Counter Badge
+function DemoCounter({ usage }: { usage: UsageInfo | null }) {
+  if (!usage) return null
+  
+  const { demoCount, remainingDemos, hasEmail, freeLimit, emailLimit } = usage
+  const totalUsed = demoCount
+  const totalLimit = hasEmail ? emailLimit : freeLimit
+  
+  return (
+    <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm shadow-sm border border-gray-200">
+      <div className="flex gap-1">
+        {[...Array(totalLimit)].map((_, i) => (
+          <div
+            key={i}
+            className={`w-2 h-2 rounded-full ${
+              i < totalUsed ? 'bg-teal-500' : 'bg-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-gray-600 font-medium">
+        {remainingDemos} demo{remainingDemos !== 1 ? 's' : ''} left
+      </span>
+      {!hasEmail && demoCount > 0 && (
+        <span className="text-teal-600 text-xs">
+          +5 with email
+        </span>
+      )}
+    </div>
+  )
 }
 
 // Typing effect component
@@ -140,9 +327,12 @@ export function SingleContentDemo({ contentType, title, description, compact = f
   const [isGenerating, setIsGenerating] = useState(false)
   const [demo, setDemo] = useState<GeneratedDemo | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [usage, setUsage] = useState<UsageInfo | null>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [showSignupModal, setShowSignupModal] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
 
-  const generateDemo = async () => {
+  const generateDemo = async (hasEmail = false) => {
     setIsGenerating(true)
     setError(null)
     
@@ -150,23 +340,53 @@ export function SingleContentDemo({ contentType, title, description, compact = f
       const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType })
+        body: JSON.stringify({ contentType, hasEmail })
       })
       
       const data = await response.json()
       
       if (data.success) {
         setDemo(data)
+        if (data.usage) setUsage(data.usage)
         setTimeout(() => {
           resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
         }, 100)
       } else {
-        setError(data.error || 'Something went wrong')
+        // Handle limit errors
+        const errorData = data as DemoError
+        if (errorData.requiresEmail) {
+          setShowEmailModal(true)
+        } else if (errorData.requiresSignup) {
+          setShowSignupModal(true)
+        } else {
+          setError(errorData.message || errorData.error || 'Something went wrong')
+        }
+        if (errorData.demoCount !== undefined) {
+          setUsage(prev => prev ? { ...prev, demoCount: errorData.demoCount! } : null)
+        }
       }
     } catch (err) {
       setError('Failed to generate. Please try again.')
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const handleEmailSubmit = async (email: string) => {
+    const response = await fetch('/api/demo/unlock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    
+    const data = await response.json()
+    if (data.success) {
+      setShowEmailModal(false)
+      if (data.usage) setUsage(data.usage)
+      // Now generate with email flag
+      generateDemo(true)
+    } else {
+      throw new Error(data.error)
     }
   }
 
@@ -182,67 +402,86 @@ export function SingleContentDemo({ contentType, title, description, compact = f
   const styles = getTypeStyles()
 
   return (
-    <div className={`bg-gradient-to-br ${styles.bg} rounded-2xl overflow-hidden`}>
-      <div className={`${compact ? 'p-6' : 'p-8'} text-center`}>
-        <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-        <p className="text-white/80 text-sm mb-4">{description}</p>
-        <button
-          onClick={generateDemo}
-          disabled={isGenerating}
-          className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-            isGenerating
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl'
-          }`}
-        >
-          {isGenerating ? (
-            <>
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Generating...
-            </>
-          ) : demo ? (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Generate New
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Generate Example
-            </>
-          )}
-        </button>
-        {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
-      </div>
-
-      {demo && (
-        <div ref={resultRef} className="bg-white p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles.badge}`}>
-              {demo.displayType}
-            </span>
-            <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
-          </div>
-          
-          {contentType === 'social-pack' && typeof demo.content === 'object' ? (
-            <SocialPackDisplay pack={demo.content as SocialPackContent} />
-          ) : (
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
-                <TypeWriter text={demo.content as string} speed={8} />
-              </pre>
+    <>
+      <div className={`bg-gradient-to-br ${styles.bg} rounded-2xl overflow-hidden`}>
+        <div className={`${compact ? 'p-6' : 'p-8'} text-center`}>
+          <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+          <p className="text-white/80 text-sm mb-4">{description}</p>
+          <button
+            onClick={() => generateDemo()}
+            disabled={isGenerating}
+            className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+              isGenerating
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isGenerating ? (
+              <>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Generating...
+              </>
+            ) : demo ? (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Generate New
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Generate Example
+              </>
+            )}
+          </button>
+          {usage && (
+            <div className="mt-3">
+              <DemoCounter usage={usage} />
             </div>
           )}
+          {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
         </div>
-      )}
-    </div>
+
+        {demo && (
+          <div ref={resultRef} className="bg-white p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles.badge}`}>
+                {demo.displayType}
+              </span>
+              <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
+            </div>
+            
+            {contentType === 'social-pack' && typeof demo.content === 'object' ? (
+              <SocialPackDisplay pack={demo.content as SocialPackContent} />
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
+                  <TypeWriter text={demo.content as string} speed={8} />
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSubmit={handleEmailSubmit}
+        remainingAfterEmail={5}
+      />
+      <SignupPromptModal
+        isOpen={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
+      />
+    </>
   )
 }
 
@@ -251,9 +490,12 @@ export function LandingPageDemo() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [demo, setDemo] = useState<GeneratedDemo | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [usage, setUsage] = useState<UsageInfo | null>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [showSignupModal, setShowSignupModal] = useState(false)
   const resultRef = useRef<HTMLDivElement>(null)
 
-  const generateDemo = async () => {
+  const generateDemo = async (hasEmail = false) => {
     setIsGenerating(true)
     setError(null)
     
@@ -261,18 +503,27 @@ export function LandingPageDemo() {
       const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: 'social-pack' })
+        body: JSON.stringify({ contentType: 'social-pack', hasEmail })
       })
       
       const data = await response.json()
       
       if (data.success) {
         setDemo(data)
+        if (data.usage) setUsage(data.usage)
         setTimeout(() => {
           resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }, 100)
       } else {
-        setError(data.error || 'Something went wrong')
+        // Handle limit errors
+        const errorData = data as DemoError
+        if (errorData.requiresEmail) {
+          setShowEmailModal(true)
+        } else if (errorData.requiresSignup) {
+          setShowSignupModal(true)
+        } else {
+          setError(errorData.message || errorData.error || 'Something went wrong')
+        }
       }
     } catch (err) {
       setError('Failed to generate. Please try again.')
@@ -281,53 +532,77 @@ export function LandingPageDemo() {
     }
   }
 
+  const handleEmailSubmit = async (email: string) => {
+    const response = await fetch('/api/demo/unlock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    
+    const data = await response.json()
+    if (data.success) {
+      setShowEmailModal(false)
+      if (data.usage) setUsage(data.usage)
+      generateDemo(true)
+    } else {
+      throw new Error(data.error)
+    }
+  }
+
   return (
-    <section id="examples" className="container mx-auto px-4 py-20">
-      <div className="max-w-3xl mx-auto text-center mb-12">
-        <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">See It In Action</span>
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
-          Watch AI Create Content in Real-Time
-        </h2>
-        <p className="text-xl text-gray-600 mb-8">
-          Click the button below and watch GeoSpark generate a complete social media pack — 6 platform-optimized posts in seconds.
-        </p>
-        
-        <button
-          onClick={generateDemo}
-          disabled={isGenerating}
-          className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg ${
-            isGenerating
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-orange-500 hover:bg-orange-600 text-white hover:shadow-xl hover:shadow-orange-500/25'
-          }`}
-        >
-          {isGenerating ? (
-            <>
-              <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              AI is writing 6 posts...
-            </>
-          ) : demo ? (
-            <>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Generate Another Business
-            </>
-          ) : (
-            <>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Generate Social Media Pack
-            </>
+    <>
+      <section id="examples" className="container mx-auto px-4 py-20">
+        <div className="max-w-3xl mx-auto text-center mb-12">
+          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">See It In Action</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
+            Watch AI Create Content in Real-Time
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Click the button below and watch GeoSpark generate a complete social media pack — 6 platform-optimized posts in seconds.
+          </p>
+          
+          <button
+            onClick={() => generateDemo()}
+            disabled={isGenerating}
+            className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg ${
+              isGenerating
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-orange-500 hover:bg-orange-600 text-white hover:shadow-xl hover:shadow-orange-500/25'
+            }`}
+          >
+            {isGenerating ? (
+              <>
+                <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                AI is writing 6 posts...
+              </>
+            ) : demo ? (
+              <>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Generate Another Business
+              </>
+            ) : (
+              <>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Generate Social Media Pack
+              </>
+            )}
+          </button>
+          
+          {usage && (
+            <div className="mt-4">
+              <DemoCounter usage={usage} />
+            </div>
           )}
-        </button>
-        
-        {error && <p className="mt-4 text-red-500">{error}</p>}
-      </div>
+          
+          {error && <p className="mt-4 text-red-500">{error}</p>}
+        </div>
 
       {/* Generated Result */}
       {demo && (
@@ -347,7 +622,7 @@ export function LandingPageDemo() {
                 <p className="text-sm text-gray-600">{demo.industry} • "{demo.topic}"</p>
               </div>
               <button
-                onClick={generateDemo}
+                onClick={() => generateDemo()}
                 disabled={isGenerating}
                 className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
@@ -369,29 +644,42 @@ export function LandingPageDemo() {
         </div>
       )}
 
-      {/* CTA */}
-      <div className="text-center mt-12 space-y-6">
-        <Link 
-          href="/demo" 
-          className="inline-flex items-center gap-2 bg-white border-2 border-teal-500 text-teal-600 hover:bg-teal-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all"
-        >
-          Try All 4 Content Types
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </Link>
-        <div>
+        {/* CTA */}
+        <div className="text-center mt-12 space-y-6">
           <Link 
-            href="/auth/signup" 
-            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+            href="/demo" 
+            className="inline-flex items-center gap-2 bg-white border-2 border-teal-500 text-teal-600 hover:bg-teal-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all"
           >
-            Start Your Free 14-Day Trial
+            Try All 4 Content Types
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
+          <div>
+            <Link 
+              href="/auth/signup" 
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+            >
+              Start Your Free 14-Day Trial
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* Modals */}
+      <EmailCaptureModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSubmit={handleEmailSubmit}
+        remainingAfterEmail={5}
+      />
+      <SignupPromptModal
+        isOpen={showSignupModal}
+        onClose={() => setShowSignupModal(false)}
+      />
+    </>
   )
 }

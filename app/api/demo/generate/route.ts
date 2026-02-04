@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
+import { cookies } from 'next/headers'
 
 export const maxDuration = 60 // Allow up to 60 seconds
+
+// Demo limits
+const FREE_DEMO_LIMIT = 3        // Free demos without any info
+const EMAIL_DEMO_LIMIT = 5       // Additional demos after email capture
+const TOTAL_DEMO_LIMIT = 8       // Total before requiring signup
 
 // Sample businesses for random demo
 const DEMO_BUSINESSES = [
@@ -62,6 +68,39 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}))
     
+    // Get demo usage from cookie
+    const cookieStore = await cookies()
+    const demoUsageCookie = cookieStore.get('demo_usage')
+    let demoUsage = demoUsageCookie ? JSON.parse(demoUsageCookie.value) : { count: 0, hasEmail: false }
+    
+    // Check if user has provided email (from request body)
+    const hasEmail = body.hasEmail || demoUsage.hasEmail
+    
+    // Determine limit based on email status
+    const currentLimit = hasEmail ? TOTAL_DEMO_LIMIT : FREE_DEMO_LIMIT
+    
+    // Check limits
+    if (demoUsage.count >= TOTAL_DEMO_LIMIT) {
+      return NextResponse.json({
+        error: 'Demo limit reached',
+        limitReached: true,
+        requiresSignup: true,
+        demoCount: demoUsage.count,
+        message: 'You\'ve used all your free demos! Sign up free to generate unlimited content.'
+      }, { status: 403 })
+    }
+    
+    if (demoUsage.count >= FREE_DEMO_LIMIT && !hasEmail) {
+      return NextResponse.json({
+        error: 'Email required',
+        limitReached: true,
+        requiresEmail: true,
+        demoCount: demoUsage.count,
+        remainingFree: 0,
+        message: 'Enter your email to unlock 5 more free demos!'
+      }, { status: 403 })
+    }
+    
     // Allow custom business or pick random
     let businessName = body.businessName
     let industry = body.industry
@@ -84,9 +123,31 @@ export async function POST(request: Request) {
     let content: string | SocialPackResult
     let displayType: string
 
+    // Increment usage count
+    demoUsage.count += 1
+    if (hasEmail && !demoUsage.hasEmail) {
+      demoUsage.hasEmail = true
+    }
+    
+    // Calculate remaining demos
+    const remainingDemos = hasEmail 
+      ? TOTAL_DEMO_LIMIT - demoUsage.count 
+      : FREE_DEMO_LIMIT - demoUsage.count
+    
+    // Prepare usage info for response
+    const usageInfo = {
+      demoCount: demoUsage.count,
+      remainingDemos: Math.max(0, remainingDemos),
+      hasEmail: demoUsage.hasEmail,
+      requiresEmail: !hasEmail && demoUsage.count >= FREE_DEMO_LIMIT,
+      requiresSignup: demoUsage.count >= TOTAL_DEMO_LIMIT,
+      freeLimit: FREE_DEMO_LIMIT,
+      emailLimit: TOTAL_DEMO_LIMIT
+    }
+
     if (!isOpenAIConfigured()) {
       // Return mock data with a note
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         demo: true,
         aiPowered: false,
@@ -98,8 +159,19 @@ export async function POST(request: Request) {
                      contentType === 'blog-post' ? 'Blog Post' :
                      contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter',
         content: getMockContent(contentType, businessName, industry, topic),
-        message: 'Demo mode - configure AI for live generation'
+        message: 'Demo mode - configure AI for live generation',
+        usage: usageInfo
       })
+      
+      // Set cookie
+      response.cookies.set('demo_usage', JSON.stringify(demoUsage), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+      
+      return response
     }
 
     // Generate real content with AI
@@ -124,7 +196,7 @@ export async function POST(request: Request) {
                     contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       demo: true,
       aiPowered: true,
@@ -134,8 +206,19 @@ export async function POST(request: Request) {
       contentType,
       displayType,
       content,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      usage: usageInfo
     })
+    
+    // Set cookie
+    response.cookies.set('demo_usage', JSON.stringify(demoUsage), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    })
+    
+    return response
 
   } catch (error) {
     console.error('Demo generation error:', error)
