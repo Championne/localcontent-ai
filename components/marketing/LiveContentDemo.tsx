@@ -1204,11 +1204,11 @@ export function LandingPageDemo() {
         <div className="text-center mt-12">
           <Link 
             href="/demo" 
-            className="inline-flex items-center gap-2 bg-white border-2 border-teal-500 text-teal-600 hover:bg-teal-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all"
+            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors"
           >
-            See All 4 Content Types + More Examples
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            Explore all content types
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
         </div>
