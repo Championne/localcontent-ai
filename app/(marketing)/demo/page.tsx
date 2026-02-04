@@ -119,17 +119,23 @@ export default function ExamplesPage() {
               className="w-full aspect-video object-cover"
             />
             <div className="p-5">
-              <h4 className="font-bold text-gray-900 mb-2">5 Reasons to Try Farm-to-Table Dining in Austin This Spring</h4>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Spring in Austin brings more than just wildflowers — it&apos;s the perfect time to experience the city&apos;s thriving farm-to-table scene. At Harvest Kitchen, we partner with 12 local farms within 50 miles to bring you the freshest seasonal ingredients...
+              <h4 className="font-bold text-gray-900 mb-2">Why Farm-to-Table Dining Is Worth Every Bite at Harvest Kitchen</h4>
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                Ever wonder what makes a meal truly memorable? At Harvest Kitchen, we believe it starts long before the plate hits your table...
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                <strong>Why local matters:</strong> When you dine with us, you&apos;re supporting Texas farmers and reducing the environmental impact of your meal. Our menu changes weekly based on what&apos;s at peak freshness...
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                <span className="font-semibold text-gray-700">## What Makes Us Different</span><br/>
+                We partner directly with 12 local farms within 50 miles of Austin. That means the vegetables on your plate were often picked just hours ago...
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-400">
-                <span>~650 words</span>
+              <p className="text-sm text-gray-500 italic">
+                Ready to taste the difference? Reserve your table today and experience farm-fresh dining at Harvest Kitchen.
+              </p>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
+                <span>~680 words</span>
                 <span>•</span>
                 <span>SEO optimized</span>
+                <span>•</span>
+                <span className="text-green-600">Ready to publish</span>
               </div>
             </div>
           </div>
@@ -147,20 +153,22 @@ export default function ExamplesPage() {
               className="w-full aspect-video object-cover"
             />
             <div className="p-5">
-              <h4 className="font-bold text-gray-900 mb-2">🎉 New Year, New You — January Special!</h4>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Ready to crush your 2026 fitness goals? Iron Peak Gym in Denver is offering 50% off your first 3 months when you join this January!
+              <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                💪 Transform your fitness journey at Iron Peak Gym! Join this month and get your first personal training session FREE.
               </p>
               <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                ✅ 24/7 access to all equipment<br/>
-                ✅ Free personal training session<br/>
-                ✅ Group classes included<br/>
-                ✅ No long-term contract required
+                Our certified trainers will create a custom workout plan just for you — whether you&apos;re just starting out or ready to level up.
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                📍 Visit us at 1234 Mountain Ave, Denver<br/>
-                📞 Call (303) 555-0123 to claim your spot!
+              <p className="text-sm text-gray-700 font-medium">
+                📍 Stop by for a free tour or call us today!
               </p>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
+                <span>198 characters</span>
+                <span>•</span>
+                <span>CTA: Learn More</span>
+                <span>•</span>
+                <span className="text-green-600">Ready to post</span>
+              </div>
             </div>
           </div>
 
@@ -177,23 +185,32 @@ export default function ExamplesPage() {
               className="w-full aspect-video object-cover"
             />
             <div className="p-5">
-              <div className="text-xs text-gray-500 mb-2">Subject: Seattle Housing Market Update — What Buyers Need to Know</div>
-              <h4 className="font-bold text-gray-900 mb-2">February Market Insights</h4>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Hi [First Name],
+              <div className="bg-gray-100 rounded px-2 py-1 text-xs text-gray-600 mb-3 inline-block">
+                Subject: Your February Home Buying Advantage 🏡
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                Hi there,
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                The Seattle market is shifting — and smart buyers are taking notice. Inventory is up 15% compared to last February, giving you more options and negotiating power.
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                Great news for buyers — inventory in Seattle is up 15% this month, which means more choices and better negotiating power for you.
               </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                <strong>This week&apos;s hot listings:</strong><br/>
-                • 3BR Craftsman in Ballard — $785K<br/>
-                • Modern condo in Capitol Hill — $525K<br/>
-                • Family home in Kirkland — $950K
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                Here&apos;s what I&apos;m seeing:<br/>
+                • Homes staying on market 8 days longer<br/>
+                • More price reductions than last year<br/>
+                • Motivated sellers ready to deal
               </p>
-              <p className="text-sm text-blue-600 font-medium">
-                → Schedule a free consultation
+              <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                Let&apos;s find your perfect home before spring competition heats up.
               </p>
+              <p className="text-sm text-gray-500 italic">
+                — The Westside Realty Team
+              </p>
+              <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
+                <span>~290 words</span>
+                <span>•</span>
+                <span className="text-green-600">Ready to send</span>
+              </div>
             </div>
           </div>
         </div>
