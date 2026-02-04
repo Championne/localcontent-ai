@@ -5,6 +5,14 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 90 // Allow up to 90 seconds for text + image
 
+// IP Allowlist - these IPs bypass ALL limits (rate limit + demo limit)
+// Set DEMO_ALLOWLIST_IPS in .env.local as comma-separated IPs: "123.45.67.89,98.76.54.32"
+const ALLOWLISTED_IPS = (process.env.DEMO_ALLOWLIST_IPS || '').split(',').map(ip => ip.trim()).filter(Boolean)
+
+function isAllowlisted(ip: string): boolean {
+  return ALLOWLISTED_IPS.includes(ip)
+}
+
 // Demo limits
 const FREE_DEMO_LIMIT = 3        // Free demos without any info
 const EMAIL_DEMO_LIMIT = 5       // Additional demos after email capture
@@ -100,11 +108,14 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: Request) {
   // Get IP for rate limiting
-  const ip = request.headers.get('x-forwarded-for') || 
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
              request.headers.get('x-real-ip') || 
              'anonymous'
   
-  if (!checkRateLimit(ip)) {
+  const isUnlimited = isAllowlisted(ip)
+  
+  // Skip rate limit for allowlisted IPs
+  if (!isUnlimited && !checkRateLimit(ip)) {
     return NextResponse.json(
       { error: 'Too many requests. Please wait a moment and try again.' },
       { status: 429 }
@@ -125,26 +136,29 @@ export async function POST(request: Request) {
     // Determine limit based on email status
     const currentLimit = hasEmail ? TOTAL_DEMO_LIMIT : FREE_DEMO_LIMIT
     
-    // Check limits
-    if (demoUsage.count >= TOTAL_DEMO_LIMIT) {
-      return NextResponse.json({
-        error: 'Demo limit reached',
-        limitReached: true,
-        requiresSignup: true,
-        demoCount: demoUsage.count,
-        message: 'You\'ve used all your free demos! Sign up free to generate unlimited content.'
-      }, { status: 403 })
-    }
-    
-    if (demoUsage.count >= FREE_DEMO_LIMIT && !hasEmail) {
-      return NextResponse.json({
-        error: 'Email required',
-        limitReached: true,
-        requiresEmail: true,
-        demoCount: demoUsage.count,
-        remainingFree: 0,
-        message: 'Enter your email to unlock 5 more free demos!'
-      }, { status: 403 })
+    // Skip demo limits for allowlisted IPs
+    if (!isUnlimited) {
+      // Check limits
+      if (demoUsage.count >= TOTAL_DEMO_LIMIT) {
+        return NextResponse.json({
+          error: 'Demo limit reached',
+          limitReached: true,
+          requiresSignup: true,
+          demoCount: demoUsage.count,
+          message: 'You\'ve used all your free demos! Sign up free to generate unlimited content.'
+        }, { status: 403 })
+      }
+      
+      if (demoUsage.count >= FREE_DEMO_LIMIT && !hasEmail) {
+        return NextResponse.json({
+          error: 'Email required',
+          limitReached: true,
+          requiresEmail: true,
+          demoCount: demoUsage.count,
+          remainingFree: 0,
+          message: 'Enter your email to unlock 5 more free demos!'
+        }, { status: 403 })
+      }
     }
     
     // Allow custom business or pick random
@@ -183,10 +197,12 @@ export async function POST(request: Request) {
     let content: string | SocialPackResult
     let displayType: string
 
-    // Increment usage count
-    demoUsage.count += 1
-    if (hasEmail && !demoUsage.hasEmail) {
-      demoUsage.hasEmail = true
+    // Increment usage count (skip for allowlisted IPs)
+    if (!isUnlimited) {
+      demoUsage.count += 1
+      if (hasEmail && !demoUsage.hasEmail) {
+        demoUsage.hasEmail = true
+      }
     }
     
     // Calculate remaining demos
@@ -196,13 +212,14 @@ export async function POST(request: Request) {
     
     // Prepare usage info for response
     const usageInfo = {
-      demoCount: demoUsage.count,
-      remainingDemos: Math.max(0, remainingDemos),
+      demoCount: isUnlimited ? 0 : demoUsage.count,
+      remainingDemos: isUnlimited ? 999 : Math.max(0, remainingDemos),
       hasEmail: demoUsage.hasEmail,
-      requiresEmail: !hasEmail && demoUsage.count >= FREE_DEMO_LIMIT,
-      requiresSignup: demoUsage.count >= TOTAL_DEMO_LIMIT,
+      requiresEmail: false, // Never require email for allowlisted
+      requiresSignup: false, // Never require signup for allowlisted
       freeLimit: FREE_DEMO_LIMIT,
-      emailLimit: TOTAL_DEMO_LIMIT
+      emailLimit: TOTAL_DEMO_LIMIT,
+      unlimited: isUnlimited
     }
 
     if (!isOpenAIConfigured()) {
