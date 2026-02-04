@@ -843,98 +843,13 @@ export function LandingPageDemo() {
         </div>
       )}
 
-        {/* Static Examples of Other Content Types */}
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            GeoSpark Also Creates These Content Types
-          </h3>
-          
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Blog Post Example - Restaurant */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-blue-600 text-white px-4 py-3 flex items-center gap-2">
-                <span className="text-lg">📝</span>
-                <span className="font-semibold">Blog Post</span>
-                <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Restaurant</span>
-              </div>
-              <div className="p-5">
-                <h4 className="font-bold text-gray-900 mb-2">5 Reasons to Try Farm-to-Table Dining in Austin This Spring</h4>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  Spring in Austin brings more than just wildflowers — it's the perfect time to experience the city's thriving farm-to-table scene. At Harvest Kitchen, we partner with 12 local farms within 50 miles to bring you the freshest seasonal ingredients...
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  <strong>Why local matters:</strong> When you dine with us, you're supporting Texas farmers and reducing the environmental impact of your meal. Our menu changes weekly based on what's at peak freshness...
-                </p>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <span>~650 words</span>
-                  <span>•</span>
-                  <span>SEO optimized</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Google Business Post Example - Fitness */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-green-600 text-white px-4 py-3 flex items-center gap-2">
-                <span className="text-lg">📍</span>
-                <span className="font-semibold">Google Business</span>
-                <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Fitness</span>
-              </div>
-              <div className="p-5">
-                <h4 className="font-bold text-gray-900 mb-2">🎉 New Year, New You — January Special!</h4>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  Ready to crush your 2026 fitness goals? Iron Peak Gym in Denver is offering 50% off your first 3 months when you join this January!
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  ✅ 24/7 access to all equipment<br/>
-                  ✅ Free personal training session<br/>
-                  ✅ Group classes included<br/>
-                  ✅ No long-term contract required
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  📍 Visit us at 1234 Mountain Ave, Denver<br/>
-                  📞 Call (303) 555-0123 to claim your spot!
-                </p>
-              </div>
-            </div>
-
-            {/* Email Newsletter Example - Real Estate */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="bg-orange-600 text-white px-4 py-3 flex items-center gap-2">
-                <span className="text-lg">📧</span>
-                <span className="font-semibold">Email Newsletter</span>
-                <span className="ml-auto text-xs bg-white/20 px-2 py-0.5 rounded">Real Estate</span>
-              </div>
-              <div className="p-5">
-                <div className="text-xs text-gray-500 mb-2">Subject: Seattle Housing Market Update — What Buyers Need to Know</div>
-                <h4 className="font-bold text-gray-900 mb-2">February Market Insights</h4>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  Hi [First Name],
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  The Seattle market is shifting — and smart buyers are taking notice. Inventory is up 15% compared to last February, giving you more options and negotiating power.
-                </p>
-                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                  <strong>This week's hot listings:</strong><br/>
-                  • 3BR Craftsman in Ballard — $785K<br/>
-                  • Modern condo in Capitol Hill — $525K<br/>
-                  • Family home in Kirkland — $950K
-                </p>
-                <p className="text-sm text-blue-600 font-medium">
-                  → Schedule a free consultation
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* CTA */}
         <div className="text-center mt-12">
           <Link 
             href="/demo" 
             className="inline-flex items-center gap-2 bg-white border-2 border-teal-500 text-teal-600 hover:bg-teal-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all"
           >
-            Try All 4 Content Types Live
+            See All 4 Content Types + More Examples
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
