@@ -14,9 +14,9 @@ export default function MarketingLayout({
             <Image 
               src="/logo-geospark.png" 
               alt="GeoSpark" 
-              width={140} 
-              height={36} 
-              className="h-9 w-auto"
+              width={240} 
+              height={64} 
+              className="h-16 w-auto"
             />
           </Link>
           

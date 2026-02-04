@@ -89,9 +89,9 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
           <Image 
             src="/logo-geospark.png" 
             alt="GeoSpark" 
-            width={160} 
-            height={48} 
-            className="h-10 w-auto"
+            width={200} 
+            height={56} 
+            className="h-12 w-auto"
             priority
           />
         </Link>
