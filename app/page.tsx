@@ -24,14 +24,14 @@ export default function HomePage() {
             <Link href="/demo" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               Live Demo
             </Link>
-            <Link href="#features" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
-              Features
-            </Link>
-            <Link href="#how-it-works" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
-              How It Works
-            </Link>
             <Link href="#pricing" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               Pricing
+            </Link>
+            <Link href="/about" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
+              About
+            </Link>
+            <Link href="/contact" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
+              Contact
             </Link>
             <Link href="/auth/login" className="text-sm font-medium text-gray-700 hover:text-teal-600 transition-colors">
               Sign In
@@ -558,10 +558,8 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="#features" className="hover:text-teal-400">Features</Link></li>
-                <li><Link href="#pricing" className="hover:text-teal-400">Pricing</Link></li>
-                <li><Link href="#how-it-works" className="hover:text-teal-400">How It Works</Link></li>
                 <li><Link href="/demo" className="hover:text-teal-400">Live Demo</Link></li>
+                <li><Link href="#pricing" className="hover:text-teal-400">Pricing</Link></li>
               </ul>
             </div>
             <div>

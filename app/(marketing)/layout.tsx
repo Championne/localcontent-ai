@@ -41,7 +41,7 @@ export default function MarketingLayout({
               href='/auth/signup' 
               className='bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors'
             >
-              Get Started Free
+              Start Sparking
             </Link>
           </div>
 
@@ -54,7 +54,7 @@ export default function MarketingLayout({
               href='/auth/signup' 
               className='bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors'
             >
-              Start Free
+              Start Sparking
             </Link>
           </div>
         </nav>
