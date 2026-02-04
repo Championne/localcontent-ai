@@ -33,6 +33,7 @@ interface GeneratedDemo {
   content: string | SocialPackContent
   aiPowered: boolean
   usage?: UsageInfo
+  imageUrl?: string
 }
 
 interface DemoError {
@@ -271,9 +272,30 @@ function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
 }
 
 // Social Pack Display Component
-function SocialPackDisplay({ pack }: { pack: SocialPackContent }) {
+function SocialPackDisplay({ pack, imageUrl }: { pack: SocialPackContent; imageUrl?: string }) {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-6">
+      {/* Generated Image */}
+      {imageUrl && (
+        <div className="flex justify-center">
+          <div className="relative rounded-xl overflow-hidden shadow-lg max-w-md">
+            <img 
+              src={imageUrl} 
+              alt="AI Generated Marketing Image" 
+              className="w-full h-auto"
+            />
+            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              AI Generated
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Social Posts Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* Twitter */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="bg-black text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
@@ -339,6 +361,7 @@ function SocialPackDisplay({ pack }: { pack: SocialPackContent }) {
         <div className="p-4">
           <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.nextdoor.content} speed={15} /></p>
         </div>
+      </div>
       </div>
     </div>
   )
@@ -492,12 +515,33 @@ export function SingleContentDemo({ contentType, title, description, compact = f
             </div>
             
             {contentType === 'social-pack' && typeof demo.content === 'object' ? (
-              <SocialPackDisplay pack={demo.content as SocialPackContent} />
+              <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
             ) : (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
-                  <TypeWriter text={demo.content as string} speed={8} />
-                </pre>
+              <div className="space-y-4">
+                {/* Generated Image */}
+                {demo.imageUrl && (
+                  <div className="flex justify-center">
+                    <div className="relative rounded-xl overflow-hidden shadow-lg max-w-lg">
+                      <img 
+                        src={demo.imageUrl} 
+                        alt="AI Generated Marketing Image" 
+                        className="w-full h-auto"
+                      />
+                      <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        AI Generated
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Content */}
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <pre className="whitespace-pre-wrap font-sans text-sm text-gray-700 leading-relaxed">
+                    <TypeWriter text={demo.content as string} speed={8} />
+                  </pre>
+                </div>
               </div>
             )}
           </div>
@@ -669,7 +713,7 @@ export function LandingPageDemo() {
           </div>
           
           {typeof demo.content === 'object' && (
-            <SocialPackDisplay pack={demo.content as SocialPackContent} />
+            <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
           )}
           
           <p className="text-center text-gray-500 text-sm mt-6">

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
+import { generateImage, isImageGenerationConfigured, detectBestStyle } from '@/lib/openai/images'
 import { cookies } from 'next/headers'
 
-export const maxDuration = 60 // Allow up to 60 seconds
+export const maxDuration = 90 // Allow up to 90 seconds for text + image
 
 // Demo limits
 const FREE_DEMO_LIMIT = 3        // Free demos without any info
@@ -255,6 +256,25 @@ export async function POST(request: Request) {
                     contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'
     }
 
+    // Generate image if configured
+    let imageUrl: string | undefined
+    if (isImageGenerationConfigured()) {
+      try {
+        const style = detectBestStyle(topic)
+        const imageResult = await generateImage({
+          topic,
+          businessName,
+          industry,
+          style,
+          contentType,
+        })
+        imageUrl = imageResult.url
+      } catch (imgError) {
+        console.error('Demo image generation failed:', imgError)
+        // Continue without image - don't fail the whole demo
+      }
+    }
+
     const response = NextResponse.json({
       success: true,
       demo: true,
@@ -265,6 +285,7 @@ export async function POST(request: Request) {
       contentType,
       displayType,
       content,
+      imageUrl,
       generatedAt: new Date().toISOString(),
       usage: usageInfo
     })
