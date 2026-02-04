@@ -186,6 +186,119 @@ Assumes gradual scaling of email accounts and 5% monthly churn.
 
 ---
 
+## Profit Projections (With Partner Commissions)
+
+### Unit Economics Per Customer
+
+| Item | Amount | % |
+|------|--------|---|
+| Customer pays | $60 | 100% |
+| API/product cost | -$6 | -10% |
+| Partner commission (40%) | -$24 | -40% |
+| **Your net profit** | **$30** | **50%** |
+
+Even at 40% commission, you keep **50% profit margin**.
+
+---
+
+### 12-Month Profit Projection (With Partners)
+
+| Month | New Customers | Total Customers | Gross Revenue | Commission (40%) | API Cost (10%) | **Net Profit** |
+|-------|---------------|-----------------|---------------|------------------|----------------|----------------|
+| 1 | 0 | 0 | $0 | $0 | $0 | $0 |
+| 2 | 20 | 20 | $1,200 | $480 | $120 | **$600** |
+| 3 | 40 | 58 | $3,480 | $1,392 | $348 | **$1,740** |
+| 4 | 60 | 113 | $6,780 | $2,712 | $678 | **$3,390** |
+| 5 | 80 | 186 | $11,160 | $4,464 | $1,116 | **$5,580** |
+| 6 | 100 | 276 | $16,560 | $6,624 | $1,656 | **$8,280** |
+| 7 | 100 | 363 | $21,780 | $8,712 | $2,178 | **$10,890** |
+| 8 | 120 | 466 | $27,960 | $11,184 | $2,796 | **$13,980** |
+| 9 | 120 | 566 | $33,960 | $13,584 | $3,396 | **$16,980** |
+| 10 | 150 | 690 | $41,400 | $16,560 | $4,140 | **$20,700** |
+| 11 | 150 | 809 | $48,540 | $19,416 | $4,854 | **$24,270** |
+| 12 | 150 | 922 | $55,320 | $22,128 | $5,532 | **$27,660** |
+
+### Year 1 Financial Summary
+
+| Metric | Amount |
+|--------|--------|
+| Total customers | ~920 |
+| Gross MRR (Month 12) | $55,320 |
+| Annual gross revenue | ~$268,000 |
+| Partner commissions paid | ~$107,000 |
+| API costs | ~$27,000 |
+| **Net profit Year 1** | **~$134,000** |
+
+---
+
+### Commission Blend Over Time
+
+Not all partners at 40%. As you scale:
+
+| Partner Tier | Partners | Commission | Customers (est.) |
+|--------------|----------|------------|------------------|
+| First 15 | 15 | 40% | 600 |
+| 16-50 | 35 | 35% | 800 |
+| 51+ | 20 | 30% | 400 |
+
+**Blended commission rate: ~35%**
+
+---
+
+### Profit Margin Improvement Over Time
+
+| Year | Avg Commission | Your Margin (after API) |
+|------|----------------|------------------------|
+| Year 1 | 40% | 50% |
+| Year 2 | 35% | 55% |
+| Year 3 | 32% | 58% |
+| Year 4+ | 30% | 60% |
+
+---
+
+### Multi-Year Profit Projection
+
+| Metric | Year 1 | Year 2 | Year 3 |
+|--------|--------|--------|--------|
+| Customers | 920 | 2,500 | 5,000 |
+| Gross MRR | $55K | $150K | $300K |
+| Commission rate | 40% | 35% | 32% |
+| Commission paid | $22K/mo | $52K/mo | $96K/mo |
+| **Net profit/month** | **$28K** | **$83K** | **$174K** |
+| **Net profit/year** | **$134K** | **$500K** | **$1M+** |
+
+---
+
+### Partners vs Solo Comparison
+
+| Scenario | Monthly Revenue (M12) | Commission | Net Profit | Your Time |
+|----------|----------------------|------------|------------|-----------|
+| You alone (no partners) | ~$6,000 | $0 | $5,400 | 50+ hrs/week |
+| With partners (40%) | $55,320 | $22,128 | $27,660 | 10 hrs/week |
+| With partners (blended) | $55,320 | $19,362 | $30,426 | 10 hrs/week |
+
+**Partners cost 40% commission but deliver 9x revenue and free your time.**
+
+---
+
+### Partner Break-Even Analysis
+
+Partner cost: 40% of revenue
+Alternative: Employee at $4,000/month
+
+| Partner Performance | Your Revenue Share | vs. Employee? |
+|---------------------|-------------------|---------------|
+| 10 clients/month | $360/month | ❌ Employee cheaper |
+| 20 clients/month | $720/month | ❌ Employee cheaper |
+| 50 clients/month | $1,800/month | ❌ Employee cheaper |
+| 70 clients/month | $2,520/month | ✅ Partner cheaper |
+| 100 clients/month | $3,600/month | ✅ Partner much cheaper |
+
+**Break-even: ~67 clients/month per partner**
+**Key advantage: Partners cost $0 if they close 0 deals.**
+
+---
+
 ## Sales Department Expansion Plan
 
 ### Agent Workload Capacity
