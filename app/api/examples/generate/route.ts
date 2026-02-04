@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateContent, generateSocialPack, isOpenAIConfigured } from '@/lib/openai'
+import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
 import { generateImage, isImageGenerationConfigured } from '@/lib/openai/images'
 import { SAMPLE_BUSINESSES, type ExamplesData, type GeneratedExample } from '@/scripts/generate-examples'
 import { writeFile, mkdir } from 'fs/promises'
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     for (const sample of SAMPLE_BUSINESSES) {
       console.log(`Generating ${sample.type} for ${sample.businessName}...`)
       
-      let content: string | Record<string, unknown>
+      let content: string | SocialPackResult
       let imageUrl: string | undefined
 
       if (sample.type === 'social-pack') {
