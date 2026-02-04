@@ -1157,9 +1157,7 @@ export default function CreateContentPage() {
                   topic || 'Your headline here',
                   businessName || 'Business Name',
                   `${topic} - ${businessName}`,
-                  selectedTemplate === 'gmb-post' ? 'Learn More' : 
-                  selectedTemplate === 'social-pack' ? 'Follow Us' : 
-                  'Contact Us Today'
+                  'Follow Us'
                 ].filter(Boolean)}
                 industry={industry}
                 businessName={businessName}
