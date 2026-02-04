@@ -679,7 +679,7 @@ export function LandingPageDemo() {
       )}
 
         {/* CTA */}
-        <div className="text-center mt-12 space-y-6">
+        <div className="text-center mt-12">
           <Link 
             href="/demo" 
             className="inline-flex items-center gap-2 bg-white border-2 border-teal-500 text-teal-600 hover:bg-teal-50 px-8 py-4 rounded-xl text-lg font-semibold transition-all"
@@ -689,17 +689,6 @@ export function LandingPageDemo() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
-          <div>
-            <Link 
-              href="/auth/signup" 
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
-            >
-              Start Your Free 14-Day Trial
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
         </div>
       </section>
 
