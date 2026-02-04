@@ -44,10 +44,13 @@ INSERT INTO markets (name, code, language, countries, timezone, currency) VALUES
   ('Germany', 'de-de', 'de', ARRAY['DE'], 'Europe/Berlin', 'EUR'),
   ('Austria', 'at-de', 'de', ARRAY['AT'], 'Europe/Vienna', 'EUR'),
   ('Switzerland (German)', 'ch-de', 'de', ARRAY['CH'], 'Europe/Zurich', 'CHF'),
+  ('Switzerland (Italian)', 'ch-it', 'it', ARRAY['CH'], 'Europe/Zurich', 'CHF'),
   ('France', 'fr-fr', 'fr', ARRAY['FR'], 'Europe/Paris', 'EUR'),
   ('Belgium (French)', 'be-fr', 'fr', ARRAY['BE'], 'Europe/Brussels', 'EUR'),
   ('Spain', 'es-es', 'es', ARRAY['ES'], 'Europe/Madrid', 'EUR'),
   ('Mexico', 'mx-es', 'es', ARRAY['MX'], 'America/Mexico_City', 'MXN'),
+  ('Italy', 'it-it', 'it', ARRAY['IT'], 'Europe/Rome', 'EUR'),
+  ('Russia', 'ru-ru', 'ru', ARRAY['RU'], 'Europe/Moscow', 'RUB'),
   ('Australia', 'au-en', 'en', ARRAY['AU'], 'Australia/Sydney', 'AUD')
 ON CONFLICT (code) DO NOTHING;
 

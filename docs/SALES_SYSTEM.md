@@ -300,6 +300,24 @@ Market: Spain (Spanish)
 ├─ Accounts: 6 (240/day capacity)
 ├─ Templates: 12 (translated)
 └─ Leads: 0 (not started)
+
+Market: Italy (Italian)
+├─ Language: it
+├─ Countries: IT
+├─ Timezone: Europe/Rome
+├─ Agents: (to be assigned)
+├─ Accounts: (to be configured)
+├─ Templates: (to be translated)
+└─ Leads: 0 (not started)
+
+Market: Russia (Russian)
+├─ Language: ru
+├─ Countries: RU
+├─ Timezone: Europe/Moscow
+├─ Agents: (to be assigned)
+├─ Accounts: (to be configured)
+├─ Templates: (to be translated)
+└─ Leads: 0 (not started)
 ```
 
 ### Sending in Correct Timezone
