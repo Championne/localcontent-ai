@@ -1,30 +1,30 @@
 import OpenAI from 'openai'
 
-// Image style definitions - optimized for realistic, authentic-looking images
+// Image style definitions - optimized for realistic, authentic-looking images WITHOUT TEXT
 export const IMAGE_STYLES = {
   promotional: {
     name: 'Promotional',
     description: 'Clean marketing images for sales and offers',
     keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    promptPrefix: 'Clean, simple marketing photograph with minimal elements, professional product or service photography, authentic and believable, single focused subject'
+    promptPrefix: 'Clean marketing photograph, professional product or service photography, single focused subject, absolutely no text or writing visible anywhere'
   },
   professional: {
     name: 'Professional',
     description: 'Authentic business photography',
     keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service'],
-    promptPrefix: 'Authentic professional photograph, realistic lighting, simple clean composition with one main subject, looks like a real photo taken by a professional photographer'
+    promptPrefix: 'Authentic professional photograph, realistic lighting, simple clean composition with one main subject, absolutely no text or writing visible anywhere'
   },
   friendly: {
     name: 'Friendly',
     description: 'Warm, approachable photography',
     keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love'],
-    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel, simple composition, looks like a real moment captured'
+    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel, simple composition, absolutely no text or writing visible anywhere'
   },
   seasonal: {
     name: 'Seasonal',
     description: 'Subtle seasonal themed photography',
     keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween'],
-    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements, authentic and not overdone, simple elegant composition'
+    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements, simple elegant composition, absolutely no text or writing visible anywhere'
   }
 } as const
 
@@ -118,13 +118,21 @@ function buildImagePrompt(params: GenerateImageParams): string {
     formatDesc = 'Tall portrait format (9:16 aspect ratio)'
   }
   
-  // Create a descriptive prompt that captures the essence without including text
-  const prompt = `${styleConfig.promptPrefix}. 
-Create a realistic photograph representing "${topic}" for a ${industry} business.
-Keep it simple: one main subject, clean background, no clutter.
-Style: ${styleConfig.name} - ${styleConfig.description}.
-Important: Do NOT include any text, words, letters, or numbers in the image. No floating objects. No cartoon elements. Must look like a real photograph.
-${formatDesc}, natural lighting, authentic and believable.`
+  // Create a descriptive prompt that captures the essence - STRICTLY NO TEXT
+  const prompt = `${styleConfig.promptPrefix}.
+
+Create a realistic photograph visually representing the concept of "${topic}" for a ${industry} business.
+Keep it simple: one main subject, clean background, no clutter, no signs, no labels, no logos.
+
+CRITICAL TEXT RULES - MUST FOLLOW:
+- ZERO text anywhere in the image
+- No words, letters, numbers, or symbols
+- No signs, banners, labels, or logos with writing
+- No business names, no prices, no dates
+- No text on clothing, walls, or objects
+- If there would be a sign in the scene, show it blank or out of focus
+
+Style: ${styleConfig.name}. ${formatDesc}. Natural lighting, authentic and believable photograph.`
 
   return prompt
 }
