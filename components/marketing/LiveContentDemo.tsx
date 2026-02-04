@@ -343,12 +343,12 @@ function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
 
 // Social Pack Display Component - Image integrated into each post
 function SocialPackDisplay({ pack, imageUrl }: { pack: SocialPackContent; imageUrl?: string }) {
-  // Reusable post image component
+  // Reusable post image component - show full image without awkward cropping
   const PostImage = ({ className = "" }: { className?: string }) => (
     <DemoImage 
       src={imageUrl} 
-      className={`w-full h-32 object-cover rounded-lg`}
-      containerClassName={className}
+      className={`w-full rounded-lg`}
+      containerClassName={`${className} bg-gray-100 rounded-lg overflow-hidden`}
     />
   )
 
