@@ -21,8 +21,8 @@ export default function HomePage() {
           
           {/* Desktop Nav */}
           <div className="hidden md:flex gap-6 items-center">
-            <Link href="/examples" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
-              Examples
+            <Link href="/demo" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
+              Live Demo
             </Link>
             <Link href="#features" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               Features
