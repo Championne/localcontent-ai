@@ -839,10 +839,34 @@ export function SingleContentDemo({ contentType, title, description, compact = f
 
   const getTypeStyles = () => {
     switch (contentType) {
-      case 'social-pack': return { bg: 'from-purple-600/70 to-purple-700/70', badge: 'bg-purple-100 text-purple-700' }
-      case 'blog-post': return { bg: 'from-blue-600/70 to-blue-700/70', badge: 'bg-blue-100 text-blue-700' }
-      case 'gmb-post': return { bg: 'from-green-600/70 to-green-700/70', badge: 'bg-green-100 text-green-700' }
-      case 'email': return { bg: 'from-orange-600/70 to-orange-700/70', badge: 'bg-orange-100 text-orange-700' }
+      case 'social-pack': return { 
+        gradient: 'from-violet-600 via-purple-600 to-fuchsia-600',
+        glow: 'shadow-purple-500/25',
+        icon: '📱',
+        badge: 'bg-purple-100 text-purple-700',
+        accent: 'bg-purple-400'
+      }
+      case 'blog-post': return { 
+        gradient: 'from-blue-600 via-indigo-600 to-violet-600',
+        glow: 'shadow-blue-500/25',
+        icon: '📝',
+        badge: 'bg-blue-100 text-blue-700',
+        accent: 'bg-blue-400'
+      }
+      case 'gmb-post': return { 
+        gradient: 'from-emerald-500 via-green-500 to-teal-500',
+        glow: 'shadow-green-500/25',
+        icon: '📍',
+        badge: 'bg-green-100 text-green-700',
+        accent: 'bg-green-400'
+      }
+      case 'email': return { 
+        gradient: 'from-orange-500 via-amber-500 to-yellow-500',
+        glow: 'shadow-orange-500/25',
+        icon: '📧',
+        badge: 'bg-orange-100 text-orange-700',
+        accent: 'bg-orange-400'
+      }
     }
   }
 
@@ -852,19 +876,34 @@ export function SingleContentDemo({ contentType, title, description, compact = f
     <>
       <div className="flex flex-col h-full">
         {/* Card - Always visible */}
-        <div className={`bg-gradient-to-br ${styles.bg} rounded-2xl overflow-hidden`}>
-          <div className={`${compact ? 'p-6' : 'p-8'} text-center`}>
-            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
-            <p className="text-white/80 text-sm mb-4">{description}</p>
+        <div className={`relative bg-gradient-to-br ${styles.gradient} rounded-3xl overflow-hidden shadow-xl ${styles.glow} hover:shadow-2xl transition-all duration-300 group`}>
+          {/* Decorative elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Glowing orbs */}
+            <div className={`absolute -top-20 -right-20 w-40 h-40 ${styles.accent} rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity`} />
+            <div className={`absolute -bottom-20 -left-20 w-40 h-40 ${styles.accent} rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity`} />
+            {/* Grid pattern */}
+            <div className="absolute inset-0 opacity-10" style={{ 
+              backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+              backgroundSize: '24px 24px'
+            }} />
+          </div>
+          
+          <div className={`relative ${compact ? 'p-6' : 'p-8'} text-center`}>
+            {/* Icon */}
+            <div className="text-4xl mb-3 drop-shadow-lg">{styles.icon}</div>
+            
+            <h3 className="text-xl font-bold text-white mb-2 drop-shadow-sm">{title.replace(/^[^\s]+\s/, '')}</h3>
+            <p className="text-white/80 text-sm mb-6 max-w-xs mx-auto leading-relaxed">{description}</p>
             
             <div className="flex flex-col items-center gap-3">
               <button
                 onClick={() => generateDemo()}
                 disabled={isGenerating}
-                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all transform ${
                   isGenerating
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl'
+                    ? 'bg-white/20 text-white/60 cursor-not-allowed backdrop-blur-sm'
+                    : 'bg-white text-gray-900 hover:bg-gray-50 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
                 }`}
               >
                 {isGenerating ? (
@@ -893,11 +932,11 @@ export function SingleContentDemo({ contentType, title, description, compact = f
               </button>
             </div>
             {usage && (
-              <div className="mt-3">
+              <div className="mt-4">
                 <DemoCounter usage={usage} />
               </div>
             )}
-            {error && <p className="mt-3 text-red-200 text-sm">{error}</p>}
+            {error && <p className="mt-3 text-red-200 text-sm bg-red-500/20 backdrop-blur-sm rounded-lg px-3 py-2">{error}</p>}
           </div>
         </div>
 
