@@ -70,7 +70,7 @@ export default function HomePage() {
           
           {/* Headline */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            One Idea. Under 2 Minutes.{' '}
+            One Idea. Under 2 Minutes.<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-600">
               6 Platforms Ready.
             </span>
