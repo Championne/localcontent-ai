@@ -1,30 +1,30 @@
 import OpenAI from 'openai'
 
-// Image style definitions
+// Image style definitions - optimized for realistic, authentic-looking images
 export const IMAGE_STYLES = {
   promotional: {
     name: 'Promotional',
-    description: 'Bold, eye-catching graphics for sales and offers',
+    description: 'Clean marketing images for sales and offers',
     keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    promptPrefix: 'Bold promotional marketing graphic with vibrant colors, clean modern design, professional advertising style, no text'
+    promptPrefix: 'Clean, simple marketing photograph with minimal elements, professional product or service photography, authentic and believable, single focused subject'
   },
   professional: {
     name: 'Professional',
-    description: 'Clean, polished images for tips and updates',
+    description: 'Authentic business photography',
     keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service'],
-    promptPrefix: 'Professional business photography style, clean and polished, high quality corporate imagery, no text'
+    promptPrefix: 'Authentic professional photograph, realistic lighting, simple clean composition with one main subject, looks like a real photo taken by a professional photographer'
   },
   friendly: {
     name: 'Friendly',
-    description: 'Warm, approachable illustrations',
+    description: 'Warm, approachable photography',
     keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love'],
-    promptPrefix: 'Warm friendly illustration style, approachable and welcoming, soft colors, cheerful mood, no text'
+    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel, simple composition, looks like a real moment captured'
   },
   seasonal: {
     name: 'Seasonal',
-    description: 'Holiday and seasonal themed graphics',
+    description: 'Subtle seasonal themed photography',
     keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween'],
-    promptPrefix: 'Festive seasonal themed graphic, celebratory mood, holiday decorations, no text'
+    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements, authentic and not overdone, simple elegant composition'
   }
 } as const
 
@@ -120,11 +120,11 @@ function buildImagePrompt(params: GenerateImageParams): string {
   
   // Create a descriptive prompt that captures the essence without including text
   const prompt = `${styleConfig.promptPrefix}. 
-Create an image representing "${topic}" for a ${industry} business called "${businessName}". 
-The image should be suitable for ${contentType === 'blog-post' ? 'a blog header' : contentType === 'email' ? 'an email newsletter header' : 'social media marketing'}.
+Create a realistic photograph representing "${topic}" for a ${industry} business.
+Keep it simple: one main subject, clean background, no clutter.
 Style: ${styleConfig.name} - ${styleConfig.description}.
-Important: Do NOT include any text, words, letters, or numbers in the image. The image should be purely visual.
-${formatDesc}, high quality, vibrant and engaging.`
+Important: Do NOT include any text, words, letters, or numbers in the image. No floating objects. No cartoon elements. Must look like a real photograph.
+${formatDesc}, natural lighting, authentic and believable.`
 
   return prompt
 }
@@ -142,7 +142,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       n: 1,
       size: imageSize,
       quality: 'standard',
-      style: params.style === 'friendly' ? 'natural' : 'vivid',
+      style: 'natural', // Always natural for authentic-looking images
     })
     
     const imageUrl = response.data[0]?.url
