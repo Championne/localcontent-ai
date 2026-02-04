@@ -342,89 +342,216 @@ function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
   )
 }
 
-// Social Pack Display Component - Image integrated into each post
-function SocialPackDisplay({ pack, imageUrl }: { pack: SocialPackContent; imageUrl?: string }) {
-  // Reusable post image component - show full image without awkward cropping
-  const PostImage = ({ className = "" }: { className?: string }) => (
-    <DemoImage 
-      src={imageUrl} 
-      className={`w-full rounded-lg`}
-      containerClassName={`${className} bg-gray-100 rounded-lg overflow-hidden`}
-    />
-  )
+// Social Pack Display Component - Realistic platform mockups matching dashboard
+function SocialPackDisplay({ pack, imageUrl, businessName = 'Local Business', industry = 'Business' }: { pack: SocialPackContent; imageUrl?: string; businessName?: string; industry?: string }) {
+  const businessInitial = businessName.charAt(0).toUpperCase()
+  const handle = businessName.toLowerCase().replace(/\s+/g, '')
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {/* Twitter */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-black text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          X/Twitter
-        </div>
+      {/* X/Twitter - Realistic Mockup */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-4">
-          <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.twitter.content} /></p>
-          <PostImage className="mt-3" />
+          <div className="flex gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+              {businessInitial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-gray-900 text-sm truncate">{businessName}</span>
+                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/></svg>
+              </div>
+              <span className="text-gray-500 text-sm">@{handle} · 1m</span>
+              <p className="mt-2 text-gray-900 text-[15px] leading-relaxed"><TypeWriter text={pack.twitter.content} /></p>
+              {imageUrl && (
+                <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
+                  <DemoImage src={imageUrl} className="w-full" containerClassName="w-full" />
+                </div>
+              )}
+              <div className="flex justify-between mt-3 text-gray-500 max-w-[280px]">
+                <span className="flex items-center gap-1 text-xs"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>12</span>
+                <span className="flex items-center gap-1 text-xs"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>48</span>
+                <span className="flex items-center gap-1 text-xs"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>156</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Facebook */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-[#1877F2] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          Facebook
-        </div>
+      {/* Facebook - Realistic Mockup */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-4">
-          <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.facebook.content} speed={15} /></p>
-          <PostImage className="mt-3" />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+              {businessInitial}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900 text-[15px]">{businessName}</div>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <span>Just now</span>
+                <span>·</span>
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>
+              </div>
+            </div>
+          </div>
+          <p className="text-gray-900 text-[15px] leading-relaxed mb-3"><TypeWriter text={pack.facebook.content} speed={15} /></p>
+          {imageUrl && (
+            <div className="-mx-4 mb-3">
+              <DemoImage src={imageUrl} className="w-full" containerClassName="w-full" />
+            </div>
+          )}
+          <div className="flex items-center gap-1 text-sm text-gray-500 pb-2 border-b border-gray-100">
+            <span className="flex -space-x-1">
+              <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">👍</span>
+              <span className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px]">❤️</span>
+            </span>
+            <span className="ml-1">24</span>
+          </div>
+          <div className="flex justify-around pt-2 text-gray-600 text-sm">
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>Like</span>
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Comment</span>
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>Share</span>
+          </div>
         </div>
       </div>
       
-      {/* Instagram - Image first (like real Instagram) */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#833AB4] via-[#FD1D1D] to-[#F77737] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-          Instagram
+      {/* Instagram - Realistic Mockup */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-between p-3 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
+              <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-xs font-bold text-gray-700">
+                {businessInitial}
+              </div>
+            </div>
+            <span className="font-semibold text-sm text-gray-900">{handle}</span>
+          </div>
+          <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
         </div>
-        <div className="p-4">
-          <PostImage className="mb-3" />
-          <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.instagram.content} speed={15} /></p>
-          <p className="text-xs text-blue-500 mt-2">{pack.instagram.hashtags}</p>
+        {imageUrl ? (
+          <DemoImage src={imageUrl} className="w-full aspect-square object-cover" containerClassName="w-full" />
+        ) : (
+          <div className="w-full aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
+            <span className="text-4xl">📸</span>
+          </div>
+        )}
+        <div className="p-3">
+          <div className="flex justify-between mb-3">
+            <div className="flex gap-4">
+              <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+              <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+              <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            </div>
+            <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+          </div>
+          <div className="font-semibold text-sm text-gray-900 mb-1">127 likes</div>
+          <p className="text-sm text-gray-900"><span className="font-semibold">{handle}</span> <TypeWriter text={pack.instagram.content} speed={15} /></p>
+          <p className="text-sm text-blue-900 mt-1">{pack.instagram.hashtags}</p>
         </div>
       </div>
       
-      {/* LinkedIn */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-[#0A66C2] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-          LinkedIn
-        </div>
+      {/* LinkedIn - Realistic Mockup */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-4">
-          <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.linkedin.content} speed={15} /></p>
-          <PostImage className="mt-3" />
+          <div className="flex gap-3 mb-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold">
+              {businessInitial}
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-gray-900">{businessName}</div>
+              <div className="text-xs text-gray-500">Local {industry} Expert</div>
+              <div className="text-xs text-gray-400 flex items-center gap-1">
+                <span>1h</span>
+                <span>·</span>
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>
+              </div>
+            </div>
+          </div>
+          <p className="text-gray-900 text-sm leading-relaxed mb-3"><TypeWriter text={pack.linkedin.content} speed={15} /></p>
+          {imageUrl && (
+            <div className="-mx-4 mb-3">
+              <DemoImage src={imageUrl} className="w-full" containerClassName="w-full" />
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-xs text-gray-500 pb-3 border-b border-gray-100">
+            <span className="flex -space-x-1">
+              <span className="w-4 h-4 rounded-full bg-blue-600 flex items-center justify-center text-white text-[8px]">👍</span>
+              <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px]">👏</span>
+              <span className="w-4 h-4 rounded-full bg-red-400 flex items-center justify-center text-white text-[8px]">❤️</span>
+            </span>
+            <span>42</span>
+            <span className="ml-auto">8 comments</span>
+          </div>
+          <div className="flex justify-around pt-2 text-gray-600 text-sm">
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>Like</span>
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Comment</span>
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>Repost</span>
+          </div>
         </div>
       </div>
 
-      {/* TikTok */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-black text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-          TikTok
-        </div>
-        <div className="p-4">
-          <PostImage className="mb-3" />
-          <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.tiktok.content} speed={15} /></p>
+      {/* TikTok - Realistic Mockup */}
+      <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="relative">
+          {imageUrl ? (
+            <DemoImage src={imageUrl} className="w-full aspect-[9/12] object-cover" containerClassName="w-full" />
+          ) : (
+            <div className="w-full aspect-[9/12] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+              <span className="text-6xl">🎵</span>
+            </div>
+          )}
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <div className="font-semibold text-white text-sm mb-1">@{handle}</div>
+                <p className="text-white text-sm leading-relaxed"><TypeWriter text={pack.tiktok.content} speed={15} /></p>
+                <div className="flex items-center gap-2 mt-2 text-white/80 text-xs">
+                  <span>🎵</span>
+                  <span className="truncate">Original sound - {businessName}</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-4 text-white">
+                <div className="text-center"><svg className="w-7 h-7 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12.1 18.55l-.1.1-.11-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04 1 3.57 2.36h1.86C13.46 6 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"/></svg><span className="text-xs">2.4K</span></div>
+                <div className="text-center"><svg className="w-7 h-7 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg><span className="text-xs">89</span></div>
+                <div className="text-center"><svg className="w-7 h-7 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span className="text-xs">Share</span></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Nextdoor */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-[#00B246] text-white px-3 py-2 text-xs font-semibold flex items-center gap-2">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-          Nextdoor
+      {/* Nextdoor - Realistic Mockup */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-green-600 px-4 py-2 flex items-center gap-2">
+          <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z"/></svg>
+          <span className="text-white font-semibold text-sm">Nextdoor</span>
         </div>
         <div className="p-4">
-          <p className="text-sm text-gray-700 leading-relaxed"><TypeWriter text={pack.nextdoor.content} speed={15} /></p>
-          <PostImage className="mt-3" />
+          <div className="flex gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+              {businessInitial}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900 text-sm">{businessName}</div>
+              <div className="text-xs text-gray-500 flex items-center gap-1">
+                <span className="text-green-600">✓ Verified Business</span>
+                <span>·</span>
+                <span>Your neighborhood</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-gray-900 text-sm leading-relaxed mb-3"><TypeWriter text={pack.nextdoor.content} speed={15} /></p>
+          {imageUrl && (
+            <div className="rounded-lg overflow-hidden mb-3">
+              <DemoImage src={imageUrl} className="w-full" containerClassName="w-full" />
+            </div>
+          )}
+          <div className="flex items-center gap-4 text-sm text-gray-500 pt-3 border-t border-gray-100">
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>Thank</span>
+            <span className="flex items-center gap-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Reply</span>
+            <span className="flex items-center gap-1 ml-auto"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>Share</span>
+          </div>
         </div>
       </div>
     </div>
@@ -797,7 +924,7 @@ export function SingleContentDemo({ contentType, title, description, compact = f
                   <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
                 </div>
                 <div className="p-4">
-                  <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
+                  <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} businessName={demo.businessName} industry={demo.industry} />
                 </div>
               </div>
             ) : contentType === 'blog-post' ? (
@@ -1064,7 +1191,7 @@ export function LandingPageDemo() {
           </div>
           
           {typeof demo.content === 'object' && (
-            <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} />
+            <SocialPackDisplay pack={demo.content as SocialPackContent} imageUrl={demo.imageUrl} businessName={demo.businessName} industry={demo.industry} />
           )}
           
           <p className="text-center text-gray-500 text-sm mt-6">
