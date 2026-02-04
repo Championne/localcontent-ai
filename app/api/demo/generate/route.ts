@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateContent, generateSocialPack, isOpenAIConfigured } from '@/lib/openai'
+import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
 
 export const maxDuration = 60 // Allow up to 60 seconds
 
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       contentType = CONTENT_TYPES[Math.floor(Math.random() * CONTENT_TYPES.length)]
     }
 
-    let content: string | Record<string, unknown>
+    let content: string | SocialPackResult
     let displayType: string
 
     if (!isOpenAIConfigured()) {
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
 }
 
 // Mock content for when AI is not configured
-function getMockContent(type: string, business: string, industry: string, topic: string) {
+function getMockContent(type: string, business: string, industry: string, topic: string): string | SocialPackResult {
   if (type === 'social-pack') {
     return {
       twitter: { content: `🔥 ${topic} at ${business}! Your local ${industry.toLowerCase()} experts are here to help. #${industry.replace(/\s+/g, '')} #LocalBusiness #SupportLocal`, charCount: 120 },
