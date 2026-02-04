@@ -118,20 +118,25 @@ export default function ExamplesPage() {
               alt="Fresh vegetables on wooden table" 
               className="w-full aspect-video object-cover"
             />
-            <div className="p-5">
-              <h4 className="font-bold text-gray-900 mb-2">Why Farm-to-Table Dining Is Worth Every Bite at Harvest Kitchen</h4>
+            <div className="p-5 max-h-80 overflow-y-auto">
+              <h4 className="font-bold text-gray-900 mb-2">Savor the Season: Discover Harvest Kitchen&apos;s New Farm-to-Table Spring Menu</h4>
               <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Ever wonder what makes a meal truly memorable? At Harvest Kitchen, we believe it starts long before the plate hits your table...
+                As the flowers bloom and the weather warms up, nothing excites food lovers quite like the arrival of spring! At Harvest Kitchen in Austin, TX, we&apos;re thrilled to announce our new farm-to-table spring menu...
               </p>
+              <p className="text-sm text-gray-700 font-semibold mb-1">## Fresh Ingredients, Bold Flavors</p>
               <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                <span className="font-semibold text-gray-700">## What Makes Us Different</span><br/>
-                We partner directly with 12 local farms within 50 miles of Austin. That means the vegetables on your plate were often picked just hours ago...
+                This spring, we&apos;ve partnered with local farmers to bring you the freshest produce and meats:
               </p>
+              <ul className="text-sm text-gray-600 mb-2 ml-4 list-disc">
+                <li>Seasonal Vegetables: asparagus, radishes, and spring peas</li>
+                <li>Locally-Sourced Proteins: grass-fed beef, sustainable seafood</li>
+                <li>House-Made Sauces and Dressings</li>
+              </ul>
               <p className="text-sm text-gray-500 italic">
-                Ready to taste the difference? Reserve your table today and experience farm-fresh dining at Harvest Kitchen.
+                Book your table today and let the flavors of spring inspire your dining experience!
               </p>
               <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
-                <span>~680 words</span>
+                <span>~500 words</span>
                 <span>•</span>
                 <span>SEO optimized</span>
                 <span>•</span>
@@ -153,17 +158,11 @@ export default function ExamplesPage() {
               className="w-full aspect-video object-cover"
             />
             <div className="p-5">
-              <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                💪 Transform your fitness journey at Iron Peak Gym! Join this month and get your first personal training session FREE.
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Our certified trainers will create a custom workout plan just for you — whether you&apos;re just starting out or ready to level up.
-              </p>
-              <p className="text-sm text-gray-700 font-medium">
-                📍 Stop by for a free tour or call us today!
+              <p className="text-sm text-gray-700 leading-relaxed">
+                🎉 Kickstart your fitness journey with a FREE personal training session at Iron Peak Gym! 💪 Limited spots available—don&apos;t miss out! Claim yours now by calling us or visiting our website!
               </p>
               <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
-                <span>198 characters</span>
+                <span>186 characters</span>
                 <span>•</span>
                 <span>CTA: Learn More</span>
                 <span>•</span>
@@ -184,30 +183,29 @@ export default function ExamplesPage() {
               alt="Modern home exterior" 
               className="w-full aspect-video object-cover"
             />
-            <div className="p-5">
+            <div className="p-5 max-h-80 overflow-y-auto">
               <div className="bg-gray-100 rounded px-2 py-1 text-xs text-gray-600 mb-3 inline-block">
-                Subject: Your February Home Buying Advantage 🏡
+                Subject: What&apos;s Happening in Seattle&apos;s Housing Market This February?
               </div>
               <p className="text-sm text-gray-600 leading-relaxed mb-2">
                 Hi there,
               </p>
               <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Great news for buyers — inventory in Seattle is up 15% this month, which means more choices and better negotiating power for you.
+                As we step into February, we&apos;re excited to share some intriguing insights about the Seattle housing market. Whether you&apos;re considering buying, selling, or simply curious about local trends, staying informed can help you make the best decisions.
               </p>
+              <ul className="text-sm text-gray-600 mb-2 ml-4 list-disc">
+                <li><strong>Inventory Levels:</strong> More homes for sale, giving buyers more options</li>
+                <li><strong>Home Prices:</strong> Stabilizing after steady growth</li>
+                <li><strong>Interest Rates:</strong> Still competitive, but expected to fluctuate</li>
+              </ul>
               <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Here&apos;s what I&apos;m seeing:<br/>
-                • Homes staying on market 8 days longer<br/>
-                • More price reductions than last year<br/>
-                • Motivated sellers ready to deal
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Let&apos;s find your perfect home before spring competition heats up.
+                Ready to explore your options? Reach out to us today!
               </p>
               <p className="text-sm text-gray-500 italic">
-                — The Westside Realty Team
+                Warm regards,<br/>The Westside Realty Team
               </p>
               <div className="flex items-center gap-2 text-xs text-gray-400 mt-3 pt-3 border-t">
-                <span>~290 words</span>
+                <span>~250 words</span>
                 <span>•</span>
                 <span className="text-green-600">Ready to send</span>
               </div>
