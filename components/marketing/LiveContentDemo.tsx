@@ -3,22 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
-// Industry options for the selector
-const INDUSTRY_OPTIONS = [
-  { id: 'random', label: '🎲 Surprise Me!', industry: '', icon: '🎲' },
-  { id: 'plumbing', label: 'Plumbing & HVAC', industry: 'Plumbing', icon: '🔧' },
-  { id: 'restaurant', label: 'Restaurant & Cafe', industry: 'Restaurant', icon: '🍽️' },
-  { id: 'dental', label: 'Dental Practice', industry: 'Dental', icon: '🦷' },
-  { id: 'fitness', label: 'Fitness & Gym', industry: 'Fitness', icon: '💪' },
-  { id: 'salon', label: 'Hair Salon & Spa', industry: 'Beauty Salon', icon: '💇' },
-  { id: 'realtor', label: 'Real Estate', industry: 'Real Estate', icon: '🏠' },
-  { id: 'legal', label: 'Law Firm', industry: 'Legal Services', icon: '⚖️' },
-  { id: 'auto', label: 'Auto Repair', industry: 'Auto Repair', icon: '🚗' },
-  { id: 'landscaping', label: 'Landscaping', industry: 'Landscaping', icon: '🌿' },
-  { id: 'cleaning', label: 'Cleaning Service', industry: 'Cleaning', icon: '🧹' },
-  { id: 'accounting', label: 'Accounting', industry: 'Accounting', icon: '📊' },
-]
-
 // Types for generated content
 interface SocialPackContent {
   twitter: { content: string; charCount: number }
@@ -227,104 +211,33 @@ function DemoCounter({ usage }: { usage: UsageInfo | null }) {
   )
 }
 
-// Industry Selector Component
-function IndustrySelector({ 
-  selected, 
-  onSelect,
-  compact = false 
+// Regenerate Button Component
+function RegenerateButton({ 
+  onClick, 
+  isGenerating,
+  hasContent 
 }: { 
-  selected: string
-  onSelect: (industry: string) => void
-  compact?: boolean
+  onClick: () => void
+  isGenerating: boolean
+  hasContent: boolean
 }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const selectedOption = INDUSTRY_OPTIONS.find(o => o.id === selected) || INDUSTRY_OPTIONS[0]
-
-  if (compact) {
-    return (
-      <div className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm shadow-sm border border-gray-200 hover:border-teal-400 transition-colors"
-        >
-          <span>{selectedOption.icon}</span>
-          <span className="font-medium text-gray-700">{selectedOption.label}</span>
-          <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        
-        {isOpen && (
-          <div className="absolute top-full mt-2 left-0 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
-            {INDUSTRY_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => {
-                  onSelect(option.id)
-                  setIsOpen(false)
-                }}
-                className={`w-full text-left px-4 py-2 hover:bg-teal-50 flex items-center gap-2 text-sm ${
-                  selected === option.id ? 'bg-teal-50 text-teal-700' : 'text-gray-700'
-                }`}
-              >
-                <span>{option.icon}</span>
-                <span>{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
-
+  if (!hasContent) return null
+  
   return (
-    <div className="flex flex-wrap justify-center gap-2 mb-6">
-      {INDUSTRY_OPTIONS.slice(0, 7).map((option) => (
-        <button
-          key={option.id}
-          onClick={() => onSelect(option.id)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-            selected === option.id
-              ? 'bg-teal-600 text-white shadow-md'
-              : 'bg-white text-gray-700 hover:bg-teal-50 hover:text-teal-700 border border-gray-200'
-          }`}
-        >
-          <span className="mr-1">{option.icon}</span>
-          {option.label}
-        </button>
-      ))}
-      <div className="relative">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`px-4 py-2 rounded-full text-sm font-medium transition-all border border-gray-200 ${
-            INDUSTRY_OPTIONS.slice(7).some(o => o.id === selected)
-              ? 'bg-teal-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-teal-50'
-          }`}
-        >
-          More Industries ▾
-        </button>
-        {isOpen && (
-          <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[180px]">
-            {INDUSTRY_OPTIONS.slice(7).map((option) => (
-              <button
-                key={option.id}
-                onClick={() => {
-                  onSelect(option.id)
-                  setIsOpen(false)
-                }}
-                className={`w-full text-left px-4 py-2 hover:bg-teal-50 flex items-center gap-2 text-sm ${
-                  selected === option.id ? 'bg-teal-50 text-teal-700' : 'text-gray-700'
-                }`}
-              >
-                <span>{option.icon}</span>
-                <span>{option.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      disabled={isGenerating}
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+        isGenerating
+          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 border border-gray-200 shadow-sm'
+      }`}
+    >
+      <svg className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      {isGenerating ? 'Regenerating...' : 'Regenerate'}
+    </button>
   )
 }
 
@@ -447,22 +360,17 @@ export function SingleContentDemo({ contentType, title, description, compact = f
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showSignupModal, setShowSignupModal] = useState(false)
-  const [selectedIndustry, setSelectedIndustry] = useState('random')
   const resultRef = useRef<HTMLDivElement>(null)
 
   const generateDemo = async (hasEmail = false) => {
     setIsGenerating(true)
     setError(null)
     
-    // Get the industry from the selection
-    const industryOption = INDUSTRY_OPTIONS.find(o => o.id === selectedIndustry)
-    const industry = industryOption?.industry || ''
-    
     try {
       const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType, hasEmail, industry })
+        body: JSON.stringify({ contentType, hasEmail })
       })
       
       const data = await response.json()
@@ -530,48 +438,42 @@ export function SingleContentDemo({ contentType, title, description, compact = f
           <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
           <p className="text-white/80 text-sm mb-4">{description}</p>
           
-          {/* Industry Selector */}
-          <div className="flex justify-center mb-4">
-            <IndustrySelector 
-              selected={selectedIndustry} 
-              onSelect={setSelectedIndustry}
-              compact={true}
-            />
-          </div>
-          
-          <button
-            onClick={() => generateDemo()}
-            disabled={isGenerating}
-            className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-              isGenerating
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl'
-            }`}
-          >
-            {isGenerating ? (
-              <>
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Generating...
-              </>
-            ) : demo ? (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Generate New
-              </>
+          <div className="flex flex-col items-center gap-3">
+            {!demo ? (
+              <button
+                onClick={() => generateDemo()}
+                disabled={isGenerating}
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
+                  isGenerating
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl'
+                }`}
+              >
+                {isGenerating ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Example
+                  </>
+                )}
+              </button>
             ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Generate Example
-              </>
+              <RegenerateButton 
+                onClick={() => generateDemo()} 
+                isGenerating={isGenerating}
+                hasContent={true}
+              />
             )}
-          </button>
+          </div>
           {usage && (
             <div className="mt-3">
               <DemoCounter usage={usage} />
@@ -625,22 +527,17 @@ export function LandingPageDemo() {
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showSignupModal, setShowSignupModal] = useState(false)
-  const [selectedIndustry, setSelectedIndustry] = useState('random')
   const resultRef = useRef<HTMLDivElement>(null)
 
   const generateDemo = async (hasEmail = false) => {
     setIsGenerating(true)
     setError(null)
     
-    // Get the industry from the selection
-    const industryOption = INDUSTRY_OPTIONS.find(o => o.id === selectedIndustry)
-    const industry = industryOption?.industry || ''
-    
     try {
       const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: 'social-pack', hasEmail, industry })
+        body: JSON.stringify({ contentType: 'social-pack', hasEmail })
       })
       
       const data = await response.json()
@@ -694,15 +591,9 @@ export function LandingPageDemo() {
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
             Watch AI Create Content in Real-Time
           </h2>
-          <p className="text-xl text-gray-600 mb-6">
-            Select your industry and watch GeoSpark generate a complete social media pack — 6 platform-optimized posts in seconds.
+          <p className="text-xl text-gray-600 mb-8">
+            Click the button below and watch GeoSpark generate a complete social media pack — 6 platform-optimized posts in seconds.
           </p>
-          
-          {/* Industry Selector */}
-          <IndustrySelector 
-            selected={selectedIndustry} 
-            onSelect={setSelectedIndustry}
-          />
           
           <button
             onClick={() => generateDemo()}
@@ -726,7 +617,7 @@ export function LandingPageDemo() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Generate Another Business
+                Regenerate
               </>
             ) : (
               <>
@@ -769,10 +660,10 @@ export function LandingPageDemo() {
                 disabled={isGenerating}
                 className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Try Another
+                {isGenerating ? 'Regenerating...' : 'Regenerate'}
               </button>
             </div>
           </div>
