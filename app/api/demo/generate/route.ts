@@ -9,22 +9,67 @@ const FREE_DEMO_LIMIT = 3        // Free demos without any info
 const EMAIL_DEMO_LIMIT = 5       // Additional demos after email capture
 const TOTAL_DEMO_LIMIT = 8       // Total before requiring signup
 
-// Sample businesses for random demo
+// Sample businesses for random demo - expanded to cover all industry selector options
 const DEMO_BUSINESSES = [
-  { businessName: "Sunrise Bakery", industry: "Bakery", topic: "Fresh Sourdough Bread Every Morning" },
-  { businessName: "Peak Fitness Studio", industry: "Fitness", topic: "Summer Body Transformation Program" },
-  { businessName: "Green Leaf Landscaping", industry: "Landscaping", topic: "Spring Garden Makeover Tips" },
-  { businessName: "Cozy Corner Cafe", industry: "Coffee Shop", topic: "New Seasonal Pumpkin Spice Menu" },
-  { businessName: "Swift Auto Repair", industry: "Auto Repair", topic: "Winter Car Maintenance Checklist" },
-  { businessName: "Bright Smile Dental", industry: "Dentistry", topic: "Family Dental Care Made Easy" },
-  { businessName: "Harbor View Realty", industry: "Real Estate", topic: "First-Time Home Buyer Guide" },
-  { businessName: "Paws & Claws Pet Spa", industry: "Pet Grooming", topic: "Summer Grooming Specials" },
-  { businessName: "Iron Works Gym", industry: "Gym", topic: "New Year Fitness Challenge" },
+  // Plumbing & HVAC
+  { businessName: "Mountain View Plumbing", industry: "Plumbing", topic: "Emergency Plumbing Services 24/7" },
+  { businessName: "Comfort Zone HVAC", industry: "Plumbing", topic: "AC Tune-Up Special Before Summer" },
+  { businessName: "RapidFlow Plumbers", industry: "Plumbing", topic: "Drain Cleaning Tips for Homeowners" },
+  
+  // Restaurant & Cafe
   { businessName: "Bella's Italian Kitchen", industry: "Restaurant", topic: "Homemade Pasta Night Every Thursday" },
+  { businessName: "Cozy Corner Cafe", industry: "Restaurant", topic: "New Seasonal Pumpkin Spice Menu" },
+  { businessName: "Sunrise Bakery", industry: "Restaurant", topic: "Fresh Sourdough Bread Every Morning" },
+  
+  // Dental Practice
+  { businessName: "Bright Smile Dental", industry: "Dental", topic: "Family Dental Care Made Easy" },
+  { businessName: "Pearl White Dentistry", industry: "Dental", topic: "Teeth Whitening Special Offer" },
+  { businessName: "Gentle Care Dental", industry: "Dental", topic: "Anxiety-Free Dental Visits" },
+  
+  // Fitness & Gym
+  { businessName: "Peak Fitness Studio", industry: "Fitness", topic: "Summer Body Transformation Program" },
+  { businessName: "Iron Works Gym", industry: "Fitness", topic: "New Year Fitness Challenge" },
+  { businessName: "FlexZone Training", industry: "Fitness", topic: "Personal Training Introductory Offer" },
+  
+  // Hair Salon & Spa
+  { businessName: "Glamour Hair Studio", industry: "Beauty Salon", topic: "Summer Hair Color Trends" },
+  { businessName: "Serenity Day Spa", industry: "Beauty Salon", topic: "Valentine's Couples Massage Package" },
+  { businessName: "Style & Grace Salon", industry: "Beauty Salon", topic: "Bridal Hair & Makeup Services" },
+  
+  // Real Estate
+  { businessName: "Harbor View Realty", industry: "Real Estate", topic: "First-Time Home Buyer Guide" },
+  { businessName: "Premier Properties Group", industry: "Real Estate", topic: "Market Update: Best Time to Sell" },
+  { businessName: "Hometown Realtors", industry: "Real Estate", topic: "Open House This Weekend" },
+  
+  // Law Firm
+  { businessName: "Justice & Associates", industry: "Legal Services", topic: "Free Initial Consultation Offer" },
+  { businessName: "Family Law Partners", industry: "Legal Services", topic: "Divorce Mediation Services" },
+  { businessName: "Business Law Group", industry: "Legal Services", topic: "Protect Your Small Business" },
+  
+  // Auto Repair
+  { businessName: "Swift Auto Repair", industry: "Auto Repair", topic: "Winter Car Maintenance Checklist" },
+  { businessName: "Precision Auto Care", industry: "Auto Repair", topic: "Brake Service Special This Month" },
+  { businessName: "Honest Mechanic Shop", industry: "Auto Repair", topic: "Free Vehicle Inspection" },
+  
+  // Landscaping
+  { businessName: "Green Leaf Landscaping", industry: "Landscaping", topic: "Spring Garden Makeover Tips" },
+  { businessName: "Nature's Touch Lawn Care", industry: "Landscaping", topic: "Seasonal Lawn Maintenance Plans" },
+  { businessName: "Outdoor Living Designs", industry: "Landscaping", topic: "Backyard Patio Installation" },
+  
+  // Cleaning Service
+  { businessName: "Sparkle Clean Services", industry: "Cleaning", topic: "Spring Deep Clean Special Offer" },
+  { businessName: "Fresh Start Cleaning", industry: "Cleaning", topic: "Move-In/Move-Out Cleaning" },
+  { businessName: "Green Clean Pros", industry: "Cleaning", topic: "Eco-Friendly Office Cleaning" },
+  
+  // Accounting
+  { businessName: "Balance Sheet Accounting", industry: "Accounting", topic: "Tax Season Preparation Tips" },
+  { businessName: "Small Biz Books", industry: "Accounting", topic: "Bookkeeping Services for Startups" },
+  { businessName: "Financial Focus CPA", industry: "Accounting", topic: "Year-End Tax Planning Strategies" },
+  
+  // Additional variety
+  { businessName: "Paws & Claws Pet Spa", industry: "Pet Grooming", topic: "Summer Grooming Specials" },
   { businessName: "Pixel Perfect Photography", industry: "Photography", topic: "Holiday Family Portrait Sessions" },
   { businessName: "Green Thumb Garden Center", industry: "Garden Center", topic: "Container Gardening for Beginners" },
-  { businessName: "Sparkle Clean Services", industry: "Cleaning", topic: "Spring Deep Clean Special Offer" },
-  { businessName: "Mountain View Plumbing", industry: "Plumbing", topic: "Emergency Plumbing Services 24/7" },
   { businessName: "Coastal Electric", industry: "Electrician", topic: "Smart Home Installation Services" },
 ]
 
@@ -107,9 +152,23 @@ export async function POST(request: Request) {
     let topic = body.topic
     let contentType = body.contentType
     
-    // If not provided, pick random
-    if (!businessName || !industry || !topic) {
-      const randomBusiness = DEMO_BUSINESSES[Math.floor(Math.random() * DEMO_BUSINESSES.length)]
+    // If industry is specified, filter businesses by that industry
+    // If not provided, pick random from all
+    if (!businessName || !topic) {
+      let availableBusinesses = DEMO_BUSINESSES
+      
+      // Filter by industry if provided
+      if (industry) {
+        const matchingBusinesses = DEMO_BUSINESSES.filter(b => 
+          b.industry.toLowerCase().includes(industry.toLowerCase()) ||
+          industry.toLowerCase().includes(b.industry.toLowerCase())
+        )
+        if (matchingBusinesses.length > 0) {
+          availableBusinesses = matchingBusinesses
+        }
+      }
+      
+      const randomBusiness = availableBusinesses[Math.floor(Math.random() * availableBusinesses.length)]
       businessName = businessName || randomBusiness.businessName
       industry = industry || randomBusiness.industry
       topic = topic || randomBusiness.topic

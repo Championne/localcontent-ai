@@ -3,6 +3,22 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
+// Industry options for the selector
+const INDUSTRY_OPTIONS = [
+  { id: 'random', label: '🎲 Surprise Me!', industry: '', icon: '🎲' },
+  { id: 'plumbing', label: 'Plumbing & HVAC', industry: 'Plumbing', icon: '🔧' },
+  { id: 'restaurant', label: 'Restaurant & Cafe', industry: 'Restaurant', icon: '🍽️' },
+  { id: 'dental', label: 'Dental Practice', industry: 'Dental', icon: '🦷' },
+  { id: 'fitness', label: 'Fitness & Gym', industry: 'Fitness', icon: '💪' },
+  { id: 'salon', label: 'Hair Salon & Spa', industry: 'Beauty Salon', icon: '💇' },
+  { id: 'realtor', label: 'Real Estate', industry: 'Real Estate', icon: '🏠' },
+  { id: 'legal', label: 'Law Firm', industry: 'Legal Services', icon: '⚖️' },
+  { id: 'auto', label: 'Auto Repair', industry: 'Auto Repair', icon: '🚗' },
+  { id: 'landscaping', label: 'Landscaping', industry: 'Landscaping', icon: '🌿' },
+  { id: 'cleaning', label: 'Cleaning Service', industry: 'Cleaning', icon: '🧹' },
+  { id: 'accounting', label: 'Accounting', industry: 'Accounting', icon: '📊' },
+]
+
 // Types for generated content
 interface SocialPackContent {
   twitter: { content: string; charCount: number }
@@ -211,6 +227,107 @@ function DemoCounter({ usage }: { usage: UsageInfo | null }) {
   )
 }
 
+// Industry Selector Component
+function IndustrySelector({ 
+  selected, 
+  onSelect,
+  compact = false 
+}: { 
+  selected: string
+  onSelect: (industry: string) => void
+  compact?: boolean
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const selectedOption = INDUSTRY_OPTIONS.find(o => o.id === selected) || INDUSTRY_OPTIONS[0]
+
+  if (compact) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm shadow-sm border border-gray-200 hover:border-teal-400 transition-colors"
+        >
+          <span>{selectedOption.icon}</span>
+          <span className="font-medium text-gray-700">{selectedOption.label}</span>
+          <svg className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {isOpen && (
+          <div className="absolute top-full mt-2 left-0 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[200px] max-h-[300px] overflow-y-auto">
+            {INDUSTRY_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => {
+                  onSelect(option.id)
+                  setIsOpen(false)
+                }}
+                className={`w-full text-left px-4 py-2 hover:bg-teal-50 flex items-center gap-2 text-sm ${
+                  selected === option.id ? 'bg-teal-50 text-teal-700' : 'text-gray-700'
+                }`}
+              >
+                <span>{option.icon}</span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-wrap justify-center gap-2 mb-6">
+      {INDUSTRY_OPTIONS.slice(0, 7).map((option) => (
+        <button
+          key={option.id}
+          onClick={() => onSelect(option.id)}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            selected === option.id
+              ? 'bg-teal-600 text-white shadow-md'
+              : 'bg-white text-gray-700 hover:bg-teal-50 hover:text-teal-700 border border-gray-200'
+          }`}
+        >
+          <span className="mr-1">{option.icon}</span>
+          {option.label}
+        </button>
+      ))}
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`px-4 py-2 rounded-full text-sm font-medium transition-all border border-gray-200 ${
+            INDUSTRY_OPTIONS.slice(7).some(o => o.id === selected)
+              ? 'bg-teal-600 text-white'
+              : 'bg-white text-gray-700 hover:bg-teal-50'
+          }`}
+        >
+          More Industries ▾
+        </button>
+        {isOpen && (
+          <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[180px]">
+            {INDUSTRY_OPTIONS.slice(7).map((option) => (
+              <button
+                key={option.id}
+                onClick={() => {
+                  onSelect(option.id)
+                  setIsOpen(false)
+                }}
+                className={`w-full text-left px-4 py-2 hover:bg-teal-50 flex items-center gap-2 text-sm ${
+                  selected === option.id ? 'bg-teal-50 text-teal-700' : 'text-gray-700'
+                }`}
+              >
+                <span>{option.icon}</span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // Typing effect component
 function TypeWriter({ text, speed = 20 }: { text: string; speed?: number }) {
   const [displayedText, setDisplayedText] = useState('')
@@ -330,17 +447,22 @@ export function SingleContentDemo({ contentType, title, description, compact = f
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showSignupModal, setShowSignupModal] = useState(false)
+  const [selectedIndustry, setSelectedIndustry] = useState('random')
   const resultRef = useRef<HTMLDivElement>(null)
 
   const generateDemo = async (hasEmail = false) => {
     setIsGenerating(true)
     setError(null)
     
+    // Get the industry from the selection
+    const industryOption = INDUSTRY_OPTIONS.find(o => o.id === selectedIndustry)
+    const industry = industryOption?.industry || ''
+    
     try {
       const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType, hasEmail })
+        body: JSON.stringify({ contentType, hasEmail, industry })
       })
       
       const data = await response.json()
@@ -407,6 +529,16 @@ export function SingleContentDemo({ contentType, title, description, compact = f
         <div className={`${compact ? 'p-6' : 'p-8'} text-center`}>
           <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
           <p className="text-white/80 text-sm mb-4">{description}</p>
+          
+          {/* Industry Selector */}
+          <div className="flex justify-center mb-4">
+            <IndustrySelector 
+              selected={selectedIndustry} 
+              onSelect={setSelectedIndustry}
+              compact={true}
+            />
+          </div>
+          
           <button
             onClick={() => generateDemo()}
             disabled={isGenerating}
@@ -493,17 +625,22 @@ export function LandingPageDemo() {
   const [usage, setUsage] = useState<UsageInfo | null>(null)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showSignupModal, setShowSignupModal] = useState(false)
+  const [selectedIndustry, setSelectedIndustry] = useState('random')
   const resultRef = useRef<HTMLDivElement>(null)
 
   const generateDemo = async (hasEmail = false) => {
     setIsGenerating(true)
     setError(null)
     
+    // Get the industry from the selection
+    const industryOption = INDUSTRY_OPTIONS.find(o => o.id === selectedIndustry)
+    const industry = industryOption?.industry || ''
+    
     try {
       const response = await fetch('/api/demo/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: 'social-pack', hasEmail })
+        body: JSON.stringify({ contentType: 'social-pack', hasEmail, industry })
       })
       
       const data = await response.json()
@@ -557,9 +694,15 @@ export function LandingPageDemo() {
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
             Watch AI Create Content in Real-Time
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Click the button below and watch GeoSpark generate a complete social media pack — 6 platform-optimized posts in seconds.
+          <p className="text-xl text-gray-600 mb-6">
+            Select your industry and watch GeoSpark generate a complete social media pack — 6 platform-optimized posts in seconds.
           </p>
+          
+          {/* Industry Selector */}
+          <IndustrySelector 
+            selected={selectedIndustry} 
+            onSelect={setSelectedIndustry}
+          />
           
           <button
             onClick={() => generateDemo()}
