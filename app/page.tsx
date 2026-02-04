@@ -40,7 +40,7 @@ export default function HomePage() {
               href="/auth/signup" 
               className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              Start Free Trial
+              Start Sparking
             </Link>
           </div>
 
@@ -56,7 +56,7 @@ export default function HomePage() {
               href="/auth/signup" 
               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              Start Free
+              Start Sparking
             </Link>
           </div>
         </nav>
@@ -65,26 +65,22 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 pt-16 md:pt-24 pb-16 md:pb-24">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-teal-50 text-teal-700 px-4 py-2 rounded-full text-sm font-medium mb-8">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            AI-Powered Local Content Marketing
-          </div>
-
+          {/* Brand Tagline */}
+          <p className="text-teal-600 font-semibold tracking-wide mb-4">Click. Spark. Post.</p>
+          
           {/* Headline */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Dominate Your Local Market with{' '}
+            One Idea. Under 2 Minutes.{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-teal-600">
-              AI for Local SEO
+              6 Platforms Ready.
             </span>
           </h1>
           
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-            Generate hyper-targeted, <strong>localized content</strong> — including SEO articles, social posts, and website copy — 
-            that resonates with your community. Drive local engagement and <strong>improve local search rankings</strong> with our powerful AI local content writer.
+            Stop spending hours on social media. Describe what you want to share, and GeoSpark creates 
+            <strong> platform-perfect posts</strong> for Twitter, Facebook, Instagram, LinkedIn, TikTok, and Nextdoor — 
+            complete with <strong>AI-generated images</strong>.
           </p>
 
           {/* CTA Buttons */}
@@ -96,13 +92,13 @@ export default function HomePage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Start Your Free 14-Day Trial
+              Start Sparking — Free 14-Day Trial
             </Link>
             <Link 
-              href="#how-it-works" 
+              href="#examples" 
               className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-teal-300 text-gray-700 px-8 py-4 rounded-xl text-lg font-medium transition-colors"
             >
-              See How It Works
+              Watch the Live Demo
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
@@ -121,7 +117,7 @@ export default function HomePage() {
               <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Setup in 5 minutes
+              Content ready in under 2 minutes
             </div>
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
@@ -235,10 +231,10 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center mb-16">
             <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">How It Works</span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
-              From Zero to Local Hero in 5 Steps
+              Describe It Once. We Handle the Rest.
             </h2>
             <p className="text-xl text-gray-600">
-              Start generating professional, locally-relevant content in minutes — no marketing experience needed.
+              One idea becomes 6 platform-ready posts with AI-generated images — all in under 2 minutes.
             </p>
           </div>
 
@@ -546,7 +542,7 @@ export default function HomePage() {
                 href="/auth/signup" 
                 className="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                Get Started Free
+                Start Sparking Free
               </Link>
             </div>
 
@@ -790,7 +786,7 @@ export default function HomePage() {
             href="/auth/signup" 
             className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
           >
-            Start Your Free 14-Day Trial
+            Start Sparking — It's Free
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
