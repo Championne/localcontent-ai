@@ -281,18 +281,22 @@ https://geospark.app
 
     // If this is an existing lead, log as activity
     if (existingLead) {
-      await supabase.from('activities').insert({
-        lead_id: existingLead.id,
-        type: 'email',
-        subject: `Contact form: ${subject || 'General Inquiry'}`,
-        description: `${name} submitted a contact form inquiry`,
-        outcome: 'received',
-        metadata: {
-          source: 'contact_form',
-          submission_id: contactSubmission?.id,
-          message_preview: message.substring(0, 200)
-        }
-      }).catch(() => {}) // Don't fail if activities table doesn't exist
+      try {
+        await supabase.from('activities').insert({
+          lead_id: existingLead.id,
+          type: 'email',
+          subject: `Contact form: ${subject || 'General Inquiry'}`,
+          description: `${name} submitted a contact form inquiry`,
+          outcome: 'received',
+          metadata: {
+            source: 'contact_form',
+            submission_id: contactSubmission?.id,
+            message_preview: message.substring(0, 200)
+          }
+        })
+      } catch {
+        // Don't fail if activities table doesn't exist
+      }
     }
 
     return NextResponse.json({
