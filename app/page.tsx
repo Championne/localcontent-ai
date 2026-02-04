@@ -166,24 +166,33 @@ export default function HomePage() {
                 step: '1',
                 title: 'Describe Your Idea',
                 description: 'Tell us what you want to share — a promotion, an event, or any topic. Just type a sentence or two.',
-                icon: '💡'
+                icon: '💡',
+                useLogo: false
               },
               {
                 step: '2',
                 title: 'AI Creates Your Pack',
                 description: 'Our AI instantly generates 6 platform-optimized posts plus a matching image — all tailored to your business.',
-                icon: '✨'
+                icon: '✨',
+                useLogo: true
               },
               {
                 step: '3',
                 title: 'Review & Post',
                 description: 'Edit if needed, then copy to your social platforms or schedule for later. Done in under 2 minutes.',
-                icon: '🚀'
+                icon: '🚀',
+                useLogo: false
               }
             ].map((item) => (
               <div key={item.step} className="relative text-center">
                 <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 h-full">
-                  <div className="text-5xl mb-6">{item.icon}</div>
+                  <div className="mb-6 flex justify-center">
+                    {item.useLogo ? (
+                      <Image src="/favicon-512.png" alt="GeoSpark" width={56} height={56} className="h-14 w-14" />
+                    ) : (
+                      <span className="text-5xl">{item.icon}</span>
+                    )}
+                  </div>
                   <div className="inline-flex items-center justify-center w-10 h-10 bg-teal-100 text-teal-700 rounded-full text-lg font-bold mb-4">
                     {item.step}
                   </div>
