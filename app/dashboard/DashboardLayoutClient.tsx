@@ -125,14 +125,14 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Logo */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center justify-center" onClick={() => setSidebarOpen(false)}>
             <Image 
               src="/logo-geospark.png" 
               alt="GeoSpark" 
-              width={200} 
-              height={60} 
-              className="h-14 w-auto"
+              width={240} 
+              height={80} 
+              className="w-full max-w-[220px] h-auto"
               priority
             />
           </Link>
