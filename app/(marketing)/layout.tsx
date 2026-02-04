@@ -28,6 +28,9 @@ export default function MarketingLayout({
             <Link href='/pricing' className='text-sm text-gray-600 hover:text-teal-600 transition-colors'>
               Pricing
             </Link>
+            <Link href='/blog' className='text-sm text-gray-600 hover:text-teal-600 transition-colors'>
+              Blog
+            </Link>
             <Link href='/about' className='text-sm text-gray-600 hover:text-teal-600 transition-colors'>
               About
             </Link>
@@ -77,6 +80,7 @@ export default function MarketingLayout({
             <div className='flex gap-6 text-sm text-gray-500'>
               <Link href='/demo' className='hover:text-teal-600 transition-colors'>Live Demo</Link>
               <Link href='/pricing' className='hover:text-teal-600 transition-colors'>Pricing</Link>
+              <Link href='/blog' className='hover:text-teal-600 transition-colors'>Blog</Link>
               <Link href='/about' className='hover:text-teal-600 transition-colors'>About</Link>
               <Link href='/contact' className='hover:text-teal-600 transition-colors'>Contact</Link>
             </div>

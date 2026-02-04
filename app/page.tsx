@@ -27,6 +27,9 @@ export default function HomePage() {
             <Link href="#pricing" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               Pricing
             </Link>
+            <Link href="/blog" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
+              Blog
+            </Link>
             <Link href="/about" className="text-sm text-gray-600 hover:text-teal-600 transition-colors">
               About
             </Link>
