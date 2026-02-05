@@ -6,10 +6,11 @@ import fs from 'fs'
 
 const IMAGES_DIR = path.join(process.cwd(), 'public/blog/images')
 
-// POST - Generate image for a blog post
+// POST - Generate or save image for a blog post
+// If `previewUrl` is provided, saves that existing image instead of generating new
 export async function POST(request: NextRequest) {
   try {
-    const { slug, title, style, category } = await request.json()
+    const { slug, title, style, category, previewUrl } = await request.json()
 
     if (!slug || !title) {
       return NextResponse.json({ error: 'slug and title are required' }, { status: 400 })
@@ -36,19 +37,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`Generating ${imageStyle} image for: ${title}`)
+    let imageUrl: string
 
-    // Generate the image using GeoSpark's image generation
-    const result = await generateImage({
-      topic: title,
-      businessName: 'GeoSpark',
-      industry: 'local business marketing',
-      style: imageStyle,
-      contentType: 'blog-post' // This gives us landscape 1792x1024
-    })
+    // If previewUrl is provided, use that instead of generating new
+    if (previewUrl) {
+      console.log(`Saving existing preview image for: ${title} (${imageStyle})`)
+      imageUrl = previewUrl
+    } else {
+      console.log(`Generating ${imageStyle} image for: ${title}`)
+
+      // Generate the image using GeoSpark's image generation
+      const result = await generateImage({
+        topic: title,
+        businessName: 'GeoSpark',
+        industry: 'local business marketing',
+        style: imageStyle,
+        contentType: 'blog-post' // This gives us landscape 1792x1024
+      })
+      imageUrl = result.url
+    }
 
     // Download the image
-    const imageResponse = await fetch(result.url)
+    const imageResponse = await fetch(imageUrl)
     const imageBuffer = await imageResponse.arrayBuffer()
     
     // Ensure directory exists
@@ -63,8 +73,7 @@ export async function POST(request: NextRequest) {
       slug,
       style: imageStyle,
       styleName: IMAGE_STYLES[imageStyle].name,
-      imagePath: `/blog/images/${slug}.webp`,
-      revisedPrompt: result.revisedPrompt
+      imagePath: `/blog/images/${slug}.webp`
     })
   } catch (error) {
     console.error('Blog image generation error:', error)

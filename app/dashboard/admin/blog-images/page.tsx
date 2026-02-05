@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 interface BlogPost {
   slug: string
@@ -9,6 +10,18 @@ interface BlogPost {
   hasImage: boolean
   imagePath: string | null
   imageStyle?: string
+}
+
+interface BlogPostFull {
+  slug: string
+  title: string
+  excerpt: string
+  content: string
+  category: string
+  publishedAt: string
+  readingTime: number
+  keywords: string[]
+  image: string | null
 }
 
 interface Stats {
@@ -50,15 +63,38 @@ export default function BlogImagesAdmin() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState<string | null>(null)
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
+  const [fullPost, setFullPost] = useState<BlogPostFull | null>(null)
   const [previews, setPreviews] = useState<Preview[]>([])
   const [previewLoading, setPreviewLoading] = useState(false)
   const [filter, setFilter] = useState<'all' | 'missing' | 'has'>('all')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list')
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPosts()
   }, [])
+
+  // Fetch full post content when selected
+  useEffect(() => {
+    if (selectedPost && viewMode === 'detail') {
+      fetchFullPost(selectedPost.slug)
+      // Set initial preview image
+      setPreviewImage(selectedPost.imagePath)
+    }
+  }, [selectedPost, viewMode])
+
+  async function fetchFullPost(slug: string) {
+    try {
+      const res = await fetch(`/api/admin/blog-images/${slug}`)
+      const data = await res.json()
+      if (data.success) {
+        setFullPost(data.post)
+      }
+    } catch (error) {
+      console.error('Failed to fetch full post:', error)
+    }
+  }
 
   async function fetchPosts() {
     try {
@@ -106,8 +142,16 @@ export default function BlogImagesAdmin() {
     }
   }
 
-  async function selectAndSaveImage(style: string) {
+  async function selectAndSaveImage(style: string, previewUrl?: string) {
     if (!selectedPost) return
+    
+    // Find the preview URL if not provided
+    const url = previewUrl || previews.find(p => p.style === style)?.url
+    
+    if (!url) {
+      setMessage({ type: 'error', text: 'No preview image found. Please generate previews first.' })
+      return
+    }
     
     setGenerating(selectedPost.slug)
     setMessage(null)
@@ -120,7 +164,8 @@ export default function BlogImagesAdmin() {
           slug: selectedPost.slug,
           title: selectedPost.title,
           style,
-          category: selectedPost.category
+          category: selectedPost.category,
+          previewUrl: url  // Pass the already-generated preview URL
         })
       })
       
@@ -130,14 +175,19 @@ export default function BlogImagesAdmin() {
         // Store the style
         setStoredStyle(selectedPost.slug, style)
         
+        const newImagePath = data.imagePath + '?t=' + Date.now()
+        
         setMessage({ type: 'success', text: `Saved ${STYLES.find(s => s.id === style)?.name} image for "${selectedPost.title}"` })
         
         // Update the post in the list
         setPosts(prev => prev.map(p => 
           p.slug === selectedPost.slug 
-            ? { ...p, hasImage: true, imagePath: data.imagePath + '?t=' + Date.now(), imageStyle: style }
+            ? { ...p, hasImage: true, imagePath: newImagePath, imageStyle: style }
             : p
         ))
+        
+        // Update preview image in article preview
+        setPreviewImage(newImagePath)
         
         if (stats && !selectedPost.hasImage) {
           setStats({
@@ -147,10 +197,9 @@ export default function BlogImagesAdmin() {
           })
         }
         
-        // Go back to list
-        setViewMode('list')
-        setSelectedPost(null)
-        setPreviews([])
+        // Update selectedPost with new image info (don't go back to list)
+        setSelectedPost(prev => prev ? { ...prev, hasImage: true, imagePath: newImagePath, imageStyle: style } : null)
+        
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to save image' })
       }
@@ -209,14 +258,14 @@ export default function BlogImagesAdmin() {
     )
   }
 
-  // Detail View - Generate & Select from 4 styles
+  // Detail View - Generate & Select from 4 styles + Article Preview
   if (viewMode === 'detail' && selectedPost) {
     return (
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => { setViewMode('list'); setSelectedPost(null); setPreviews([]) }}
+            onClick={() => { setViewMode('list'); setSelectedPost(null); setPreviews([]); setFullPost(null); setPreviewImage(null) }}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,37 +277,61 @@ export default function BlogImagesAdmin() {
           <p className="text-gray-500 mt-1">{selectedPost.category} • {selectedPost.slug}</p>
         </div>
 
-        {/* Current Image */}
-        {selectedPost.hasImage && (
-          <div className="mb-8 bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="font-semibold text-gray-700 mb-3">Current Image</h3>
-            <div className="flex gap-4 items-start">
-              <img 
-                src={selectedPost.imagePath || ''} 
-                alt="" 
-                className="w-64 h-40 object-cover rounded-lg"
-              />
-              <div>
-                {selectedPost.imageStyle && (
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm ${getStyleInfo(selectedPost.imageStyle)?.color}`}>
-                    {getStyleInfo(selectedPost.imageStyle)?.name} Style
-                  </span>
-                )}
-                <button
-                  onClick={() => deleteImage(selectedPost)}
-                  className="block mt-3 text-red-600 hover:text-red-700 text-sm"
-                >
-                  Delete Current Image
-                </button>
-              </div>
-            </div>
+        {/* Message */}
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+            {message.text}
           </div>
         )}
 
+        {/* Current Image & Controls */}
+        <div className="mb-8 bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-700">Current Image</h3>
+            {selectedPost.hasImage && (
+              <button
+                onClick={() => deleteImage(selectedPost)}
+                className="text-red-600 hover:text-red-700 text-sm"
+              >
+                Delete Image
+              </button>
+            )}
+          </div>
+          <div className="flex gap-4 items-start">
+            <div className="w-80 h-48 bg-gray-100 rounded-lg overflow-hidden">
+              {selectedPost.imagePath ? (
+                <img 
+                  src={selectedPost.imagePath} 
+                  alt="" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div>
+              {selectedPost.imageStyle && (
+                <span className={`inline-block px-3 py-1 rounded-full text-sm ${getStyleInfo(selectedPost.imageStyle)?.color}`}>
+                  {getStyleInfo(selectedPost.imageStyle)?.name} Style
+                </span>
+              )}
+              {!selectedPost.hasImage && (
+                <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                  No Image Yet
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Generate All 4 Styles */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
           <h3 className="font-semibold text-gray-900 mb-2">Generate New Images</h3>
-          <p className="text-gray-500 text-sm mb-6">Generate all 4 styles at once, then pick the one you like best.</p>
+          <p className="text-gray-500 text-sm mb-6">Generate all 4 styles at once, then pick the one you like best. Click &quot;Preview&quot; to see how it looks in the article.</p>
 
           {previewLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -270,10 +343,11 @@ export default function BlogImagesAdmin() {
             <div className="grid grid-cols-2 gap-6">
               {previews.map((preview, idx) => {
                 const styleInfo = getStyleInfo(preview.style)
+                const isSelectedForPreview = previewImage === preview.url
                 return (
                   <div 
                     key={idx} 
-                    className={`border-2 rounded-xl overflow-hidden transition-all hover:shadow-lg ${styleInfo?.borderColor || 'border-gray-200'}`}
+                    className={`border-2 rounded-xl overflow-hidden transition-all hover:shadow-lg ${isSelectedForPreview ? 'ring-4 ring-teal-400' : ''} ${styleInfo?.borderColor || 'border-gray-200'}`}
                   >
                     <div className="aspect-video bg-gray-100">
                       {preview.url ? (
@@ -293,13 +367,21 @@ export default function BlogImagesAdmin() {
                           <p className="text-xs text-gray-500 mt-1">{styleInfo?.description}</p>
                         </div>
                         {preview.url && (
-                          <button
-                            onClick={() => selectAndSaveImage(preview.style)}
-                            disabled={generating === selectedPost.slug}
-                            className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
-                          >
-                            {generating === selectedPost.slug ? 'Saving...' : 'Use This Image'}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setPreviewImage(preview.url)}
+                              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isSelectedForPreview ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            >
+                              {isSelectedForPreview ? 'Previewing' : 'Preview'}
+                            </button>
+                            <button
+                              onClick={() => selectAndSaveImage(preview.style, preview.url)}
+                              disabled={generating === selectedPost.slug}
+                              className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                            >
+                              {generating === selectedPost.slug ? 'Saving...' : 'Use This'}
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -328,6 +410,97 @@ export default function BlogImagesAdmin() {
               <p className="text-sm text-gray-400 mt-3">~$0.32 for 4 landscape images</p>
             </div>
           )}
+        </div>
+
+        {/* Article Preview */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">Article Preview</h3>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500">Preview image:</span>
+              <select
+                value={previewImage || ''}
+                onChange={(e) => setPreviewImage(e.target.value || null)}
+                className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              >
+                <option value="">No image</option>
+                {selectedPost.imagePath && (
+                  <option value={selectedPost.imagePath}>Current saved image</option>
+                )}
+                {previews.filter(p => p.url).map(preview => (
+                  <option key={preview.style} value={preview.url}>
+                    {getStyleInfo(preview.style)?.name} preview
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          {/* Simulated Blog Article */}
+          <article className="bg-white">
+            {/* Hero Image */}
+            {previewImage && (
+              <div className="w-full h-64 md:h-80 overflow-hidden">
+                <img 
+                  src={previewImage} 
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
+            {/* Article Header */}
+            <header className="py-10 px-6 border-b border-gray-100">
+              <div className="max-w-3xl mx-auto">
+                <span className="inline-block px-3 py-1 bg-teal-100 text-teal-700 text-sm font-medium rounded-full mb-4">
+                  {selectedPost.category}
+                </span>
+                
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                  {selectedPost.title}
+                </h1>
+                
+                <div className="flex flex-wrap items-center gap-4 mt-6 text-gray-500 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                      GS
+                    </div>
+                    <span>GeoSpark Team</span>
+                  </div>
+                  <span>•</span>
+                  <span>{fullPost ? new Date(fullPost.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Loading...'}</span>
+                  <span>•</span>
+                  <span>{fullPost?.readingTime || '...'} min read</span>
+                </div>
+              </div>
+            </header>
+
+            {/* Content Preview */}
+            <div className="max-w-3xl mx-auto px-6 py-12">
+              {fullPost ? (
+                <div className="prose prose-lg prose-gray max-w-none 
+                  prose-headings:font-bold prose-headings:text-gray-900 
+                  prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:border-b prose-h2:border-gray-100 prose-h2:pb-2
+                  prose-h3:text-xl prose-h3:mt-8
+                  prose-p:text-gray-600 prose-p:leading-relaxed
+                  prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-gray-900
+                  prose-ul:my-4 prose-li:text-gray-600
+                  prose-blockquote:border-l-teal-500 prose-blockquote:bg-teal-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
+                ">
+                  <ReactMarkdown>{fullPost.content}</ReactMarkdown>
+                </div>
+              ) : (
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              )}
+            </div>
+          </article>
         </div>
       </div>
     )
