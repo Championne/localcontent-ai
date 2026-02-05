@@ -26,8 +26,30 @@ interface CSVLead {
   tags?: string
 }
 
+interface NormalizedLead {
+  business_name: string
+  contact_name: string
+  contact_email: string | null
+  contact_phone: string | null
+  contact_title: string | null
+  website: string | null
+  city: string | null
+  state: string | null
+  country: string
+  industry: string
+  google_rating: number | null
+  google_reviews_count: number | null
+  google_maps_url: string | null
+  notes: string | null
+  tags: string[] | null
+  source?: string
+  source_details?: Record<string, string>
+  campaign_id?: string | null
+  created_by?: string
+}
+
 // Normalize CSV column names to our schema
-function normalizeLeadData(row: CSVLead): Record<string, unknown> {
+function normalizeLeadData(row: CSVLead): NormalizedLead {
   return {
     business_name: row.business_name || row.company_name || row.name || 'Unknown',
     contact_name: row.contact_name || (row.first_name && row.last_name ? `${row.first_name} ${row.last_name}` : row.first_name || ''),
@@ -65,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Normalize all leads
-    const normalizedLeads = leads.map(lead => ({
+    const normalizedLeads: NormalizedLead[] = leads.map(lead => ({
       ...normalizeLeadData(lead),
       source,
       source_details: { imported_at: new Date().toISOString() },
