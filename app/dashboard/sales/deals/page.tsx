@@ -17,7 +17,7 @@ export default function DealsPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState<CreateDeal>({ deal_name: '', salesperson_id: '', plan: 'starter', mrr_value: 69 })
+  const [form, setForm] = useState<CreateDeal>({ deal_name: '', salesperson_id: '', plan: 'starter', mrr_value: 29 })
 
   useEffect(() => {
     Promise.all([
@@ -31,7 +31,7 @@ export default function DealsPage() {
     e.preventDefault()
     await fetch('/api/sales/deals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
     setShowModal(false)
-    setForm({ deal_name: '', salesperson_id: '', plan: 'starter', mrr_value: 69 })
+    setForm({ deal_name: '', salesperson_id: '', plan: 'starter', mrr_value: 29 })
     const res = await fetch('/api/sales/deals')
     setDeals((await res.json()).data || [])
   }
@@ -90,7 +90,7 @@ export default function DealsPage() {
               <div><label className="block text-sm font-medium mb-1">Deal Name *</label><input className="w-full border rounded-lg p-2" value={form.deal_name} onChange={e => setForm({...form, deal_name: e.target.value})} required /></div>
               <div><label className="block text-sm font-medium mb-1">Salesperson *</label><select className="w-full border rounded-lg p-2" value={form.salesperson_id} onChange={e => setForm({...form, salesperson_id: e.target.value})} required><option value="">Select...</option>{team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-sm font-medium mb-1">Plan</label><select className="w-full border rounded-lg p-2" value={form.plan} onChange={e => { const p = e.target.value as keyof typeof PLAN_PRICING; setForm({...form, plan: p, mrr_value: PLAN_PRICING[p].monthly}) }}><option value="starter">Starter ($69)</option><option value="growth">Growth ($129)</option><option value="pro">Pro ($249)</option><option value="enterprise">Enterprise ($499)</option></select></div>
+                <div><label className="block text-sm font-medium mb-1">Plan</label><select className="w-full border rounded-lg p-2" value={form.plan} onChange={e => { const p = e.target.value as keyof typeof PLAN_PRICING; setForm({...form, plan: p, mrr_value: PLAN_PRICING[p].monthly}) }}><option value="starter">Starter ($29)</option><option value="growth">Growth ($49)</option><option value="pro">Pro ($79)</option><option value="premium">Premium ($179)</option><option value="enterprise">Enterprise ($499)</option></select></div>
                 <div><label className="block text-sm font-medium mb-1">MRR Value</label><input type="number" className="w-full border rounded-lg p-2" value={form.mrr_value} onChange={e => setForm({...form, mrr_value: parseFloat(e.target.value)||0})} /></div>
               </div>
               <div className="flex gap-3 pt-4"><button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button><button type="submit" className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg">Add Deal</button></div>

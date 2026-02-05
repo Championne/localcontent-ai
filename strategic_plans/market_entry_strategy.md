@@ -63,8 +63,8 @@ This document outlines the refined market entry strategy for LocalContent.ai, in
 ### Pricing (US)
 | Tier | Price | Target |
 |------|-------|--------|
-| Starter | $69/mo | Single-location, new to digital |
-| Growth | $129/mo | Established, 1-3 locations |
+| Starter | $29/mo | Single-location, new to digital |
+| Growth | $49/mo | Established, ready to scale |
 | Pro | $199/mo | Multi-location, advanced needs |
 | Enterprise | Custom | Franchises, 10+ locations |
 

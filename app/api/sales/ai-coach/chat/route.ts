@@ -13,14 +13,15 @@ WHAT WE DO:
 AI-powered social media content creation for local businesses. We write and schedule engaging posts that highlight their services and local area.
 
 PRICING PLANS:
-| Plan | Price | Posts | Locations | Best For |
-|------|-------|-------|-----------|----------|
-| Starter | $69/mo | 10/month | 1 | Solo businesses just starting |
-| Growth | $129/mo | 30/month | 3 | Growing businesses, multiple services |
-| Pro | $249/mo | Unlimited | 10 | Agencies, franchises |
+| Plan | Price | Content/mo | Locations | Best For |
+|------|-------|------------|-----------|----------|
+| Starter | $29/mo | 30 | 1 | Solo businesses just starting |
+| Growth | $49/mo | 60 | 1 | Businesses ready to scale (Most Popular) |
+| Pro | $79/mo | 100 | 3 | Growing businesses, multiple locations |
+| Premium | $179/mo | Unlimited | 10 | Agencies, multi-location |
 | Enterprise | $499/mo | Custom | Unlimited | Large organizations |
 
-Annual discount: ~15% off (2 months free)
+Annual discount: ~20% off
 
 KEY FEATURES:
 - AI writes posts in their brand voice

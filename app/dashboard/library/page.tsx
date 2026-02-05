@@ -169,7 +169,7 @@ export default function ContentLibraryPage() {
           {filteredContent.map((item) => (
             <div
               key={item.id}
-              onClick={() => router.push(`/dashboard/content/${item.id}`)}
+              onClick={() => router.push(`/dashboard/content?edit=${item.id}`)}
               className='p-4 flex items-center gap-4 hover:bg-muted/50 cursor-pointer transition-colors'
             >
               {/* Thumbnail */}

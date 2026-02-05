@@ -18,6 +18,10 @@ interface ImageOverlayEditorProps {
   onApply: (overlays: OverlayItem[]) => void
   onSkip: () => void
   applying?: boolean
+  /** Upload logo file (e.g. from Settings); returns new public URL or null */
+  onUploadLogo?: (file: File) => Promise<string | null>
+  /** Upload profile photo file; returns new public URL or null */
+  onUploadPhoto?: (file: File) => Promise<string | null>
 }
 
 export default function ImageOverlayEditor({
@@ -26,16 +30,58 @@ export default function ImageOverlayEditor({
   photoUrl,
   onApply,
   onSkip,
-  applying
+  applying,
+  onUploadLogo,
+  onUploadPhoto,
 }: ImageOverlayEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [overlays, setOverlays] = useState<OverlayItem[]>([])
   const [draggingNew, setDraggingNew] = useState<'logo' | 'photo' | null>(null)
   const [draggingExisting, setDraggingExisting] = useState<string | null>(null)
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 })
+  /** URLs set by drag-and-drop upload in this session (used until parent passes them as logoUrl/photoUrl) */
+  const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string | null>(null)
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState<'logo' | 'photo' | null>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const effectiveLogoUrl = logoUrl || uploadedLogoUrl
+  const effectivePhotoUrl = photoUrl || uploadedPhotoUrl
+
+  const handleFileUpload = async (type: 'logo' | 'photo', file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const upload = type === 'logo' ? onUploadLogo : onUploadPhoto
+    if (!upload) return
+    setUploading(type)
+    try {
+      const url = await upload(file)
+      if (url) {
+        if (type === 'logo') setUploadedLogoUrl(url)
+        else setUploadedPhotoUrl(url)
+      }
+    } finally {
+      setUploading(null)
+    }
+  }
+
+  const handleDropOnZone = (type: 'logo' | 'photo', e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const file = e.dataTransfer?.files?.[0]
+    if (file) handleFileUpload(type, file)
+  }
+
+  const handleFileInput = (type: 'logo' | 'photo', e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFileUpload(type, file)
+    e.target.value = ''
+  }
 
   // Handle starting drag from sidebar
   const handleSidebarDragStart = (type: 'logo' | 'photo', e: React.MouseEvent | React.TouchEvent) => {
+    const url = type === 'logo' ? effectiveLogoUrl : effectivePhotoUrl
+    if (!url) return
     e.preventDefault()
     setDraggingNew(type)
     
@@ -91,7 +137,7 @@ export default function ImageOverlayEditor({
         const y = ((clientY - rect.top) / rect.height) * 100
         const scale = draggingNew === 'photo' ? 20 : 15
         
-        const url = draggingNew === 'logo' ? logoUrl : photoUrl
+        const url = draggingNew === 'logo' ? effectiveLogoUrl : effectivePhotoUrl
         if (url) {
           // Check if this type already exists
           const existing = overlays.find(o => o.type === draggingNew)
@@ -163,10 +209,11 @@ export default function ImageOverlayEditor({
       </div>
       
       <div className="flex">
-        {/* Sidebar with draggable items */}
-        <div className="w-24 bg-gray-50 border-r border-gray-200 p-3 flex flex-col gap-3">
-          {logoUrl && (
-            <div className="text-center">
+        {/* Sidebar with draggable items and/or drag-drop upload zones */}
+        <div className="w-28 bg-gray-50 border-r border-gray-200 p-3 flex flex-col gap-4">
+          {/* Logo: show existing or drop zone to upload */}
+          <div className="text-center">
+            {effectiveLogoUrl ? (
               <div
                 onMouseDown={(e) => handleSidebarDragStart('logo', e)}
                 onTouchStart={(e) => handleSidebarDragStart('logo', e)}
@@ -174,15 +221,38 @@ export default function ImageOverlayEditor({
                   hasLogo ? 'border-teal-400 bg-teal-50' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50'
                 }`}
               >
-                <img src={logoUrl} alt="Logo" className="w-full h-full object-contain rounded-lg" />
+                <img src={effectiveLogoUrl} alt="Logo" className="w-full h-full object-contain rounded-lg" />
               </div>
-              <span className="text-[10px] text-gray-500 mt-1 block">Logo</span>
-              {hasLogo && <span className="text-[10px] text-teal-600">✓ Added</span>}
-            </div>
-          )}
-          
-          {photoUrl && (
-            <div className="text-center">
+            ) : onUploadLogo ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-teal-400') }}
+                onDragLeave={(e) => { e.currentTarget.classList.remove('ring-2', 'ring-teal-400') }}
+                onDrop={(e) => handleDropOnZone('logo', e)}
+                onClick={() => logoInputRef.current?.click()}
+                className="w-16 h-16 mx-auto rounded-lg border-2 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/50 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all"
+              >
+                {uploading === 'logo' ? (
+                  <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                ) : (
+                  <>
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
+                    <span className="text-[9px] text-gray-500">Drop or click</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="w-16 h-16 mx-auto rounded-lg border-2 border-dashed border-gray-200 bg-gray-100 flex items-center justify-center">
+                <span className="text-[9px] text-gray-400 text-center">No logo</span>
+              </div>
+            )}
+            <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileInput('logo', e)} />
+            <span className="text-[10px] text-gray-500 mt-1 block">Logo</span>
+            {hasLogo && <span className="text-[10px] text-teal-600">✓ On image</span>}
+          </div>
+
+          {/* Profile photo: show existing or drop zone to upload */}
+          <div className="text-center">
+            {effectivePhotoUrl ? (
               <div
                 onMouseDown={(e) => handleSidebarDragStart('photo', e)}
                 onTouchStart={(e) => handleSidebarDragStart('photo', e)}
@@ -190,15 +260,37 @@ export default function ImageOverlayEditor({
                   hasPhoto ? 'border-teal-400 bg-teal-50' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50'
                 }`}
               >
-                <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
+                <img src={effectivePhotoUrl} alt="Photo" className="w-full h-full object-cover" />
               </div>
-              <span className="text-[10px] text-gray-500 mt-1 block">Photo</span>
-              {hasPhoto && <span className="text-[10px] text-teal-600">✓ Added</span>}
-            </div>
-          )}
-          
-          {!logoUrl && !photoUrl && (
-            <p className="text-xs text-gray-400 text-center">Add logo or photo in Settings</p>
+            ) : onUploadPhoto ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-teal-400') }}
+                onDragLeave={(e) => { e.currentTarget.classList.remove('ring-2', 'ring-teal-400') }}
+                onDrop={(e) => handleDropOnZone('photo', e)}
+                onClick={() => photoInputRef.current?.click()}
+                className="w-16 h-16 mx-auto rounded-full border-2 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/50 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all"
+              >
+                {uploading === 'photo' ? (
+                  <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                ) : (
+                  <>
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    <span className="text-[9px] text-gray-500">Drop or click</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="w-16 h-16 mx-auto rounded-full border-2 border-dashed border-gray-200 bg-gray-100 flex items-center justify-center">
+                <span className="text-[9px] text-gray-400">No photo</span>
+              </div>
+            )}
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileInput('photo', e)} />
+            <span className="text-[10px] text-gray-500 mt-1 block">Photo</span>
+            {hasPhoto && <span className="text-[10px] text-teal-600">✓ On image</span>}
+          </div>
+
+          {!effectiveLogoUrl && !effectivePhotoUrl && !onUploadLogo && !onUploadPhoto && (
+            <p className="text-xs text-gray-400 text-center">Add logo or photo in Settings, or use drop zones above if available.</p>
           )}
         </div>
         
@@ -267,7 +359,7 @@ export default function ImageOverlayEditor({
           {/* Instructions */}
           <p className="text-xs text-gray-400 text-center mt-2">
             {overlays.length === 0 
-              ? 'Drag logo or photo from the left onto the image' 
+              ? (effectiveLogoUrl || effectivePhotoUrl) ? 'Drag logo or photo from the left onto the image' : 'Upload a logo or photo on the left, then drag onto the image'
               : 'Drag to reposition • Hover for size controls'}
           </p>
         </div>
@@ -301,7 +393,7 @@ export default function ImageOverlayEditor({
       </div>
       
       {/* Drag preview */}
-      {draggingNew && (
+      {draggingNew && (effectiveLogoUrl || effectivePhotoUrl) && (
         <div 
           className="fixed pointer-events-none z-50 opacity-70"
           style={{ 
@@ -312,7 +404,7 @@ export default function ImageOverlayEditor({
           }}
         >
           <img 
-            src={draggingNew === 'logo' ? logoUrl! : photoUrl!} 
+            src={draggingNew === 'logo' ? effectiveLogoUrl! : effectivePhotoUrl!} 
             alt="" 
             className={`w-full h-full object-${draggingNew === 'photo' ? 'cover' : 'contain'} ${draggingNew === 'photo' ? 'rounded-full' : 'rounded-lg'} shadow-xl`}
           />

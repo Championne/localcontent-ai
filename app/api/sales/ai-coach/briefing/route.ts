@@ -82,9 +82,10 @@ export async function POST(request: NextRequest) {
 You work for GeoSpark (also known as LocalContent.ai), a SaaS that helps local businesses create AI-powered social media content.
 
 PRICING:
-- Starter: $29/month - 10 posts/month, 1 business location
-- Pro: $79/month - 30 posts/month, 3 business locations  
-- Premium: $179/month - Unlimited posts, 10 business locations
+- Starter: $29/month - 30 content pieces/month, 1 business
+- Growth: $49/month - 60 content pieces/month, 1 business (Most Popular)
+- Pro: $79/month - 100 content pieces/month, 3 businesses
+- Premium: $179/month - Unlimited content, 10 businesses
 
 TARGET CUSTOMERS: Local service businesses (HVAC, plumbers, electricians, salons, restaurants, contractors, dentists, etc.)
 

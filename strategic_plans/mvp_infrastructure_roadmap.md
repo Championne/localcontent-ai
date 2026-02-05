@@ -540,8 +540,8 @@ Sections:
    - Step 3: Generate & publish
 
 5. Pricing
-   - Starter: $69/mo
-   - Growth: $129/mo (most popular)
+   - Starter: $29/mo
+   - Growth: $49/mo (most popular)
    - Pro: $199/mo
 
 6. FAQ

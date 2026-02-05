@@ -35,7 +35,7 @@ export type DealStage =
   | 'closed_won' 
   | 'closed_lost'
 
-export type PlanType = 'starter' | 'growth' | 'pro' | 'enterprise'
+export type PlanType = 'starter' | 'growth' | 'pro' | 'premium' | 'enterprise'
 export type BillingCycle = 'monthly' | 'annual'
 
 export type ActivityType = 'call' | 'email' | 'meeting' | 'demo' | 'note' | 'task'
@@ -290,9 +290,10 @@ export interface Commission {
 }
 
 export const PLAN_PRICING: Record<PlanType, { monthly: number; annual: number }> = {
-  starter: { monthly: 69, annual: 59 },
-  growth: { monthly: 129, annual: 109 },
-  pro: { monthly: 249, annual: 209 },
+  starter: { monthly: 29, annual: 23 },
+  growth: { monthly: 49, annual: 39 },
+  pro: { monthly: 79, annual: 63 },
+  premium: { monthly: 179, annual: 143 },
   enterprise: { monthly: 499, annual: 449 },
 }
 

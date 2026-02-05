@@ -45,14 +45,35 @@ const tiers = [
     ],
   },
   {
+    name: 'Growth',
+    price: 49,
+    annual: 39,
+    description: 'For businesses ready to scale',
+    cta: 'Start 14-Day Free Trial',
+    ctaLink: '/auth/signup?plan=growth',
+    highlighted: true,
+    badge: 'Most Popular',
+    features: [
+      { text: '1 business', included: true },
+      { text: '60 content pieces/month', included: true },
+      { text: '60 AI images/month', included: true },
+      { text: 'All 6 platforms', included: true },
+      { text: '1 user', included: true },
+      { text: 'All content types', included: true },
+      { text: 'Platform mockup previews', included: true },
+      { text: 'Saved content library', included: true },
+      { text: 'Analytics dashboard', included: true },
+      { text: 'Priority support', included: true },
+    ],
+  },
+  {
     name: 'Pro',
     price: 79,
     annual: 63,
     description: 'For growing businesses with multiple locations',
     cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=pro',
-    highlighted: true,
-    badge: 'Most Popular',
+    highlighted: false,
     features: [
       { text: '3 businesses', included: true },
       { text: '100 content pieces/month', included: true },
@@ -109,7 +130,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
           {tiers.map((tier) => (
             <div
               key={tier.name}

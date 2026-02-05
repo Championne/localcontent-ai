@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import ImageOverlayEditor from '@/components/ImageOverlayEditor'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -241,6 +241,11 @@ export default function CreateContentPage() {
   const [eventDate, setEventDate] = useState('')
   const [eventTime, setEventTime] = useState('')
 
+  // Edit existing content from library (?edit=contentId)
+  const searchParams = useSearchParams()
+  const [editingContentId, setEditingContentId] = useState<string | null>(null)
+  const [loadingEdit, setLoadingEdit] = useState(false)
+
   // Fetch user's businesses on mount
   useEffect(() => {
     async function fetchBusinesses() {
@@ -264,6 +269,49 @@ export default function CreateContentPage() {
     fetchBusinesses()
   }, [])
   
+  // Load content when opening from library (?edit=id)
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (!editId) return
+
+    let cancelled = false
+    setLoadingEdit(true)
+    fetch(`/api/content/${editId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (cancelled || !data.content) return
+        const item = data.content
+        setTopic(item.title || '')
+        setSelectedTemplate((item.template === 'social-pack' || item.template === 'blog-post' || item.template === 'gmb-post' || item.template === 'email') ? item.template : 'social-pack')
+        if (item.template === 'social-pack') {
+          try {
+            const pack = typeof item.content === 'string' ? JSON.parse(item.content) : item.content
+            setSocialPack(pack)
+          } catch {
+            setSocialPack(null)
+          }
+        } else {
+          setGeneratedContent(item.content || '')
+        }
+        const meta = item.metadata || {}
+        if (meta.businessName) setBusinessName(meta.businessName)
+        if (meta.industry) setIndustry(meta.industry)
+        if (meta.tone) setTone(meta.tone)
+        if (meta.image_url) {
+          setGeneratedImage({
+            url: meta.image_url,
+            style: meta.image_style || 'professional',
+            generatedAt: item.updated_at || new Date().toISOString(),
+          })
+        }
+        setEditingContentId(item.id)
+        setStep(3)
+      })
+      .catch(() => { if (!cancelled) setError('Failed to load content') })
+      .finally(() => { if (!cancelled) setLoadingEdit(false) })
+    return () => { cancelled = true }
+  }, [searchParams])
+
   // Update business name/industry when selected business changes
   const handleBusinessChange = (businessId: string) => {
     setSelectedBusinessId(businessId)
@@ -278,6 +326,32 @@ export default function CreateContentPage() {
   const currentBusiness = businesses.find(b => b.id === selectedBusinessId)
   const currentBusinessLogo = currentBusiness?.logo_url || null
   const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
+
+  // Upload logo or profile photo from overlay editor (drag-and-drop or click)
+  const handleUploadLogoInEditor = async (file: File): Promise<string | null> => {
+    if (!selectedBusinessId) return null
+    const formData = new FormData()
+    formData.set('businessId', selectedBusinessId)
+    formData.set('type', 'logo')
+    formData.set('logo', file)
+    const res = await fetch('/api/business/logo', { method: 'POST', body: formData })
+    if (!res.ok) return null
+    const data = await res.json()
+    setBusinesses(prev => prev.map(b => b.id === selectedBusinessId ? { ...b, logo_url: data.url } : b))
+    return data.url
+  }
+  const handleUploadPhotoInEditor = async (file: File): Promise<string | null> => {
+    if (!selectedBusinessId) return null
+    const formData = new FormData()
+    formData.set('businessId', selectedBusinessId)
+    formData.set('type', 'profile_photo')
+    formData.set('profile_photo', file)
+    const res = await fetch('/api/business/logo', { method: 'POST', body: formData })
+    if (!res.ok) return null
+    const data = await res.json()
+    setBusinesses(prev => prev.map(b => b.id === selectedBusinessId ? { ...b, profile_photo_url: data.url } : b))
+    return data.url
+  }
 
   // Calculate expiration date for offers
   
@@ -640,18 +714,22 @@ export default function CreateContentPage() {
         ? JSON.stringify(socialPack) 
         : generatedContent
 
-      const response = await fetch('/api/content', {
-        method: 'POST',
+      const payload = {
+        template: selectedTemplate,
+        title: topic,
+        content,
+        metadata: { businessName, industry, tone, type: selectedTemplate, image_url: generatedImage?.url || null, image_style: generatedImage?.style || null },
+        status: 'draft' as const,
+        image_url: generatedImage?.url || null,
+        image_style: generatedImage?.style || null,
+      }
+
+      const url = editingContentId ? `/api/content/${editingContentId}` : '/api/content'
+      const method = editingContentId ? 'PATCH' : 'POST'
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          template: selectedTemplate,
-          title: topic,
-          content,
-          metadata: { businessName, industry, tone, type: selectedTemplate },
-          status: 'draft',
-          image_url: generatedImage?.url || null,
-          image_style: generatedImage?.style || null,
-        }),
+        body: JSON.stringify(editingContentId ? { title: payload.title, content: payload.content, status: payload.status, metadata: payload.metadata } : payload),
       })
 
       const data = await response.json()
@@ -794,8 +872,14 @@ export default function CreateContentPage() {
         </div>
       )}
 
+      {loadingEdit && (
+        <div className="flex items-center justify-center py-16">
+          <p className="text-gray-500">Loading content...</p>
+        </div>
+      )}
+
       {/* Step 1: Choose Template */}
-      {step === 1 && (
+      {!loadingEdit && step === 1 && (
         <div>
           {/* Inspiring Header */}
           <div className="text-center mb-8">
@@ -879,7 +963,7 @@ export default function CreateContentPage() {
       )}
 
       {/* Step 2: Add Details */}
-      {step === 2 && (
+      {!loadingEdit && step === 2 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us about your {templates.find(t => t.id === selectedTemplate)?.name.toLowerCase() || 'content'}</h2>
           
@@ -1132,7 +1216,7 @@ export default function CreateContentPage() {
       )}
 
       {/* Step 3: Review & Edit - Social Pack */}
-      {step === 3 && selectedTemplate === 'social-pack' && socialPack && (
+      {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div>
           {/* Header with Actions at Top */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
@@ -1244,8 +1328,8 @@ export default function CreateContentPage() {
 
           
 
-          {/* Image Overlay Editor - Drag & Drop Logo/Photo */}
-          {generatedImage && showOverlayEditor && (currentBusinessLogo || currentBusinessPhoto) ? (
+          {/* Image Overlay Editor - Drag & Drop Logo/Photo (or upload here) */}
+          {generatedImage && showOverlayEditor ? (
             <div className="mb-6">
               <ImageOverlayEditor
                 imageUrl={generatedImage.url}
@@ -1254,6 +1338,8 @@ export default function CreateContentPage() {
                 onApply={handleApplyOverlays}
                 onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
                 applying={applyingLogo}
+                onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
+                onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
               />
             </div>
           ) : generatedImage && showTextOverlay ? (
@@ -1295,17 +1381,15 @@ export default function CreateContentPage() {
                     </svg>
                     Add Text
                   </button>
-                  {(currentBusinessLogo || currentBusinessPhoto) && (!logoSkipped || !photoSkipped) && (
-                    <button
-                      onClick={() => setShowOverlayEditor(true)}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1.5"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Add Logo/Photo
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setShowOverlayEditor(true)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Add Logo/Photo
+                  </button>
                   <button
                     onClick={handleDownloadImage}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
@@ -1628,7 +1712,7 @@ export default function CreateContentPage() {
       )}
 
       {/* Step 3: Review & Edit - Regular Content (Blog, GMB, Email) */}
-      {step === 3 && selectedTemplate !== 'social-pack' && (
+      {!loadingEdit && step === 3 && selectedTemplate !== 'social-pack' && (
         <div>
           {/* Header with Actions at Top */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
@@ -1762,8 +1846,23 @@ export default function CreateContentPage() {
             </div>
           )}
 
+          {/* Image Overlay Editor - same as social-pack flow */}
+          {generatedImage && showOverlayEditor && (
+            <div className="mb-6">
+              <ImageOverlayEditor
+                imageUrl={generatedImage.url}
+                logoUrl={currentBusinessLogo}
+                photoUrl={currentBusinessPhoto}
+                onApply={handleApplyOverlays}
+                onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
+                applying={applyingLogo}
+                onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
+                onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
+              />
+            </div>
+          )}
           {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
-          {generatedImage && selectedTemplate !== 'blog-post' && showTextOverlay && (
+          {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && showTextOverlay && (
             <div className="mb-4">
               <ImageTextOverlay
                 imageUrl={generatedImage.url}
@@ -1779,7 +1878,7 @@ export default function CreateContentPage() {
               />
             </div>
           )}
-          {generatedImage && selectedTemplate !== 'blog-post' && !showTextOverlay && (
+          {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && !showTextOverlay && (
             <div className="mb-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1802,6 +1901,15 @@ export default function CreateContentPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Add Text
+                  </button>
+                  <button
+                    onClick={() => setShowOverlayEditor(true)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Add Logo/Photo
                   </button>
                   <button
                     onClick={handleDownloadImage}

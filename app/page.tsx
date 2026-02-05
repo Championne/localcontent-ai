@@ -332,7 +332,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {/* Free Plan */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
@@ -369,13 +369,8 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Starter Plan - Most Popular */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-teal-500 relative scale-105">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
-              </span>
-            </div>
+          {/* Starter Plan */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Starter</h3>
             <p className="text-gray-500 text-sm mb-4 h-10">Perfect for solo business owners</p>
             <div className="mb-1">
@@ -402,6 +397,48 @@ export default function HomePage() {
                 </svg>
                 Saved content library
               </li>
+            </ul>
+            <Link 
+              href="/auth/signup?plan=starter" 
+              className="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            >
+              Start 14-Day Free Trial
+            </Link>
+          </div>
+
+          {/* Growth Plan - Most Popular */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-teal-500 relative scale-105">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                Most Popular
+              </span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Growth</h3>
+            <p className="text-gray-500 text-sm mb-4 h-10">For businesses ready to scale</p>
+            <div className="mb-1">
+              <span className="text-4xl font-bold text-gray-900">$49</span>
+              <span className="text-gray-500">/month</span>
+            </div>
+            <p className="text-sm text-teal-600 font-medium mb-5">$39/mo billed annually</p>
+            <ul className="space-y-3 mb-8 text-gray-600 text-sm">
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                60 content packs/month
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                60 AI images/month
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Analytics dashboard
+              </li>
               <li className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -410,7 +447,7 @@ export default function HomePage() {
               </li>
             </ul>
             <Link 
-              href="/auth/signup?plan=starter" 
+              href="/auth/signup?plan=growth" 
               className="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
             >
               Start 14-Day Free Trial
@@ -454,6 +491,49 @@ export default function HomePage() {
             </ul>
             <Link 
               href="/auth/signup?plan=pro" 
+              className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            >
+              Start 14-Day Free Trial
+            </Link>
+          </div>
+
+          {/* Premium Plan */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Premium</h3>
+            <p className="text-gray-500 text-sm mb-4 h-10">For agencies & multi-location</p>
+            <div className="mb-1">
+              <span className="text-4xl font-bold text-gray-900">$179</span>
+              <span className="text-gray-500">/month</span>
+            </div>
+            <p className="text-sm text-teal-600 font-medium mb-5">$143/mo billed annually</p>
+            <ul className="space-y-3 mb-8 text-gray-600 text-sm">
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Unlimited content
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                10 businesses
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                3 users
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Priority support
+              </li>
+            </ul>
+            <Link 
+              href="/auth/signup?plan=premium" 
               className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
             >
               Start 14-Day Free Trial

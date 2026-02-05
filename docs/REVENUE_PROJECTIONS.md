@@ -36,7 +36,7 @@ Cold email outreach projections based on 9 email accounts at full capacity.
 | Positive replies | 243 |
 | Demos | 97 |
 | **New customers** | **19** |
-| **MRR added** | **$931** |
+| **MRR added** | **$1,121** |
 
 ### Realistic (5% reply, 25% close)
 
@@ -47,7 +47,7 @@ Cold email outreach projections based on 9 email accounts at full capacity.
 | Positive replies | 405 |
 | Demos | 162 |
 | **New customers** | **40** |
-| **MRR added** | **$1,960** |
+| **MRR added** | **$2,360** |
 
 ### Optimistic (8% reply, 30% close)
 
@@ -58,7 +58,7 @@ Cold email outreach projections based on 9 email accounts at full capacity.
 | Positive replies | 648 |
 | Demos | 259 |
 | **New customers** | **78** |
-| **MRR added** | **$3,822** |
+| **MRR added** | **$4,602** |
 
 ---
 
@@ -66,10 +66,10 @@ Cold email outreach projections based on 9 email accounts at full capacity.
 
 | Setup | Daily Emails | Monthly Customers | Monthly MRR Added |
 |-------|--------------|-------------------|-------------------|
-| 9 accounts | 450 | 40 | $1,960 |
-| 18 accounts | 900 | 80 | $3,920 |
-| 45 accounts | 2,250 | 200 | $9,800 |
-| 90 accounts | 4,500 | 400 | $19,600 |
+| 9 accounts | 450 | 40 | $2,360 |
+| 18 accounts | 900 | 80 | $4,720 |
+| 45 accounts | 2,250 | 200 | $11,800 |
+| 90 accounts | 4,500 | 400 | $23,600 |
 
 ---
 
@@ -80,25 +80,25 @@ Assumes gradual scaling of email accounts and 5% monthly churn.
 | Month | Accounts | New Customers | Total Customers | MRR |
 |-------|----------|---------------|-----------------|-----|
 | 1 | 9 | 0 (warmup) | 0 | $0 |
-| 2 | 9 | 20 (ramp) | 20 | $980 |
-| 3 | 9 | 40 | 58 | $2,842 |
-| 4 | 18 | 60 | 113 | $5,537 |
-| 5 | 18 | 80 | 186 | $9,114 |
-| 6 | 27 | 100 | 276 | $13,524 |
-| 7 | 27 | 100 | 363 | $17,787 |
-| 8 | 36 | 120 | 466 | $22,834 |
-| 9 | 36 | 120 | 566 | $27,734 |
-| 10 | 45 | 150 | 690 | $33,810 |
-| 11 | 45 | 150 | 809 | $39,641 |
-| 12 | 45 | 150 | 922 | $45,178 |
+| 2 | 9 | 20 (ramp) | 20 | $1,180 |
+| 3 | 9 | 40 | 58 | $3,422 |
+| 4 | 18 | 60 | 113 | $6,667 |
+| 5 | 18 | 80 | 186 | $10,974 |
+| 6 | 27 | 100 | 276 | $16,284 |
+| 7 | 27 | 100 | 363 | $21,417 |
+| 8 | 36 | 120 | 466 | $27,494 |
+| 9 | 36 | 120 | 566 | $33,394 |
+| 10 | 45 | 150 | 690 | $40,710 |
+| 11 | 45 | 150 | 809 | $47,731 |
+| 12 | 45 | 150 | 922 | $54,398 |
 
 ### Year 1 Summary
 
 | Metric | Value |
 |--------|-------|
 | Total customers | ~920 |
-| Monthly Recurring Revenue | ~$45,000 |
-| Annual Run Rate (ARR) | ~$540,000 |
+| Monthly Recurring Revenue | ~$54,400 |
+| Annual Run Rate (ARR) | ~$653,000 |
 
 ---
 
@@ -122,7 +122,8 @@ Assumes gradual scaling of email accounts and 5% monthly churn.
 | Positive reply rate | 60% of all replies |
 | Demo booking rate | 40% of interested leads |
 | Close rate | 25% of demos |
-| Average plan value | $49/month (Growth plan) |
+| **Pricing tiers** | Starter $29, Growth $49, Pro $79, Premium $179 |
+| **Blended ARPU** | $59/month (typical mix: 30% Starter, 40% Growth, 25% Pro, 5% Premium) |
 | Monthly churn | 5% |
 | Warmup period | 14 days per account |
 
@@ -174,11 +175,11 @@ Assumes gradual scaling of email accounts and 5% monthly churn.
 
 | Metric | Value |
 |--------|-------|
-| Average Revenue Per User (ARPU) | $49/month |
+| Average Revenue Per User (ARPU) | $59/month (blended across 4 tiers) |
 | Customer Acquisition Cost (CAC) | ~$1 |
 | Gross Margin | ~98% (after API costs) |
-| LTV (12-month avg tenure) | $588 |
-| LTV:CAC Ratio | 588:1 |
+| LTV (12-month avg tenure) | $708 |
+| LTV:CAC Ratio | 708:1 |
 
 **Extremely favorable unit economics** - cold email is one of the most cost-effective B2B acquisition channels.
 
@@ -192,10 +193,10 @@ Assumes gradual scaling of email accounts and 5% monthly churn.
 
 | Item | Amount | % |
 |------|--------|---|
-| Customer pays | $60 | 100% |
+| Customer pays (blended avg) | $59 | 100% |
 | API/product cost | -$6 | -10% |
 | Partner commission (40%) | -$24 | -40% |
-| **Your net profit** | **$30** | **50%** |
+| **Your net profit** | **$29** | **~49%** |
 
 Even at 40% commission, you keep **50% profit margin**.
 
@@ -203,31 +204,33 @@ Even at 40% commission, you keep **50% profit margin**.
 
 ### 12-Month Profit Projection (With Partners)
 
+Blended ARPU $59; Commission 40%; API cost ~10%.
+
 | Month | New Customers | Total Customers | Gross Revenue | Commission (40%) | API Cost (10%) | **Net Profit** |
 |-------|---------------|-----------------|---------------|------------------|----------------|----------------|
 | 1 | 0 | 0 | $0 | $0 | $0 | $0 |
-| 2 | 20 | 20 | $1,200 | $480 | $120 | **$600** |
-| 3 | 40 | 58 | $3,480 | $1,392 | $348 | **$1,740** |
-| 4 | 60 | 113 | $6,780 | $2,712 | $678 | **$3,390** |
-| 5 | 80 | 186 | $11,160 | $4,464 | $1,116 | **$5,580** |
-| 6 | 100 | 276 | $16,560 | $6,624 | $1,656 | **$8,280** |
-| 7 | 100 | 363 | $21,780 | $8,712 | $2,178 | **$10,890** |
-| 8 | 120 | 466 | $27,960 | $11,184 | $2,796 | **$13,980** |
-| 9 | 120 | 566 | $33,960 | $13,584 | $3,396 | **$16,980** |
-| 10 | 150 | 690 | $41,400 | $16,560 | $4,140 | **$20,700** |
-| 11 | 150 | 809 | $48,540 | $19,416 | $4,854 | **$24,270** |
-| 12 | 150 | 922 | $55,320 | $22,128 | $5,532 | **$27,660** |
+| 2 | 20 | 20 | $1,180 | $472 | $118 | **$590** |
+| 3 | 40 | 58 | $3,422 | $1,369 | $342 | **$1,711** |
+| 4 | 60 | 113 | $6,667 | $2,667 | $667 | **$3,333** |
+| 5 | 80 | 186 | $10,974 | $4,390 | $1,097 | **$5,487** |
+| 6 | 100 | 276 | $16,284 | $6,514 | $1,628 | **$8,142** |
+| 7 | 100 | 363 | $21,417 | $8,567 | $2,142 | **$10,708** |
+| 8 | 120 | 466 | $27,494 | $10,998 | $2,749 | **$13,747** |
+| 9 | 120 | 566 | $33,394 | $13,358 | $3,339 | **$16,697** |
+| 10 | 150 | 690 | $40,710 | $16,284 | $4,071 | **$20,355** |
+| 11 | 150 | 809 | $47,731 | $19,092 | $4,773 | **$23,866** |
+| 12 | 150 | 922 | $54,398 | $21,759 | $5,440 | **$27,199** |
 
 ### Year 1 Financial Summary
 
 | Metric | Amount |
 |--------|--------|
 | Total customers | ~920 |
-| Gross MRR (Month 12) | $55,320 |
-| Annual gross revenue | ~$268,000 |
-| Partner commissions paid | ~$107,000 |
-| API costs | ~$27,000 |
-| **Net profit Year 1** | **~$134,000** |
+| Gross MRR (Month 12) | $54,398 |
+| Annual gross revenue | ~$327,000 |
+| Partner commissions paid | ~$131,000 |
+| API costs | ~$33,000 |
+| **Net profit Year 1** | **~$163,000** |
 
 ---
 
@@ -261,11 +264,11 @@ Not all partners at 40%. As you scale:
 | Metric | Year 1 | Year 2 | Year 3 |
 |--------|--------|--------|--------|
 | Customers | 920 | 2,500 | 5,000 |
-| Gross MRR | $55K | $150K | $300K |
+| Gross MRR (blended $59) | $54K | $148K | $295K |
 | Commission rate | 40% | 35% | 32% |
-| Commission paid | $22K/mo | $52K/mo | $96K/mo |
-| **Net profit/month** | **$28K** | **$83K** | **$174K** |
-| **Net profit/year** | **$134K** | **$500K** | **$1M+** |
+| Commission paid | $22K/mo | $52K/mo | $94K/mo |
+| **Net profit/month** | **$27K** | **$81K** | **$170K** |
+| **Net profit/year** | **$163K** | **$490K** | **$1M+** |
 
 ---
 
@@ -274,8 +277,8 @@ Not all partners at 40%. As you scale:
 | Scenario | Monthly Revenue (M12) | Commission | Net Profit | Your Time |
 |----------|----------------------|------------|------------|-----------|
 | You alone (no partners) | ~$6,000 | $0 | $5,400 | 50+ hrs/week |
-| With partners (40%) | $55,320 | $22,128 | $27,660 | 10 hrs/week |
-| With partners (blended) | $55,320 | $19,362 | $30,426 | 10 hrs/week |
+| With partners (40%) | $54,398 | $21,759 | $27,199 | 10 hrs/week |
+| With partners (blended 35%) | $54,398 | $19,039 | $30,359 | 10 hrs/week |
 
 **Partners cost 40% commission but deliver 9x revenue and free your time.**
 
@@ -283,18 +286,18 @@ Not all partners at 40%. As you scale:
 
 ### Partner Break-Even Analysis
 
-Partner cost: 40% of revenue
+Partner cost: 40% of revenue. Blended ARPU $59 → your share $35.40/client/month.
 Alternative: Employee at $4,000/month
 
-| Partner Performance | Your Revenue Share | vs. Employee? |
-|---------------------|-------------------|---------------|
-| 10 clients/month | $360/month | ❌ Employee cheaper |
-| 20 clients/month | $720/month | ❌ Employee cheaper |
-| 50 clients/month | $1,800/month | ❌ Employee cheaper |
-| 70 clients/month | $2,520/month | ✅ Partner cheaper |
-| 100 clients/month | $3,600/month | ✅ Partner much cheaper |
+| Partner Performance | Your Revenue Share (60%) | vs. Employee? |
+|---------------------|--------------------------|---------------|
+| 10 clients/month | $354/month | ❌ Employee cheaper |
+| 20 clients/month | $708/month | ❌ Employee cheaper |
+| 50 clients/month | $1,770/month | ❌ Employee cheaper |
+| 70 clients/month | $2,478/month | ✅ Partner cheaper |
+| 100 clients/month | $3,540/month | ✅ Partner much cheaper |
 
-**Break-even: ~67 clients/month per partner**
+**Break-even: ~113 clients/month per partner at $4K employee cost**
 **Key advantage: Partners cost $0 if they close 0 deals.**
 
 ---

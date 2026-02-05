@@ -12,7 +12,7 @@ The Impact Analytics Dashboard is a **P0 priority** feature that addresses the #
 ## 1. Core Concept
 
 ### The Problem
-- Clients pay $69-199/month but can't see ROI
+- Clients pay $29-179/month but can't see ROI
 - They question "is this actually working?"
 - Partners/accountants ask for proof of value
 - Without visible results, churn risk increases

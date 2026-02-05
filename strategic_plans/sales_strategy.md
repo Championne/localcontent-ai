@@ -182,7 +182,7 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 
 ### **Tiered Pricing Strategy Based on Business Sophistication**
 
-#### **🌱 Starter Plan - $69/month**
+#### **🌱 Starter Plan - $29/month**
 *Perfect for: Single-location service businesses new to digital marketing*
 
 **Content Allocation:**
@@ -201,7 +201,7 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 **Target Customer:** "Busy Sarah" - salon owner who needs basics covered consistently
 **Value Justification:** Replaces $300/month part-time marketing help or $150/month freelancer
 
-#### **🚀 Growth Plan - $129/month** *(MOST POPULAR)*
+#### **🚀 Growth Plan - $49/month** *(MOST POPULAR)*
 *Perfect for: Established businesses ready to dominate local market*
 
 **Content Allocation:**
@@ -223,8 +223,8 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 **Target Customer:** "Growth-Focused Mike" - restaurant owner expanding to second location
 **Value Justification:** Replaces $800/month marketing agency retainer or $500/month in-house marketing person
 
-#### **💎 Pro Plan - $249/month**
-*Perfect for: Market leaders who want enterprise-level marketing intelligence*
+#### **💎 Pro Plan - $79/month**
+*Perfect for: Growing businesses and multiple locations*
 
 **Content Allocation:**
 - Unlimited blog posts and social media content
@@ -247,6 +247,9 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 **Target Customer:** Multi-location businesses, franchisees, market leaders
 **Value Justification:** Replaces $2,000/month full-service marketing agency
 
+#### **💎 Premium Plan - $179/month**
+*Perfect for: Agencies and multi-location businesses*
+
 #### **🏢 Enterprise Plan - Custom Pricing (Starting $499/month)**
 *Perfect for: Franchise networks, multi-location chains, agency partners*
 
@@ -263,9 +266,9 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 ### **Psychological Pricing Optimization**
 
 #### **Anchoring Strategy:**
-- Lead with Pro Plan ($249) in marketing materials to make Growth Plan ($129) seem like great value
+- Lead with Pro/Premium ($79-$179) in marketing materials to make Growth ($49) seem like great value
 - Compare against hiring marketing agency ($2,000+/month) to make all plans seem affordable
-- Emphasize "cost per piece of content" (Growth Plan = $0.86 per piece vs. $25-50 freelancer)
+- Emphasize "cost per piece of content" (Growth = ~$0.82 per piece vs. $25-50 freelancer)
 
 #### **Payment Psychology:**
 - **Annual Discount:** 20% off (positions annual as "smart business decision")
@@ -431,7 +434,7 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 *"The whole point is you DON'T need time. Setup takes 5 minutes - connect your social accounts, tell us your business type and location, done. The AI handles everything else. Your content gets posted automatically, you just watch the engagement and customers roll in. Most owners spend less time thinking about marketing after LocalContent.ai than they did stressing about it before."*
 
 #### **"This seems expensive for my small business"**
-*"Let's put this in perspective. LocalContent.ai costs $129/month. A part-time marketing person costs $1,200/month. A marketing agency costs $2,000/month. We generate more content than either option, and it's optimized specifically for local businesses like yours. Plus, most customers see the cost pay for itself within 30 days through new customer inquiries."*
+*"Let's put this in perspective. GeoSpark costs from $29-179/month depending on your needs. A part-time marketing person costs $1,200/month. A marketing agency costs $2,000/month. We generate more content than either option, and it's optimized specifically for local businesses like yours. Plus, most customers see the cost pay for itself within 30 days through new customer inquiries."*
 
 #### **"How do I know this will work for my industry?"**
 *"We've already got [X number] of [their industry] businesses using LocalContent.ai with an average of [X]% increase in customer inquiries. Here's a case study from [similar business in nearby city]. But honestly, the best way to know is try it - our 14-day free trial includes real content generation for your business. You'll see exactly how it works for your industry before spending a penny."*
@@ -470,7 +473,7 @@ LocalContent.ai transforms local businesses into content marketing powerhouses t
 **Our Advantage:** "Enterprise-level results at small business prices"
 
 **Differentiation Messages:**
-- *"Marketing agencies charge $2,000/month for 10 pieces of content. We give you 150+ pieces for $129/month."*
+- *"Marketing agencies charge $2,000/month for 10 pieces of content. We give you 60-150+ pieces for $49-79/month."*
 - *"Agencies take weeks to understand your business. Our AI understands your industry and location in minutes."*
 - *"Fire your expensive agency and hire an AI that works 24/7, knows your neighborhood, and costs 90% less."*
 

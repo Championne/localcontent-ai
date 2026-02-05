@@ -9,7 +9,7 @@
 
 | Document | Description | Size |
 |----------|-------------|------|
-| [sales_strategy.md](./sales_strategy.md) | **Comprehensive Sales Strategy** - Target segments, pricing ($69-$499), value propositions, competitor differentiation, 12-month implementation roadmap | 65KB |
+| [sales_strategy.md](./sales_strategy.md) | **Comprehensive Sales Strategy** - Target segments, pricing ($29-$179 + Enterprise), value propositions, competitor differentiation, 12-month implementation roadmap | 65KB |
 | [market_entry_strategy.md](./market_entry_strategy.md) | **Market Entry Plan** - US → Netherlands → UK expansion strategy with detailed go-to-market plans | 20KB |
 | [mvp_infrastructure_roadmap.md](./mvp_infrastructure_roadmap.md) | **MVP Development Roadmap** - Technical implementation phases, priorities | 36KB |
 | [services_roadmap.md](./services_roadmap.md) | **Services Roadmap** - P0-P3 prioritized features (Impact Analytics, GMB Automation, etc.) | 23KB |
@@ -59,7 +59,7 @@ From the sales strategy:
 |--------|--------|
 | **Revenue Goal** | $20,000 MRR by Month 12 |
 | **Customers** | 190+ by Month 12 |
-| **Pricing Tiers** | Starter $69, Growth $129, Pro $249, Enterprise $499+ |
+| **Pricing Tiers** | Starter $29, Growth $49, Pro $79, Premium $179, Enterprise $499+ |
 | **Primary Market** | US (45%), then NL, UK |
 | **Target Segments** | Service businesses (45%), Restaurants (30%), Retail (15%), Professional (10%) |
 

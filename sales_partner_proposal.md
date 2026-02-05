@@ -11,6 +11,7 @@ Our AI writes and schedules engaging posts about their services, local events, a
 | Plan | Price | Target Customer |
 |------|-------|-----------------|
 | Starter | $29/mo | Solo businesses |
+| Growth | $49/mo | Businesses ready to scale *(Most Popular)* |
 | Pro | $79/mo | Growing businesses, multiple locations |
 | Premium | $179/mo | Agencies, multi-location businesses |
 
@@ -25,7 +26,7 @@ Our AI writes and schedules engaging posts about their services, local events, a
 - Marketing agencies cost **$1,000-5,000/month**—too expensive
 - DIY takes **5-10 hours/week**—time they don't have
 
-**GeoSpark = Professional presence at $29-79/month with 5 min/week effort.**
+**GeoSpark = Professional presence at $29-179/month with 5 min/week effort.**
 
 ---
 
@@ -138,38 +139,38 @@ Choose your style—or combine both:
 ## 5-Month Income Projection (Early Partner at 40%)
 
 **Commission: 40% recurring on all active clients**
-**Average deal: $60/month (mix of Starter $29 & Pro $79 plans)**
+**Average deal: $59/month (blend of Starter $29, Growth $49, Pro $79, Premium $179)**
 **Churn assumption: 5% monthly after month 2**
 
 | Month | New Clients | Lost | Portfolio | Commission (40%) | Cumulative |
 |-------|-------------|------|-----------|------------------|------------|
-| **1** | 8 | 0 | 8 | **$192** | $192 |
-| **2** | 15 | 0 | 23 | **$552** | $744 |
-| **3** | 20 | 1 | 42 | **$1,008** | $1,752 |
-| **4** | 23 | 2 | 63 | **$1,512** | $3,264 |
-| **5** | 26 | 3 | 86 | **$2,064** | $5,328 |
+| **1** | 8 | 0 | 8 | **$189** | $189 |
+| **2** | 15 | 0 | 23 | **$543** | $732 |
+| **3** | 20 | 1 | 42 | **$991** | $1,723 |
+| **4** | 23 | 2 | 63 | **$1,487** | $3,210 |
+| **5** | 26 | 3 | 86 | **$2,030** | $5,240 |
 
-**Month 5: $2,064/month recurring income**
-**Month 12 projection (same pace): $4,000+/month with 150+ clients**
+**Month 5: $2,030/month recurring income**
+**Month 12 projection (same pace): ~$5,200/month with 220+ clients**
 
 ---
 
 ## 12-Month Projection (Early Partner at 40%)
 
-Assuming continued growth and 5% monthly churn:
+Assuming continued growth and 5% monthly churn ($59 blended ARPU):
 
 | Month | Portfolio | Monthly Commission |
 |-------|-----------|-------------------|
-| 6 | 108 | $2,592 |
-| 7 | 129 | $3,096 |
-| 8 | 149 | $3,576 |
-| 9 | 168 | $4,032 |
-| 10 | 186 | $4,464 |
-| 11 | 203 | $4,872 |
-| 12 | 219 | $5,256 |
+| 6 | 108 | $2,549 |
+| 7 | 129 | $3,044 |
+| 8 | 149 | $3,516 |
+| 9 | 168 | $3,965 |
+| 10 | 186 | $4,390 |
+| 11 | 203 | $4,791 |
+| 12 | 219 | $5,168 |
 
 **Year 1 total earnings: ~$35,000**
-**Monthly recurring at month 12: $5,256**
+**Monthly recurring at month 12: $5,168**
 
 ---
 
