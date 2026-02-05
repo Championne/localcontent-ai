@@ -105,12 +105,12 @@ export default function CategoryPage({ params }: Props) {
             {posts.map(post => (
               <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
                 <article className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all h-full flex flex-col">
-                  <div className="h-40 overflow-hidden">
+                  <div className="h-44 overflow-hidden">
                     {post.image ? (
                       <img 
                         src={post.image} 
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">

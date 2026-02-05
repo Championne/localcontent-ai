@@ -71,12 +71,12 @@ export default function BlogPage() {
                 className={`group ${index === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
               >
                 <article className={`bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col ${index === 0 ? 'md:flex-row' : ''}`}>
-                  <div className={`relative ${index === 0 ? 'md:w-1/2 h-48 md:h-auto' : 'h-40'} overflow-hidden`}>
+                  <div className={`relative ${index === 0 ? 'md:w-1/2 h-48 md:h-auto' : 'h-44'} overflow-hidden`}>
                     {post.image ? (
                       <img 
                         src={post.image} 
                         alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
@@ -114,12 +114,12 @@ export default function BlogPage() {
           {remainingPosts.map(post => (
             <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
               <article className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-all h-full flex flex-col">
-                <div className="h-32 overflow-hidden">
+                <div className="h-40 overflow-hidden">
                   {post.image ? (
                     <img 
                       src={post.image} 
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
