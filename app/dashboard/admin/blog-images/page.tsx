@@ -325,7 +325,7 @@ export default function BlogImagesAdmin() {
               >
                 Generate All 4 Styles
               </button>
-              <p className="text-sm text-gray-400 mt-3">~$0.16 for 4 images</p>
+              <p className="text-sm text-gray-400 mt-3">~$0.32 for 4 landscape images</p>
             </div>
           )}
         </div>
