@@ -178,12 +178,14 @@ export async function POST(request: NextRequest) {
     // Update email account sent counts (estimate - Instantly will track actual)
     // This helps with capacity tracking
     if (filters?.market_id) {
-      await supabase.rpc('increment_account_sent_count', {
-        p_market_id: filters.market_id,
-        p_count: leads.length
-      }).catch(() => {
+      try {
+        await supabase.rpc('increment_account_sent_count', {
+          p_market_id: filters.market_id,
+          p_count: leads.length
+        })
+      } catch {
         // Function may not exist yet, ignore
-      })
+      }
     }
 
     return NextResponse.json({
