@@ -511,7 +511,7 @@ export default function BlogImagesAdmin() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Blog Image Manager</h1>
-        <p className="text-gray-600 mt-2">Click on any post to generate images in all 4 styles and choose your favorite</p>
+        <p className="text-gray-600 mt-2">Preview how blog posts look on the website. Click any card to generate images and see the full article preview.</p>
       </div>
 
       {/* Stats */}
@@ -539,19 +539,6 @@ export default function BlogImagesAdmin() {
         </div>
       )}
 
-      {/* Style Legend */}
-      <div className="mb-6 bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="font-semibold text-gray-900 mb-3">Image Styles</h3>
-        <div className="flex flex-wrap gap-3">
-          {STYLES.map(style => (
-            <div key={style.id} className={`px-4 py-2 rounded-lg border-2 ${style.borderColor} ${style.bgLight}`}>
-              <span className={`font-medium ${style.color.replace('bg-', 'text-').replace('-100', '-700')}`}>{style.name}</span>
-              <span className="text-gray-500 text-sm ml-2">- {style.description}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Filters */}
       <div className="flex gap-2 mb-6">
         <button
@@ -574,101 +561,93 @@ export default function BlogImagesAdmin() {
         </button>
       </div>
 
-      {/* Posts List */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left p-4 text-sm font-semibold text-gray-600">Image</th>
-              <th className="text-left p-4 text-sm font-semibold text-gray-600">Title</th>
-              <th className="text-left p-4 text-sm font-semibold text-gray-600">Category</th>
-              <th className="text-left p-4 text-sm font-semibold text-gray-600">Style</th>
-              <th className="text-left p-4 text-sm font-semibold text-gray-600">Status</th>
-              <th className="text-right p-4 text-sm font-semibold text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredPosts.map(post => {
-              const styleInfo = getStyleInfo(post.imageStyle)
-              return (
-                <tr 
-                  key={post.slug} 
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => { setSelectedPost(post); setViewMode('detail'); setPreviews([]) }}
-                >
-                  <td className="p-4">
-                    <div className={`w-28 h-18 bg-gray-100 rounded-lg overflow-hidden border-2 ${styleInfo?.borderColor || 'border-transparent'}`}>
-                      {post.imagePath ? (
-                        <img 
-                          src={post.imagePath} 
-                          alt="" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-16 flex items-center justify-center text-gray-400">
-                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      )}
+      {/* Posts Grid - Matches Real Blog Layout */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredPosts.map(post => {
+          const styleInfo = getStyleInfo(post.imageStyle)
+          return (
+            <div 
+              key={post.slug} 
+              className="group cursor-pointer"
+              onClick={() => { setSelectedPost(post); setViewMode('detail'); setPreviews([]) }}
+            >
+              <article className={`bg-white rounded-xl border-2 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col ${styleInfo?.borderColor || 'border-gray-200'} ${!post.hasImage ? 'border-dashed border-orange-300' : ''}`}>
+                {/* Image - Same height as real blog */}
+                <div className="h-40 overflow-hidden relative">
+                  {post.imagePath ? (
+                    <img 
+                      src={post.imagePath} 
+                      alt={post.title}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                      <div className="text-center">
+                        <svg className="w-10 h-10 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs text-gray-400 mt-1 block">No image</span>
+                      </div>
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="font-medium text-gray-900 line-clamp-2">{post.title}</div>
-                    <div className="text-xs text-gray-400 mt-1">{post.slug}</div>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-sm text-gray-600">{post.category}</span>
-                  </td>
-                  <td className="p-4">
-                    {styleInfo ? (
-                      <span className={`inline-block px-3 py-1 rounded-full text-sm ${styleInfo.color}`}>
-                        {styleInfo.name}
-                      </span>
-                    ) : (
-                      <span className="text-gray-400 text-sm">—</span>
-                    )}
-                  </td>
-                  <td className="p-4">
+                  )}
+                  {/* Status Badge */}
+                  <div className="absolute top-2 right-2">
                     {post.hasImage ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-sm rounded-full">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full shadow">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         Ready
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-sm rounded-full">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded-full shadow">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                         Needs Image
                       </span>
                     )}
-                  </td>
-                  <td className="p-4 text-right" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedPost(post); setViewMode('detail'); setPreviews([]) }}
-                        className="px-3 py-1.5 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700"
-                      >
-                        {post.hasImage ? 'Change' : 'Generate'}
-                      </button>
-                      {post.hasImage && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteImage(post) }}
-                          className="px-3 py-1.5 bg-red-100 text-red-600 text-sm rounded-lg hover:bg-red-200"
-                        >
-                          Delete
-                        </button>
-                      )}
+                  </div>
+                  {/* Style Badge */}
+                  {styleInfo && (
+                    <div className="absolute top-2 left-2">
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium shadow ${styleInfo.color}`}>
+                        {styleInfo.name}
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+                  )}
+                </div>
+                {/* Content - Same structure as real blog */}
+                <div className="p-5 flex flex-col flex-1">
+                  <span className="text-xs font-semibold text-teal-600 uppercase tracking-wide">{post.category}</span>
+                  <h3 className="font-semibold text-gray-900 mt-1 group-hover:text-teal-600 transition-colors line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <div className="flex-1"></div>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100" onClick={e => e.stopPropagation()}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedPost(post); setViewMode('detail'); setPreviews([]) }}
+                      className="flex-1 px-3 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
+                    >
+                      {post.hasImage ? 'Change Image' : 'Generate Image'}
+                    </button>
+                    {post.hasImage && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteImage(post) }}
+                        className="px-3 py-2 bg-red-100 text-red-600 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </article>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

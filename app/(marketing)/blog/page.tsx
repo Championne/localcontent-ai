@@ -59,19 +59,19 @@ export default async function BlogPage() {
         </div>
       </section>
 
-      {/* Featured Posts */}
+      {/* Featured Posts - 3 Equal Cards */}
       {featuredPosts.length > 0 && (
         <section className="container mx-auto px-4 pb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Articles</h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {featuredPosts.map((post, index) => (
+            {featuredPosts.map((post) => (
               <Link 
                 key={post.slug} 
                 href={`/blog/${post.slug}`}
-                className={`group ${index === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
+                className="group"
               >
-                <article className={`bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col ${index === 0 ? 'md:flex-row' : ''}`}>
-                  <div className={`relative ${index === 0 ? 'md:w-1/2 h-48 md:h-auto' : 'h-44'} overflow-hidden`}>
+                <article className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col">
+                  <div className="h-48 overflow-hidden">
                     {post.image ? (
                       <img 
                         src={post.image} 
@@ -88,9 +88,9 @@ export default async function BlogPage() {
                       </div>
                     )}
                   </div>
-                  <div className={`p-6 flex flex-col flex-1 ${index === 0 ? 'md:w-1/2' : ''}`}>
+                  <div className="p-6 flex flex-col flex-1">
                     <span className="text-xs font-semibold text-teal-600 uppercase tracking-wide">{post.category}</span>
-                    <h3 className={`font-bold text-gray-900 mt-2 group-hover:text-teal-600 transition-colors ${index === 0 ? 'text-2xl' : 'text-lg'}`}>
+                    <h3 className="font-bold text-gray-900 mt-2 group-hover:text-teal-600 transition-colors text-lg line-clamp-2">
                       {post.title}
                     </h3>
                     <p className="text-gray-600 text-sm mt-2 flex-1 line-clamp-3">{post.excerpt}</p>
