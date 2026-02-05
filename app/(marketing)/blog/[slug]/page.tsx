@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/blog'
+import { getAllPosts, getPostBySlugWithImage, getRelatedPosts } from '@/lib/blog'
 import type { Metadata } from 'next'
 import ReactMarkdown from 'react-markdown'
 
@@ -74,7 +74,7 @@ function addInternalLinks(content: string): string {
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlugWithImage(slug)
   
   if (!post) {
     notFound()

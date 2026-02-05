@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { list, del } from '@vercel/blob'
 import fs from 'fs'
 import path from 'path'
 
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
-const IMAGES_DIR = path.join(process.cwd(), 'public/blog/images')
 
 interface BlogPost {
   slug: string
@@ -46,6 +46,20 @@ export async function GET() {
       return NextResponse.json({ posts: [], error: 'Blog directory not found' })
     }
 
+    // Get list of images from Vercel Blob
+    const blobImages: Map<string, string> = new Map()
+    try {
+      const { blobs } = await list({ prefix: 'blog/images/' })
+      for (const blob of blobs) {
+        // Extract slug from pathname like "blog/images/my-post.webp"
+        const filename = blob.pathname.split('/').pop() || ''
+        const slug = filename.replace('.webp', '')
+        blobImages.set(slug, blob.url)
+      }
+    } catch (blobError) {
+      console.log('Vercel Blob not configured or empty, checking local files')
+    }
+
     const files = fs.readdirSync(BLOG_DIR).filter(f => f.endsWith('.md') && f !== 'article_manifest.md')
     
     const posts: BlogPost[] = files.map(filename => {
@@ -54,16 +68,20 @@ export async function GET() {
       const slug = filename.replace('.md', '')
       const category = detectCategory(title, content)
       
-      // Check if image exists
-      const imagePath = path.join(IMAGES_DIR, `${slug}.webp`)
-      const hasImage = fs.existsSync(imagePath)
+      // Check if image exists in Vercel Blob first, then fallback to local
+      const blobUrl = blobImages.get(slug)
+      const localImagePath = path.join(process.cwd(), 'public/blog/images', `${slug}.webp`)
+      const hasLocalImage = fs.existsSync(localImagePath)
+      
+      const hasImage = !!blobUrl || hasLocalImage
+      const imagePath = blobUrl || (hasLocalImage ? `/blog/images/${slug}.webp` : null)
       
       return {
         slug,
         title,
         category,
         hasImage,
-        imagePath: hasImage ? `/blog/images/${slug}.webp` : null
+        imagePath
       }
     })
 
@@ -89,17 +107,27 @@ export async function GET() {
 // DELETE - Remove an image
 export async function DELETE(request: NextRequest) {
   try {
-    const { slug } = await request.json()
+    const { slug, imageUrl } = await request.json()
     
     if (!slug) {
       return NextResponse.json({ error: 'Slug is required' }, { status: 400 })
     }
 
-    const imagePath = path.join(IMAGES_DIR, `${slug}.webp`)
-    
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath)
-      return NextResponse.json({ success: true, message: `Deleted ${slug}.webp` })
+    // Try to delete from Vercel Blob if URL provided
+    if (imageUrl && imageUrl.includes('vercel-storage.com')) {
+      try {
+        await del(imageUrl)
+        return NextResponse.json({ success: true, message: `Deleted blob image for ${slug}` })
+      } catch (blobError) {
+        console.error('Error deleting from blob:', blobError)
+      }
+    }
+
+    // Fallback: try local file
+    const localImagePath = path.join(process.cwd(), 'public/blog/images', `${slug}.webp`)
+    if (fs.existsSync(localImagePath)) {
+      fs.unlinkSync(localImagePath)
+      return NextResponse.json({ success: true, message: `Deleted local ${slug}.webp` })
     }
     
     return NextResponse.json({ error: 'Image not found' }, { status: 404 })

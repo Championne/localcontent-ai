@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getAllPosts, getCategories } from '@/lib/blog'
+import { getAllPostsWithImages, getCategories } from '@/lib/blog'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   },
 }
 
-export default function BlogPage() {
-  const posts = getAllPosts()
+export default async function BlogPage() {
+  const posts = await getAllPostsWithImages()
   const categories = getCategories()
   
   // Featured posts (first 3)

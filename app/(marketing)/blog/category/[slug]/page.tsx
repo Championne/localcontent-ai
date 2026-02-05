@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getAllPosts, getCategories } from '@/lib/blog'
+import { getAllPostsWithImages, getCategories } from '@/lib/blog'
 import type { Metadata } from 'next'
 
 interface Props {
@@ -38,14 +38,14 @@ export async function generateStaticParams() {
   }))
 }
 
-export default function CategoryPage({ params }: Props) {
+export default async function CategoryPage({ params }: Props) {
   const category = slugToCategory(params.slug)
   
   if (!category) {
     notFound()
   }
 
-  const allPosts = getAllPosts()
+  const allPosts = await getAllPostsWithImages()
   const posts = allPosts.filter(p => p.category === category)
   const categories = getCategories()
 

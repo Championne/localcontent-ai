@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateImage, IMAGE_STYLES, ImageStyle } from '@/lib/openai/images'
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
-import fs from 'fs'
+import { put } from '@vercel/blob'
+import { createClient } from '@supabase/supabase-js'
 
-const IMAGES_DIR = path.join(process.cwd(), 'public/blog/images')
+// Create Supabase client with service role for admin operations
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 // POST - Generate or save image for a blog post
 // If `previewUrl` is provided, saves that existing image instead of generating new
@@ -57,23 +60,41 @@ export async function POST(request: NextRequest) {
       imageUrl = result.url
     }
 
-    // Download the image
+    // Download the image from OpenAI
     const imageResponse = await fetch(imageUrl)
     const imageBuffer = await imageResponse.arrayBuffer()
     
-    // Ensure directory exists
-    await mkdir(IMAGES_DIR, { recursive: true })
-    
-    // Save the image
-    const imagePath = path.join(IMAGES_DIR, `${slug}.webp`)
-    await writeFile(imagePath, Buffer.from(imageBuffer))
+    // Upload to Vercel Blob storage
+    const blob = await put(`blog/images/${slug}.webp`, imageBuffer, {
+      access: 'public',
+      contentType: 'image/webp',
+      addRandomSuffix: false, // Keep clean URLs
+    })
+
+    console.log(`Uploaded to Vercel Blob: ${blob.url}`)
+
+    // Store the image URL in Supabase for persistence
+    // Uses upsert to update if exists, insert if not
+    const { error: dbError } = await supabase
+      .from('blog_images')
+      .upsert({
+        slug,
+        image_url: blob.url,
+        style: imageStyle,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'slug' })
+
+    if (dbError) {
+      console.log('Could not save to Supabase (table may not exist):', dbError.message)
+      // Continue anyway - image was uploaded successfully
+    }
 
     return NextResponse.json({
       success: true,
       slug,
       style: imageStyle,
       styleName: IMAGE_STYLES[imageStyle].name,
-      imagePath: `/blog/images/${slug}.webp`
+      imagePath: blob.url
     })
   } catch (error) {
     console.error('Blog image generation error:', error)

@@ -191,3 +191,59 @@ export function searchPosts(query: string): BlogPost[] {
     p.keywords.some(k => k.includes(lowerQuery))
   )
 }
+
+// Fetch blog images from Supabase (for production use with Vercel Blob)
+export async function getBlogImagesFromDB(): Promise<Map<string, string>> {
+  const imageMap = new Map<string, string>()
+  
+  try {
+    // Use fetch to avoid importing supabase client in this shared module
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/blog_images?select=slug,image_url`,
+      {
+        headers: {
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        },
+        next: { revalidate: 60 } // Cache for 60 seconds
+      }
+    )
+    
+    if (response.ok) {
+      const images = await response.json()
+      for (const img of images) {
+        imageMap.set(img.slug, img.image_url)
+      }
+    }
+  } catch (error) {
+    console.log('Could not fetch blog images from DB:', error)
+  }
+  
+  return imageMap
+}
+
+// Async version of getAllPosts that includes Supabase/Blob images
+export async function getAllPostsWithImages(): Promise<BlogPost[]> {
+  const posts = getAllPosts()
+  const dbImages = await getBlogImagesFromDB()
+  
+  // Override images with DB values where available
+  return posts.map(post => ({
+    ...post,
+    image: dbImages.get(post.slug) || post.image
+  }))
+}
+
+// Async version of getPostBySlug that includes Supabase/Blob images  
+export async function getPostBySlugWithImage(slug: string): Promise<BlogPost | null> {
+  const post = getPostBySlug(slug)
+  if (!post) return null
+  
+  const dbImages = await getBlogImagesFromDB()
+  const dbImage = dbImages.get(slug)
+  
+  return {
+    ...post,
+    image: dbImage || post.image
+  }
+}
