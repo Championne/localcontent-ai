@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS markets (
   timezone TEXT NOT NULL,                -- "America/New_York"
   currency TEXT DEFAULT 'USD',           -- "USD", "EUR"
   
-  -- Settings
+  -- Settings\
   is_active BOOLEAN DEFAULT TRUE,
   send_start_hour INTEGER DEFAULT 8,     -- Start sending at 8am local
   send_end_hour INTEGER DEFAULT 17,      -- Stop sending at 5pm local
@@ -102,11 +102,7 @@ CREATE TABLE IF NOT EXISTS email_accounts (
   -- Maturity & Limits
   status TEXT DEFAULT 'warmup' CHECK (status IN ('warmup', 'limited', 'ramping', 'active', 'paused', 'suspended')),
   warmup_started_at TIMESTAMPTZ,
-  days_since_warmup INTEGER GENERATED ALWAYS AS (
-    CASE WHEN warmup_started_at IS NOT NULL 
-    THEN EXTRACT(DAY FROM (NOW() - warmup_started_at))::INTEGER 
-    ELSE 0 END
-  ) STORED,
+  days_since_warmup INTEGER DEFAULT 0,  -- Set by trigger (cannot use GENERATED: NOW() is not immutable)
   
   -- Daily limits based on maturity
   base_daily_limit INTEGER DEFAULT 50,   -- Max when fully mature
@@ -254,6 +250,9 @@ BEGIN
     NEW.bounced_today := 0;
     NEW.stats_reset_at := CURRENT_DATE;
   END IF;
+  
+  -- Recompute days since warmup (used for maturity phase)
+  NEW.days_since_warmup := COALESCE(EXTRACT(DAY FROM (NOW() - NEW.warmup_started_at))::INTEGER, 0);
   
   -- Update status and limits
   NEW.status := get_account_status(NEW);

@@ -300,13 +300,15 @@ Connect and enable warmup for ALL accounts.
 
 ## Step 4.2: Run Database Migrations
 
-In Supabase SQL Editor, run these files in order:
+In Supabase SQL Editor, run these files **in this order**:
 
-1. `lib/database/unified-sales-schema.sql`
-2. `lib/database/lead-scoring-schema.sql`
-3. `lib/database/markets-and-accounts-schema.sql`
-4. `lib/database/outreach-schema.sql`
-5. `lib/database/outreach-sales-integration.sql`
+1. `lib/database/unified-sales-schema.sql` – industries, leads (CRM)
+2. `lib/database/outreach-schema.sql` – outreach_leads, campaigns
+3. `lib/database/lead-scoring-schema.sql` – score, webhook support
+4. `lib/database/markets-and-accounts-schema.sql` – markets, email_accounts
+5. `lib/database/outreach-sales-integration.sql` – link outreach → sales
+
+**Full step-by-step:** See [COLD_EMAIL_GEOSPARK_SETUP.md](./COLD_EMAIL_GEOSPARK_SETUP.md) for webhook URL and first campaign flow.
 
 ## Step 4.3: Add Email Accounts to GeoSpark
 
@@ -425,7 +427,7 @@ Or use the dashboard UI when available.
 - [ ] Warmup enabled on all
 - [ ] Tracking domain verified
 - [ ] API key generated
-- [ ] Webhook configured
+- [ ] Webhook configured → URL: `https://YOUR-DOMAIN/api/outreach/webhooks/instantly` (see COLD_EMAIL_GEOSPARK_SETUP.md)
 
 ## GeoSpark
 - [ ] API key in .env.local

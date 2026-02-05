@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { getStockImageForSlug } from './blog-images'
 
 const BLOG_DIR = path.join(process.cwd(), 'content/blog')
 
@@ -142,7 +143,7 @@ export function getAllPosts(): BlogPost[] {
       publishedAt: data.publishedAt || publishDate.toISOString().split('T')[0],
       readingTime: calculateReadingTime(content),
       keywords: data.keywords || extractKeywords(title, content),
-      image: data.image || getBlogImage(slug)
+      image: data.image || getStockImageForSlug(slug) || getBlogImage(slug)
     }
   })
   
@@ -227,10 +228,10 @@ export async function getAllPostsWithImages(): Promise<BlogPost[]> {
   const posts = getAllPosts()
   const dbImages = await getBlogImagesFromDB()
   
-  // Override images with DB values where available
+  // Professional stock images first, then DB, then local/frontmatter
   return posts.map(post => ({
     ...post,
-    image: dbImages.get(post.slug) || post.image
+    image: getStockImageForSlug(post.slug) || dbImages.get(post.slug) || post.image
   }))
 }
 
@@ -244,6 +245,6 @@ export async function getPostBySlugWithImage(slug: string): Promise<BlogPost | n
   
   return {
     ...post,
-    image: dbImage || post.image
+    image: getStockImageForSlug(slug) || dbImage || post.image
   }
 }

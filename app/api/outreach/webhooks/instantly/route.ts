@@ -38,11 +38,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Find the lead by email
+    // Find the lead by contact email (Instantly sends "email" in payload)
     const { data: lead } = await supabase
       .from('outreach_leads')
-      .select('id, status, emails_sent, emails_opened, emails_replied')
-      .eq('email', payload.lead?.email)
+      .select('id, status, emails_sent, emails_opened, emails_replied, emails_clicked')
+      .eq('contact_email', payload.lead?.email)
       .single()
 
     if (!lead) {
@@ -72,28 +72,23 @@ export async function POST(request: NextRequest) {
         updateData.last_email_opened_at = payload.timestamp
         activityType = 'email_opened'
         activityNotes = `Email opened: "${payload.email_subject || 'No subject'}"`
-        
-        // Boost lead score for engagement
-        updateData.score = supabase.rpc('increment_score', { lead_id: lead.id, points: 5 })
+        await supabase.rpc('increment_score', { lead_id: lead.id, points: 5 })
         break
 
       case 'email_clicked':
+        updateData.emails_clicked = (lead.emails_clicked || 0) + 1
         activityType = 'email_clicked'
         activityNotes = `Link clicked: ${payload.link_clicked || 'unknown link'}`
-        
-        // Higher score boost for clicks
-        updateData.score = supabase.rpc('increment_score', { lead_id: lead.id, points: 15 })
+        await supabase.rpc('increment_score', { lead_id: lead.id, points: 15 })
         break
 
       case 'email_replied':
         updateData.emails_replied = (lead.emails_replied || 0) + 1
         updateData.last_email_replied_at = payload.timestamp
-        updateData.status = 'replied' // Auto-update status
+        updateData.status = 'replied'
         activityType = 'email_replied'
         activityNotes = `Reply received: "${payload.reply_text?.substring(0, 200) || 'No text'}..."`
-        
-        // Big score boost for replies - this is a hot lead!
-        updateData.score = supabase.rpc('increment_score', { lead_id: lead.id, points: 50 })
+        await supabase.rpc('increment_score', { lead_id: lead.id, points: 50 })
         break
 
       case 'email_bounced':
@@ -101,9 +96,7 @@ export async function POST(request: NextRequest) {
         updateData.bounced = true
         activityType = 'email_bounced'
         activityNotes = 'Email bounced - invalid address'
-        
-        // Negative score for bounces
-        updateData.score = supabase.rpc('increment_score', { lead_id: lead.id, points: -50 })
+        await supabase.rpc('increment_score', { lead_id: lead.id, points: -50 })
         break
 
       case 'lead_unsubscribed':
@@ -112,8 +105,6 @@ export async function POST(request: NextRequest) {
         updateData.unsubscribed_at = payload.timestamp
         activityType = 'unsubscribed'
         activityNotes = 'Lead unsubscribed from emails'
-        
-        // Remove from active consideration
         updateData.score = -100
         break
 
