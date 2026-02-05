@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getAllPosts, getPostBySlugWithImage, getRelatedPosts } from '@/lib/blog'
+import { getAllPosts, getPostBySlug, getPostBySlugWithImage, getRelatedPosts } from '@/lib/blog'
 import type { Metadata } from 'next'
 import ReactMarkdown from 'react-markdown'
 
