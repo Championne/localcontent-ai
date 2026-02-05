@@ -1,6 +1,6 @@
 ﻿# 10 Budget-Friendly Marketing Ideas for Any Local Business
 
-For local businesses, making every marketing dollar count is essential. YouΓÇÖre not just selling products or services; youΓÇÖre building community, fostering relationships, and keeping local economies vibrant. But with limited budgets, how do you compete against bigger brands and effectively reach your ideal customers without breaking the bank?
+For local businesses, making every marketing dollar count is essential. You're not just selling products or services; you're building community, fostering relationships, and keeping local economies vibrant. But with limited budgets, how do you compete against bigger brands and effectively reach your ideal customers without breaking the bank?
 
 The good news is that impactful marketing doesn't always require a huge investment. Smart, strategic efforts can yield significant returns. This guide will walk you through 10 budget-friendly marketing ideas for any local business, highlighting how a powerful AI tool like GeoSpark can amplify your efforts and deliver more bang for your buck.
 

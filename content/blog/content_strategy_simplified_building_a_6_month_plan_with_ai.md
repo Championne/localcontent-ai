@@ -1,6 +1,6 @@
 ﻿# Content Strategy Simplified: Building a 6-Month Plan with AI
 
-For local small and medium-sized businesses (SMBs), a robust online presence isn't just nice-to-have ΓÇô it's essential. But let's be honest, crafting a consistent, engaging content strategy can feel like a monumental task, especially when you're juggling a million other things. What if we told you it doesn't have to be? What if you could build a powerful **6-month content plan** with clarity and confidence, powered by the intelligence of AI?
+For local small and medium-sized businesses (SMBs), a robust online presence isn't just nice-to-have – it's essential. But let's be honest, crafting a consistent, engaging content strategy can feel like a monumental task, especially when you're juggling a million other things. What if we told you it doesn't have to be? What if you could build a powerful **6-month content plan** with clarity and confidence, powered by the intelligence of AI?
 
 At GeoSpark, we believe in empowering local businesses. This guide will show you how to create an effective **local business content strategy**, simplified, and how **AI content planning** can transform your digital marketing efforts.
 
@@ -18,7 +18,7 @@ Now, let's build your plan, step-by-step, with AI at your side.
 
 ## Step-by-Step: Crafting Your 6-Month Content Plan with AI
 
-### Month 1: Foundation & Ideation ΓÇô Where AI Shines
+### Month 1: Foundation & Ideation – Where AI Shines
 
 This is where you set the stage and brainstorm.
 

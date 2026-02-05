@@ -19,7 +19,7 @@ Here are actionable, easy-to-implement **small business email campaigns** that l
 You can't send emails if you don't have addresses! Focus on capturing email addresses from your existing customer base and new prospects.
 
 *   **In-Store Sign-Up:** A simple sign-up sheet or tablet at your checkout counter. Offer an immediate incentive like a small discount (e.g., "Sign up for our newsletter and get 10% off your next purchase!").
-*   **Website Pop-Ups & Forms:** Integrate a non-intrusive pop-up on your website offering a valuable incentive ΓÇô perhaps an exclusive local guide, a first-time customer discount, or early access to new products/services.
+*   **Website Pop-Ups & Forms:** Integrate a non-intrusive pop-up on your website offering a valuable incentive – perhaps an exclusive local guide, a first-time customer discount, or early access to new products/services.
 *   **Local Events & Partnerships:** If you participate in local markets or events, have a sign-up option. Partner with other local businesses for joint promotions where email sign-ups are part of the deal.
 
 ### 2. Craft Engaging, Locally-Relevant Content
@@ -66,7 +66,7 @@ With GeoSpark, you can:
 
 *   **Generate engaging email copy** tailored to your business and local community in minutes.
 *   **Create personalized email campaigns** without the heavy lifting of traditional marketing tools. Our AI helps you craft messages that resonate with different customer segments, making those **email conversion strategies** even more effective.
-*   **Save valuable time** and focus on what you do best ΓÇô serving your customers ΓÇô while our AI handles the content creation.
+*   **Save valuable time** and focus on what you do best – serving your customers – while our AI handles the content creation.
 
 GeoSpark transforms the complex world of email marketing into an empowering experience, making advanced strategies accessible and affordable for every local business.
 

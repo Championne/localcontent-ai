@@ -34,7 +34,7 @@ Crafting compelling **direct mail copy** and integrating it with your overall ma
 
 Our platform empowers you to:
 
-*   **Generate Killer Direct Mail Copy with AI:** Our AI-powered content creation tools can instantly generate engaging, persuasive copy tailored for your direct mail pieces. No more struggling with writer's block ΓÇô get compelling headlines, body text, and calls to action in minutes.
+*   **Generate Killer Direct Mail Copy with AI:** Our AI-powered content creation tools can instantly generate engaging, persuasive copy tailored for your direct mail pieces. No more struggling with writer's block – get compelling headlines, body text, and calls to action in minutes.
 *   **Ensure Integrated Campaign Messaging:** GeoSpark helps you maintain consistent branding and messaging across all your marketing channels, including your direct mail. This ensures your customers experience a cohesive narrative, whether they see your ad online or receive a postcard in their mailbox.
 *   **Simplify Your Workflow:** We streamline the content creation process, allowing you to focus on running your business while we help you produce high-quality, impactful marketing materials.
 

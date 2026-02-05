@@ -1,30 +1,31 @@
 import OpenAI from 'openai'
 
 // Image style definitions - optimized for realistic, authentic-looking images WITHOUT TEXT
+// NOTE: DALL-E often ignores "no text" instructions - we use multiple reinforcement techniques
 export const IMAGE_STYLES = {
   promotional: {
     name: 'Promotional',
     description: 'Clean marketing images for sales and offers',
     keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    promptPrefix: 'Clean marketing photograph, professional product or service photography, single focused subject, absolutely no text or writing visible anywhere'
+    promptPrefix: 'Clean marketing photograph of physical objects only. Product photography with shallow depth of field. All surfaces are blank and unmarked. No signage exists in this scene'
   },
   professional: {
     name: 'Professional',
     description: 'Authentic business photography',
     keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service'],
-    promptPrefix: 'Authentic professional photograph, realistic lighting, simple clean composition with one main subject, absolutely no text or writing visible anywhere'
+    promptPrefix: 'Authentic professional photograph with realistic lighting. Simple clean composition showing only physical objects and environments. All surfaces blank and unmarked. No signage in scene'
   },
   friendly: {
     name: 'Friendly',
     description: 'Warm, approachable photography',
     keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love'],
-    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel, simple composition, absolutely no text or writing visible anywhere'
+    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel. Shows only physical objects and people. All clothing is plain solid colors. All surfaces blank. No signage anywhere'
   },
   seasonal: {
     name: 'Seasonal',
     description: 'Subtle seasonal themed photography',
     keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween'],
-    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements, simple elegant composition, absolutely no text or writing visible anywhere'
+    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements. Only physical decorations and objects. All surfaces blank and unmarked. No signage, no greeting cards, no written messages'
   }
 } as const
 
@@ -118,21 +119,24 @@ function buildImagePrompt(params: GenerateImageParams): string {
     formatDesc = 'Tall portrait format (9:16 aspect ratio)'
   }
   
-  // Create a descriptive prompt that captures the essence - STRICTLY NO TEXT
+  // Create a descriptive prompt - using positive framing (what TO show) rather than negatives
+  // DALL-E responds better to "blank surfaces" than "no text"
   const prompt = `${styleConfig.promptPrefix}.
 
-Create a realistic photograph visually representing the concept of "${topic}" for a ${industry} business.
-Keep it simple: one main subject, clean background, no clutter, no signs, no labels, no logos.
+Realistic photograph representing "${topic}" for a ${industry} business.
 
-CRITICAL TEXT RULES - MUST FOLLOW:
-- ZERO text anywhere in the image
-- No words, letters, numbers, or symbols
-- No signs, banners, labels, or logos with writing
-- No business names, no prices, no dates
-- No text on clothing, walls, or objects
-- If there would be a sign in the scene, show it blank or out of focus
+SCENE REQUIREMENTS:
+- One main subject with clean, uncluttered background
+- All walls, surfaces, and objects are BLANK and UNMARKED
+- Any signs in scene are EMPTY wooden boards or BLANK metal plates
+- All clothing is PLAIN SOLID COLORS with no prints or logos
+- All packaging and products show BLANK LABELS (solid color only)
+- Computer and phone screens are OFF or show abstract colored shapes only
+- Books show BLANK SPINES (solid colors)
 
-Style: ${styleConfig.name}. ${formatDesc}. Natural lighting, authentic and believable photograph.`
+The scene exists in a world where written language does not exist. Everything is communicated through colors, shapes, and gestures instead.
+
+${formatDesc}. Natural lighting, authentic photograph style.`
 
   return prompt
 }

@@ -14,7 +14,7 @@ The benefits of expanding your local business into the digital realm are immense
 
 ## Setting Up Your Online Storefront: A Step-by-Step Guide
 
-Ready to dive into **setting up an online storefront**? HereΓÇÖs a practical roadmap to get your local business selling online:
+Ready to dive into **setting up an online storefront**? Here's a practical roadmap to get your local business selling online:
 
 ### 1. Choose the Right E-commerce Platform
 
@@ -29,7 +29,7 @@ Think about your technical comfort level and budget when making this choice.
 
 ### 2. Craft Compelling Product Listings
 
-This is where your products truly shine ΓÇô or don't. Each product needs:
+This is where your products truly shine – or don't. Each product needs:
 
 *   **High-Quality Images:** Take clear, well-lit photos from multiple angles. Consider adding lifestyle shots.
 *   **Detailed & Engaging Descriptions:** Don't just list features; tell a story. What problem does your product solve? What makes it unique? This is where GeoSpark truly shines! Our **AI-powered product descriptions** can help you generate compelling, SEO-friendly, and engaging text for every item, saving you hours and boosting appeal.
@@ -67,7 +67,7 @@ Having an online store is only half the battle; people need to know it exists!
 
 ## Tips for E-commerce Success for Your Local Business
 
-*   **Maintain Your Local Identity:** Even online, emphasize what makes your local shop unique ΓÇô your story, your community involvement, your personalized service.
+*   **Maintain Your Local Identity:** Even online, emphasize what makes your local shop unique – your story, your community involvement, your personalized service.
 *   **Prioritize Customer Service:** Be responsive to inquiries, and handle returns/exchanges gracefully. Excellent service builds loyalty, online and off.
 *   **Mobile-First Design:** A significant portion of online shopping happens on mobile devices. Ensure your website is responsive and user-friendly on smartphones and tablets.
 *   **Collect Reviews:** Encourage customers to leave reviews. Social proof is incredibly powerful.

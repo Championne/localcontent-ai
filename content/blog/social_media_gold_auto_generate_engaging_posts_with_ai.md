@@ -46,7 +46,7 @@ Let's look at how **auto-generate engaging posts** can come to life for your bus
 *   **Community Spotlight (e.g., for a fitness studio):**
     *   *AI-generated post idea:* "≡ƒÉ╛ We absolutely LOVE seeing your happy, freshly groomed pets! ≡ƒÿì Did your furry friend just get pampered at [Your Salon Name]? Share their adorable post-grooming photos in the comments below! Let's spread some cuteness! #PupPerfection #HappyPets #LocalGrooming #[YourTown]Pets"
 
-These examples demonstrate the versatility of AI in generating relevant, engaging content that speaks directly to your local market ΓÇô the heart of effective **local social media marketing**.
+These examples demonstrate the versatility of AI in generating relevant, engaging content that speaks directly to your local market – the heart of effective **local social media marketing**.
 
 ## GeoSpark: Your Partner in Unlocking Social Media Gold AI
 

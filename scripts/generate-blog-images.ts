@@ -92,15 +92,22 @@ async function generateImageForPost(post: BlogPost): Promise<string | null> {
   
   const prompt = `${styleHint}.
 
-Create a realistic, professional photograph visually representing: "${post.title}"
+Realistic photograph representing: "${post.title}"
 
-This is for a blog about local business marketing and SEO.
-Keep it simple: one main subject, clean background, no clutter.
+For a blog about local business marketing.
 
-CRITICAL: ABSOLUTELY NO TEXT, WORDS, LETTERS, OR WRITING ANYWHERE IN THE IMAGE.
-No signs, no labels, no logos with text, no watermarks.
+SCENE REQUIREMENTS:
+- One main subject with clean, uncluttered background
+- All walls, surfaces, and objects are BLANK and UNMARKED
+- Any signs in scene are EMPTY wooden boards or BLANK metal plates
+- All clothing is PLAIN SOLID COLORS with no prints
+- All packaging shows BLANK LABELS (solid color only)
+- Computer/phone screens are OFF or show abstract colored shapes only
+- Books show BLANK SPINES (solid colors)
 
-Style: Natural, authentic photograph. Wide landscape format (16:9).`
+The scene exists in a world where written language does not exist. Everything is communicated through colors and shapes.
+
+Wide landscape format (16:9). Natural lighting, authentic photograph.`
 
   try {
     console.log(`🎨 Generating image for: ${post.title}`)

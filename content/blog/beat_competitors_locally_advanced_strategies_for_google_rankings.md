@@ -43,7 +43,7 @@ Reviews are golden for local SEO, but just getting them isn't enough.
 *   **Implement Local Business Schema (Review Snippets):** Ensure your reviews are properly marked up with schema.org JSON-LD to qualify for rich snippets in search results. This immediately makes your listing stand out and commands attention, directly influencing click-through rates.
 *   **Target Niche Local Directories:** Beyond the big ones (Yelp, TripAdvisor), identify industry-specific and hyper-local directories. A local art gallery, for instance, might seek listings in regional arts council directories or local tourism sites that often have high domain authority.
 
-*   **Monitor and Respond Strategically:** A robust strategy involves not just getting reviews but actively monitoring them and responding thoughtfullyΓÇöeven to negative ones. This shows Google and potential customers you are engaged and trustworthy.
+*   **Monitor and Respond Strategically:** A robust strategy involves not just getting reviews but actively monitoring them and responding thoughtfully—even to negative ones. This shows Google and potential customers you are engaged and trustworthy.
 
 These **advanced local SEO** tactics build trust and authority, two pillars of strong **Google rankings**.
 

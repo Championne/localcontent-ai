@@ -53,7 +53,7 @@
 *   When to Scale: Investing in Digital Marketing for Local Business Growth (COMPLETED)
 *   Forge a Strong Local Brand: Identity in the Digital Age (COMPLETED)
 *   E-commerce for Local Shops: Setting Up Your Online Storefront (COMPLETED)
-*   Customer Journey Mapping: Optimizing Your Local BuyerΓÇÖs Path (COMPLETED)
+*   Customer Journey Mapping: Optimizing Your Local Buyer's Path (COMPLETED)
 *   Small Business Automation: Tools to Streamline Your Operations (COMPLETED)
 *   The Power of Local Data: Making Smarter Business Decisions (COMPLETED)
 *   Subscription Models for SMBs: Building Recurring Local Revenue (COMPLETED)

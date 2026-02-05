@@ -22,7 +22,7 @@ Here are some actionable tips to design and execute compelling promotions that d
 Before you even think about an offer, understand who you're trying to reach.
 *   **Segment your audience:** Are you targeting young families, busy professionals, seniors, or a mix?
 *   **Listen to feedback:** What do your customers ask for? What problems can you solve for them?
-*   **Observe local trends:** What's happening in your town? Seasonal events, local sports, school calendars ΓÇô these can all inspire relevant promotions.
+*   **Observe local trends:** What's happening in your town? Seasonal events, local sports, school calendars – these can all inspire relevant promotions.
 
 *Example:* A local cafe near a university could offer a "Study Break Special" during exam season.
 
@@ -41,7 +41,7 @@ While discounts have their place, truly **creative local marketing** goes furthe
 A great promotion can fall flat if it's too complicated.
 *   **Clear Call to Action:** Tell people exactly what to do. "Visit our store," "Use code LOCAL20," "Tag a friend."
 *   **Simple Redemption:** Whether it's a coupon, a loyalty card, or an online code, make it easy to claim the offer.
-*   **Accessible Channels:** Promote your offer where your audience spends their time ΓÇô social media, local flyers, email newsletters, even local radio.
+*   **Accessible Channels:** Promote your offer where your audience spends their time – social media, local flyers, email newsletters, even local radio.
 
 ### 4. Leverage the Power of GeoSpark
 
