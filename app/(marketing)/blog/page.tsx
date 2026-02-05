@@ -39,8 +39,7 @@ export default async function BlogPage() {
             Real Advice for Real Business Owners
           </h1>
           <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-            No fancy jargon, just practical tips to get more customers through your door. 
-            Written by people who get what it&apos;s like to run a local business.
+            No fancy jargon, just practical tips to get more customers through your door.
           </p>
         </div>
       </section>
