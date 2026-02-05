@@ -122,24 +122,23 @@ export default async function BlogPostPage({ params }: PageProps) {
       />
       
       <article className="min-h-screen bg-white">
-        {/* Hero Image */}
+        {/* Hero Image - Clean, no text overlay */}
         {post.image && (
-          <div className="relative h-64 md:h-96 w-full">
+          <div className="w-full h-64 md:h-80 overflow-hidden">
             <img 
               src={post.image} 
-              alt={post.title}
+              alt=""
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
           </div>
         )}
         
-        {/* Hero Text */}
-        <header className={`${post.image ? 'relative -mt-32 z-10' : 'bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900'} py-16 px-4`}>
+        {/* Article Header - Below image */}
+        <header className="bg-white py-10 px-4 border-b border-gray-100">
           <div className="container mx-auto max-w-3xl">
             <Link 
               href="/blog" 
-              className="inline-flex items-center gap-2 text-teal-400 hover:text-teal-300 text-sm mb-6"
+              className="inline-flex items-center gap-2 text-gray-500 hover:text-teal-600 text-sm mb-6 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -147,15 +146,15 @@ export default async function BlogPostPage({ params }: PageProps) {
               Back to Blog
             </Link>
             
-            <span className="inline-block px-3 py-1 bg-teal-500/20 text-teal-300 text-sm font-medium rounded-full mb-4">
+            <span className="inline-block px-3 py-1 bg-teal-100 text-teal-700 text-sm font-medium rounded-full mb-4">
               {post.category}
             </span>
             
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
               {post.title}
             </h1>
             
-            <div className="flex flex-wrap items-center gap-4 mt-6 text-gray-400 text-sm">
+            <div className="flex flex-wrap items-center gap-4 mt-6 text-gray-500 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
                   GS
