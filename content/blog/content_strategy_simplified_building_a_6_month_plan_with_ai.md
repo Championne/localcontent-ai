@@ -1,4 +1,4 @@
-﻿# Content Strategy Simplified: Building a 6-Month Plan with AI
+# Content Strategy Simplified: Building a 6-Month Plan with AI
 
 For local small and medium-sized businesses (SMBs), a robust online presence isn't just nice-to-have – it's essential. But let's be honest, crafting a consistent, engaging content strategy can feel like a monumental task, especially when you're juggling a million other things. What if we told you it doesn't have to be? What if you could build a powerful **6-month content plan** with clarity and confidence, powered by the intelligence of AI?
 
@@ -49,9 +49,9 @@ From broad ideas to specific content types.
 Now, you organize and start producing.
 
 1.  **Build Your Content Calendar:** Map out specific content ideas to publication dates. Think about seasonal events, local holidays, and promotions. A good **6-month content plan** visually lays out your entire strategy.
-    *   *AI Assist:* GeoSpark.Content.ai's **content calendar** feature makes this seamless. It allows you to schedule, organize, and manage all your content in one place. You can drag and drop ideas, assign tasks, and see your entire publishing pipeline at a glance, ensuring consistent output and avoiding content deserts.
-2.  **Automated Content Generation (Where AI Transforms):** This is the game-changer for SMBs.
-    *   *AI Assist:* With GeoSpark, you don't have to stare at a blank page. Our **automated generation** capabilities can draft blog posts, social media captions, email snippets, and even video scripts based on your chosen topics, keywords, and tone. You provide the core idea, and AI gives you a solid first draft to review and personalize, saving you hours of writing time. This is the essence of effective **AI content planning**.
+    *   *AI Assist:* Use a simple spreadsheet or your favorite planning tool to organize content ideas. GeoSpark can help generate content for each slot in your calendar, ensuring you always have fresh material ready to publish.
+2.  **Rapid Content Generation (Where AI Transforms):** This is the game-changer for SMBs.
+    *   *AI Assist:* With GeoSpark, you don't have to stare at a blank page. Our AI can draft blog posts, social media captions, Google Business Profile updates, and more based on your chosen topics, keywords, and tone. You provide the core idea, and AI gives you a solid first draft to review and personalize, saving you hours of writing time. This is the essence of effective **AI content planning**.
 
 ### Months 5-6: Distribution, Promotion & Analysis
 
