@@ -34,7 +34,7 @@ export const BLOG_STOCK_IMAGES: Record<string, string> = {
   hyperlocal_marketing_connecting_with_your_neighbors: U('1441986300917-64674bd600d8'),
   direct_mail_still_works_creative_strategies_for_local_businesses: U('1557804506-669a67965ba3'),
   forge_a_strong_local_brand_identity_in_the_digital_age: U('1517248135467-4c7edcad34c4'),
-  10_budget_friendly_marketing_ideas_for_local_business: U('1563013544-824ae1b704d3'),
+  '10_budget_friendly_marketing_ideas_for_local_business': U('1563013544-824ae1b704d3'),
 
   // AI & content
   unlock_content_superpowers_how_ai_transforms_local_business_blogs: U('1522071820081-0090120127c2'),
