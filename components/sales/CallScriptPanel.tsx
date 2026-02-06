@@ -60,9 +60,9 @@ const DEFAULT_SCRIPT: ScriptSection[] = [
     icon: '💰',
     expanded: false,
     items: [
-      { id: 'pr1', text: 'Starter: $69/month - 10 posts, 1 business', type: 'say', checked: false },
-      { id: 'pr2', text: 'Growth: $129/month - 30 posts, 3 businesses (most popular)', type: 'say', checked: false },
-      { id: 'pr3', text: 'Pro: $249/month - Unlimited posts, 10 businesses', type: 'say', checked: false },
+      { id: 'pr1', text: 'Starter: $29/month - 30 content pieces, 1 business', type: 'say', checked: false },
+      { id: 'pr2', text: 'Pro: $79/month - 100 content pieces, 3 businesses (most popular)', type: 'say', checked: false },
+      { id: 'pr3', text: 'Premium: $199/month - Unlimited content, 10 businesses', type: 'say', checked: false },
       { id: 'pr4', text: 'Based on what you told me, [Plan] would be perfect because...', type: 'say', checked: false },
       { id: 'pr5', text: 'Start with value, then price. Never lead with pricing.', type: 'tip', checked: false },
     ]

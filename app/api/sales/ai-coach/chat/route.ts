@@ -12,16 +12,12 @@ GEOSPARK / LOCALCONTENT.AI - PRODUCT KNOWLEDGE
 WHAT WE DO:
 AI-powered social media content creation for local businesses. We write and schedule engaging posts that highlight their services and local area.
 
-PRICING PLANS:
-| Plan | Price | Content/mo | Locations | Best For |
-|------|-------|------------|-----------|----------|
-| Starter | $29/mo | 30 | 1 | Solo businesses just starting |
-| Growth | $49/mo | 60 | 1 | Businesses ready to scale (Most Popular) |
-| Pro | $79/mo | 100 | 3 | Growing businesses, multiple locations |
-| Premium | $179/mo | Unlimited | 10 | Agencies, multi-location |
-| Enterprise | $499/mo | Custom | Unlimited | Large organizations |
-
-Annual discount: ~20% off
+PRICING PLANS (matches Stripe):
+| Plan | Monthly | Annual | Content/mo | Locations | Best For |
+|------|---------|--------|------------|-----------|----------|
+| Starter | $29/mo | $290/yr | 30 | 1 | Solo businesses just starting |
+| Pro | $79/mo | $790/yr | 100 | 3 | Growing businesses, multiple locations (Most Popular) |
+| Premium | $199/mo | $1990/yr | Unlimited | 10 | Agencies, multi-location |
 
 KEY FEATURES:
 - AI writes posts in their brand voice
@@ -71,7 +67,7 @@ COMMON OBJECTIONS & RESPONSES:
    → "That's great you have help! How consistent are they posting? GeoSpark can complement that - we handle the regular posting so they can focus on special content."
 
 CLOSING TECHNIQUES:
-- "Should we get you started with the Starter plan today, or does Growth make more sense for your 3 locations?"
+- "Should we get you started with the Starter plan today, or does Pro make more sense for your 3 locations?"
 - "I can set up a quick demo right now - takes 10 minutes and you'll see exactly what your posts would look like. Want to do that?"
 - "We're running a special this month - first month is 50% off. Want me to lock that in for you?"
 - "What would need to happen for you to give this a try?"

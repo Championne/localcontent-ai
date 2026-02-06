@@ -30,7 +30,7 @@ export interface Subscription {
   user_id: string
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
-  plan: 'free' | 'starter' | 'growth' | 'pro'
+  plan: 'free' | 'starter' | 'growth' | 'pro' | 'premium' // growth deprecated; Stripe: starter, pro, premium
   status: 'active' | 'canceled' | 'past_due'
   current_period_start: string | null
   current_period_end: string | null

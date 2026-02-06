@@ -30,12 +30,13 @@ export async function GET() {
       .eq('user_id', user.id)
       .gte('created_at', startOfMonth.toISOString())
 
-    // Define plan limits
+    // Plan limits (matches Stripe: Starter $29, Pro $79, Premium $199). growth = legacy, map to pro.
     const planLimits: Record<string, { content: number; businesses: number }> = {
       free: { content: 5, businesses: 1 },
-      starter: { content: 25, businesses: 3 },
-      growth: { content: 100, businesses: 10 },
-      pro: { content: -1, businesses: -1 }, // unlimited
+      starter: { content: 30, businesses: 1 },
+      growth: { content: 100, businesses: 3 }, // legacy; treat like pro
+      pro: { content: 100, businesses: 3 },
+      premium: { content: -1, businesses: 10 }, // unlimited
     }
 
     const plan = subscription?.plan || 'free'

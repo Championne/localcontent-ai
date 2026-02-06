@@ -35,7 +35,7 @@ export type DealStage =
   | 'closed_won' 
   | 'closed_lost'
 
-export type PlanType = 'starter' | 'growth' | 'pro' | 'premium' | 'enterprise'
+export type PlanType = 'starter' | 'growth' | 'pro' | 'premium' | 'enterprise' // growth = legacy, not in Stripe
 export type BillingCycle = 'monthly' | 'annual'
 
 export type ActivityType = 'call' | 'email' | 'meeting' | 'demo' | 'note' | 'task'
@@ -289,12 +289,13 @@ export interface Commission {
   deal?: Deal
 }
 
+// Matches Stripe: Starter $29/$290yr, Pro $79/$790yr, Premium $199/$1990yr. growth = legacy; enterprise = custom.
 export const PLAN_PRICING: Record<PlanType, { monthly: number; annual: number }> = {
-  starter: { monthly: 29, annual: 23 },
-  growth: { monthly: 49, annual: 39 },
-  pro: { monthly: 79, annual: 63 },
-  premium: { monthly: 179, annual: 143 },
-  enterprise: { monthly: 499, annual: 449 },
+  starter: { monthly: 29, annual: 290 },
+  growth: { monthly: 79, annual: 790 }, // legacy; same as pro
+  pro: { monthly: 79, annual: 790 },
+  premium: { monthly: 199, annual: 1990 },
+  enterprise: { monthly: 0, annual: 0 },
 }
 
 export const DEAL_STAGE_ORDER: DealStage[] = [

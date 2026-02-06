@@ -8,50 +8,55 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Trial period configuration
 export const TRIAL_PERIOD_DAYS = 14
 
+/**
+ * Pricing (matches Stripe Dashboard):
+ * - Starter: $29/mo, $290/yr
+ * - Pro: $79/mo, $790/yr
+ * - Premium: $199/mo, $1990/yr
+ */
 export const PLANS = {
   starter: {
     name: 'Starter',
-    price: 6900, // $69.00 in cents
+    price: 2900, // $29.00 in cents (monthly)
+    annualTotal: 29000, // $290.00 in cents (total per year)
     priceId: process.env.STRIPE_STARTER_PRICE_ID,
     features: [
-      '25 blog posts/month',
-      '75 social media posts/month',
-      '15 Google Business updates/month',
-      '5 industry templates',
-      'Basic local event integration',
+      '30 content pieces/month',
+      '30 AI images/month',
+      '1 business',
+      'All 6 platforms',
+      'Saved content library',
       'Email support',
     ],
   },
-  growth: {
-    name: 'Growth',
-    price: 12900, // $129.00 in cents
-    priceId: process.env.STRIPE_GROWTH_PRICE_ID,
+  pro: {
+    name: 'Pro',
+    price: 7900, // $79.00 in cents (monthly)
+    annualTotal: 79000, // $790.00 in cents (total per year)
+    priceId: process.env.STRIPE_PRO_PRICE_ID,
     features: [
-      '50 blog posts/month',
-      '150 social media posts/month',
-      '25 Google Business updates/month',
-      '15 industry templates',
-      'Advanced local integration',
-      'Multi-location support (up to 3)',
-      'Competitor content analysis',
+      '100 content pieces/month',
+      '100 AI images/month',
+      '3 businesses',
+      'All 6 platforms',
+      'Analytics dashboard',
       'Priority support',
     ],
     popular: true,
   },
-  pro: {
-    name: 'Pro',
-    price: 19900, // $199.00 in cents
-    priceId: process.env.STRIPE_PRO_PRICE_ID,
+  premium: {
+    name: 'Premium',
+    price: 19900, // $199.00 in cents (monthly)
+    annualTotal: 199000, // $1990.00 in cents (total per year)
+    priceId: process.env.STRIPE_PREMIUM_PRICE_ID,
     features: [
-      'Unlimited blog posts',
-      'Unlimited social media posts',
-      'Unlimited Google Business updates',
-      'All templates + custom requests',
-      'Full local intelligence suite',
-      'Multi-location support (up to 10)',
-      'Advanced analytics & ROI tracking',
-      'White-label reports',
-      'Dedicated account manager',
+      'Unlimited content',
+      'Unlimited AI images',
+      '10 businesses',
+      '3 users',
+      'All 6 platforms',
+      'Advanced analytics',
+      'Priority support',
     ],
   },
 } as const

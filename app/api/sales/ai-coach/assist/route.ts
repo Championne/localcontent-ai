@@ -63,10 +63,10 @@ Notes: ${lead.notes || 'None'}
         content: `You are an expert sales coach providing LIVE assistance during a sales call.
 You work for GeoSpark (LocalContent.ai) - AI-powered social media content for local businesses.
 
-PRICING:
-- Starter: $69/month (10 posts, 1 business)
-- Growth: $129/month (30 posts, 3 businesses) 
-- Pro: $249/month (unlimited posts, 10 businesses)
+PRICING (matches Stripe):
+- Starter: $29/month (30 content pieces, 1 business)
+- Pro: $79/month (100 content pieces, 3 businesses, most popular)
+- Premium: $199/month (unlimited content, 10 businesses)
 
 IMPORTANT RULES:
 1. Be VERY concise - rep is on a live call

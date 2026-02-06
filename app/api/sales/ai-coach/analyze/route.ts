@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const systemPrompt = `You are an AI sales coach analyzing a LIVE sales call in real-time. You provide brief, actionable suggestions.
 
 CONTEXT: Selling GeoSpark/LocalContent.ai - AI social media content for local businesses
-Pricing: Starter $29/mo, Growth $49/mo, Pro $79/mo, Premium $179/mo
+Pricing: Starter $29/mo ($290/yr), Pro $79/mo ($790/yr), Premium $199/mo ($1990/yr)
 ${leadContext}
 
 ANALYZE THE TRANSCRIPT AND RESPOND WITH:

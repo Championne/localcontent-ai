@@ -1,4 +1,5 @@
 // app/(marketing)/pricing/page.tsx
+// Pricing matches Stripe: Starter $29/$290yr, Pro $79/$790yr, Premium $199/$1990yr
 
 import React from 'react'
 import Link from 'next/link'
@@ -7,7 +8,7 @@ const tiers = [
   {
     name: 'Free',
     price: 0,
-    annual: 0,
+    annualTotal: 0,
     description: 'Try it out, no credit card required',
     cta: 'Get Started Free',
     ctaLink: '/auth/signup',
@@ -27,7 +28,7 @@ const tiers = [
   {
     name: 'Starter',
     price: 29,
-    annual: 23,
+    annualTotal: 290,
     description: 'Perfect for solo business owners',
     cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=starter',
@@ -45,35 +46,14 @@ const tiers = [
     ],
   },
   {
-    name: 'Growth',
-    price: 49,
-    annual: 39,
-    description: 'For businesses ready to scale',
-    cta: 'Start 14-Day Free Trial',
-    ctaLink: '/auth/signup?plan=growth',
-    highlighted: true,
-    badge: 'Most Popular',
-    features: [
-      { text: '1 business', included: true },
-      { text: '60 content pieces/month', included: true },
-      { text: '60 AI images/month', included: true },
-      { text: 'All 6 platforms', included: true },
-      { text: '1 user', included: true },
-      { text: 'All content types', included: true },
-      { text: 'Platform mockup previews', included: true },
-      { text: 'Saved content library', included: true },
-      { text: 'Analytics dashboard', included: true },
-      { text: 'Priority support', included: true },
-    ],
-  },
-  {
     name: 'Pro',
     price: 79,
-    annual: 63,
+    annualTotal: 790,
     description: 'For growing businesses with multiple locations',
     cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=pro',
-    highlighted: false,
+    highlighted: true,
+    badge: 'Most Popular',
     features: [
       { text: '3 businesses', included: true },
       { text: '100 content pieces/month', included: true },
@@ -84,12 +64,13 @@ const tiers = [
       { text: 'Platform mockup previews', included: true },
       { text: 'Saved content library', included: true },
       { text: 'Analytics dashboard', included: true },
+      { text: 'Priority support', included: true },
     ],
   },
   {
     name: 'Premium',
-    price: 179,
-    annual: 143,
+    price: 199,
+    annualTotal: 1990,
     description: 'For agencies and multi-location businesses',
     cta: 'Start 14-Day Free Trial',
     ctaLink: '/auth/signup?plan=premium',
@@ -125,12 +106,12 @@ export default function PricingPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Save 20% with annual billing
+            Save with annual billing
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
           {tiers.map((tier) => (
             <div
               key={tier.name}
@@ -161,7 +142,7 @@ export default function PricingPage() {
                   </div>
                   {tier.price > 0 && (
                     <p className="mt-1 text-sm text-teal-600 font-medium">
-                      ${tier.annual}/mo billed annually
+                      or ${tier.annualTotal}/year
                     </p>
                   )}
                 </div>
@@ -277,7 +258,7 @@ export default function PricingPage() {
             {/* CTA */}
             <div className="mt-12 text-center">
               <p className="text-gray-600">
-                More questions? <Link href="/contact" className="text-teal-600 font-medium hover:text-teal-700">Contact us</Link>
+                More questions? <Link href="/contact" className="text-teal-600 font-medium hover:underline">Contact us</Link>
               </p>
             </div>
           </div>
