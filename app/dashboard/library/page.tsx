@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+const UNSPLASH_UTM = 'https://unsplash.com?utm_source=geospark&utm_medium=referral'
+
 interface ContentItem {
   id: string
   title: string
@@ -11,6 +13,9 @@ interface ContentItem {
   content: string
   metadata?: {
     image_url?: string
+    image_source?: string
+    photographer_name?: string
+    photographer_url?: string
     platforms?: string[]
     [key: string]: unknown
   }
@@ -195,6 +200,19 @@ export default function ContentLibraryPage() {
                 <p className='text-sm text-muted-foreground'>
                   {getTemplateLabel(item.template)} • {formatDate(item.created_at)}
                 </p>
+                {item.metadata?.image_url && (item.metadata?.image_source === 'stock' || item.metadata?.photographer_url) && (
+                  <p className='text-xs text-muted-foreground mt-1'>
+                    Photo by{' '}
+                    {item.metadata.photographer_url ? (
+                      <a href={item.metadata.photographer_url} target='_blank' rel='noopener noreferrer' className='text-teal-600 hover:underline' onClick={(e) => e.stopPropagation()}>
+                        {item.metadata.photographer_name || 'Photographer'}
+                      </a>
+                    ) : (
+                      <span>{item.metadata.photographer_name || 'Photographer'}</span>
+                    )}{' '}
+                    on <a href={UNSPLASH_UTM} target='_blank' rel='noopener noreferrer' className='text-teal-600 hover:underline' onClick={(e) => e.stopPropagation()}>Unsplash</a>
+                  </p>
+                )}
               </div>
               <div className='flex items-center gap-4 ml-4'>
                 <span

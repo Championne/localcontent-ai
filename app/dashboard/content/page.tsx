@@ -22,6 +22,10 @@ interface GeneratedImage {
   url: string
   style: string
   generatedAt: string
+  source?: 'stock' | 'ai'
+  attribution?: string
+  photographerName?: string
+  photographerUrl?: string
 }
 
 interface Business {
@@ -213,8 +217,9 @@ export default function CreateContentPage() {
   // Regenerate dropdown menu
   const [regenerateMenuOpen, setRegenerateMenuOpen] = useState(false)
   
-  // Image generation options
+  // Image generation options (Option C: stock default, AI optional)
   const [generateImageFlag] = useState(true) // Always generate images
+  const [imageSource, setImageSource] = useState<'stock' | 'ai'>('stock') // 'stock' = free Unsplash, 'ai' = DALL-E
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
   const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
   
@@ -241,6 +246,10 @@ export default function CreateContentPage() {
   const [offerCustomDate, setOfferCustomDate] = useState('')
   const [eventDate, setEventDate] = useState('')
   const [eventTime, setEventTime] = useState('')
+
+  // Stock image picker (when imageSource === 'stock', user picks one)
+  const [stockImageOptions, setStockImageOptions] = useState<Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }>>([])
+  const [selectedStockImage, setSelectedStockImage] = useState<typeof stockImageOptions[0] | null>(null)
 
   // Quality ratings: link to generated_images / generated_texts when saving
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
@@ -309,6 +318,12 @@ export default function CreateContentPage() {
             url: meta.image_url,
             style: meta.image_style || 'professional',
             generatedAt: item.updated_at || new Date().toISOString(),
+            ...(meta.image_source === 'stock' && {
+              source: 'stock',
+              photographerName: meta.photographer_name,
+              photographerUrl: meta.photographer_url,
+              attribution: meta.photographer_name ? `Photo by ${meta.photographer_name} on Unsplash` : undefined,
+            }),
           })
         }
         setEditingContentId(item.id)
@@ -653,9 +668,10 @@ export default function CreateContentPage() {
     setError('')
     setRegenerateMenuOpen(false)
     
-    // Only clear image if regenerating all or image
     if (mode === 'all' || mode === 'image') {
       setGeneratedImage(null)
+      setStockImageOptions([])
+      setSelectedStockImage(null)
     }
     
     setViewMode('preview') // Reset to preview mode on new generation
@@ -671,6 +687,7 @@ export default function CreateContentPage() {
           topic,
           tone,
           generateImageFlag: mode === 'text' ? false : generateImageFlag,
+          imageSource,
           imageStyle,
           regenerateMode: mode,
         }),
@@ -691,6 +708,15 @@ export default function CreateContentPage() {
         }
       }
       
+      if (data.stockImageOptions?.length) {
+        setStockImageOptions(data.stockImageOptions)
+        setSelectedStockImage(null)
+        setGeneratedImage(null)
+        setGeneratedImageId(null)
+      } else {
+        setStockImageOptions([])
+        setSelectedStockImage(null)
+      }
       if (data.image) {
         setGeneratedImage(data.image)
         const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
@@ -724,7 +750,19 @@ export default function CreateContentPage() {
         template: selectedTemplate,
         title: topic,
         content,
-        metadata: { businessName, industry, tone, type: selectedTemplate, image_url: generatedImage?.url || null, image_style: generatedImage?.style || null },
+        metadata: {
+          businessName,
+          industry,
+          tone,
+          type: selectedTemplate,
+          image_url: generatedImage?.url || null,
+          image_style: generatedImage?.style || null,
+          ...(generatedImage?.source === 'stock' && {
+            image_source: 'stock',
+            photographer_name: generatedImage.photographerName,
+            photographer_url: generatedImage.photographerUrl,
+          }),
+        },
         status: 'draft' as const,
         image_url: generatedImage?.url || null,
         image_style: generatedImage?.style || null,
@@ -764,6 +802,29 @@ export default function CreateContentPage() {
       })
       setImageRating(rating)
     } catch (_) {}
+  }
+
+  const handlePickStockImage = async (opt: typeof stockImageOptions[0]) => {
+    setSelectedStockImage(opt)
+    setGeneratedImage({
+      url: opt.url,
+      style: imageStyle,
+      generatedAt: new Date().toISOString(),
+      source: 'stock',
+      attribution: opt.attribution,
+      photographerName: opt.photographerName,
+      photographerUrl: opt.photographerUrl,
+    })
+    // Unsplash production requirement: trigger download when user uses a photo
+    if (opt.downloadLocation) {
+      try {
+        await fetch('/api/stock-images/trigger-download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ downloadLocation: opt.downloadLocation }),
+        })
+      } catch (_) {}
+    }
   }
 
   const handleRateText = async (rating: number, feedbackReasons?: string[]) => {
@@ -1146,12 +1207,12 @@ export default function CreateContentPage() {
               </div>
             </div>
 
-            {/* Image Generation Settings */}
+            {/* Image (required for every post) */}
             <div className="border-t border-gray-100 pt-5 mt-5">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700">Image Generation</span>
-                {/* Image Quota Counter */}
-                {imagesRemaining !== null && (
+                <span className="text-sm font-medium text-gray-700">Image (required)</span>
+                {/* Image Quota Counter (only for AI) */}
+                {imageSource === 'ai' && imagesRemaining !== null && (
                   <div>
                     {imagesRemaining === -1 ? (
                       <span className="text-xs text-teal-600 font-medium">✨ Unlimited images</span>
@@ -1178,13 +1239,34 @@ export default function CreateContentPage() {
                   </div>
                 )}
               </div>
-              {imagesRemaining === 0 && (
+              {imageSource === 'ai' && imagesRemaining === 0 && (
                 <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                  You've used all your images this month. <a href="/pricing" className="font-medium underline">Upgrade for more</a>
+                  You've used all your AI images this month. Use &quot;Free stock photo&quot; or <a href="/pricing" className="font-medium underline">upgrade</a>.
                 </div>
               )}
-              
-              {imagesRemaining !== 0 && (
+              <div className="mt-3 flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="imageSource"
+                    checked={imageSource === 'stock'}
+                    onChange={() => setImageSource('stock')}
+                    className="text-teal-600 border-gray-300 focus:ring-teal-500"
+                  />
+                  <span className="text-sm text-gray-700">Free stock photo</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="imageSource"
+                    checked={imageSource === 'ai'}
+                    onChange={() => setImageSource('ai')}
+                    className="text-teal-600 border-gray-300 focus:ring-teal-500"
+                  />
+                  <span className="text-sm text-gray-700">Generate with AI</span>
+                </label>
+              </div>
+              {imageSource === 'ai' && imagesRemaining !== 0 && (
                 <div className="mt-4 ml-8">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Image Style</label>
                   <select
@@ -1324,7 +1406,7 @@ export default function CreateContentPage() {
               </div>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || (stockImageOptions.length > 0 && !generatedImage)}
                 className="px-5 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
               >
                 {saving ? (
@@ -1346,6 +1428,35 @@ export default function CreateContentPage() {
               </button>
             </div>
           </div>
+          
+          {/* Stock image picker: choose one (required for post) */}
+          {stockImageOptions.length > 0 && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="text-sm font-medium text-gray-800 mb-2">Choose an image for your post (required)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {stockImageOptions.map((opt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handlePickStockImage(opt)}
+                    className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
+                      selectedStockImage?.url === opt.url
+                        ? 'border-teal-500 ring-2 ring-teal-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img src={opt.url} alt="" className="w-full h-full object-cover" />
+                    {selectedStockImage?.url === opt.url && (
+                      <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Images from Unsplash. Attribution will be included.</p>
+            </div>
+          )}
           
           {/* Progress Bar for Regeneration */}
           {generating && (
@@ -1434,6 +1545,20 @@ export default function CreateContentPage() {
                   <div>
                     <h3 className="font-medium text-gray-900">Generated Image</h3>
                     <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
+                    {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Photo by{' '}
+                        {generatedImage.photographerUrl ? (
+                          <a href={generatedImage.photographerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">{generatedImage.photographerName || 'Photographer'}</a>
+                        ) : (
+                          <span>{generatedImage.photographerName || 'Photographer'}</span>
+                        )}{' '}
+                        on <a href="https://unsplash.com?utm_source=geospark&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">Unsplash</a>
+                      </p>
+                    )}
+                    {generatedImage.source === 'ai' && generatedImage.attribution && (
+                      <p className="text-xs text-gray-400 mt-1">{generatedImage.attribution}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1877,7 +2002,7 @@ export default function CreateContentPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || (stockImageOptions.length > 0 && !generatedImage)}
                 className="px-5 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
               >
                 {saving ? (
@@ -1899,6 +2024,35 @@ export default function CreateContentPage() {
               </button>
             </div>
           </div>
+          
+          {/* Stock image picker (blog/gmb/email): choose one required */}
+          {stockImageOptions.length > 0 && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="text-sm font-medium text-gray-800 mb-2">Choose an image for your post (required)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {stockImageOptions.map((opt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handlePickStockImage(opt)}
+                    className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
+                      selectedStockImage?.url === opt.url
+                        ? 'border-teal-500 ring-2 ring-teal-200'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img src={opt.url} alt="" className="w-full h-full object-cover" />
+                    {selectedStockImage?.url === opt.url && (
+                      <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Images from Unsplash. Attribution will be included.</p>
+            </div>
+          )}
           
           {/* Progress Bar for Regeneration */}
           {generating && (
@@ -1974,6 +2128,20 @@ export default function CreateContentPage() {
                   <div>
                     <h3 className="font-medium text-gray-900">Generated Image</h3>
                     <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
+                    {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Photo by{' '}
+                        {generatedImage.photographerUrl ? (
+                          <a href={generatedImage.photographerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">{generatedImage.photographerName || 'Photographer'}</a>
+                        ) : (
+                          <span>{generatedImage.photographerName || 'Photographer'}</span>
+                        )}{' '}
+                        on <a href="https://unsplash.com?utm_source=geospark&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">Unsplash</a>
+                      </p>
+                    )}
+                    {generatedImage.source === 'ai' && generatedImage.attribution && (
+                      <p className="text-xs text-gray-400 mt-1">{generatedImage.attribution}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

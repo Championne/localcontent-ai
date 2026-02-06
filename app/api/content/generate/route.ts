@@ -1,16 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, ContentTemplate, isOpenAIConfigured, SocialPackResult, GbpPostType } from '@/lib/openai'
-import { 
-  generateImage, 
-  isImageGenerationConfigured, 
-  hasImageQuota, 
+import {
+  generateImage,
+  isImageGenerationConfigured,
+  hasImageQuota,
   getRemainingImageQuota,
   detectBestStyle,
   IMAGE_LIMITS,
-  ImageStyle 
+  ImageStyle
 } from '@/lib/openai/images'
 import { persistContentImage } from '@/lib/content-image'
+import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
       additionalContext,
       saveAsDraft = false,
       generateImageFlag = false,
+      imageSource = 'stock', // 'stock' | 'ai' — default free stock, optional AI
       imageStyle,
       regenerateMode = 'all', // 'all' | 'text' | 'image'
       // GBP-specific fields
@@ -89,8 +91,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check image quota if image generation is requested
-    if (generateImageFlag && !hasImageQuota(plan, imagesUsedThisMonth)) {
+    // Image quota only applies when using AI (stock is free)
+    if (generateImageFlag && imageSource === 'ai' && !hasImageQuota(plan, imagesUsedThisMonth)) {
       return NextResponse.json(
         { error: 'Monthly image limit reached. Please upgrade your plan.' },
         { status: 403 }
@@ -120,51 +122,61 @@ export async function POST(request: Request) {
         }
       }
 
-      // Generate image if requested; record every generation for Picture Library
+      // Image: stock = return options for picker; AI = single generated image
       let image = null
       let generatedImageId: string | null = null
-      if (shouldGenerateImage && isImageGenerationConfigured()) {
+      let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
+      if (shouldGenerateImage) {
+        const useStock = imageSource === 'stock' && isStockImageConfigured()
+        const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
         try {
-          const imageResult = await generateImage({
-            topic,
-            businessName,
-            industry,
-            style: finalImageStyle,
-            contentType: template
-          })
-          const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
-          const imageUrl = permanentUrl || imageResult.url
-          image = {
-            url: imageUrl,
-            style: imageResult.style,
-            size: imageResult.size,
-            generatedAt: new Date().toISOString()
+          if (useStock) {
+            const options = await getStockImageOptions({ topic, industry, contentType: template }, 5)
+            if (options.length) stockImageOptions = options
           }
-          const { data: imgRow } = await supabase
-            .from('generated_images')
-            .insert({
-              user_id: user.id,
-              image_url: imageUrl,
+          if (stockImageOptions.length === 0 && canUseAi) {
+            const imageResult = await generateImage({
               topic,
-              business_name: businessName,
+              businessName,
               industry,
+              style: finalImageStyle,
+              contentType: template
+            })
+            const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
+            const imageUrl = permanentUrl || imageResult.url
+            image = {
+              url: imageUrl,
               style: imageResult.style,
-              content_type: template,
               size: imageResult.size,
-              full_prompt: imageResult.fullPrompt || null,
-              revised_prompt: imageResult.revisedPrompt || null,
-              prompt_version: 'v1'
-            })
-            .select('id')
-            .single()
-          if (imgRow) generatedImageId = imgRow.id
-          await supabase
-            .from('subscriptions')
-            .update({ 
-              images_generated_this_month: imagesUsedThisMonth + 1,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', user.id)
+              generatedAt: new Date().toISOString(),
+              source: 'ai'
+            }
+            const { data: imgRow } = await supabase
+              .from('generated_images')
+              .insert({
+                user_id: user.id,
+                image_url: imageUrl,
+                topic,
+                business_name: businessName,
+                industry,
+                style: imageResult.style,
+                content_type: template,
+                size: imageResult.size,
+                full_prompt: imageResult.fullPrompt || null,
+                revised_prompt: imageResult.revisedPrompt || null,
+                prompt_version: 'v1'
+              })
+              .select('id')
+              .single()
+            if (imgRow) generatedImageId = imgRow.id
+            await supabase
+              .from('subscriptions')
+              .update({
+                images_generated_this_month: imagesUsedThisMonth + 1,
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', user.id)
+          }
         } catch (imgError) {
           console.error('Image generation failed:', imgError)
         }
@@ -238,6 +250,7 @@ export async function POST(request: Request) {
         success: true,
         socialPack,
         image,
+        stockImageOptions: stockImageOptions.length ? stockImageOptions : undefined,
         savedContent,
         generated_image_id: generatedImageId,
         generated_text_id: generatedTextId,
@@ -249,10 +262,10 @@ export async function POST(request: Request) {
           tone,
           generatedAt: new Date().toISOString(),
           aiGenerated: isOpenAIConfigured(),
-          imageGenerated: !!image
+          imageGenerated: !!image || stockImageOptions.length > 0
         },
         usage: {
-          imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image ? 1 : 0)),
+          imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image && (image as { source?: string }).source === 'ai' ? 1 : 0)),
           imageLimit: IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
         }
       })
@@ -282,51 +295,61 @@ export async function POST(request: Request) {
       }
     }
 
-    // Generate image if requested; record every generation for Picture Library
+    // Image: stock = return options for picker; AI = single generated image
     let image = null
     let generatedImageId: string | null = null
-    if (shouldGenerateImage && isImageGenerationConfigured()) {
+    let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
+    if (shouldGenerateImage) {
+      const useStock = imageSource === 'stock' && isStockImageConfigured()
+      const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
       try {
-        const imageResult = await generateImage({
-          topic,
-          businessName,
-          industry,
-          style: finalImageStyle,
-          contentType: template
-        })
-        const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
-        const imageUrl = permanentUrl || imageResult.url
-        image = {
-          url: imageUrl,
-          style: imageResult.style,
-          size: imageResult.size,
-          generatedAt: new Date().toISOString()
+        if (useStock) {
+          const options = await getStockImageOptions({ topic, industry, contentType: template }, 5)
+          if (options.length) stockImageOptions = options
         }
-        const { data: imgRow } = await supabase
-          .from('generated_images')
-          .insert({
-            user_id: user.id,
-            image_url: imageUrl,
+        if (stockImageOptions.length === 0 && canUseAi) {
+          const imageResult = await generateImage({
             topic,
-            business_name: businessName,
+            businessName,
             industry,
+            style: finalImageStyle,
+            contentType: template
+          })
+          const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
+          const imageUrl = permanentUrl || imageResult.url
+          image = {
+            url: imageUrl,
             style: imageResult.style,
-            content_type: template,
             size: imageResult.size,
-            full_prompt: imageResult.fullPrompt || null,
-            revised_prompt: imageResult.revisedPrompt || null,
-            prompt_version: 'v1'
-          })
-          .select('id')
-          .single()
-        if (imgRow) generatedImageId = imgRow.id
-        await supabase
-          .from('subscriptions')
-          .update({ 
-            images_generated_this_month: imagesUsedThisMonth + 1,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id)
+            generatedAt: new Date().toISOString(),
+            source: 'ai'
+          }
+          const { data: imgRow } = await supabase
+            .from('generated_images')
+            .insert({
+              user_id: user.id,
+              image_url: imageUrl,
+              topic,
+              business_name: businessName,
+              industry,
+              style: imageResult.style,
+              content_type: template,
+              size: imageResult.size,
+              full_prompt: imageResult.fullPrompt || null,
+              revised_prompt: imageResult.revisedPrompt || null,
+              prompt_version: 'v1'
+            })
+            .select('id')
+            .single()
+          if (imgRow) generatedImageId = imgRow.id
+          await supabase
+            .from('subscriptions')
+            .update({
+              images_generated_this_month: imagesUsedThisMonth + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id)
+        }
       } catch (imgError) {
         console.error('Image generation failed:', imgError)
       }
@@ -399,6 +422,7 @@ export async function POST(request: Request) {
       success: true,
       content,
       image,
+      stockImageOptions: stockImageOptions.length ? stockImageOptions : undefined,
       savedContent,
       generated_image_id: generatedImageId,
       generated_text_id: generatedTextId,
@@ -411,10 +435,10 @@ export async function POST(request: Request) {
         gbpPostType: template === 'gmb-post' ? gbpPostType : undefined,
         generatedAt: new Date().toISOString(),
         aiGenerated: isOpenAIConfigured(),
-        imageGenerated: !!image
+        imageGenerated: !!image || stockImageOptions.length > 0
       },
       usage: {
-        imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image ? 1 : 0)),
+        imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image && (image as { source?: string }).source === 'ai' ? 1 : 0)),
         imageLimit: IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
       }
     })

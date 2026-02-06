@@ -106,40 +106,17 @@ export interface GenerateImageResult {
   fullPrompt?: string
 }
 
-// Build the image generation prompt
+// Build the image generation prompt (simplified: one clear scene, one short "no text" rule)
 function buildImagePrompt(params: GenerateImageParams): string {
-  const { topic, businessName, industry, style, contentType } = params
+  const { topic, industry, style, contentType } = params
   const styleConfig = IMAGE_STYLES[style]
   const imageSize = getImageSizeForContentType(contentType || 'social-post')
-  
-  // Determine format description based on size
+
   let formatDesc = 'Square format'
-  if (imageSize === '1792x1024') {
-    formatDesc = 'Wide landscape format (16:9 aspect ratio)'
-  } else if (imageSize === '1024x1792') {
-    formatDesc = 'Tall portrait format (9:16 aspect ratio)'
-  }
-  
-  // Create a descriptive prompt - using positive framing (what TO show) rather than negatives
-  // DALL-E responds better to "blank surfaces" than "no text"
-  const prompt = `${styleConfig.promptPrefix}.
+  if (imageSize === '1792x1024') formatDesc = 'Wide landscape format'
+  else if (imageSize === '1024x1792') formatDesc = 'Tall portrait format'
 
-Realistic photograph representing "${topic}" for a ${industry} business.
-
-SCENE REQUIREMENTS:
-- One main subject with clean, uncluttered background
-- All walls, surfaces, and objects are BLANK and UNMARKED
-- Any signs in scene are EMPTY wooden boards or BLANK metal plates
-- All clothing is PLAIN SOLID COLORS with no prints or logos
-- All packaging and products show BLANK LABELS (solid color only)
-- Computer and phone screens are OFF or show abstract colored shapes only
-- Books show BLANK SPINES (solid colors)
-
-The scene exists in a world where written language does not exist. Everything is communicated through colors, shapes, and gestures instead.
-
-${formatDesc}. Natural lighting, authentic photograph style.`
-
-  return prompt
+  return `${styleConfig.promptPrefix}. Realistic photograph representing "${topic}" for a ${industry} business. Single main subject, clean background, natural lighting. No text, no text-like elements, no text in the image. ${formatDesc}.`
 }
 
 // Generate an image using DALL-E 3
