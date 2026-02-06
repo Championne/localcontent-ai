@@ -1526,7 +1526,7 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: copy always; image only for AI-generated (stock can be rated in Generations) */}
+          {/* In-flow rating: rate both text and image when present */}
           {(generatedImageId || generatedTextId) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
@@ -1543,7 +1543,7 @@ export default function CreateContentPage() {
                     />
                   </div>
                 )}
-                {generatedImageId && generatedImage?.source !== 'stock' && (
+                {generatedImageId && generatedImage && (
                   <div className="min-w-[200px]">
                     <RatingStars
                       type="image"
@@ -2135,7 +2135,7 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: copy always; image only for AI-generated */}
+          {/* In-flow rating: rate both text and image when present */}
           {(generatedImageId || generatedTextId) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
@@ -2145,7 +2145,7 @@ export default function CreateContentPage() {
                     <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
                   </div>
                 )}
-                {generatedImageId && generatedImage?.source !== 'stock' && (
+                {generatedImageId && generatedImage && (
                   <div className="min-w-[200px]">
                     <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
                   </div>

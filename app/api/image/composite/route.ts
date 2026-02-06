@@ -25,6 +25,19 @@ export async function POST(request: Request) {
       )
     }
 
+    if (typeof imageUrl !== 'string' || imageUrl.startsWith('blob:') || imageUrl.startsWith('data:')) {
+      return NextResponse.json(
+        { error: 'Base image URL cannot be processed. Please use a saved image.' },
+        { status: 400 }
+      )
+    }
+    if (typeof logoUrl !== 'string' || logoUrl.startsWith('blob:') || logoUrl.startsWith('data:')) {
+      return NextResponse.json(
+        { error: 'Logo/photo URL cannot be processed. Please use a saved logo or photo.' },
+        { status: 400 }
+      )
+    }
+
     const fetchOpts: RequestInit = {
       headers: { 'User-Agent': 'GeoSpark-ImageComposite/1.0 (https://geospark.ai)' },
     }
@@ -124,8 +137,11 @@ export async function POST(request: Request) {
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return NextResponse.json({ error: 'Failed to save image' }, { status: 500 })
+      console.error('Composite upload error:', uploadError.message, uploadError)
+      const message = uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')
+        ? 'Storage bucket is not set up. Please create a bucket named "generated-images" in Supabase Storage and allow authenticated uploads.'
+        : uploadError.message || 'Failed to save image'
+      return NextResponse.json({ error: message }, { status: 500 })
     }
 
     // Get public URL

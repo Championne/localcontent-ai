@@ -45,9 +45,6 @@ const TONE_OPTIONS = [
   { value: '', label: 'Not set' },
   { value: 'professional', label: 'Professional' },
   { value: 'friendly', label: 'Friendly' },
-  { value: 'casual', label: 'Casual' },
-  { value: 'authoritative', label: 'Authoritative' },
-  { value: 'warm', label: 'Warm' },
 ]
 
 export default function BrandingPage() {
@@ -58,7 +55,6 @@ export default function BrandingPage() {
   const [showAddBusiness, setShowAddBusiness] = useState(false)
   const [newBusiness, setNewBusiness] = useState({ name: '', industry: '', location: '' })
   const [editingBusiness, setEditingBusiness] = useState<string | null>(null)
-  const [expandedBranding, setExpandedBranding] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
   const logoInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
@@ -68,19 +64,7 @@ export default function BrandingPage() {
     fetchBusinesses()
   }, [])
 
-  // Auto-expand branding when there's only one business
-  useEffect(() => {
-    if (businesses.length === 1) {
-      setExpandedBranding((prev) => (prev === businesses[0].id ? prev : businesses[0].id))
-    }
-  }, [businesses])
 
-  // Auto-expand branding when there's only one business
-  useEffect(() => {
-    if (businesses.length === 1 && !expandedBranding) {
-      setExpandedBranding(businesses[0].id)
-    }
-  }, [businesses.length])
 
   const fetchBusinesses = async () => {
     try {
@@ -158,7 +142,6 @@ export default function BrandingPage() {
         const data = await res.json()
         setBusinesses((prev) => prev.map((b) => (b.id === business.id ? data.business : b)))
         setEditingBusiness(null)
-        setExpandedBranding(null)
         showMessage('success', 'Saved')
       } else {
         showMessage('error', 'Failed to save')
@@ -276,9 +259,9 @@ export default function BrandingPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Brand identity</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Brand Identity</h1>
       <p className="text-gray-600 text-sm mb-6">
-        Set up each business: name, logo, colours, tagline, and CTAs. Used in content, overlays, and AI prompts.
+        Set up each business: name, logo, colours, tagline, and calls to action. Used in content, overlays, and AI prompts.
       </p>
 
       {message && (
@@ -413,384 +396,125 @@ export default function BrandingPage() {
               </div>
 
               {editingBusiness === business.id ? (
-                <div className="p-4 bg-gray-50 space-y-3">
+                <div className="p-4 bg-gray-50 space-y-4">
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
                   <input
                     type="text"
                     value={business.name}
                     onChange={(e) => updateBusiness(business.id, { name: e.target.value })}
                     placeholder="Business name"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                   />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Industry</label>
                   <select
                     value={business.industry || ''}
                     onChange={(e) => updateBusiness(business.id, { industry: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 outline-none"
                   >
                     <option value="">Industry...</option>
                     {INDUSTRIES.map((ind) => (
                       <option key={ind.value} value={ind.value}>{ind.label}</option>
                     ))}
                   </select>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Location</label>
                   <input
                     type="text"
                     value={business.location || ''}
                     onChange={(e) => updateBusiness(business.id, { location: e.target.value })}
-                    placeholder="Location"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    placeholder="City, neighbourhoods"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                   />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateBusiness(business)}
-                      disabled={saving === business.id}
-                      className="px-3 py-1.5 bg-teal-600 text-white rounded-lg font-medium text-sm disabled:opacity-50"
-                    >
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Website URL</label>
+                  <input
+                    type="url"
+                    value={business.website || ''}
+                    onChange={(e) => updateBusiness(business.id, { website: e.target.value || null })}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                  />
+
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Logo</label>
+                  <div className="flex items-center gap-3">
+                    {business.logo_url ? (
+                      <div className="relative inline-block group">
+                        <img src={business.logo_url} alt="Logo" className="w-16 h-16 rounded-lg object-contain border border-gray-200 bg-white" />
+                        <button type="button" onClick={() => handleRemoveFile(business.id, 'logo')} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs">×</button>
+                      </div>
+                    ) : (
+                      <div onClick={() => logoInputRefs.current[business.id]?.click()} className="w-16 h-16 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-teal-300">
+                        <span className="text-xl text-gray-400">🖼️</span>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" ref={(el) => { logoInputRefs.current[business.id] = el }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(business.id, f, 'logo'); e.target.value = '' }} className="hidden" />
+                    <span className="text-xs text-gray-500">{uploadingLogo === business.id ? 'Uploading...' : 'Click to upload'}</span>
+                  </div>
+
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Profile photo</label>
+                  <div className="flex items-center gap-3">
+                    {business.profile_photo_url ? (
+                      <div className="relative inline-block group">
+                        <img src={business.profile_photo_url} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-gray-200" />
+                        <button type="button" onClick={() => handleRemoveFile(business.id, 'profile_photo')} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs">×</button>
+                      </div>
+                    ) : (
+                      <div onClick={() => photoInputRefs.current[business.id]?.click()} className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-teal-300">
+                        <span className="text-xl text-gray-400">👤</span>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" ref={(el) => { photoInputRefs.current[business.id] = el }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(business.id, f, 'profile_photo'); e.target.value = '' }} className="hidden" />
+                    <span className="text-xs text-gray-500">{uploadingPhoto === business.id ? 'Uploading...' : 'Click to upload'}</span>
+                  </div>
+
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Primary colour</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color || '') ? business.brand_primary_color! : '#0d9488'} onChange={(e) => updateBusiness(business.id, { brand_primary_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
+                    <input type="text" value={business.brand_primary_color || ''} onChange={(e) => updateBusiness(business.id, { brand_primary_color: e.target.value || null })} placeholder="#0d9488" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  </div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Secondary colour (optional)</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_secondary_color || '') ? business.brand_secondary_color! : '#6b7280'} onChange={(e) => updateBusiness(business.id, { brand_secondary_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
+                    <input type="text" value={business.brand_secondary_color || ''} onChange={(e) => updateBusiness(business.id, { brand_secondary_color: e.target.value || null })} placeholder="#hex" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  </div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Accent colour (optional)</label>
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_accent_color || '') ? business.brand_accent_color! : '#6b7280'} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
+                    <input type="text" value={business.brand_accent_color || ''} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value || null })} placeholder="#hex" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  </div>
+                  <div className="flex gap-1 h-8 rounded-lg overflow-hidden border border-gray-200">
+                    <div className="flex-1" style={{ backgroundColor: business.brand_primary_color || '#0d9488' }} />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} />
+                  </div>
+
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Tagline</label>
+                  <input type="text" value={business.tagline || ''} onChange={(e) => updateBusiness(business.id, { tagline: e.target.value || null })} placeholder="e.g. Your neighbourhood plumber" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Primary call to action</label>
+                  <input type="text" value={business.default_cta_primary || ''} onChange={(e) => updateBusiness(business.id, { default_cta_primary: e.target.value || null })} placeholder="e.g. Book now" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Secondary call to action (optional)</label>
+                  <input type="text" value={business.default_cta_secondary || ''} onChange={(e) => updateBusiness(business.id, { default_cta_secondary: e.target.value || null })} placeholder="e.g. Contact us" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Default tone</label>
+                  <select value={business.default_tone || ''} onChange={(e) => updateBusiness(business.id, { default_tone: e.target.value || null })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                    {TONE_OPTIONS.map((o) => (<option key={o.value || 'none'} value={o.value}>{o.label}</option>))}
+                  </select>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">SEO keywords (comma-separated)</label>
+                  <input type="text" value={business.seo_keywords || ''} onChange={(e) => updateBusiness(business.id, { seo_keywords: e.target.value || null })} placeholder="plumber near me, drain cleaning [city]" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Social handles</label>
+                  <input type="text" value={business.social_handles || ''} onChange={(e) => updateBusiness(business.id, { social_handles: e.target.value || null })} placeholder="@mybusiness" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Service areas (cities, neighbourhoods)</label>
+                  <input type="text" value={business.service_areas || ''} onChange={(e) => updateBusiness(business.id, { service_areas: e.target.value || null })} placeholder="Austin, Round Rock, Pflugerville" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Short About (2–4 sentences)</label>
+                  <textarea value={business.short_about || ''} onChange={(e) => updateBusiness(business.id, { short_about: e.target.value || null })} placeholder="Used in Google Business Profile, blog author box, About sections" rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" />
+
+                  <div className="flex gap-2 pt-2">
+                    <button type="button" onClick={() => handleUpdateBusiness(business)} disabled={saving === business.id} className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50">
                       {saving === business.id ? 'Saving...' : 'Save'}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => { setEditingBusiness(null); fetchBusinesses() }}
-                      className="px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-sm"
-                    >
+                    <button type="button" onClick={() => { setEditingBusiness(null); fetchBusinesses() }} className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm hover:bg-gray-50">
                       Cancel
                     </button>
                   </div>
                 </div>
-              ) : (
-                <>
-                  {/* Logo + profile photo */}
-                  <div className="p-4 grid grid-cols-2 gap-6 border-b border-gray-100">
-                    <div className="text-center">
-                      <div className="mb-2">
-                        {business.logo_url ? (
-                          <div className="relative inline-block group">
-                            <img
-                              src={business.logo_url}
-                              alt="Logo"
-                              className="w-20 h-20 rounded-lg object-contain border border-gray-200 bg-white mx-auto cursor-pointer hover:opacity-80"
-                              onClick={() => logoInputRefs.current[business.id]?.click()}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFile(business.id, 'logo')}
-                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center"
-                            >
-                              <span className="text-xs">×</span>
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => logoInputRefs.current[business.id]?.click()}
-                            onKeyDown={(e) => e.key === 'Enter' && logoInputRefs.current[business.id]?.click()}
-                            className="w-20 h-20 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto cursor-pointer hover:border-teal-300"
-                          >
-                            <span className="text-2xl text-gray-400">🖼️</span>
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={(el) => { logoInputRefs.current[business.id] = el }}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) handleFileUpload(business.id, f, 'logo')
-                          e.target.value = ''
-                        }}
-                        className="hidden"
-                      />
-                      <p className="text-xs text-gray-500">
-                        {uploadingLogo === business.id ? 'Uploading...' : 'Logo (overlay)'}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <div className="mb-2">
-                        {business.profile_photo_url ? (
-                          <div className="relative inline-block group">
-                            <img
-                              src={business.profile_photo_url}
-                              alt="Profile"
-                              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 mx-auto cursor-pointer hover:opacity-80"
-                              onClick={() => photoInputRefs.current[business.id]?.click()}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFile(business.id, 'profile_photo')}
-                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center"
-                            >
-                              <span className="text-xs">×</span>
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => photoInputRefs.current[business.id]?.click()}
-                            onKeyDown={(e) => e.key === 'Enter' && photoInputRefs.current[business.id]?.click()}
-                            className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto cursor-pointer hover:border-teal-300"
-                          >
-                            <span className="text-2xl text-gray-400">👤</span>
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        ref={(el) => { photoInputRefs.current[business.id] = el }}
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) handleFileUpload(business.id, f, 'profile_photo')
-                          e.target.value = ''
-                        }}
-                        className="hidden"
-                      />
-                      <p className="text-xs text-gray-500">
-                        {uploadingPhoto === business.id ? 'Uploading...' : 'Profile photo (overlay)'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Branding fields (expandable) */}
-                  <div className="p-4">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedBranding(expandedBranding === business.id ? null : business.id)
-                      }
-                      className="w-full flex items-center justify-between text-left text-sm font-medium text-gray-700 py-1"
-                    >
-                      Brand colours, tagline, CTA, SEO, tone, website, social, about
-                      <span className="text-gray-400">
-                        {expandedBranding === business.id ? '▼' : '▶'}
-                      </span>
-                    </button>
-                    {expandedBranding === business.id && (
-                      <div className="mt-4 space-y-6 pt-4 border-t border-gray-100">
-                        {/* Visual identity */}
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Visual identity</h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Primary colour</label>
-                              <div className="flex gap-2 items-center">
-                                <input
-                                  type="color"
-                                  value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color || '') ? business.brand_primary_color! : '#0d9488'}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { brand_primary_color: e.target.value })
-                                  }
-                                  className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
-                                />
-                                <input
-                                  type="text"
-                                  value={business.brand_primary_color || ''}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { brand_primary_color: e.target.value || null })
-                                  }
-                                  placeholder="#0d9488"
-                                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm"
-                                />
-                              </div>
-                              <p className="mt-1 text-xs text-gray-400">Used on image overlays, borders, and in content.</p>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Secondary (optional)</label>
-                              <div className="flex gap-2 items-center">
-                                <input
-                                  type="color"
-                                  value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_secondary_color || '') ? business.brand_secondary_color! : '#6b7280'}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { brand_secondary_color: e.target.value })
-                                  }
-                                  className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
-                                />
-                                <input
-                                  type="text"
-                                  value={business.brand_secondary_color || ''}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { brand_secondary_color: e.target.value || null })
-                                  }
-                                  placeholder="#hex"
-                                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm"
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Accent (optional)</label>
-                              <div className="flex gap-2 items-center">
-                                <input
-                                  type="color"
-                                  value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_accent_color || '') ? business.brand_accent_color! : '#6b7280'}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { brand_accent_color: e.target.value })
-                                  }
-                                  className="w-10 h-10 rounded border border-gray-200 cursor-pointer"
-                                />
-                                <input
-                                  type="text"
-                                  value={business.brand_accent_color || ''}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { brand_accent_color: e.target.value || null })
-                                  }
-                                  placeholder="#hex"
-                                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="mt-3 flex gap-1 h-8 rounded-lg overflow-hidden border border-gray-200">
-                            <div className="flex-1" style={{ backgroundColor: business.brand_primary_color || '#0d9488' }} title="Primary" />
-                            <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} title="Secondary" />
-                            <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} title="Accent" />
-                          </div>
-                        </div>
-
-                        {/* Voice & messaging */}
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Voice & messaging</h4>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Tagline (one line)</label>
-                              <input
-                                type="text"
-                                value={business.tagline || ''}
-                                onChange={(e) => updateBusiness(business.id, { tagline: e.target.value || null })}
-                                placeholder="e.g. Your neighbourhood plumber"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                              />
-                              <p className="mt-1 text-xs text-gray-400">Used in social posts, GMB, and overlay suggestions.</p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Primary CTA</label>
-                                <input
-                                  type="text"
-                                  value={business.default_cta_primary || ''}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { default_cta_primary: e.target.value || null })
-                                  }
-                                  placeholder="e.g. Book now"
-                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Secondary CTA</label>
-                                <input
-                                  type="text"
-                                  value={business.default_cta_secondary || ''}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { default_cta_secondary: e.target.value || null })
-                                  }
-                                  placeholder="e.g. Contact us"
-                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Default tone</label>
-                              <select
-                                value={business.default_tone || ''}
-                                onChange={(e) =>
-                                  updateBusiness(business.id, { default_tone: e.target.value || null })
-                                }
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
-                              >
-                                {TONE_OPTIONS.map((o) => (
-                                  <option key={o.value || 'none'} value={o.value}>{o.label}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Discoverability */}
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Discoverability</h4>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">SEO keywords (comma-separated)</label>
-                              <input
-                                type="text"
-                                value={business.seo_keywords || ''}
-                                onChange={(e) =>
-                                  updateBusiness(business.id, { seo_keywords: e.target.value || null })
-                                }
-                                placeholder="plumber near me, drain cleaning [city]"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                              />
-                              <p className="mt-1 text-xs text-gray-400">Used in blog meta, headings, and social hashtags.</p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Website URL</label>
-                                <input
-                                  type="url"
-                                  value={business.website || ''}
-                                  onChange={(e) => updateBusiness(business.id, { website: e.target.value || null })}
-                                  placeholder="https://..."
-                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Social handles</label>
-                                <input
-                                  type="text"
-                                  value={business.social_handles || ''}
-                                  onChange={(e) =>
-                                    updateBusiness(business.id, { social_handles: e.target.value || null })
-                                  }
-                                  placeholder="@mybusiness"
-                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Service areas (cities, neighbourhoods)</label>
-                              <input
-                                type="text"
-                                value={business.service_areas || ''}
-                                onChange={(e) =>
-                                  updateBusiness(business.id, { service_areas: e.target.value || null })
-                                }
-                                placeholder="Austin, Round Rock, Pflugerville"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* About */}
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">About</h4>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">Short About (2–4 sentences)</label>
-                          <textarea
-                            value={business.short_about || ''}
-                            onChange={(e) =>
-                              updateBusiness(business.id, { short_about: e.target.value || null })
-                            }
-                            placeholder="Used in GMB, blog author box, About sections"
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none"
-                          />
-                        </div>
-
-                        <div className="flex justify-end pt-2">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateBusiness(business)}
-                            disabled={saving === business.id}
-                            className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50"
-                          >
-                            {saving === business.id ? 'Saving...' : 'Save branding'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
+              ) : null}
             </div>
           ))}
         </div>

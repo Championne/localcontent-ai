@@ -132,7 +132,7 @@ export default function SettingsPage() {
             ) : 'Save Profile'}
           </button>
           <p className="text-sm text-gray-500 mt-2">
-            Businesses, logo, and brand identity → <Link href="/dashboard/branding" className="text-teal-600 hover:underline">Brand identity</Link>
+            Businesses, logo, and Brand Identity → <Link href="/dashboard/branding" className="text-teal-600 hover:underline">Brand Identity</Link>
           </p>
         </div>
       </div>

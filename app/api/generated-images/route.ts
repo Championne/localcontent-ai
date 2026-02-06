@@ -32,19 +32,36 @@ export async function GET(request: NextRequest) {
     }))
     const linkedContentIds = new Set((list.map((i) => i.content_id).filter(Boolean) as string[]))
 
-    // Include images from content that have image_url but no row in generated_images (e.g. stock images from before we synced)
+    // Fetch content metadata to fill missing image_url for linked rows and to add synthetic rows
     const { data: contentWithImages } = await supabase
       .from('content')
       .select('id, title, template, updated_at, metadata')
       .eq('user_id', user.id)
       .not('metadata', 'is', null)
 
+    const contentImageById = new Map<string, string>()
     if (contentWithImages?.length) {
-      const fromContent: Array<Record<string, unknown>> = []
       for (const row of contentWithImages) {
         const meta = (row.metadata as Record<string, unknown>) || {}
         const imageUrl = (meta.image_url as string) ?? (row as Record<string, unknown>).image_url
+        if (imageUrl) contentImageById.set(row.id, imageUrl)
+      }
+    }
+
+    // Fill missing image_url for generated_images rows that have content_id (e.g. URL stored only in content.metadata)
+    list = list.map((i) => {
+      const contentId = i.content_id as string | undefined
+      const url = (i.image_url as string) || (contentId ? contentImageById.get(contentId) : null)
+      return url ? { ...i, image_url: url } : i
+    })
+
+    // Include images from content that have image_url but no row in generated_images (e.g. stock images from before we synced)
+    if (contentWithImages?.length) {
+      const fromContent: Array<Record<string, unknown>> = []
+      for (const row of contentWithImages) {
+        const imageUrl = contentImageById.get(row.id)
         if (imageUrl && !linkedContentIds.has(row.id)) {
+          const meta = (row.metadata as Record<string, unknown>) || {}
           fromContent.push({
             id: `content-${row.id}`,
             image_url: imageUrl,

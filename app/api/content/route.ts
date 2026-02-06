@@ -28,14 +28,46 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', status)
     }
 
-    const { data, error } = await query
+    const { data: contentList, error } = await query
 
     if (error) {
       console.error('Content fetch error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ content: data || [] })
+    const list = contentList || []
+
+    // For content missing metadata.image_url, get thumbnail from linked generated_images so Spark Library shows images
+    const idsWithoutImage = list.filter((c: { metadata?: { image_url?: string }; image_url?: string }) => {
+      const meta = c.metadata as { image_url?: string } | undefined
+      return !meta?.image_url && !(c as { image_url?: string }).image_url
+    }).map((c: { id: string }) => c.id)
+
+    if (idsWithoutImage.length > 0) {
+      const { data: images } = await supabase
+        .from('generated_images')
+        .select('content_id, image_url')
+        .eq('user_id', user.id)
+        .in('content_id', idsWithoutImage)
+        .not('image_url', 'is', null)
+        .order('created_at', { ascending: false })
+
+      const imageByContentId = new Map<string, string>()
+      for (const row of images || []) {
+        if (row.content_id && !imageByContentId.has(row.content_id)) {
+          imageByContentId.set(row.content_id, row.image_url)
+        }
+      }
+
+      const enriched = list.map((c: { id: string; metadata?: Record<string, unknown> }) => {
+        const url = imageByContentId.get(c.id)
+        if (url) return { ...c, metadata: { ...(c.metadata || {}), image_url: url } }
+        return c
+      })
+      return NextResponse.json({ content: enriched })
+    }
+
+    return NextResponse.json({ content: list })
   } catch (error) {
     console.error('Content API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -63,6 +95,17 @@ export async function POST(request: NextRequest) {
     if (image_url && isTemporaryImageUrl(image_url)) {
       const persisted = await persistContentImage(supabase, user.id, image_url)
       if (persisted) finalImageUrl = persisted
+    }
+
+    // When saving with generated_image_id, ensure we have the image URL in metadata (e.g. client didn't send image_url)
+    if (generated_image_id && !finalImageUrl) {
+      const { data: genImg } = await supabase
+        .from('generated_images')
+        .select('image_url')
+        .eq('id', generated_image_id)
+        .eq('user_id', user.id)
+        .single()
+      if (genImg?.image_url) finalImageUrl = genImg.image_url
     }
 
     // Build metadata including image if provided

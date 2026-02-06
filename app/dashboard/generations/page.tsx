@@ -191,38 +191,42 @@ export default function GenerationsPage() {
     }
   }
 
-  // One card per image so bad-rated and regenerated images both stay visible; text-only sparks for content with no image
+  // One row per content: latest image + latest text, with two ratings (text + image). Orphan images/text get their own row.
   const sparks = useMemo((): Spark[] => {
-    const contentIdsWithImages = new Set(images.map((img) => img.content_id).filter(Boolean) as string[])
-    const textByContentId = new Map<string, GeneratedText>()
+    const map = new Map<string, { image?: GeneratedImage; text?: GeneratedText; created_at: string }>()
+
+    for (const img of images) {
+      const key = img.content_id ?? `img-${img.id}`
+      const created = img.created_at
+      if (!map.has(key)) map.set(key, { created_at: created })
+      const entry = map.get(key)!
+      if (!entry.image || new Date(created) > new Date(entry.created_at)) {
+        entry.image = img
+        entry.created_at = created
+      }
+    }
     for (const t of texts) {
-      if (!t.content_id) continue
-      const existing = textByContentId.get(t.content_id)
-      if (!existing || new Date(t.created_at) > new Date(existing.created_at)) {
-        textByContentId.set(t.content_id, t)
+      const key = t.content_id ?? `text-${t.id}`
+      const created = t.created_at
+      if (!map.has(key)) map.set(key, { created_at: created })
+      const entry = map.get(key)!
+      if (!entry.text || new Date(created) > new Date(entry.created_at)) {
+        entry.text = t
+        entry.created_at = created
       }
     }
 
     const result: Spark[] = []
-    for (const img of images) {
+    for (const [key, entry] of map.entries()) {
+      if (!entry.image && !entry.text) continue
+      const contentId = key.startsWith('img-') || key.startsWith('text-') ? null : key
       result.push({
-        id: String(img.id),
-        contentId: img.content_id ?? null,
-        image: img,
-        text: img.content_id ? textByContentId.get(img.content_id) ?? null : null,
-        created_at: img.created_at,
+        id: key,
+        contentId,
+        image: entry.image ?? null,
+        text: entry.text ?? null,
+        created_at: entry.created_at,
       })
-    }
-    for (const t of texts) {
-      if (!t.content_id || !contentIdsWithImages.has(t.content_id)) {
-        result.push({
-          id: `text-${t.id}`,
-          contentId: t.content_id ?? null,
-          image: null,
-          text: t,
-          created_at: t.created_at,
-        })
-      }
     }
     return result
   }, [images, texts])
