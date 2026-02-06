@@ -19,6 +19,7 @@ interface ContentItem {
     platforms?: string[]
     [key: string]: unknown
   }
+  image_url?: string | null
   status: 'draft' | 'published' | 'scheduled'
   created_at: string
   updated_at: string
@@ -93,11 +94,16 @@ export default function ContentLibraryPage() {
   const getTemplateLabel = (template: string) => {
     const labels: Record<string, string> = {
       'blog-post': 'Blog Post',
+      'social-pack': 'Social Media Pack',
       'social-post': 'Social Media',
       'gmb-post': 'Google Business',
       'email': 'Email',
     }
     return labels[template] || template
+  }
+
+  const getThumbnailUrl = (item: ContentItem): string | null => {
+    return item.metadata?.image_url ?? item.image_url ?? null
   }
 
   if (loading) {
@@ -142,6 +148,7 @@ export default function ContentLibraryPage() {
           }}
         >
           <option value=''>All Types</option>
+          <option value='social-pack'>Social Media Pack</option>
           <option value='blog-post'>Blog Posts</option>
           <option value='social-post'>Social Media</option>
           <option value='gmb-post'>Google Business</option>
@@ -179,12 +186,13 @@ export default function ContentLibraryPage() {
               className='p-4 flex items-center gap-4 hover:bg-muted/50 cursor-pointer transition-colors'
             >
               {/* Thumbnail: show image if we have a URL and it hasn't failed to load */}
-              {item.metadata?.image_url && !failedThumbnails[item.id] ? (
+              {getThumbnailUrl(item) && !failedThumbnails[item.id] ? (
                 <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0'>
                   <img
-                    src={item.metadata.image_url}
+                    src={getThumbnailUrl(item)!}
                     alt={item.title || 'Content'}
                     className='w-full h-full object-cover'
+                    referrerPolicy='no-referrer'
                     onError={() => setFailedThumbnails((prev) => ({ ...prev, [item.id]: true }))}
                   />
                 </div>
@@ -200,7 +208,7 @@ export default function ContentLibraryPage() {
                 <p className='text-sm text-muted-foreground'>
                   {getTemplateLabel(item.template)} • {formatDate(item.created_at)}
                 </p>
-                {item.metadata?.image_url && (item.metadata?.image_source === 'stock' || item.metadata?.photographer_url) && (
+                {getThumbnailUrl(item) && (item.metadata?.image_source === 'stock' || item.metadata?.photographer_url) && (
                   <p className='text-xs text-muted-foreground mt-1'>
                     Photo by{' '}
                     {item.metadata.photographer_url ? (

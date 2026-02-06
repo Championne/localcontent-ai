@@ -12,6 +12,7 @@ interface GeneratedImage {
   content_type: string | null
   rating: number | null
   created_at: string
+  content_id?: string | null
 }
 
 const RATING_REMINDER_KEY = 'quality-rating-reminder-dismissed'
@@ -114,11 +115,16 @@ export default function PictureLibraryPage() {
 
       {images.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {images.map((img) => (
+          {images.map((img) => {
+            const isFromContent = typeof img.id === 'string' && img.id.startsWith('content-')
+            const href = isFromContent && img.content_id
+              ? `/dashboard/content?edit=${img.content_id}`
+              : `/dashboard/pictures/${img.id}`
+            return (
             <button
               key={img.id}
               type="button"
-              onClick={() => router.push(`/dashboard/pictures/${img.id}`)}
+              onClick={() => router.push(href)}
               className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 hover:border-teal-400 hover:ring-2 hover:ring-teal-200 transition-all text-left"
             >
               <img
@@ -128,14 +134,14 @@ export default function PictureLibraryPage() {
               />
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs flex items-center justify-between">
                 <span className="truncate">{img.topic || 'Untitled'}</span>
-                {img.rating != null ? (
+                {!isFromContent && (img.rating != null ? (
                   <span className="text-yellow-400">★ {img.rating}</span>
                 ) : (
                   <span className="text-white/70">Rate</span>
-                )}
+                ))}
               </div>
             </button>
-          ))}
+          )})}
         </div>
       ) : (
         <div className="border rounded-lg p-12 text-center bg-card">

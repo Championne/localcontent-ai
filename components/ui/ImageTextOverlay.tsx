@@ -19,7 +19,7 @@ interface ImageTextOverlayProps {
   suggestedTexts: string[] // AI-suggested texts based on content
   industry?: string
   businessName?: string
-  onSave?: (imageWithText: Blob) => void
+  onSave?: (imageWithText: Blob) => void | Promise<void>
   onClose?: () => void
   className?: string
 }
@@ -322,68 +322,68 @@ export function ImageTextOverlay({
     }
   }
 
-  // Download image with text overlay
-  const downloadImage = async () => {
+  const [applyingContent, setApplyingContent] = useState(false)
+
+  // Render image + text overlays to blob, then run callback (and optionally trigger download)
+  const renderToBlob = useCallback((callback: (blob: Blob) => void, triggerDownload: boolean) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    
     img.onload = () => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
       if (!ctx) return
-      
       canvas.width = img.width
       canvas.height = img.height
       ctx.drawImage(img, 0, 0)
-      
-      // Render text overlays
       overlays.forEach(overlay => {
-        // Only render if within bounds
         if (overlay.x < 0 || overlay.x > 100 || overlay.y < 0 || overlay.y > 100) return
-        
         const x = (overlay.x / 100) * canvas.width
         const y = (overlay.y / 100) * canvas.height
-        const fontSize = Math.round((overlay.fontSize / 400) * canvas.width) // Scale font to image size
-        
+        const fontSize = Math.round((overlay.fontSize / 400) * canvas.width)
         ctx.font = `${overlay.fontWeight} ${fontSize}px Inter, system-ui, sans-serif`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        
-        // Draw shadow/outline for readability
         ctx.shadowColor = overlay.shadowColor
         ctx.shadowBlur = fontSize / 4
         ctx.shadowOffsetX = 0
         ctx.shadowOffsetY = 2
-        
-        // Draw text
         ctx.fillStyle = overlay.color
         ctx.fillText(overlay.text, x, y)
-        
-        // Reset shadow
         ctx.shadowColor = 'transparent'
         ctx.shadowBlur = 0
       })
-      
       canvas.toBlob((blob) => {
         if (!blob) return
-        
-        if (onSave) {
-          onSave(blob)
+        callback(blob)
+        if (triggerDownload) {
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${businessName || 'geospark'}-content.png`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
         }
-        
-        // Also trigger download
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${businessName || 'geospark'}-content.png`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
       }, 'image/png')
     }
-    
     img.src = imageUrl
+  }, [imageUrl, overlays, businessName])
+
+  const downloadImage = () => {
+    renderToBlob((blob) => { if (onSave) void Promise.resolve(onSave(blob)) }, true)
+  }
+
+  const applyToContent = () => {
+    if (!onSave || overlays.length === 0) return
+    setApplyingContent(true)
+    renderToBlob(async (blob) => {
+      try {
+        await Promise.resolve(onSave(blob))
+      } finally {
+        setApplyingContent(false)
+      }
+    }, false)
   }
 
   // Check if overlay is out of bounds (for removal indicator)
@@ -553,7 +553,7 @@ export function ImageTextOverlay({
       )}
 
       {/* Footer with actions */}
-      <div className="flex items-center justify-between px-4 py-3 border-t bg-white">
+      <div className="flex items-center justify-between px-4 py-3 border-t bg-white flex-wrap gap-2">
         <div className="text-sm text-gray-500">
           {overlays.length === 0 
             ? 'No text added • Download clean image or add text'
@@ -562,13 +562,31 @@ export function ImageTextOverlay({
               : 'Text will be embedded in image'
           }
         </div>
-        <button
-          onClick={downloadImage}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          <Download className="w-4 h-4" />
-          Download
-        </button>
+        <div className="flex items-center gap-2">
+          {onSave && overlays.length > 0 && (
+            <button
+              onClick={applyToContent}
+              disabled={applyingContent}
+              className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-60 transition-colors font-medium"
+            >
+              {applyingContent ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Applying...
+                </>
+              ) : (
+                'Apply to content'
+              )}
+            </button>
+          )}
+          <button
+            onClick={downloadImage}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </button>
+        </div>
       </div>
     </div>
   )

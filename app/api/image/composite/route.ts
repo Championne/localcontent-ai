@@ -24,15 +24,18 @@ export async function POST(request: Request) {
       )
     }
 
+    const fetchOpts: RequestInit = {
+      headers: { 'User-Agent': 'GeoSpark-ImageComposite/1.0 (https://geospark.ai)' },
+    }
     // Fetch the base image
-    const imageResponse = await fetch(imageUrl)
+    const imageResponse = await fetch(imageUrl, fetchOpts)
     if (!imageResponse.ok) {
       return NextResponse.json({ error: 'Failed to fetch base image' }, { status: 500 })
     }
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
 
-    // Fetch the logo
-    const logoResponse = await fetch(logoUrl)
+    // Fetch the logo/overlay
+    const logoResponse = await fetch(logoUrl, fetchOpts)
     if (!logoResponse.ok) {
       return NextResponse.json({ error: 'Failed to fetch logo' }, { status: 500 })
     }

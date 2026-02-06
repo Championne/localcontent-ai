@@ -239,6 +239,7 @@ export default function CreateContentPage() {
   
   // Text overlay editor
   const [showTextOverlay, setShowTextOverlay] = useState(false)
+  const [overlayError, setOverlayError] = useState<string | null>(null)
 
   // GBP-specific state
   const [gbpPostType, setGbpPostType] = useState<GbpPostType>('update')
@@ -313,15 +314,16 @@ export default function CreateContentPage() {
         if (meta.businessName) setBusinessName(meta.businessName)
         if (meta.industry) setIndustry(meta.industry)
         if (meta.tone) setTone(meta.tone)
-        if (meta.image_url) {
+        const imageUrl = meta.image_url ?? (item as { image_url?: string }).image_url
+        if (imageUrl) {
           setGeneratedImage({
-            url: meta.image_url,
-            style: meta.image_style || 'professional',
+            url: imageUrl,
+            style: (meta.image_style as string) || 'professional',
             generatedAt: item.updated_at || new Date().toISOString(),
             ...(meta.image_source === 'stock' && {
               source: 'stock',
-              photographerName: meta.photographer_name,
-              photographerUrl: meta.photographer_url,
+              photographerName: meta.photographer_name as string | undefined,
+              photographerUrl: meta.photographer_url as string | undefined,
               attribution: meta.photographer_name ? `Photo by ${meta.photographer_name} on Unsplash` : undefined,
             }),
           })
@@ -430,12 +432,12 @@ export default function CreateContentPage() {
   // Handle applying multiple overlays from the drag-drop editor
   const handleApplyOverlays = async (overlays: Array<{ id: string; url: string; x: number; y: number; scale: number; type: 'logo' | 'photo' }>) => {
     if (!generatedImage || overlays.length === 0) return
-    
+
+    setOverlayError(null)
     setApplyingLogo(true)
     try {
-      // Apply each overlay sequentially
       let currentImageUrl = generatedImage.url
-      
+
       for (const overlay of overlays) {
         const response = await fetch('/api/image/composite', {
           method: 'POST',
@@ -447,24 +449,23 @@ export default function CreateContentPage() {
             isCircular: overlay.type === 'photo',
           }),
         })
-        
-        if (response.ok) {
-          const data = await response.json()
-          currentImageUrl = data.url
-        } else {
-          console.error('Failed to apply overlay:', overlay.type)
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}))
+          setOverlayError(err.error || 'Failed to apply logo/photo. Try again.')
+          return
         }
+        const data = await response.json()
+        currentImageUrl = data.url
       }
-      
-      setGeneratedImage({
-        ...generatedImage,
-        url: currentImageUrl,
-      })
+
+      setGeneratedImage((prev) => (prev ? { ...prev, url: currentImageUrl } : prev))
       setShowOverlayEditor(false)
       setLogoSkipped(true)
       setPhotoSkipped(true)
     } catch (error) {
       console.error('Overlay apply error:', error)
+      setOverlayError('Something went wrong. Please try again.')
     } finally {
       setApplyingLogo(false)
     }
@@ -519,6 +520,30 @@ export default function CreateContentPage() {
   const handleSkipPhoto = () => {
     setShowPhotoPositioner(false)
     setPhotoSkipped(true)
+  }
+
+  // Apply text-overlay image to content (upload blob, set as generated image, close overlay)
+  const handleTextOverlaySave = async (blob: Blob) => {
+    if (!generatedImage) return
+    try {
+      const form = new FormData()
+      form.append('file', blob, 'content-image.png')
+      const res = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setOverlayError(err.error || 'Failed to apply text to image.')
+        return
+      }
+      const data = await res.json()
+      if (data.url) {
+        setGeneratedImage((prev) => (prev ? { ...prev, url: data.url } : prev))
+        setShowTextOverlay(false)
+        setOverlayError(null)
+      }
+    } catch (e) {
+      console.error('Text overlay save error:', e)
+      setOverlayError('Failed to apply text to image.')
+    }
   }
 
   // Auto-detect best image style when topic changes
@@ -668,11 +693,12 @@ export default function CreateContentPage() {
     setError('')
     setRegenerateMenuOpen(false)
     
-    if (mode === 'all' || mode === 'image') {
+    if (mode === 'all') {
       setGeneratedImage(null)
       setStockImageOptions([])
       setSelectedStockImage(null)
     }
+    // For mode === 'image' we clear after we get a successful response with new options/image below
     
     setViewMode('preview') // Reset to preview mode on new generation
     
@@ -707,24 +733,27 @@ export default function CreateContentPage() {
           setGeneratedContent(data.content)
         }
       }
-      
-      if (data.stockImageOptions?.length) {
-        setStockImageOptions(data.stockImageOptions)
-        setSelectedStockImage(null)
-        setGeneratedImage(null)
-        setGeneratedImageId(null)
-      } else {
-        setStockImageOptions([])
-        setSelectedStockImage(null)
-      }
-      if (data.image) {
-        setGeneratedImage(data.image)
-        const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
-        if (businessLogo && !logoSkipped) {
-          setShowOverlayEditor(true)
+
+      // Only update image-related state when we requested image (all or image). When regenerating text only, preserve current image.
+      if (mode === 'all' || mode === 'image') {
+        if (data.stockImageOptions?.length) {
+          setStockImageOptions(data.stockImageOptions)
+          setSelectedStockImage(null)
+          setGeneratedImage(null)
+          setGeneratedImageId(null)
+        } else {
+          setStockImageOptions([])
+          setSelectedStockImage(null)
         }
+        if (data.image) {
+          setGeneratedImage(data.image)
+          const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
+          if (businessLogo && !logoSkipped) {
+            setShowOverlayEditor(true)
+          }
+        }
+        if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
       }
-      if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
       if (data.generated_text_id) { setGeneratedTextId(data.generated_text_id); setTextRating(null) }
       if (data.usage) {
         setImagesRemaining(data.usage.imagesRemaining)
@@ -1507,6 +1536,11 @@ export default function CreateContentPage() {
           {/* Image Overlay Editor - Drag & Drop Logo/Photo (or upload here) */}
           {generatedImage && showOverlayEditor ? (
             <div className="mb-6">
+              {overlayError && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {overlayError}
+                </div>
+              )}
               <ImageOverlayEditor
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
@@ -1520,6 +1554,11 @@ export default function CreateContentPage() {
             </div>
           ) : generatedImage && showTextOverlay ? (
             <div className="mb-6">
+              {overlayError && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {overlayError}
+                </div>
+              )}
               <ImageTextOverlay
                 imageUrl={generatedImage.url}
                 suggestedTexts={[
@@ -1530,7 +1569,8 @@ export default function CreateContentPage() {
                 ].filter(Boolean)}
                 industry={industry}
                 businessName={businessName}
-                onClose={() => setShowTextOverlay(false)}
+                onSave={handleTextOverlaySave}
+                onClose={() => { setShowTextOverlay(false); setOverlayError(null) }}
               />
             </div>
           ) : generatedImage && (
@@ -2087,6 +2127,11 @@ export default function CreateContentPage() {
           {/* Image Overlay Editor - same as social-pack flow */}
           {generatedImage && showOverlayEditor && (
             <div className="mb-6">
+              {overlayError && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {overlayError}
+                </div>
+              )}
               <ImageOverlayEditor
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
@@ -2102,6 +2147,11 @@ export default function CreateContentPage() {
           {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
           {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && showTextOverlay && (
             <div className="mb-4">
+              {overlayError && (
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {overlayError}
+                </div>
+              )}
               <ImageTextOverlay
                 imageUrl={generatedImage.url}
                 suggestedTexts={[
@@ -2112,7 +2162,8 @@ export default function CreateContentPage() {
                 ].filter(Boolean)}
                 industry={industry}
                 businessName={businessName}
-                onClose={() => setShowTextOverlay(false)}
+                onSave={handleTextOverlaySave}
+                onClose={() => { setShowTextOverlay(false); setOverlayError(null) }}
               />
             </div>
           )}

@@ -83,7 +83,7 @@ export default function HomePage() {
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
             Stop spending hours on social media. Describe what you want to share, and GeoSpark creates 
             <strong> platform-perfect posts</strong> for Twitter, Facebook, Instagram, LinkedIn, TikTok, and Nextdoor — 
-            complete with <strong>AI-generated images</strong>.
+            complete with a <strong>matching image</strong> (free stock photo or AI-generated).
           </p>
 
           {/* CTA Button */}
@@ -175,7 +175,7 @@ export default function HomePage() {
               {
                 step: '2',
                 title: 'AI Creates Your Pack',
-                description: 'Our AI instantly generates 6 platform-optimized posts plus a matching image — all tailored to your business.',
+                description: 'Our AI instantly generates 6 platform-optimized posts plus a matching image (stock or AI) — all tailored to your business.',
                 icon: '✨',
                 useLogo: true
               },
@@ -230,7 +230,7 @@ export default function HomePage() {
             {
               icon: '🖼️',
               title: 'AI Image Generation',
-              description: 'Every content pack includes a matching AI-generated image — no design skills or stock photos needed.',
+              description: 'Every content pack includes a matching image — free stock photo or AI-generated. No design skills needed.',
             },
             {
               icon: '📍',
@@ -289,7 +289,7 @@ export default function HomePage() {
                 rating: 5
               },
               {
-                quote: "As a solo real estate agent, I compete with big agencies now. The AI-generated images look professional, and my listings get way more attention.",
+                quote: "As a solo real estate agent, I compete with big agencies now. The matching images look professional, and my listings get way more attention.",
                 name: "Emily R.",
                 role: "Real Estate Agent",
                 metric: "10+ hrs saved/week",
@@ -518,7 +518,7 @@ export default function HomePage() {
               {[
                 {
                   q: "How fast can I create content?",
-                  a: "In under 2 minutes. Just describe your topic in a sentence or two, and our AI generates 6 platform-optimized posts with a matching image. You can create a week's worth of content during your coffee break."
+                  a: "In under 2 minutes. Just describe your topic in a sentence or two, and our AI generates 6 platform-optimized posts with a matching image (free stock photo or AI). You can create a week's worth of content during your coffee break."
                 },
                 {
                   q: "What platforms does GeoSpark support?",
@@ -530,7 +530,7 @@ export default function HomePage() {
                 },
                 {
                   q: "Do I need design skills for the images?",
-                  a: "Not at all. Our AI generates professional-quality images that match your content automatically. No Canva, no stock photos, no design experience needed."
+                  a: "Not at all. You get a matching image with every pack — we use free stock photos or AI generation. No Canva, no design experience needed."
                 },
                 {
                   q: "What if I'm not satisfied?",

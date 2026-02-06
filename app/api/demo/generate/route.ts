@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
 import { generateImage, isImageGenerationConfigured, detectBestStyle } from '@/lib/openai/images'
+import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 import { cookies } from 'next/headers'
 
 export const maxDuration = 90 // Allow up to 90 seconds for text + image
@@ -273,9 +274,20 @@ export async function POST(request: Request) {
                     contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'
     }
 
-    // Generate image if configured
+    // Image: prefer free stock photo (simplified workflow), fallback to AI
     let imageUrl: string | undefined
-    if (isImageGenerationConfigured()) {
+    const templateForStock = contentType === 'social-pack' ? 'social-pack' : (contentType as 'blog-post' | 'gmb-post' | 'email')
+    if (isStockImageConfigured()) {
+      try {
+        const options = await getStockImageOptions({ topic, industry, contentType: templateForStock }, 1)
+        if (options.length > 0) {
+          imageUrl = options[0].url
+        }
+      } catch (e) {
+        console.error('Demo stock image failed:', e)
+      }
+    }
+    if (!imageUrl && isImageGenerationConfigured()) {
       try {
         const style = detectBestStyle(topic)
         const imageResult = await generateImage({
@@ -288,7 +300,6 @@ export async function POST(request: Request) {
         imageUrl = imageResult.url
       } catch (imgError) {
         console.error('Demo image generation failed:', imgError)
-        // Continue without image - don't fail the whole demo
       }
     }
 

@@ -95,6 +95,19 @@ export async function POST(request: NextRequest) {
     if (data?.id) {
       if (generated_image_id) {
         await supabase.from('generated_images').update({ content_id: data.id }).eq('id', generated_image_id).eq('user_id', user.id)
+      } else if (finalImageUrl) {
+        // Stock or other image: add to Picture Library so it shows up there
+        const title = body.title || data.title || `${template} - ${new Date().toLocaleDateString()}`
+        await supabase.from('generated_images').insert({
+          user_id: user.id,
+          image_url: finalImageUrl,
+          topic: title,
+          business_name: metadata.businessName ?? null,
+          industry: metadata.industry ?? null,
+          style: image_style ?? null,
+          content_type: template,
+          content_id: data.id,
+        })
       }
       if (generated_text_id) {
         await supabase.from('generated_texts').update({ content_id: data.id }).eq('id', generated_text_id).eq('user_id', user.id)

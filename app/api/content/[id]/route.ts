@@ -99,6 +99,28 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update content' }, { status: 500 })
     }
 
+    // Ensure image appears in Picture Library when content has an image
+    if (data?.metadata?.image_url) {
+      const { data: existingImg } = await supabase
+        .from('generated_images')
+        .select('id')
+        .eq('content_id', params.id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (!existingImg) {
+        await supabase.from('generated_images').insert({
+          user_id: user.id,
+          image_url: data.metadata.image_url,
+          topic: (data.title as string) || null,
+          business_name: (data.metadata.businessName as string) ?? null,
+          industry: (data.metadata.industry as string) ?? null,
+          style: (data.metadata.image_style as string) ?? null,
+          content_type: data.template,
+          content_id: data.id,
+        })
+      }
+    }
+
     return NextResponse.json({
       success: true,
       content: data

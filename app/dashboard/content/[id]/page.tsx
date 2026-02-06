@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface ContentItem {
   id: string
@@ -16,6 +15,7 @@ interface ContentItem {
     tone?: string
     [key: string]: unknown
   }
+  image_url?: string | null
   status: 'draft' | 'published' | 'scheduled'
   created_at: string
   updated_at: string
@@ -244,15 +244,12 @@ export default function EditContentPage({ params }: { params: { id: string } }) 
           <h2 className="font-semibold text-gray-900 mb-4">Preview</h2>
           
           {/* Image Preview */}
-          {content.metadata?.image_url && (
+          {(content.metadata?.image_url ?? content.image_url) && (
             <div className="mb-4 rounded-lg overflow-hidden bg-gray-100">
-              <Image
-                src={content.metadata.image_url}
+              <img
+                src={content.metadata?.image_url ?? content.image_url ?? ''}
                 alt={title || 'Content image'}
-                width={500}
-                height={500}
-                className="w-full h-auto object-contain"
-                unoptimized
+                className="w-full h-auto object-contain max-h-80"
               />
             </div>
           )}
