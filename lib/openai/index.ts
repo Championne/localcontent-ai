@@ -205,7 +205,9 @@ function buildPrompt(params: GenerateContentParams): string {
 **Business Name:** ${businessName}
 **Industry:** ${industry}
 **Topic/Subject:** ${topic}
-**Desired Tone:** ${tone}`
+**Desired Tone:** ${tone}
+
+**Language:** Write all content in the same language as the Topic/Subject above. If the topic is in Dutch, write entirely in Dutch; if in another language, write in that language. Only use English if the topic is in English.`
 
   if (location) {
     prompt += `\n**Location:** ${location}`
@@ -352,7 +354,9 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
 **Business Name:** ${businessName}
 **Industry:** ${industry}
 **Topic/Subject:** ${topic}
-**Desired Tone:** ${tone}`
+**Desired Tone:** ${tone}
+
+**Language:** Write all posts in the same language as the Topic/Subject above. If the topic is in Dutch, write entirely in Dutch; if in another language, write in that language. Only use English if the topic is in English.`
 
   if (location) {
     context += `\n**Location:** ${location}`

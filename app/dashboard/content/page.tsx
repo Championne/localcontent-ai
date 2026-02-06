@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 import ImageOverlayEditor from '@/components/ImageOverlayEditor'
+import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ImageTextOverlay } from '@/components/ui/ImageTextOverlay'
 import { GenerationProgress } from '@/components/ui/GenerationProgress'
@@ -240,6 +241,12 @@ export default function CreateContentPage() {
   const [offerCustomDate, setOfferCustomDate] = useState('')
   const [eventDate, setEventDate] = useState('')
   const [eventTime, setEventTime] = useState('')
+
+  // Quality ratings: link to generated_images / generated_texts when saving
+  const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
+  const [generatedTextId, setGeneratedTextId] = useState<string | null>(null)
+  const [imageRating, setImageRating] = useState<number | null>(null)
+  const [textRating, setTextRating] = useState<number | null>(null)
 
   // Edit existing content from library (?edit=contentId)
   const searchParams = useSearchParams()
@@ -686,17 +693,16 @@ export default function CreateContentPage() {
       
       if (data.image) {
         setGeneratedImage(data.image)
-        // Show logo positioner if business has a logo
         const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
         if (businessLogo && !logoSkipped) {
           setShowOverlayEditor(true)
         }
       }
-      
+      if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
+      if (data.generated_text_id) { setGeneratedTextId(data.generated_text_id); setTextRating(null) }
       if (data.usage) {
         setImagesRemaining(data.usage.imagesRemaining)
       }
-      
       setStep(3)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -722,6 +728,8 @@ export default function CreateContentPage() {
         status: 'draft' as const,
         image_url: generatedImage?.url || null,
         image_style: generatedImage?.style || null,
+        ...(generatedImageId && { generated_image_id: generatedImageId }),
+        ...(generatedTextId && { generated_text_id: generatedTextId }),
       }
 
       const url = editingContentId ? `/api/content/${editingContentId}` : '/api/content'
@@ -744,6 +752,30 @@ export default function CreateContentPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleRateImage = async (rating: number, feedbackReasons?: string[]) => {
+    if (!generatedImageId) return
+    try {
+      await fetch(`/api/generated-images/${generatedImageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, feedback_reasons: feedbackReasons || [] })
+      })
+      setImageRating(rating)
+    } catch (_) {}
+  }
+
+  const handleRateText = async (rating: number, feedbackReasons?: string[]) => {
+    if (!generatedTextId) return
+    try {
+      await fetch(`/api/generated-texts/${generatedTextId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, feedback_reasons: feedbackReasons || [] })
+      })
+      setTextRating(rating)
+    } catch (_) {}
   }
 
   const handleCopy = (text: string, platform?: string) => {
@@ -1326,6 +1358,39 @@ export default function CreateContentPage() {
             </div>
           )}
 
+          {/* In-flow rating: soft nudge to rate copy and image */}
+          {(generatedImageId || generatedTextId) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
+              <div className="flex flex-wrap gap-6">
+                {generatedTextId && (
+                  <div className="min-w-[200px]">
+                    <RatingStars
+                      type="text"
+                      label="Rate this copy"
+                      value={textRating}
+                      onChange={handleRateText}
+                      onSkip={() => {}}
+                      showSkip
+                    />
+                  </div>
+                )}
+                {generatedImageId && (
+                  <div className="min-w-[200px]">
+                    <RatingStars
+                      type="image"
+                      label="Rate this image"
+                      value={imageRating}
+                      onChange={handleRateImage}
+                      onSkip={() => {}}
+                      showSkip
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           
 
           {/* Image Overlay Editor - Drag & Drop Logo/Photo (or upload here) */}
@@ -1843,6 +1908,25 @@ export default function CreateContentPage() {
                 contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
                 size="md"
               />
+            </div>
+          )}
+
+          {/* In-flow rating */}
+          {(generatedImageId || generatedTextId) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
+              <div className="flex flex-wrap gap-6">
+                {generatedTextId && (
+                  <div className="min-w-[200px]">
+                    <RatingStars type="text" label="Rate this copy" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
+                  </div>
+                )}
+                {generatedImageId && (
+                  <div className="min-w-[200px]">
+                    <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

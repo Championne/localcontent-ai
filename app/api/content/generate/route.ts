@@ -10,6 +10,7 @@ import {
   IMAGE_LIMITS,
   ImageStyle 
 } from '@/lib/openai/images'
+import { persistContentImage } from '@/lib/content-image'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -119,8 +120,9 @@ export async function POST(request: Request) {
         }
       }
 
-      // Generate image if requested
+      // Generate image if requested; record every generation for Picture Library
       let image = null
+      let generatedImageId: string | null = null
       if (shouldGenerateImage && isImageGenerationConfigured()) {
         try {
           const imageResult = await generateImage({
@@ -130,14 +132,32 @@ export async function POST(request: Request) {
             style: finalImageStyle,
             contentType: template
           })
+          const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
+          const imageUrl = permanentUrl || imageResult.url
           image = {
-            url: imageResult.url,
+            url: imageUrl,
             style: imageResult.style,
             size: imageResult.size,
             generatedAt: new Date().toISOString()
           }
-          
-          // Update image usage counter
+          const { data: imgRow } = await supabase
+            .from('generated_images')
+            .insert({
+              user_id: user.id,
+              image_url: imageUrl,
+              topic,
+              business_name: businessName,
+              industry,
+              style: imageResult.style,
+              content_type: template,
+              size: imageResult.size,
+              full_prompt: imageResult.fullPrompt || null,
+              revised_prompt: imageResult.revisedPrompt || null,
+              prompt_version: 'v1'
+            })
+            .select('id')
+            .single()
+          if (imgRow) generatedImageId = imgRow.id
           await supabase
             .from('subscriptions')
             .update({ 
@@ -147,9 +167,30 @@ export async function POST(request: Request) {
             .eq('user_id', user.id)
         } catch (imgError) {
           console.error('Image generation failed:', imgError)
-          // Continue without image - don't fail the whole request
         }
       }
+
+      // Record text generation for Text Library
+      let generatedTextId: string | null = null
+      const contentStr = JSON.stringify(socialPack)
+      const preview = contentStr.length > 500 ? contentStr.slice(0, 500) + '…' : contentStr
+      const { data: textRow } = await supabase
+        .from('generated_texts')
+        .insert({
+          user_id: user.id,
+          template: 'social-pack',
+          topic,
+          business_name: businessName,
+          industry,
+          tone,
+          content_preview: preview,
+          content_full: contentStr,
+          prompt_summary: `topic: ${topic}, template: social-pack, business: ${businessName}, industry: ${industry}`,
+          prompt_version: 'v1'
+        })
+        .select('id')
+        .single()
+      if (textRow) generatedTextId = textRow.id
 
       // Optionally save to database
       let savedContent = null
@@ -160,17 +201,29 @@ export async function POST(request: Request) {
             user_id: user.id,
             template: 'social-pack',
             title: topic,
-            content: JSON.stringify(socialPack),
-            metadata: { businessName, industry, tone, additionalContext, type: 'social-pack' },
-            status: 'draft',
-            image_url: image?.url || null,
-            image_style: image?.style || null
+            content: contentStr,
+            metadata: {
+              businessName,
+              industry,
+              tone,
+              additionalContext,
+              type: 'social-pack',
+              image_url: image?.url || null,
+              image_style: image?.style || null
+            },
+            status: 'draft'
           })
           .select()
           .single()
 
-        if (!error) {
+        if (!error && data) {
           savedContent = data
+          if (generatedImageId) {
+            await supabase.from('generated_images').update({ content_id: data.id }).eq('id', generatedImageId)
+          }
+          if (generatedTextId) {
+            await supabase.from('generated_texts').update({ content_id: data.id }).eq('id', generatedTextId)
+          }
           await supabase
             .from('subscriptions')
             .update({ 
@@ -186,6 +239,8 @@ export async function POST(request: Request) {
         socialPack,
         image,
         savedContent,
+        generated_image_id: generatedImageId,
+        generated_text_id: generatedTextId,
         template: 'social-pack',
         metadata: {
           businessName,
@@ -227,8 +282,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // Generate image if requested
+    // Generate image if requested; record every generation for Picture Library
     let image = null
+    let generatedImageId: string | null = null
     if (shouldGenerateImage && isImageGenerationConfigured()) {
       try {
         const imageResult = await generateImage({
@@ -238,14 +294,32 @@ export async function POST(request: Request) {
           style: finalImageStyle,
           contentType: template
         })
+        const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
+        const imageUrl = permanentUrl || imageResult.url
         image = {
-          url: imageResult.url,
+          url: imageUrl,
           style: imageResult.style,
           size: imageResult.size,
           generatedAt: new Date().toISOString()
         }
-        
-        // Update image usage counter
+        const { data: imgRow } = await supabase
+          .from('generated_images')
+          .insert({
+            user_id: user.id,
+            image_url: imageUrl,
+            topic,
+            business_name: businessName,
+            industry,
+            style: imageResult.style,
+            content_type: template,
+            size: imageResult.size,
+            full_prompt: imageResult.fullPrompt || null,
+            revised_prompt: imageResult.revisedPrompt || null,
+            prompt_version: 'v1'
+          })
+          .select('id')
+          .single()
+        if (imgRow) generatedImageId = imgRow.id
         await supabase
           .from('subscriptions')
           .update({ 
@@ -255,9 +329,29 @@ export async function POST(request: Request) {
           .eq('user_id', user.id)
       } catch (imgError) {
         console.error('Image generation failed:', imgError)
-        // Continue without image - don't fail the whole request
       }
     }
+
+    // Record text generation for Text Library
+    let generatedTextId: string | null = null
+    const contentPreview = content && content.length > 500 ? content.slice(0, 500) + '…' : (content || '')
+    const { data: textRow } = await supabase
+      .from('generated_texts')
+      .insert({
+        user_id: user.id,
+        template,
+        topic,
+        business_name: businessName,
+        industry,
+        tone,
+        content_preview: contentPreview,
+        content_full: content || null,
+        prompt_summary: `topic: ${topic}, template: ${template}, business: ${businessName}, industry: ${industry}`,
+        prompt_version: 'v1'
+      })
+      .select('id')
+      .single()
+    if (textRow) generatedTextId = textRow.id
 
     // Optionally save to database as draft
     let savedContent = null
@@ -268,23 +362,29 @@ export async function POST(request: Request) {
           user_id: user.id,
           template,
           title: topic,
-          content,
+          content: content || '',
           metadata: { 
             businessName, 
             industry, 
             tone, 
             additionalContext,
             gbpPostType: template === 'gmb-post' ? gbpPostType : undefined,
+            image_url: image?.url || null,
+            image_style: image?.style || null
           },
-          status: 'draft',
-          image_url: image?.url || null,
-          image_style: image?.style || null
+          status: 'draft'
         })
         .select()
         .single()
 
-      if (!error) {
+      if (!error && data) {
         savedContent = data
+        if (generatedImageId) {
+          await supabase.from('generated_images').update({ content_id: data.id }).eq('id', generatedImageId)
+        }
+        if (generatedTextId) {
+          await supabase.from('generated_texts').update({ content_id: data.id }).eq('id', generatedTextId)
+        }
         await supabase
           .from('subscriptions')
           .update({ 
@@ -300,6 +400,8 @@ export async function POST(request: Request) {
       content,
       image,
       savedContent,
+      generated_image_id: generatedImageId,
+      generated_text_id: generatedTextId,
       template,
       metadata: {
         businessName,

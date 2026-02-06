@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { isTemporaryImageUrl, persistContentImage } from '@/lib/content-image'
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,16 +52,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, content, template, metadata = {}, status = 'draft', business_id, image_url, image_style, platforms } = body
+    const { title, content, template, metadata = {}, status = 'draft', business_id, image_url, image_style, platforms, generated_image_id, generated_text_id } = body
 
     if (!content || !template) {
       return NextResponse.json({ error: 'Content and template are required' }, { status: 400 })
     }
 
+    // Persist temporary image URLs (e.g. DALL-E) to storage so they don't expire
+    let finalImageUrl = image_url
+    if (image_url && isTemporaryImageUrl(image_url)) {
+      const persisted = await persistContentImage(supabase, user.id, image_url)
+      if (persisted) finalImageUrl = persisted
+    }
+
     // Build metadata including image if provided
     const fullMetadata = {
       ...metadata,
-      ...(image_url && { image_url }),
+      ...(finalImageUrl && { image_url: finalImageUrl }),
       ...(image_style && { image_style }),
       ...(platforms && { platforms }),
     }
@@ -82,6 +90,15 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Content save error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    if (data?.id) {
+      if (generated_image_id) {
+        await supabase.from('generated_images').update({ content_id: data.id }).eq('id', generated_image_id).eq('user_id', user.id)
+      }
+      if (generated_text_id) {
+        await supabase.from('generated_texts').update({ content_id: data.id }).eq('id', generated_text_id).eq('user_id', user.id)
+      }
     }
 
     return NextResponse.json({ message: 'Content saved successfully', data }, { status: 201 })

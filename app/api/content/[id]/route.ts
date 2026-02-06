@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { isTemporaryImageUrl, persistContentImage } from '@/lib/content-image'
 
 // GET /api/content/[id] - Get single content item
 export async function GET(
@@ -49,7 +50,15 @@ export async function PATCH(
 
   try {
     const body = await request.json()
-    const { title, content, status, scheduled_for, metadata } = body
+    let { title, content, status, scheduled_for, metadata } = body
+
+    // Persist temporary image URL (e.g. DALL-E) so library thumbnails don't expire
+    if (metadata?.image_url && isTemporaryImageUrl(metadata.image_url)) {
+      const persisted = await persistContentImage(supabase, user.id, metadata.image_url)
+      if (persisted) {
+        metadata = { ...metadata, image_url: persisted }
+      }
+    }
 
     // Verify ownership
     const { data: existing } = await supabase

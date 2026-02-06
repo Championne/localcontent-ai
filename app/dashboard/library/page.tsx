@@ -25,6 +25,7 @@ export default function ContentLibraryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState({ type: '', status: '', search: '' })
+  const [failedThumbnails, setFailedThumbnails] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     fetchContent()
@@ -172,13 +173,14 @@ export default function ContentLibraryPage() {
               onClick={() => router.push(`/dashboard/content?edit=${item.id}`)}
               className='p-4 flex items-center gap-4 hover:bg-muted/50 cursor-pointer transition-colors'
             >
-              {/* Thumbnail */}
-              {item.metadata?.image_url ? (
+              {/* Thumbnail: show image if we have a URL and it hasn't failed to load */}
+              {item.metadata?.image_url && !failedThumbnails[item.id] ? (
                 <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0'>
-                  <img 
-                    src={item.metadata.image_url} 
-                    alt={item.title || 'Content'} 
+                  <img
+                    src={item.metadata.image_url}
+                    alt={item.title || 'Content'}
                     className='w-full h-full object-cover'
+                    onError={() => setFailedThumbnails((prev) => ({ ...prev, [item.id]: true }))}
                   />
                 </div>
               ) : (
@@ -206,7 +208,7 @@ export default function ContentLibraryPage() {
                 >
                   {item.status}
                 </span>
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation()
                     handleDelete(item.id)

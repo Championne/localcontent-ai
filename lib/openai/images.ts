@@ -103,6 +103,7 @@ export interface GenerateImageResult {
   style: ImageStyle
   size: string
   revisedPrompt?: string
+  fullPrompt?: string
 }
 
 // Build the image generation prompt
@@ -168,7 +169,8 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       url: imageUrl,
       style: params.style,
       size: imageSize,
-      revisedPrompt: revisedPrompt
+      revisedPrompt: revisedPrompt,
+      fullPrompt: prompt
     }
   } catch (error) {
     console.error('DALL-E image generation error:', error)
