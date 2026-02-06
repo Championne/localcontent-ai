@@ -111,7 +111,7 @@ export default function TextLibraryPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-500">{templateLabel[t.template] || t.template} • {new Date(t.created_at).toLocaleDateString()}</p>
                 <p className="font-medium truncate">{t.topic || 'Untitled'}</p>
-                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{t.content_preview || '—'}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{t.content_preview || '-'}</p>
               </div>
               <div className="flex-shrink-0">
                 {t.rating != null ? (

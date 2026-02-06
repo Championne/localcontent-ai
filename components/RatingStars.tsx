@@ -3,10 +3,8 @@
 import { useState } from 'react'
 
 export const FEEDBACK_REASONS_IMAGE = [
-  'Wrong style / mood',
-  'Unwanted text in image',
-  'Off-topic / doesn\'t match idea',
-  'Blurry or low quality',
+  'Unclear',
+  'Incorrect text in image',
   'Other'
 ] as const
 
@@ -50,21 +48,45 @@ export default function RatingStars({
   variant = 'full',
 }: RatingStarsProps) {
   const [localRating, setLocalRating] = useState<number | null>(value)
-  const [localReasons, setLocalReasons] = useState<string[]>(feedbackReasons)
+  const [localReasons, setLocalReasons] = useState<string[]>(() =>
+    feedbackReasons.map((r) => (r.startsWith('Other') ? 'Other' : r)).filter((v, i, a) => a.indexOf(v) === i)
+  )
+  const [otherText, setOtherText] = useState(() => {
+    const other = feedbackReasons.find((r) => r.startsWith('Other:'))
+    return other ? other.replace(/^Other:\s*/, '') : ''
+  })
   const reasons = type === 'image' ? FEEDBACK_REASONS_IMAGE : FEEDBACK_REASONS_TEXT
   const showReasons = variant === 'full' && localRating === RATING_BAD
+  const showOtherField = localReasons.includes('Other')
+
+  const buildReasonsForSubmit = (): string[] => {
+    const base = localReasons.filter((r) => r !== 'Other')
+    if (localReasons.includes('Other')) {
+      base.push(otherText.trim() ? `Other: ${otherText.trim()}` : 'Other')
+    }
+    return base
+  }
 
   const handleThumb = (rating: number) => {
     if (disabled) return
     setLocalRating(rating)
-    onChange(rating, rating === RATING_BAD ? localReasons : undefined)
+    onChange(rating, rating === RATING_BAD ? buildReasonsForSubmit() : undefined)
   }
 
   const toggleReason = (r: string) => {
     if (disabled) return
     const next = localReasons.includes(r) ? localReasons.filter((x) => x !== r) : [...localReasons, r]
     setLocalReasons(next)
-    if (localRating != null) onChange(localRating, next)
+    const nextBuilt = next.filter((x) => x !== 'Other').concat(next.includes('Other') ? [otherText.trim() ? `Other: ${otherText.trim()}` : 'Other'] : [])
+    if (localRating === RATING_BAD) onChange(localRating, nextBuilt)
+  }
+
+  const handleOtherTextChange = (text: string) => {
+    setOtherText(text)
+    if (localRating === RATING_BAD && localReasons.includes('Other')) {
+      const base = localReasons.filter((x) => x !== 'Other')
+      onChange(localRating, [...base, text.trim() ? `Other: ${text.trim()}` : 'Other'])
+    }
   }
 
   const displayRating = localRating ?? value
@@ -127,6 +149,19 @@ export default function RatingStars({
               </label>
             ))}
           </div>
+          {showOtherField && (
+            <div className="mt-2">
+              <label className="block text-xs text-gray-500 mb-1">{type === 'image' ? "Describe what's wrong with the image" : "Describe what's wrong"}</label>
+              <textarea
+                value={otherText}
+                onChange={(e) => handleOtherTextChange(e.target.value)}
+                disabled={disabled}
+                placeholder="e.g. wrong colors, distorted subject, wrong style..."
+                rows={2}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

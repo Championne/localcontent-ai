@@ -100,7 +100,7 @@ async function sendWelcomeEmail(email: string, name: string) {
         <div class="content">
           <p style="font-size: 18px;">Hi ${name}! 👋</p>
           
-          <p>Thanks for joining GeoSpark — you're about to save <strong>10+ hours every week</strong> on content creation!</p>
+          <p>Thanks for joining GeoSpark. You're about to save <strong>10+ hours every week</strong> on content creation!</p>
           
           <p>With GeoSpark, you can turn one simple idea into 6 platform-ready posts with a matching AI image, all in under 2 minutes.</p>
           
@@ -128,21 +128,21 @@ async function sendWelcomeEmail(email: string, name: string) {
           
           <div class="feature">
             <div class="feature-icon"><span>✓</span></div>
-            <span><strong>5 content pieces</strong> — Create social packs, blogs, GMB posts & emails</span>
+            <span><strong>5 content pieces</strong>: Create social packs, blogs, GMB posts & emails</span>
           </div>
           <div class="feature">
             <div class="feature-icon"><span>✓</span></div>
-            <span><strong>5 AI-generated images</strong> — Professional visuals, no design skills needed</span>
+            <span><strong>5 AI-generated images</strong>: Professional visuals, no design skills needed</span>
           </div>
           <div class="feature">
             <div class="feature-icon"><span>✓</span></div>
-            <span><strong>6 platforms</strong> — Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor</span>
+            <span><strong>6 platforms</strong>: Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor</span>
           </div>
           
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
           
           <p style="color: #6b7280; font-size: 14px;">
-            Have questions? Just reply to this email — we read every message and typically respond within a few hours.
+            Have questions? Just reply to this email. We read every message and typically respond within a few hours.
           </p>
         </div>
         <div class="footer">
@@ -163,7 +163,7 @@ Welcome to GeoSpark! 🎉
 
 Hi ${name}! 👋
 
-Thanks for joining GeoSpark — you're about to save 10+ hours every week on content creation!
+Thanks for joining GeoSpark. You're about to save 10+ hours every week on content creation!
 
 With GeoSpark, you can turn one simple idea into 6 platform-ready posts with a matching AI image, all in under 2 minutes.
 
@@ -175,11 +175,11 @@ HERE'S HOW TO GET STARTED:
 Go to your dashboard: https://geospark.app/dashboard
 
 WHAT YOU GET WITH YOUR FREE TRIAL:
-✓ 5 content pieces — Create social packs, blogs, GMB posts & emails
-✓ 5 AI-generated images — Professional visuals, no design skills needed
-✓ 6 platforms — Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor
+✓ 5 content pieces: Create social packs, blogs, GMB posts & emails
+✓ 5 AI-generated images: Professional visuals, no design skills needed
+✓ 6 platforms: Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor
 
-Have questions? Just reply to this email — we read every message and typically respond within a few hours.
+Have questions? Just reply to this email. We read every message and typically respond within a few hours.
 
 Ready to spark some content? 🚀
 

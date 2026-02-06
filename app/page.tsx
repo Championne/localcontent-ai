@@ -82,7 +82,7 @@ export default function HomePage() {
           {/* Subheadline */}
           <p className="text-xl md:text-2xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
             Stop spending hours on social media. Describe what you want to share, and GeoSpark creates 
-            <strong> platform-perfect posts</strong> for Twitter, Facebook, Instagram, LinkedIn, TikTok, and Nextdoor — 
+            <strong> platform-perfect posts</strong> for Twitter, Facebook, Instagram, LinkedIn, TikTok, and Nextdoor, 
             complete with a <strong>matching image</strong> (free stock photo or AI-generated).
           </p>
 
@@ -95,7 +95,7 @@ export default function HomePage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Start Sparking — Free 14-Day Trial
+              Start Sparking: Free 14-Day Trial
             </Link>
           </div>
 
@@ -168,14 +168,14 @@ export default function HomePage() {
               {
                 step: '1',
                 title: 'Describe Your Idea',
-                description: 'Tell us what you want to share — a promotion, an event, or any topic. Just type a sentence or two.',
+                description: 'Tell us what you want to share: a promotion, an event, or any topic. Just type a sentence or two.',
                 icon: '💡',
                 useLogo: false
               },
               {
                 step: '2',
                 title: 'AI Creates Your Pack',
-                description: 'Our AI instantly generates 6 platform-optimized posts plus a matching image (stock or AI) — all tailored to your business.',
+                description: 'Our AI instantly generates 6 platform-optimized posts plus a matching image (stock or AI), all tailored to your business.',
                 icon: '✨',
                 useLogo: true
               },
@@ -230,12 +230,12 @@ export default function HomePage() {
             {
               icon: '🖼️',
               title: 'AI Image Generation',
-              description: 'Every content pack includes a matching image — free stock photo or AI-generated. No design skills needed.',
+              description: 'Every content pack includes a matching image: free stock photo or AI-generated. No design skills needed.',
             },
             {
               icon: '📍',
               title: 'Hyper-Local Optimization',
-              description: 'Content that mentions your neighborhood, local events, and community — making it relevant to nearby customers.',
+              description: 'Content that mentions your neighborhood, local events, and community, making it relevant to nearby customers.',
             },
             {
               icon: '⚡',
@@ -328,7 +328,7 @@ export default function HomePage() {
             Simple, Transparent Pricing
           </h2>
           <p className="text-xl text-gray-600">
-            From hours to minutes — generate a month of content for less than one freelance article.
+            From hours to minutes: generate a month of content for less than one freelance article.
           </p>
         </div>
 
@@ -522,7 +522,7 @@ export default function HomePage() {
                 },
                 {
                   q: "What platforms does GeoSpark support?",
-                  a: "Every content pack includes posts optimized for Twitter/X, Facebook, Instagram, LinkedIn, TikTok, and Nextdoor — each formatted correctly for that platform's best practices and character limits."
+                  a: "Every content pack includes posts optimized for Twitter/X, Facebook, Instagram, LinkedIn, TikTok, and Nextdoor, each formatted correctly for that platform's best practices and character limits."
                 },
                 {
                   q: "Can I edit the content before posting?",
@@ -530,11 +530,11 @@ export default function HomePage() {
                 },
                 {
                   q: "Do I need design skills for the images?",
-                  a: "Not at all. You get a matching image with every pack — we use free stock photos or AI generation. No Canva, no design experience needed."
+                  a: "Not at all. You get a matching image with every pack. We use free stock photos or AI generation. No Canva, no design experience needed."
                 },
                 {
                   q: "What if I'm not satisfied?",
-                  a: "We offer a 14-day free trial on all paid plans and a 30-day money-back guarantee. If GeoSpark doesn't save you hours every week, we'll refund you — no questions asked."
+                  a: "We offer a 14-day free trial on all paid plans and a 30-day money-back guarantee. If GeoSpark doesn't save you hours every week, we'll refund you. No questions asked."
                 }
               ].map((faq, i) => (
                 <details key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden group">
@@ -568,7 +568,7 @@ export default function HomePage() {
             href="/auth/signup" 
             className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all shadow-lg hover:shadow-xl"
           >
-            Start Sparking — It's Free
+            Start Sparking: It's Free
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>

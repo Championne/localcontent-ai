@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    let list: Array<Record<string, unknown>> = (data || []) as Array<Record<string, unknown>>
+    // Normalize so every item has image_url (Supabase returns snake_case)
+    let list: Array<Record<string, unknown>> = ((data || []) as Array<Record<string, unknown>>).map((i) => ({
+      ...i,
+      image_url: i.image_url ?? (i as Record<string, unknown>).imageUrl ?? null,
+    }))
     const linkedContentIds = new Set((list.map((i) => i.content_id).filter(Boolean) as string[]))
 
     // Include images from content that have image_url but no row in generated_images (e.g. stock images from before we synced)

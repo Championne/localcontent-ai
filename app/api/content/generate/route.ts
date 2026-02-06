@@ -34,9 +34,14 @@ export async function POST(request: Request) {
       additionalContext,
       saveAsDraft = false,
       generateImageFlag = false,
-      imageSource = 'stock', // 'stock' | 'ai' — default free stock, optional AI
+      imageSource = 'stock', // 'stock' | 'ai': default free stock, optional AI
       imageStyle,
       regenerateMode = 'all', // 'all' | 'text' | 'image'
+      // Branding (from Brand identity)
+      tagline,
+      defaultCtaPrimary,
+      defaultCtaSecondary,
+      seoKeywords,
       // GBP-specific fields
       gbpPostType,
       gbpExpiration,
@@ -115,6 +120,10 @@ export async function POST(request: Request) {
             topic,
             tone,
             additionalContext,
+            tagline: tagline || undefined,
+            defaultCtaPrimary: defaultCtaPrimary || undefined,
+            defaultCtaSecondary: defaultCtaSecondary || undefined,
+            seoKeywords: seoKeywords || undefined,
           })
         } else {
           // Mock social pack for development
@@ -285,7 +294,10 @@ export async function POST(request: Request) {
           topic,
           tone,
           additionalContext,
-          // Pass GBP-specific fields
+          tagline: tagline || undefined,
+          defaultCtaPrimary: defaultCtaPrimary || undefined,
+          defaultCtaSecondary: defaultCtaSecondary || undefined,
+          seoKeywords: seoKeywords || undefined,
           gbpPostType: template === 'gmb-post' ? (gbpPostType as GbpPostType || 'update') : undefined,
           gbpExpiration: template === 'gmb-post' && gbpPostType === 'offer' ? gbpExpiration : undefined,
           gbpEventDate: template === 'gmb-post' && gbpPostType === 'event' ? gbpEventDate : undefined,

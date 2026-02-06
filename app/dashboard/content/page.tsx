@@ -34,6 +34,12 @@ interface Business {
   industry: string | null
   logo_url: string | null
   profile_photo_url: string | null
+  brand_primary_color?: string | null
+  tagline?: string | null
+  default_cta_primary?: string | null
+  default_cta_secondary?: string | null
+  seo_keywords?: string | null
+  default_tone?: string | null
 }
 
 // Image style definitions (must match backend)
@@ -203,6 +209,7 @@ export default function CreateContentPage() {
   const [topic, setTopic] = useState('')
   const [tone, setTone] = useState('professional')
   const [generating, setGenerating] = useState(false)
+  const [generationStartTime, setGenerationStartTime] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
   const [generatedContent, setGeneratedContent] = useState('')
   const [socialPack, setSocialPack] = useState<SocialPackResult | null>(null)
@@ -277,6 +284,7 @@ export default function CreateContentPage() {
             setSelectedBusinessId(firstBusiness.id)
             setBusinessName(firstBusiness.name || '')
             setIndustry(firstBusiness.industry || '')
+            if (firstBusiness.default_tone) setTone(firstBusiness.default_tone)
           }
         }
       } catch (err) {
@@ -343,6 +351,7 @@ export default function CreateContentPage() {
     if (business) {
       setBusinessName(business.name || '')
       setIndustry(business.industry || '')
+      if (business.default_tone) setTone(business.default_tone)
     }
   }
   
@@ -405,15 +414,16 @@ export default function CreateContentPage() {
           imageUrl: generatedImage.url,
           logoUrl: currentBusinessLogo,
           position,
+          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
         }),
       })
       
       if (response.ok) {
         const data = await response.json()
-        setGeneratedImage({
-          ...generatedImage,
-          url: data.url,
-        })
+        const newUrl = data.url ? `${data.url}${data.url.includes('?') ? '&' : '?'}_=${Date.now()}` : null
+        if (newUrl) {
+          setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+        }
         setShowOverlayEditor(false)
         // Show profile photo positioner next if available
         if (currentBusinessPhoto && !photoSkipped) {
@@ -447,6 +457,7 @@ export default function CreateContentPage() {
             logoUrl: overlay.url,
             position: { x: overlay.x, y: overlay.y, scale: overlay.scale },
             isCircular: overlay.type === 'photo',
+            brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
           }),
         })
 
@@ -463,9 +474,9 @@ export default function CreateContentPage() {
         currentImageUrl = data.url
       }
 
-      // Update image so the content area above shows the composited result (cache-bust so browser refetches)
+      // Update image so the content area and platform examples show the composited result (cache-bust so browser refetches)
       const cacheBustedUrl = `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
-      setGeneratedImage({ ...generatedImage, url: cacheBustedUrl })
+      setGeneratedImage((prev) => (prev ? { ...prev, url: cacheBustedUrl } : null))
       setShowOverlayEditor(false)
       setLogoSkipped(true)
       setPhotoSkipped(true)
@@ -502,15 +513,16 @@ export default function CreateContentPage() {
           logoUrl: currentBusinessPhoto,
           position,
           isCircular: true, // Profile photos are circular
+          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
         }),
       })
       
       if (response.ok) {
         const data = await response.json()
-        setGeneratedImage({
-          ...generatedImage,
-          url: data.url,
-        })
+        const newUrl = data.url ? `${data.url}${data.url.includes('?') ? '&' : '?'}_=${Date.now()}` : null
+        if (newUrl) {
+          setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+        }
         setShowPhotoPositioner(false)
       } else {
         console.error('Failed to apply photo')
@@ -694,7 +706,8 @@ export default function CreateContentPage() {
     setStep(2)
   }
 
-  const handleGenerate = async (mode: 'all' | 'text' | 'image' = 'all') => {
+  const handleGenerate = async (mode: 'all' | 'text' | 'image' = 'all', imageSourceOverride?: 'stock' | 'ai') => {
+    setGenerationStartTime(Date.now())
     setGenerating(true)
     setError('')
     setRegenerateMenuOpen(false)
@@ -708,6 +721,8 @@ export default function CreateContentPage() {
     
     setViewMode('preview') // Reset to preview mode on new generation
     
+    const effectiveImageSource = mode === 'image' && imageSourceOverride != null ? imageSourceOverride : imageSource
+    
     try {
       const response = await fetch('/api/content/generate', {
         method: 'POST',
@@ -719,9 +734,13 @@ export default function CreateContentPage() {
           topic,
           tone,
           generateImageFlag: mode === 'text' ? false : generateImageFlag,
-          imageSource,
+          imageSource: effectiveImageSource,
           imageStyle,
           regenerateMode: mode,
+          tagline: currentBusiness?.tagline ?? undefined,
+          defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
+          defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
+          seoKeywords: currentBusiness?.seo_keywords ?? undefined,
         }),
       })
 
@@ -769,6 +788,7 @@ export default function CreateContentPage() {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setGenerating(false)
+      setGenerationStartTime(null)
     }
   }
 
@@ -1134,7 +1154,7 @@ export default function CreateContentPage() {
               <>
                 {/* Info tip */}
                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 -mt-2 mb-4">
-                  💡 GBP posts are optimized for searchers ready to act — short, direct, benefit-first.
+                  💡 GBP posts are optimized for searchers ready to act: short, direct, benefit-first.
                 </div>
                 
                 <div className="mb-4">
@@ -1356,6 +1376,7 @@ export default function CreateContentPage() {
                 <GenerationProgress 
                   isGenerating={generating} 
                   contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
+                  startTime={generationStartTime ?? undefined}
                   size="lg"
                 />
               </div>
@@ -1406,35 +1427,35 @@ export default function CreateContentPage() {
                   </svg>
                 </button>
                 {regenerateMenuOpen && !generating && (
-                  <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                    <button
-                      onClick={() => handleGenerate('all')}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Regenerate All
-                    </button>
+                  <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                     <button
                       onClick={() => handleGenerate('text')}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h10M7 16h6" />
                       </svg>
-                      Text Only
+                      Text only
                     </button>
                     <button
-                      onClick={() => handleGenerate('image')}
+                      onClick={() => handleGenerate('image', 'ai')}
                       disabled={imagesRemaining === 0}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      Image Only
+                      AI image
+                    </button>
+                    <button
+                      onClick={() => handleGenerate('image', 'stock')}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg"
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Free stock image
                     </button>
                   </div>
                 )}
@@ -1499,6 +1520,7 @@ export default function CreateContentPage() {
               <GenerationProgress 
                 isGenerating={generating} 
                 contentType="social-pack"
+                startTime={generationStartTime ?? undefined}
                 size="md"
               />
             </div>
@@ -1639,6 +1661,7 @@ export default function CreateContentPage() {
               </div>
               <div className="p-4 flex justify-center bg-gray-50">
                 <SafeImage 
+                  key={generatedImage.url}
                   src={generatedImage.url} 
                   alt="Generated content image" 
                   className="max-w-md w-full rounded-lg shadow-sm"
@@ -1681,7 +1704,7 @@ export default function CreateContentPage() {
                               <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
                               {generatedImage && (
                                 <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
-                                  <img src={generatedImage.url} alt="" className="w-full" />
+                                  <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full" referrerPolicy="no-referrer" />
                                 </div>
                               )}
                               <div className="flex justify-between mt-3 text-gray-500 max-w-[300px]">
@@ -1721,7 +1744,7 @@ export default function CreateContentPage() {
                           <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                           {generatedImage && (
                             <div className="-mx-4 mb-3">
-                              <img src={generatedImage.url} alt="" className="w-full" />
+                              <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full" referrerPolicy="no-referrer" />
                             </div>
                           )}
                           <div className="flex items-center gap-1 text-sm text-gray-500 pb-2 border-b border-gray-100">
@@ -1760,7 +1783,7 @@ export default function CreateContentPage() {
                           <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
                         </div>
                         {generatedImage ? (
-                          <img src={generatedImage.url} alt="" className="w-full aspect-square object-cover" />
+                          <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full aspect-square object-cover" referrerPolicy="no-referrer" />
                         ) : (
                           <div className="w-full aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
                             <span className="text-4xl">📸</span>
@@ -1810,7 +1833,7 @@ export default function CreateContentPage() {
                           <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                           {generatedImage && (
                             <div className="-mx-4 mb-3">
-                              <img src={generatedImage.url} alt="" className="w-full" />
+                              <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full" referrerPolicy="no-referrer" />
                             </div>
                           )}
                           <div className="flex items-center gap-2 text-xs text-gray-500 pb-3 border-b border-gray-100">
@@ -1838,7 +1861,7 @@ export default function CreateContentPage() {
                         {/* TikTok Mockup - Vertical style */}
                         <div className="relative">
                           {generatedImage ? (
-                            <img src={generatedImage.url} alt="" className="w-full aspect-[9/12] object-cover" />
+                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full aspect-[9/12] object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-full aspect-[9/12] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                               <span className="text-6xl">🎵</span>
@@ -1890,7 +1913,7 @@ export default function CreateContentPage() {
                           <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                           {generatedImage && (
                             <div className="rounded-lg overflow-hidden mb-3">
-                              <img src={generatedImage.url} alt="" className="w-full" />
+                              <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full" referrerPolicy="no-referrer" />
                             </div>
                           )}
                           <div className="flex items-center gap-4 text-sm text-gray-500 pt-3 border-t border-gray-100">
@@ -2106,6 +2129,7 @@ export default function CreateContentPage() {
               <GenerationProgress 
                 isGenerating={generating} 
                 contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
+                startTime={generationStartTime ?? undefined}
                 size="md"
               />
             </div>
@@ -2233,6 +2257,7 @@ export default function CreateContentPage() {
               </div>
               <div className="p-4 flex justify-center bg-gray-50">
                 <SafeImage 
+                  key={generatedImage.url}
                   src={generatedImage.url} 
                   alt="Generated content image" 
                   className="max-w-md w-full rounded-lg shadow-sm"
@@ -2278,9 +2303,11 @@ export default function CreateContentPage() {
                 {selectedTemplate === 'blog-post' && generatedImage && (
                   <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200">
                     <img 
+                      key={generatedImage.url}
                       src={generatedImage.url} 
                       alt="Blog hero" 
                       className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                   </div>

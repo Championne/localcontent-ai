@@ -100,7 +100,7 @@ export default function PricingPage() {
             Simple pricing. Powerful results.
           </h1>
           <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
-            From hours to minutes — generate a month of content for less than one freelance article.
+            From hours to minutes: generate a month of content for less than one freelance article.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,7 +226,7 @@ export default function PricingPage() {
               {[
                 {
                   q: "What counts as a content piece?",
-                  a: "Each generation counts as 1 piece — whether it's a blog post, email, Google Business post, or a Social Media Pack (which gives you 6 platform-optimized posts in one generation)."
+                  a: "Each generation counts as 1 piece, whether it's a blog post, email, Google Business post, or a Social Media Pack (which gives you 6 platform-optimized posts in one generation)."
                 },
                 {
                   q: "Can I upgrade or downgrade anytime?",

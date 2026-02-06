@@ -48,6 +48,11 @@ export interface GenerateContentParams {
   location?: string
   additionalContext?: string
   maxTokens?: number
+  // Branding (from Brand identity)
+  tagline?: string | null
+  defaultCtaPrimary?: string | null
+  defaultCtaSecondary?: string | null
+  seoKeywords?: string | null
   // GBP-specific fields
   gbpPostType?: GbpPostType
   gbpExpiration?: string
@@ -89,7 +94,7 @@ Write for searchers ready to act:
 CTA Button: "Get Offer" (Google will show this button)
 
 GOOD EXAMPLE:
-"🎁 20% OFF first visit! New customers welcome — same-day appointments available. Offer ends Friday. Tap 'Get Offer' to claim!"
+"🎁 20% OFF first visit! New customers welcome. Same-day appointments available. Offer ends Friday. Tap 'Get Offer' to claim!"
 
 BAD EXAMPLE (don't write like this):
 "We are excited to announce a special promotion for our valued customers! We're offering a discount on our services because we appreciate you..."
@@ -110,7 +115,7 @@ Write for searchers ready to act:
 CTA Button: "Book" (Google will show this button)
 
 GOOD EXAMPLE:
-"📅 FREE Workshop: Home Maintenance 101 — Saturday, Feb 8 at 10am. Learn money-saving tips from our experts. Limited spots! Tap to reserve."
+"📅 FREE Workshop: Home Maintenance 101, Saturday, Feb 8 at 10am. Learn money-saving tips from our experts. Limited spots! Tap to reserve."
 
 BAD EXAMPLE (don't write like this):
 "We are pleased to invite you to join us for an exciting event that we have been planning..."
@@ -194,6 +199,10 @@ function buildPrompt(params: GenerateContentParams): string {
     tone = 'professional',
     location,
     additionalContext,
+    tagline,
+    defaultCtaPrimary,
+    defaultCtaSecondary,
+    seoKeywords,
     gbpPostType,
     gbpExpiration,
     gbpEventDate,
@@ -212,7 +221,16 @@ function buildPrompt(params: GenerateContentParams): string {
   if (location) {
     prompt += `\n**Location:** ${location}`
   }
-
+  if (tagline) {
+    prompt += `\n**Tagline (use in sign-off or when appropriate):** ${tagline}`
+  }
+  if (defaultCtaPrimary || defaultCtaSecondary) {
+    const ctas = [defaultCtaPrimary, defaultCtaSecondary].filter(Boolean).join(' or ')
+    prompt += `\n**Preferred call-to-action:** Prefer these CTAs where relevant: ${ctas}`
+  }
+  if (seoKeywords) {
+    prompt += `\n**SEO keywords (weave naturally into headings/body):** ${seoKeywords}`
+  }
   if (additionalContext) {
     prompt += `\n**Additional Context:** ${additionalContext}`
   }
@@ -227,7 +245,7 @@ Write a comprehensive, SEO-optimized blog post (600-800 words) that:
 - Includes 3-4 main sections with descriptive headers (##)
 - Provides actionable tips, insights, or valuable information
 - Naturally mentions the business name 2-3 times (not forced)
-- Ends with a clear call-to-action (like "Contact us today" or "Visit our website")
+- Ends with a clear call-to-action${defaultCtaPrimary ? ` (prefer: "${defaultCtaPrimary}" or "${defaultCtaSecondary || 'Contact us'}")` : ' (e.g. "Contact us today" or "Visit our website")'}
 - Uses short paragraphs for readability
 
 Remember: Do NOT use any placeholder text in brackets. Write complete, ready-to-publish content.`
@@ -346,7 +364,11 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
     topic, 
     tone = 'professional',
     location,
-    additionalContext 
+    additionalContext,
+    tagline,
+    defaultCtaPrimary,
+    defaultCtaSecondary,
+    seoKeywords
   } = params
 
   let context = `Create social media posts for a local business:
@@ -361,7 +383,16 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
   if (location) {
     context += `\n**Location:** ${location}`
   }
-
+  if (tagline) {
+    context += `\n**Tagline (use in sign-off or bio where fitting):** ${tagline}`
+  }
+  if (defaultCtaPrimary || defaultCtaSecondary) {
+    const ctas = [defaultCtaPrimary, defaultCtaSecondary].filter(Boolean).join(' or ')
+    context += `\n**Preferred CTA:** ${ctas}`
+  }
+  if (seoKeywords) {
+    context += `\n**SEO / hashtag hints:** Consider these for hashtags or captions: ${seoKeywords}`
+  }
   if (additionalContext) {
     context += `\n**Additional Context:** ${additionalContext}`
   }

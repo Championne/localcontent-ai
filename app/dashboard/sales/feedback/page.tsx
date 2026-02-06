@@ -196,7 +196,7 @@ export default function FeedbackPage() {
                       "{item.client_quote}"
                       {item.client_name && (
                         <span className="block text-xs text-gray-500 mt-1 not-italic">
-                          — {item.client_name}{item.client_company && `, ${item.client_company}`}
+                          - {item.client_name}{item.client_company && `, ${item.client_company}`}
                         </span>
                       )}
                     </blockquote>

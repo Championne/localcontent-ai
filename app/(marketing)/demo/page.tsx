@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { SingleContentDemo } from '@/components/marketing/LiveContentDemo'
+import { SingleContentDemo, DemoResultView, type GeneratedDemo } from '@/components/marketing/LiveContentDemo'
 
 // Industry options
 const INDUSTRY_OPTIONS = [
@@ -20,8 +20,11 @@ const INDUSTRY_OPTIONS = [
   { value: 'cleaning', label: '🧹 Cleaning Services' },
 ]
 
+type DemoContentType = 'social-pack' | 'blog-post' | 'gmb-post' | 'email'
+
 export default function ExamplesPage() {
   const [selectedIndustry, setSelectedIndustry] = useState('random')
+  const [lastGenerated, setLastGenerated] = useState<{ contentType: DemoContentType; data: GeneratedDemo } | null>(null)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -56,7 +59,7 @@ export default function ExamplesPage() {
         </div>
       </section>
 
-      {/* 4 Live Demos Grid */}
+      {/* 4 Live Demos Grid + full-width result */}
       <section className="container mx-auto px-4 pb-16">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
           {/* Social Media Pack Demo */}
@@ -65,6 +68,7 @@ export default function ExamplesPage() {
             title="📱 Social Media Pack"
             description="6 platform-optimized posts (Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor) generated in one click"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
+            onGenerated={(data) => setLastGenerated({ contentType: 'social-pack', data })}
           />
 
           {/* Blog Post Demo */}
@@ -73,6 +77,7 @@ export default function ExamplesPage() {
             title="📝 Blog Post"
             description="SEO-optimized, 600-800 word articles that help you rank for local searches"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
+            onGenerated={(data) => setLastGenerated({ contentType: 'blog-post', data })}
           />
 
           {/* Google Business Post Demo */}
@@ -81,6 +86,7 @@ export default function ExamplesPage() {
             title="📍 Google Business Post"
             description="Engaging updates for your Google Business Profile that drive local traffic"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
+            onGenerated={(data) => setLastGenerated({ contentType: 'gmb-post', data })}
           />
 
           {/* Email Newsletter Demo */}
@@ -89,8 +95,20 @@ export default function ExamplesPage() {
             title="📧 Email Newsletter"
             description="Professional newsletters with compelling subject lines and clear CTAs"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
+            onGenerated={(data) => setLastGenerated({ contentType: 'email', data })}
           />
         </div>
+
+        {/* Full-width generated result below all cards */}
+        {lastGenerated && (
+          <div className="max-w-6xl mx-auto mt-8 w-full">
+            <DemoResultView
+              contentType={lastGenerated.contentType}
+              demo={lastGenerated.data}
+              className="w-full"
+            />
+          </div>
+        )}
       </section>
 
       {/* Static Examples Section */}
@@ -101,7 +119,7 @@ export default function ExamplesPage() {
             See What GeoSpark Creates
           </h2>
           <p className="text-xl text-gray-600">
-            Real examples across different industries — this is what your content could look like.
+            Real examples across different industries. This is what your content could look like.
           </p>
         </div>
         
@@ -184,7 +202,7 @@ export default function ExamplesPage() {
             {/* Content */}
             <div className="p-4">
               <p className="text-sm text-gray-700 leading-relaxed">
-                🎉 Kickstart your fitness journey with a FREE personal training session at Iron Peak Gym! 💪 Limited spots available—don&apos;t miss out! Claim yours now by calling us or visiting our website!
+                🎉 Kickstart your fitness journey with a FREE personal training session at Iron Peak Gym! 💪 Limited spots available. Don&apos;t miss out! Claim yours now by calling us or visiting our website!
               </p>
               
               {/* CTA Button */}
@@ -279,7 +297,7 @@ export default function ExamplesPage() {
             Ready to Create Content Like This?
           </h2>
           <p className="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
-            Generate a month of local content in minutes. Blog posts, newsletters, social media — all tailored for your business.
+            Generate a month of local content in minutes. Blog posts, newsletters, social media, all tailored for your business.
           </p>
           <Link 
             href="/auth/signup" 

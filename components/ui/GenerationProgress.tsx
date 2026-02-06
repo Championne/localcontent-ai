@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface GenerationProgressProps {
   isGenerating: boolean
   contentType?: 'social-pack' | 'blog-post' | 'gmb-post' | 'email' | 'image' | 'general'
+  /** If set, progress is computed from this timestamp so it never resets on remount (e.g. when generating text then image). */
+  startTime?: number
   className?: string
   showPercentage?: boolean
   size?: 'sm' | 'md' | 'lg'
@@ -34,22 +36,25 @@ const PROGRESS_MESSAGES: Record<number, string[]> = {
 export function GenerationProgress({ 
   isGenerating, 
   contentType = 'general',
+  startTime: startTimeProp,
   className = '',
   showPercentage = true,
   size = 'md'
 }: GenerationProgressProps) {
   const [progress, setProgress] = useState(0)
   const [message, setMessage] = useState('')
-  
+  const prevGenerating = useRef(false)
+  const internalStartTime = useRef<number | null>(null)
   const estimatedTime = ESTIMATED_TIMES[contentType] || 20
 
   useEffect(() => {
     if (!isGenerating) {
+      prevGenerating.current = false
+      internalStartTime.current = null
       // When generation completes, quickly animate to 100%
       if (progress > 0 && progress < 100) {
         setProgress(100)
         setMessage('Complete!')
-        // Reset after a short delay
         const timeout = setTimeout(() => {
           setProgress(0)
           setMessage('')
@@ -59,26 +64,30 @@ export function GenerationProgress({
       return
     }
 
-    // Reset when starting
-    setProgress(0)
-    
-    // Simulate progress based on estimated time
-    const startTime = Date.now()
+    const justStarted = !prevGenerating.current
+    prevGenerating.current = true
+    const intervalStart = startTimeProp ?? internalStartTime.current ?? Date.now()
+    if (justStarted) {
+      if (startTimeProp == null) {
+        internalStartTime.current = intervalStart
+        setProgress(0)
+        setMessage('')
+      } else {
+        const elapsed = (Date.now() - intervalStart) / 1000
+        const raw = (elapsed / estimatedTime) * 100
+        const eased = Math.min(95, raw * (1 - raw / 200))
+        setProgress(Math.round(eased))
+      }
+    }
+
     const interval = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000
-      
-      // Use easing function to slow down as we approach 95%
-      // This prevents showing 100% before actual completion
+      const elapsed = (Date.now() - intervalStart) / 1000
       const rawProgress = (elapsed / estimatedTime) * 100
       const easedProgress = Math.min(95, rawProgress * (1 - rawProgress / 200))
-      
-      setProgress(Math.round(easedProgress))
-      
-      // Update message based on progress
+      setProgress((prev) => Math.max(prev, Math.round(easedProgress)))
       const progressThresholds = Object.keys(PROGRESS_MESSAGES)
         .map(Number)
         .sort((a, b) => b - a)
-      
       for (const threshold of progressThresholds) {
         if (easedProgress >= threshold) {
           const messages = PROGRESS_MESSAGES[threshold]
@@ -90,7 +99,7 @@ export function GenerationProgress({
     }, 100)
 
     return () => clearInterval(interval)
-  }, [isGenerating, estimatedTime])
+  }, [isGenerating, startTimeProp, estimatedTime])
 
   if (!isGenerating && progress === 0) return null
 
@@ -142,9 +151,11 @@ export function GenerationProgressInline({
   className?: string 
 }) {
   const [progress, setProgress] = useState(0)
+  const prevGenerating = useRef(false)
 
   useEffect(() => {
     if (!isGenerating) {
+      prevGenerating.current = false
       if (progress > 0) {
         setProgress(100)
         const timeout = setTimeout(() => setProgress(0), 300)
@@ -152,16 +163,16 @@ export function GenerationProgressInline({
       }
       return
     }
-
-    setProgress(0)
+    const justStarted = !prevGenerating.current
+    prevGenerating.current = true
+    if (justStarted) setProgress(0)
     const startTime = Date.now()
     const interval = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000
       const rawProgress = (elapsed / 20) * 100
       const easedProgress = Math.min(95, rawProgress * (1 - rawProgress / 200))
-      setProgress(Math.round(easedProgress))
+      setProgress((prev) => Math.max(prev, Math.round(easedProgress)))
     }, 100)
-
     return () => clearInterval(interval)
   }, [isGenerating])
 

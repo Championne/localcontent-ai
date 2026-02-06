@@ -99,7 +99,26 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json()
-    const { id, name, industry, description, location, website, phone } = body
+    const {
+      id,
+      name,
+      industry,
+      description,
+      location,
+      website,
+      phone,
+      brand_primary_color,
+      brand_secondary_color,
+      brand_accent_color,
+      tagline,
+      default_cta_primary,
+      default_cta_secondary,
+      seo_keywords,
+      default_tone,
+      social_handles,
+      service_areas,
+      short_about,
+    } = body
 
     if (!id) {
       return NextResponse.json(
@@ -118,6 +137,17 @@ export async function PATCH(request: Request) {
     if (location !== undefined) updates.location = location
     if (website !== undefined) updates.website = website
     if (phone !== undefined) updates.phone = phone
+    if (brand_primary_color !== undefined) updates.brand_primary_color = brand_primary_color || null
+    if (brand_secondary_color !== undefined) updates.brand_secondary_color = brand_secondary_color || null
+    if (brand_accent_color !== undefined) updates.brand_accent_color = brand_accent_color || null
+    if (tagline !== undefined) updates.tagline = tagline || null
+    if (default_cta_primary !== undefined) updates.default_cta_primary = default_cta_primary || null
+    if (default_cta_secondary !== undefined) updates.default_cta_secondary = default_cta_secondary || null
+    if (seo_keywords !== undefined) updates.seo_keywords = seo_keywords || null
+    if (default_tone !== undefined) updates.default_tone = default_tone || null
+    if (social_handles !== undefined) updates.social_handles = social_handles || null
+    if (service_areas !== undefined) updates.service_areas = service_areas || null
+    if (short_about !== undefined) updates.short_about = short_about || null
 
     const { data, error } = await supabase
       .from('businesses')

@@ -13,9 +13,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { imageUrl, logoUrl, position, isCircular = false } = await request.json()
+    const { imageUrl, logoUrl, position, isCircular = false, brandPrimaryColor } = await request.json()
     // position: { x: number, y: number, scale: number } - all in percentages
     // isCircular: boolean - if true, crop overlay image to circle (for profile photos)
+    // brandPrimaryColor: optional hex e.g. #0d9488 - add subtle border/tint
 
     if (!imageUrl || !logoUrl || !position) {
       return NextResponse.json(
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
     const boundedTop = Math.max(0, Math.min(imgHeight - logoHeight, top))
 
     // Composite the images
-    const composited = await baseImage
+    let composited = await baseImage
       .composite([
         {
           input: resizedLogo,
@@ -91,15 +92,32 @@ export async function POST(request: Request) {
           top: boundedTop,
         },
       ])
-      .jpeg({ quality: 90 })
       .toBuffer()
+
+    // Optional: add brand colour border
+    const borderHex = typeof brandPrimaryColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(brandPrimaryColor)
+      ? brandPrimaryColor
+      : null
+    if (borderHex) {
+      const borderPx = Math.max(2, Math.min(12, Math.round(imgWidth / 256)))
+      const [r, g, b] = [
+        parseInt(borderHex.slice(1, 3), 16),
+        parseInt(borderHex.slice(3, 5), 16),
+        parseInt(borderHex.slice(5, 7), 16),
+      ]
+      composited = await sharp(composited)
+        .extend({ top: borderPx, bottom: borderPx, left: borderPx, right: borderPx, background: { r, g, b, alpha: 1 } })
+        .toBuffer()
+    }
+
+    const finalBuffer = await sharp(composited).jpeg({ quality: 90 }).toBuffer()
 
     // Upload to Supabase Storage (generated-images bucket)
     const filename = `${user.id}/branded_${Date.now()}.jpg`
     
     const { error: uploadError } = await supabase.storage
       .from('generated-images')
-      .upload(filename, composited, {
+      .upload(filename, finalBuffer, {
         contentType: 'image/jpeg',
         cacheControl: '3600',
         upsert: true,

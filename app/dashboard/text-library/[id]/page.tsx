@@ -125,7 +125,7 @@ export default function TextDetailPage() {
           ) : (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <pre className="text-sm text-gray-800 whitespace-pre-wrap font-sans leading-relaxed overflow-auto max-h-[32rem]">
-                {text.content_full || text.content_preview || '—'}
+                {text.content_full || text.content_preview || '-'}
               </pre>
             </div>
           )}

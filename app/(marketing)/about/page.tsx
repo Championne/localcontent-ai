@@ -36,7 +36,7 @@ const AboutPage = () => {
               <p className="text-gray-600 leading-relaxed">
                 No more staring at blank screens. No more expensive agencies. No more generic content 
                 that doesn't connect. Just describe your idea, and watch it transform into 6 platform-ready 
-                posts with a matching image — all in under 2 minutes.
+                posts with a matching image, all in under 2 minutes.
               </p>
             </div>
             <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-8">
@@ -161,7 +161,7 @@ const AboutPage = () => {
               href="/auth/signup" 
               className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-colors"
             >
-              Start Sparking — It's Free
+              Start Sparking: It's Free
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>

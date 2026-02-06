@@ -106,7 +106,10 @@ export interface GenerateImageResult {
   fullPrompt?: string
 }
 
-// Build the image generation prompt (simplified: one clear scene, one short "no text" rule)
+// DALL-E 3 often adds text; we put no-text first and repeat it so the model follows it
+const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Screens and displays are off or show only abstract colors. The image must be completely free of written language.`
+
+// Build the image generation prompt with strong anti-text reinforcement (no-text at start and end)
 function buildImagePrompt(params: GenerateImageParams): string {
   const { topic, industry, style, contentType } = params
   const styleConfig = IMAGE_STYLES[style]
@@ -116,7 +119,9 @@ function buildImagePrompt(params: GenerateImageParams): string {
   if (imageSize === '1792x1024') formatDesc = 'Wide landscape format'
   else if (imageSize === '1024x1792') formatDesc = 'Tall portrait format'
 
-  return `${styleConfig.promptPrefix}. Realistic photograph representing "${topic}" for a ${industry} business. Single main subject, clean background, natural lighting. No text, no text-like elements, no text in the image. ${formatDesc}.`
+  // Start with no-text so the model sees it first; keep scene description minimal to reduce text temptation
+  const scene = `Realistic photograph representing the theme "${topic}" for a ${industry} context. ${styleConfig.promptPrefix}. Single main subject, clean uncluttered background, natural lighting. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  return `${NO_TEXT_BLOCK} ${scene} ${NO_TEXT_BLOCK}`
 }
 
 // Generate an image using DALL-E 3

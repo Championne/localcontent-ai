@@ -21,6 +21,19 @@ export interface Business {
   phone: string | null
   gmb_place_id: string | null
   gmb_connected: boolean
+  logo_url: string | null
+  profile_photo_url: string | null
+  brand_primary_color: string | null
+  brand_secondary_color: string | null
+  brand_accent_color: string | null
+  tagline: string | null
+  default_cta_primary: string | null
+  default_cta_secondary: string | null
+  seo_keywords: string | null
+  default_tone: string | null
+  social_handles: string | null
+  service_areas: string | null
+  short_about: string | null
   created_at: string
   updated_at: string
 }
