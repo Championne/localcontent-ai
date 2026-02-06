@@ -1,5 +1,8 @@
 # Quality & Ratings System – Build Reference
 
+**If you see "Could not find the table 'public.generated_images' in the schema cache":**  
+Run the migration in the **same** Supabase project your app uses (the project in `NEXT_PUBLIC_SUPABASE_URL`). In Supabase Dashboard → **SQL Editor**, paste and run the contents of `supabase/migrations/20260205_quality_ratings.sql`. Then reload the app or wait a moment for the schema cache to refresh.
+
 This document describes the Picture Library, Text Library, and combined rating system for improving the content and image engines. **Vision API is explicitly out of scope** (no automatic image scoring). Storage cost is the only additional cost (see Cost section).
 
 ---
