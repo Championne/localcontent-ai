@@ -73,6 +73,47 @@ export default function PictureLibraryPage() {
     )
   }
 
+  const imageGrid = images.length > 0 ? (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {images.map((img) => {
+        const isFromContent = typeof img.id === 'string' && img.id.startsWith('content-')
+        const href = isFromContent && img.content_id
+          ? `/dashboard/content?edit=${img.content_id}`
+          : `/dashboard/pictures/${img.id}`
+        const showRating = !isFromContent && (img.source === 'ai' || img.source == null)
+        return (
+          <button
+            key={img.id}
+            type="button"
+            onClick={() => router.push(href)}
+            className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 hover:border-teal-400 hover:ring-2 hover:ring-teal-200 transition-all text-left"
+          >
+            <img
+              src={img.image_url}
+              alt={img.topic || 'Generated image'}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs flex items-center justify-between">
+              <span className="truncate">{img.topic || 'Untitled'}</span>
+              {showRating && (img.rating != null ? (
+                <span className="text-white/90">{img.rating >= 3 ? '👍' : '👎'}</span>
+              ) : (
+                <span className="text-white/70">Rate</span>
+              ))}
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  ) : (
+    <div className="border rounded-lg p-12 text-center bg-card">
+      <p className="text-muted-foreground">No images yet. Create content with images to see them here.</p>
+      <Link href="/dashboard/content" className="mt-4 inline-block text-primary hover:underline">
+        Create your first spark
+      </Link>
+    </div>
+  )
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -114,45 +155,7 @@ export default function PictureLibraryPage() {
         </div>
       )}
 
-      {images.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {images.map((img) => {
-            const isFromContent = typeof img.id === 'string' && img.id.startsWith('content-')
-            const href = isFromContent && img.content_id
-              ? `/dashboard/content?edit=${img.content_id}`
-              : `/dashboard/pictures/${img.id}`
-            return (
-            <button
-              key={img.id}
-              type="button"
-              onClick={() => router.push(href)}
-              className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200 hover:border-teal-400 hover:ring-2 hover:ring-teal-200 transition-all text-left"
-            >
-              <img
-                src={img.image_url}
-                alt={img.topic || 'Generated image'}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs flex items-center justify-between">
-                <span className="truncate">{img.topic || 'Untitled'}</span>
-                {!isFromContent && (img.source === 'ai' || img.source == null) && (img.rating != null ? (
-                  <span className="text-white/90">{img.rating >= 3 ? '👍' : '👎'}</span>
-                ) : !isFromContent && (img.source === 'ai' || img.source == null) ? (
-                  <span className="text-white/70">Rate</span>
-                ) : null}
-              </div>
-            </button>
-          )
-          })}
-        </div>
-      ) : (
-        <div className="border rounded-lg p-12 text-center bg-card">
-          <p className="text-muted-foreground">No images yet. Create content with images to see them here.</p>
-          <Link href="/dashboard/content" className="mt-4 inline-block text-primary hover:underline">
-            Create your first spark
-          </Link>
-        </div>
-      )}
+      {imageGrid}
     </div>
   )
 }
