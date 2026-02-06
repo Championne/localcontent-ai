@@ -47,6 +47,42 @@ const TONE_OPTIONS = [
   { value: 'friendly', label: 'Friendly' },
 ]
 
+const BRAND_FIELDS_TOTAL = 14
+
+function getBrandCompleteness(b: Business): number {
+  let set = 0
+  if (b.name?.trim()) set++
+  if (b.industry?.trim()) set++
+  if (b.location?.trim()) set++
+  if (b.website?.trim()) set++
+  if (b.logo_url) set++
+  if (b.profile_photo_url) set++
+  if (b.brand_primary_color?.trim()) set++
+  if (b.tagline?.trim()) set++
+  if (b.default_cta_primary?.trim()) set++
+  if (b.default_tone?.trim()) set++
+  if (b.seo_keywords?.trim()) set++
+  if (b.social_handles?.trim()) set++
+  if (b.service_areas?.trim()) set++
+  if (b.short_about?.trim()) set++
+  return set
+}
+
+function getSetBadges(b: Business): { label: string }[] {
+  const badges: { label: string }[] = []
+  if (b.tagline?.trim()) badges.push({ label: 'Tagline ✓' })
+  const toneLabel = TONE_OPTIONS.find((o) => o.value === b.default_tone)?.label
+  if (b.default_tone && toneLabel && toneLabel !== 'Not set') badges.push({ label: `Tone: ${toneLabel}` })
+  if (b.default_cta_primary?.trim()) badges.push({ label: 'CTA ✓' })
+  if (b.logo_url) badges.push({ label: 'Logo ✓' })
+  if (b.profile_photo_url) badges.push({ label: 'Photo ✓' })
+  if (b.brand_primary_color?.trim()) badges.push({ label: 'Colours ✓' })
+  if (b.seo_keywords?.trim()) badges.push({ label: 'SEO ✓' })
+  if (b.website?.trim()) badges.push({ label: 'Website ✓' })
+  if (b.service_areas?.trim()) badges.push({ label: 'Areas ✓' })
+  return badges
+}
+
 export default function BrandingPage() {
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [loading, setLoading] = useState(true)
@@ -362,12 +398,27 @@ export default function BrandingPage() {
             >
               {/* Header: name, industry, location, edit/delete */}
               <div className="p-4 border-b border-gray-100 flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{business.name}</h3>
-                  <p className="text-sm text-gray-500">
-                    {business.industry || 'No industry'}
-                    {business.location && ` • ${business.location}`}
-                  </p>
+                <div className="flex gap-3 min-w-0 flex-1">
+                  {/* Logo + profile photo in view */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {business.logo_url ? (
+                      <img src={business.logo_url} alt="" className="w-10 h-10 rounded-lg object-contain border border-gray-200 bg-white" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-lg" title="Logo">🖼️</div>
+                    )}
+                    {business.profile_photo_url ? (
+                      <img src={business.profile_photo_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center text-gray-400 text-lg" title="Profile photo">👤</div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate">{business.name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {business.industry || 'No industry'}
+                      {business.location && ` • ${business.location}`}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
@@ -376,7 +427,7 @@ export default function BrandingPage() {
                       setEditingBusiness(editingBusiness === business.id ? null : business.id)
                     }
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-                    title="Edit basics"
+                    title="Edit brand identity"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -394,6 +445,63 @@ export default function BrandingPage() {
                   </button>
                 </div>
               </div>
+
+              {/* View mode: completeness, colour strip, badges, micro-summary, empty state */}
+              {editingBusiness !== business.id && (
+                <>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setEditingBusiness(business.id)}
+                    onKeyDown={(e) => e.key === 'Enter' && setEditingBusiness(business.id)}
+                    className="px-4 py-3 bg-gray-50/80 border-b border-gray-100 cursor-pointer hover:bg-gray-100/80 transition-colors"
+                  >
+                    {/* Completeness indicator */}
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-medium text-gray-600">
+                        {getBrandCompleteness(business)} of {BRAND_FIELDS_TOTAL} set
+                      </span>
+                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[120px]">
+                        <div
+                          className="h-full bg-teal-500 rounded-full transition-all"
+                          style={{ width: `${(100 * getBrandCompleteness(business)) / BRAND_FIELDS_TOTAL}%` }}
+                        />
+                      </div>
+                    </div>
+                    {/* Set badges */}
+                    {getSetBadges(business).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {getSetBadges(business).map((badge) => (
+                          <span
+                            key={badge.label}
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-50 text-teal-700"
+                          >
+                            {badge.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* Inline micro-summary */}
+                    <p className="text-xs text-gray-500">
+                      Tagline, tone, SEO, colours & more — Edit to add or change.
+                    </p>
+                    {/* Empty state when logo and profile photo both missing */}
+                    {!business.logo_url && !business.profile_photo_url && (
+                      <p className="text-xs text-amber-600 mt-1.5">
+                        Add logo & profile photo in Edit.
+                      </p>
+                    )}
+                  </div>
+                  {/* Colour strip */}
+                  {business.brand_primary_color?.trim() && /^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color) && (
+                    <div
+                      className="h-1.5 w-full"
+                      style={{ backgroundColor: business.brand_primary_color }}
+                      title="Brand primary colour"
+                    />
+                  )}
+                </>
+              )}
 
               {editingBusiness === business.id ? (
                 <div className="p-4 bg-gray-50 space-y-4">
