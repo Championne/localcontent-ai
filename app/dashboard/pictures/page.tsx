@@ -142,7 +142,8 @@ export default function PictureLibraryPage() {
                 ) : null}
               </div>
             </button>
-          )})}
+          )
+          })}
         </div>
       ) : (
         <div className="border rounded-lg p-12 text-center bg-card">
