@@ -1007,6 +1007,13 @@ export function SingleContentDemo({ contentType, title, description, compact = f
   )
 }
 
+const BADGE_BY_CONTENT_TYPE: Record<string, string> = {
+  'social-pack': 'bg-purple-100 text-purple-700',
+  'blog-post': 'bg-blue-100 text-blue-700',
+  'gmb-post': 'bg-green-100 text-green-700',
+  email: 'bg-orange-100 text-orange-700',
+}
+
 /** Renders generated demo result (for use in parent, e.g. full-width below cards). */
 export function DemoResultView({
   contentType,
@@ -1017,12 +1024,13 @@ export function DemoResultView({
   demo: GeneratedDemo
   className?: string
 }) {
+  const badgeClass = BADGE_BY_CONTENT_TYPE[contentType] ?? 'bg-gray-100 text-gray-700'
   return (
     <div className={className}>
       {contentType === 'social-pack' && typeof demo.content === 'object' ? (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles.badge}`}>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeClass}`}>
               {demo.displayType}
             </span>
             <span className="text-sm text-gray-500">{demo.businessName} • {demo.industry}</span>
