@@ -117,6 +117,7 @@ export async function PATCH(
           style: (data.metadata.image_style as string) ?? null,
           content_type: data.template,
           content_id: data.id,
+          source: 'stock',
         })
       }
     }

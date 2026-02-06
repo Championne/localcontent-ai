@@ -21,6 +21,7 @@ interface ImageRecord {
   rated_at: string | null
   feedback_reasons: string[] | null
   content_id: string | null
+  source?: 'ai' | 'stock' | 'composite' | null
   created_at: string
 }
 
@@ -128,7 +129,11 @@ export default function PictureDetailPage() {
           )}
 
           <div className="pt-4 border-t">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Rate this image</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              {image.source === 'stock' || image.source === 'composite'
+                ? 'Did this image work for your post?'
+                : 'Rate this image'}
+            </h3>
             <RatingStars
               type="image"
               value={image.rating}
@@ -136,6 +141,7 @@ export default function PictureDetailPage() {
               onChange={handleRating}
               disabled={saving}
               showSkip={false}
+              variant={image.source === 'stock' || image.source === 'composite' ? 'fit' : 'full'}
             />
           </div>
         </div>

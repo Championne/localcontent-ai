@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
           style: image_style ?? null,
           content_type: template,
           content_id: data.id,
+          source: 'stock',
         })
       }
       if (generated_text_id) {

@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
             rating: null,
             created_at: row.updated_at,
             content_id: row.id,
+            source: 'stock',
           })
         }
       }

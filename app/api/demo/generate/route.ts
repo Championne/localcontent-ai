@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
 import { generateImage, isImageGenerationConfigured, detectBestStyle } from '@/lib/openai/images'
 import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
-import { cookies } from 'next/headers'
 
 export const maxDuration = 90 // Allow up to 90 seconds for text + image
 
@@ -14,10 +13,7 @@ function isAllowlisted(ip: string): boolean {
   return ALLOWLISTED_IPS.includes(ip)
 }
 
-// Demo limits
-const FREE_DEMO_LIMIT = 3        // Free demos without any info
-const EMAIL_DEMO_LIMIT = 5       // Additional demos after email capture
-const TOTAL_DEMO_LIMIT = 8       // Total before requiring signup
+// Demo limits removed – no cap on demo generations
 
 // Sample businesses for random demo - expanded to cover all industry selector options
 const DEMO_BUSINESSES = [
@@ -126,42 +122,6 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}))
     
-    // Get demo usage from cookie
-    const cookieStore = await cookies()
-    const demoUsageCookie = cookieStore.get('demo_usage')
-    let demoUsage = demoUsageCookie ? JSON.parse(demoUsageCookie.value) : { count: 0, hasEmail: false }
-    
-    // Check if user has provided email (from request body)
-    const hasEmail = body.hasEmail || demoUsage.hasEmail
-    
-    // Determine limit based on email status
-    const currentLimit = hasEmail ? TOTAL_DEMO_LIMIT : FREE_DEMO_LIMIT
-    
-    // Skip demo limits for allowlisted IPs
-    if (!isUnlimited) {
-      // Check limits
-      if (demoUsage.count >= TOTAL_DEMO_LIMIT) {
-        return NextResponse.json({
-          error: 'Demo limit reached',
-          limitReached: true,
-          requiresSignup: true,
-          demoCount: demoUsage.count,
-          message: 'You\'ve used all your free demos! Sign up free to generate unlimited content.'
-        }, { status: 403 })
-      }
-      
-      if (demoUsage.count >= FREE_DEMO_LIMIT && !hasEmail) {
-        return NextResponse.json({
-          error: 'Email required',
-          limitReached: true,
-          requiresEmail: true,
-          demoCount: demoUsage.count,
-          remainingFree: 0,
-          message: 'Enter your email to unlock 5 more free demos!'
-        }, { status: 403 })
-      }
-    }
-    
     // Allow custom business or pick random
     let businessName = body.businessName
     let industry = body.industry
@@ -198,29 +158,14 @@ export async function POST(request: Request) {
     let content: string | SocialPackResult
     let displayType: string
 
-    // Increment usage count (skip for allowlisted IPs)
-    if (!isUnlimited) {
-      demoUsage.count += 1
-      if (hasEmail && !demoUsage.hasEmail) {
-        demoUsage.hasEmail = true
-      }
-    }
-    
-    // Calculate remaining demos
-    const remainingDemos = hasEmail 
-      ? TOTAL_DEMO_LIMIT - demoUsage.count 
-      : FREE_DEMO_LIMIT - demoUsage.count
-    
-    // Prepare usage info for response
+    // No demo limits – usage info for optional client display only
     const usageInfo = {
-      demoCount: isUnlimited ? 0 : demoUsage.count,
-      remainingDemos: isUnlimited ? 999 : Math.max(0, remainingDemos),
-      hasEmail: demoUsage.hasEmail,
-      requiresEmail: false, // Never require email for allowlisted
-      requiresSignup: false, // Never require signup for allowlisted
-      freeLimit: FREE_DEMO_LIMIT,
-      emailLimit: TOTAL_DEMO_LIMIT,
-      unlimited: isUnlimited
+      demoCount: 0,
+      remainingDemos: 999,
+      hasEmail: false,
+      requiresEmail: false,
+      requiresSignup: false,
+      unlimited: true
     }
 
     if (!isOpenAIConfigured()) {
@@ -240,15 +185,6 @@ export async function POST(request: Request) {
         message: 'Demo mode - configure AI for live generation',
         usage: usageInfo
       })
-      
-      // Set cookie
-      response.cookies.set('demo_usage', JSON.stringify(demoUsage), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      })
-      
       return response
     }
 
@@ -317,15 +253,6 @@ export async function POST(request: Request) {
       generatedAt: new Date().toISOString(),
       usage: usageInfo
     })
-    
-    // Set cookie
-    response.cookies.set('demo_usage', JSON.stringify(demoUsage), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
-    })
-    
     return response
 
   } catch (error) {

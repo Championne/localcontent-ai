@@ -21,6 +21,10 @@ export const FEEDBACK_REASONS_TEXT = [
 type FeedbackReasonsImage = typeof FEEDBACK_REASONS_IMAGE[number]
 type FeedbackReasonsText = typeof FEEDBACK_REASONS_TEXT[number]
 
+/** Thumbs: good = 4, bad = 2 (stored in DB; reasons only when bad) */
+export const RATING_GOOD = 4
+export const RATING_BAD = 2
+
 export interface RatingStarsProps {
   type: 'image' | 'text'
   value: number | null
@@ -30,6 +34,8 @@ export interface RatingStarsProps {
   disabled?: boolean
   label?: string
   showSkip?: boolean
+  /** 'fit' = thumbs only, no reasons (e.g. "Did this image work?" for stock). Default 'full' = thumbs + reasons on 👎 */
+  variant?: 'full' | 'fit'
 }
 
 export default function RatingStars({
@@ -40,50 +46,59 @@ export default function RatingStars({
   onSkip,
   disabled,
   label,
-  showSkip = true
+  showSkip = true,
+  variant = 'full',
 }: RatingStarsProps) {
   const [localRating, setLocalRating] = useState<number | null>(value)
   const [localReasons, setLocalReasons] = useState<string[]>(feedbackReasons)
   const reasons = type === 'image' ? FEEDBACK_REASONS_IMAGE : FEEDBACK_REASONS_TEXT
+  const showReasons = variant === 'full' && localRating === RATING_BAD
 
-  const handleStarClick = (rating: number) => {
+  const handleThumb = (rating: number) => {
     if (disabled) return
     setLocalRating(rating)
-    onChange(rating, rating <= 2 ? localReasons : undefined)
+    onChange(rating, rating === RATING_BAD ? localReasons : undefined)
   }
 
   const toggleReason = (r: string) => {
     if (disabled) return
-    const next = localReasons.includes(r) ? localReasons.filter(x => x !== r) : [...localReasons, r]
+    const next = localReasons.includes(r) ? localReasons.filter((x) => x !== r) : [...localReasons, r]
     setLocalReasons(next)
     if (localRating != null) onChange(localRating, next)
   }
 
   const displayRating = localRating ?? value
+  const isGood = displayRating != null && displayRating >= 3
+  const isBad = displayRating != null && displayRating <= 2
 
   return (
     <div className="space-y-2">
       {label && <p className="text-sm font-medium text-gray-700">{label}</p>}
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            disabled={disabled}
-            onClick={() => handleStarClick(star)}
-            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            aria-label={`${star} star${star > 1 ? 's' : ''}`}
-          >
-            <svg
-              className="w-8 h-8"
-              fill={displayRating != null && star <= displayRating ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </button>
-        ))}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => handleThumb(RATING_GOOD)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isGood ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+          }`}
+          aria-label="Good"
+        >
+          <span className="text-lg" aria-hidden>👍</span>
+          <span className="text-sm font-medium">Good</span>
+        </button>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => handleThumb(RATING_BAD)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isBad ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+          }`}
+          aria-label="Not great"
+        >
+          <span className="text-lg" aria-hidden>👎</span>
+          <span className="text-sm font-medium">Not great</span>
+        </button>
         {showSkip && onSkip && (
           <button
             type="button"
@@ -95,7 +110,7 @@ export default function RatingStars({
           </button>
         )}
       </div>
-      {displayRating != null && displayRating <= 2 && (
+      {showReasons && (
         <div className="pt-2 border-t border-gray-100">
           <p className="text-xs text-gray-500 mb-1">What was wrong? (optional)</p>
           <div className="flex flex-wrap gap-2">

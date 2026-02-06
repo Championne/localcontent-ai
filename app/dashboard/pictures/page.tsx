@@ -11,6 +11,7 @@ interface GeneratedImage {
   style: string | null
   content_type: string | null
   rating: number | null
+  source?: 'ai' | 'stock' | 'composite' | null
   created_at: string
   content_id?: string | null
 }
@@ -134,11 +135,11 @@ export default function PictureLibraryPage() {
               />
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs flex items-center justify-between">
                 <span className="truncate">{img.topic || 'Untitled'}</span>
-                {!isFromContent && (img.rating != null ? (
-                  <span className="text-yellow-400">★ {img.rating}</span>
-                ) : (
+                {!isFromContent && (img.source === 'ai' || img.source == null) && (img.rating != null ? (
+                  <span className="text-white/90">{img.rating >= 3 ? '👍' : '👎'}</span>
+                ) : !isFromContent && (img.source === 'ai' || img.source == null) ? (
                   <span className="text-white/70">Rate</span>
-                ))}
+                ) : null}
               </div>
             </button>
           )})}

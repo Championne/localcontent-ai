@@ -115,7 +115,7 @@ export default function TextLibraryPage() {
               </div>
               <div className="flex-shrink-0">
                 {t.rating != null ? (
-                  <span className="text-yellow-500">★ {t.rating}</span>
+                  <span className="text-muted-foreground">{t.rating >= 3 ? '👍' : '👎'}</span>
                 ) : (
                   <span className="text-gray-400 text-sm">Rate</span>
                 )}

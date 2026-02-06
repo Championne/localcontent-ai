@@ -164,7 +164,8 @@ export async function POST(request: Request) {
                 size: imageResult.size,
                 full_prompt: imageResult.fullPrompt || null,
                 revised_prompt: imageResult.revisedPrompt || null,
-                prompt_version: 'v1'
+                prompt_version: 'v1',
+                source: 'ai'
               })
               .select('id')
               .single()
@@ -337,7 +338,8 @@ export async function POST(request: Request) {
               size: imageResult.size,
               full_prompt: imageResult.fullPrompt || null,
               revised_prompt: imageResult.revisedPrompt || null,
-              prompt_version: 'v1'
+              prompt_version: 'v1',
+              source: 'ai'
             })
             .select('id')
             .single()

@@ -456,10 +456,16 @@ export default function CreateContentPage() {
           return
         }
         const data = await response.json()
+        if (!data.url) {
+          setOverlayError('No image URL returned. Try again.')
+          return
+        }
         currentImageUrl = data.url
       }
 
-      setGeneratedImage((prev) => (prev ? { ...prev, url: currentImageUrl } : prev))
+      // Update image so the content area above shows the composited result (cache-bust so browser refetches)
+      const cacheBustedUrl = `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
+      setGeneratedImage({ ...generatedImage, url: cacheBustedUrl })
       setShowOverlayEditor(false)
       setLogoSkipped(true)
       setPhotoSkipped(true)
@@ -1498,7 +1504,7 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: soft nudge to rate copy and image */}
+          {/* In-flow rating: copy always; image only for AI-generated (stock can be rated in Generations) */}
           {(generatedImageId || generatedTextId) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
@@ -1507,7 +1513,7 @@ export default function CreateContentPage() {
                   <div className="min-w-[200px]">
                     <RatingStars
                       type="text"
-                      label="Rate this copy"
+                      label="Rate this text"
                       value={textRating}
                       onChange={handleRateText}
                       onSkip={() => {}}
@@ -1515,7 +1521,7 @@ export default function CreateContentPage() {
                     />
                   </div>
                 )}
-                {generatedImageId && (
+                {generatedImageId && generatedImage?.source !== 'stock' && (
                   <div className="min-w-[200px]">
                     <RatingStars
                       type="image"
@@ -2105,17 +2111,17 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating */}
+          {/* In-flow rating: copy always; image only for AI-generated */}
           {(generatedImageId || generatedTextId) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
               <div className="flex flex-wrap gap-6">
                 {generatedTextId && (
                   <div className="min-w-[200px]">
-                    <RatingStars type="text" label="Rate this copy" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
+                    <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
                   </div>
                 )}
-                {generatedImageId && (
+                {generatedImageId && generatedImage?.source !== 'stock' && (
                   <div className="min-w-[200px]">
                     <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
                   </div>
