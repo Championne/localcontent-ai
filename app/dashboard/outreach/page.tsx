@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// Safe parse: never throw so we don't trigger the dashboard error boundary
+async function safeJson<T = unknown>(res: Response): Promise<T | null> {
+  const text = await res.text()
+  try {
+    return text ? (JSON.parse(text) as T) : null
+  } catch {
+    return null
+  }
+}
+
 interface Lead {
   id: string
   business_name: string
@@ -127,14 +137,16 @@ export default function OutreachDashboard() {
   const [pushingToInstantly, setPushingToInstantly] = useState(false)
 
   useEffect(() => {
-    fetchData()
-    fetchInstantlyStatus()
-    fetchPriorityQueue()
-    fetchIndustries()
+    Promise.all([
+      fetchData(),
+      fetchInstantlyStatus(),
+      fetchPriorityQueue(),
+      fetchIndustries(),
+    ]).catch((err) => console.error('Outreach initial load error:', err))
   }, [])
 
   useEffect(() => {
-    fetchLeads()
+    fetchLeads().catch((err) => console.error('Outreach fetchLeads error:', err))
   }, [selectedStatus, selectedIndustry, searchQuery])
 
   async function fetchData() {
@@ -153,44 +165,59 @@ export default function OutreachDashboard() {
   }
 
   async function fetchLeads() {
-    const params = new URLSearchParams()
-    if (selectedStatus !== 'all') params.set('status', selectedStatus)
-    if (selectedIndustry) params.set('industry_id', selectedIndustry)
-    if (searchQuery) params.set('search', searchQuery)
-    params.set('limit', '20')
+    try {
+      const params = new URLSearchParams()
+      if (selectedStatus !== 'all') params.set('status', selectedStatus)
+      if (selectedIndustry) params.set('industry_id', selectedIndustry)
+      if (searchQuery) params.set('search', searchQuery)
+      params.set('limit', '20')
 
-    const res = await fetch(`/api/outreach/leads?${params}`)
-    const data = await res.json()
-    setLeads(data.leads || [])
+      const res = await fetch(`/api/outreach/leads?${params}`)
+      const data = await safeJson<{ leads?: Lead[] }>(res)
+      setLeads(data?.leads ?? [])
+    } catch (error) {
+      console.error('Error fetching leads:', error)
+      setLeads([])
+    }
   }
 
   async function fetchCampaigns() {
-    const res = await fetch('/api/outreach/campaigns')
-    const data = await res.json()
-    setCampaigns(data.campaigns || [])
+    try {
+      const res = await fetch('/api/outreach/campaigns')
+      const data = await safeJson<{ campaigns?: Campaign[] }>(res)
+      setCampaigns(data?.campaigns ?? [])
+    } catch (error) {
+      console.error('Error fetching campaigns:', error)
+      setCampaigns([])
+    }
   }
 
   async function fetchStats() {
-    const res = await fetch('/api/outreach/leads?limit=1000')
-    const data = await res.json()
-    const allLeads = data.leads || []
-    
-    setStats({
-      total_leads: allLeads.length,
-      new_leads: allLeads.filter((l: Lead) => l.status === 'new').length,
-      contacted: allLeads.filter((l: Lead) => l.status === 'contacted').length,
-      replied: allLeads.filter((l: Lead) => l.status === 'replied').length,
-      interested: allLeads.filter((l: Lead) => l.status === 'interested').length,
-      converted: allLeads.filter((l: Lead) => l.status === 'converted').length,
-    })
+    try {
+      const res = await fetch('/api/outreach/leads?limit=1000')
+      const data = await safeJson<{ leads?: Lead[] }>(res)
+      const allLeads = data?.leads ?? []
+
+      setStats({
+        total_leads: allLeads.length,
+        new_leads: allLeads.filter((l: Lead) => l.status === 'new').length,
+        contacted: allLeads.filter((l: Lead) => l.status === 'contacted').length,
+        replied: allLeads.filter((l: Lead) => l.status === 'replied').length,
+        interested: allLeads.filter((l: Lead) => l.status === 'interested').length,
+        converted: allLeads.filter((l: Lead) => l.status === 'converted').length,
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      setStats({ total_leads: 0, new_leads: 0, contacted: 0, replied: 0, interested: 0, converted: 0 })
+    }
   }
 
   async function fetchInstantlyStatus() {
     try {
       const res = await fetch('/api/outreach/instantly/sync')
-      const data = await res.json()
-      setInstantlyConnected(data.connected)
-      if (data.campaigns) {
+      const data = await safeJson<{ connected?: boolean; campaigns?: InstantlyCampaign[] }>(res)
+      setInstantlyConnected(data?.connected ?? false)
+      if (data?.campaigns) {
         setInstantlyCampaigns(data.campaigns)
       }
     } catch {
@@ -201,21 +228,26 @@ export default function OutreachDashboard() {
   async function fetchPriorityQueue() {
     try {
       const res = await fetch('/api/outreach/priority-queue?limit=10')
-      const data = await res.json()
-      setPriorityQueue(data)
-      setHotLeads(data.leads?.filter((l: Lead) => l.temperature === 'hot' || l.temperature === 'warm').slice(0, 5) || [])
+      const data = await safeJson<PriorityQueue>(res)
+      if (data) {
+        setPriorityQueue(data)
+        setHotLeads(data.leads?.filter((l: Lead) => l.temperature === 'hot' || l.temperature === 'warm').slice(0, 5) ?? [])
+      }
     } catch (error) {
       console.error('Error fetching priority queue:', error)
+      setPriorityQueue(null)
+      setHotLeads([])
     }
   }
 
   async function fetchIndustries() {
     try {
       const res = await fetch('/api/sales/industries')
-      const data = await res.json()
-      setIndustries(data.industries || [])
+      const data = await safeJson<{ industries?: Industry[] }>(res)
+      setIndustries(data?.industries ?? [])
     } catch (error) {
       console.error('Error fetching industries:', error)
+      setIndustries([])
     }
   }
 
