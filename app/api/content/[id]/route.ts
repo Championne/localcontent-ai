@@ -27,7 +27,22 @@ export async function GET(
       return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ content: data })
+    // Resolve generated_image_id so the client can show image rating when editing
+    const { data: genImg } = await supabase
+      .from('generated_images')
+      .select('id')
+      .eq('content_id', params.id)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const content = {
+      ...data,
+      generated_image_id: genImg?.id ?? null,
+      image_url: (data.metadata as { image_url?: string })?.image_url ?? (data as { image_url?: string }).image_url ?? null,
+    }
+    return NextResponse.json({ content })
 
   } catch (error) {
     console.error('Get content error:', error)

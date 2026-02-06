@@ -151,6 +151,8 @@ export default function BrandingPage() {
 
   const handleUpdateBusiness = async (business: Business) => {
     setSaving(business.id)
+    const previousEditing = editingBusiness
+    setEditingBusiness(null)
     try {
       const res = await fetch('/api/business', {
         method: 'PATCH',
@@ -174,15 +176,16 @@ export default function BrandingPage() {
           short_about: business.short_about,
         }),
       })
-      if (res.ok) {
-        const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.business) {
         setBusinesses((prev) => prev.map((b) => (b.id === business.id ? data.business : b)))
-        setEditingBusiness(null)
         showMessage('success', 'Saved')
       } else {
-        showMessage('error', 'Failed to save')
+        setEditingBusiness(previousEditing)
+        showMessage('error', data.error || 'Failed to save')
       }
     } catch {
+      setEditingBusiness(previousEditing)
       showMessage('error', 'Failed to save')
     } finally {
       setSaving(null)

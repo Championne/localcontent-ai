@@ -336,6 +336,8 @@ export default function CreateContentPage() {
             }),
           })
         }
+        const genImageId = (item as { generated_image_id?: string }).generated_image_id ?? null
+        if (genImageId) setGeneratedImageId(genImageId)
         setEditingContentId(item.id)
         setStep(3)
       })
@@ -1526,8 +1528,8 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: rate both text and image when present */}
-          {(generatedImageId || generatedTextId) && (
+          {/* In-flow rating: one for text, one for image (show both when applicable) */}
+          {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
               <div className="flex flex-wrap gap-6">
@@ -1543,7 +1545,7 @@ export default function CreateContentPage() {
                     />
                   </div>
                 )}
-                {generatedImageId && generatedImage && (
+                {(generatedImageId || generatedImage) && (
                   <div className="min-w-[200px]">
                     <RatingStars
                       type="image"
@@ -2135,8 +2137,8 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: rate both text and image when present */}
-          {(generatedImageId || generatedTextId) && (
+          {/* In-flow rating: one for text, one for image (show both when applicable) */}
+          {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
               <div className="flex flex-wrap gap-6">
@@ -2145,7 +2147,7 @@ export default function CreateContentPage() {
                     <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
                   </div>
                 )}
-                {generatedImageId && generatedImage && (
+                {(generatedImageId || generatedImage) && (
                   <div className="min-w-[200px]">
                     <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
                   </div>

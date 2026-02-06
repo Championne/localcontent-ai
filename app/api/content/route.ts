@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       return !meta?.image_url && !(c as { image_url?: string }).image_url
     }).map((c: { id: string }) => c.id)
 
+    let result = list
     if (idsWithoutImage.length > 0) {
       const { data: images } = await supabase
         .from('generated_images')
@@ -59,15 +60,19 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const enriched = list.map((c: { id: string; metadata?: Record<string, unknown> }) => {
+      result = list.map((c: { id: string; metadata?: Record<string, unknown> }) => {
         const url = imageByContentId.get(c.id)
         if (url) return { ...c, metadata: { ...(c.metadata || {}), image_url: url } }
         return c
       })
-      return NextResponse.json({ content: enriched })
     }
 
-    return NextResponse.json({ content: list })
+    // Ensure every item has top-level image_url for Spark Library / clients that read item.image_url
+    const withTopLevelImage = (result as { metadata?: { image_url?: string }; image_url?: string }[]).map((c) => ({
+      ...c,
+      image_url: (c.metadata as { image_url?: string } | undefined)?.image_url ?? c.image_url ?? null,
+    }))
+    return NextResponse.json({ content: withTopLevelImage })
   } catch (error) {
     console.error('Content API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
