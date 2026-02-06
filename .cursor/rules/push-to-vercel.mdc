@@ -1,0 +1,15 @@
+---
+description: After making code changes, commit and push to main so Vercel deploys.
+alwaysApply: true
+---
+
+# Push changes to Vercel
+
+When you finish implementing or changing code in this project:
+
+1. **Commit and push to main** so Vercel automatically deploys.
+2. Run: `git add -A`, then `git commit -m "<clear message>"`, then `git push origin main`.
+3. If `.git/index.lock` exists and blocks git, remove it first, then retry.
+4. Request `git_write` and `network` permissions when running git push.
+
+Do not leave uncommitted changes with the expectation that the user will push later—push immediately after completing the work unless the user asks otherwise.
