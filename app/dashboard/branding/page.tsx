@@ -150,9 +150,8 @@ export default function BrandingPage() {
   }
 
   const handleUpdateBusiness = async (business: Business) => {
+    if (!business?.id) return
     setSaving(business.id)
-    const previousEditing = editingBusiness
-    setEditingBusiness(null)
     try {
       const res = await fetch('/api/business', {
         method: 'PATCH',
@@ -179,13 +178,12 @@ export default function BrandingPage() {
       const data = await res.json().catch(() => ({}))
       if (res.ok && data.business) {
         setBusinesses((prev) => prev.map((b) => (b.id === business.id ? data.business : b)))
+        setEditingBusiness(null)
         showMessage('success', 'Saved')
       } else {
-        setEditingBusiness(previousEditing)
         showMessage('error', data.error || 'Failed to save')
       }
     } catch {
-      setEditingBusiness(previousEditing)
       showMessage('error', 'Failed to save')
     } finally {
       setSaving(null)
@@ -617,7 +615,12 @@ export default function BrandingPage() {
                   <textarea value={business.short_about || ''} onChange={(e) => updateBusiness(business.id, { short_about: e.target.value || null })} placeholder="Used in Google Business Profile, blog author box, About sections" rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" />
 
                   <div className="flex gap-2 pt-2">
-                    <button type="button" onClick={() => handleUpdateBusiness(business)} disabled={saving === business.id} className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUpdateBusiness(business) }}
+                      disabled={saving === business.id}
+                      className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50"
+                    >
                       {saving === business.id ? 'Saving...' : 'Save'}
                     </button>
                     <button type="button" onClick={() => { setEditingBusiness(null); fetchBusinesses() }} className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm hover:bg-gray-50">
