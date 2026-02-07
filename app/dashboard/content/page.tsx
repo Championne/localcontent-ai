@@ -835,7 +835,7 @@ export default function CreateContentPage() {
           topic,
           tone,
           location: currentBusiness?.location ?? undefined,
-          generateImageFlag: mode === 'text' ? false : (mode === 'image' ? true : false),
+          generateImageFlag: mode === 'text' ? false : true,
           imageSource: mode === 'image' ? effectiveImageSource : 'stock',
           imageStyle,
           regenerateMode: mode,
@@ -879,6 +879,14 @@ export default function CreateContentPage() {
         }
         if (data.image) {
           setGeneratedImage(data.image)
+          if ((data.image as { source?: string }).source === 'ai') {
+            setStep3AIImage({
+              url: data.image.url,
+              style: data.image.style || 'professional',
+              size: (data.image as { size?: string }).size || '1024x1024',
+              generated_image_id: data.generated_image_id ?? null,
+            })
+          }
           const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
           if (businessLogo && !logoSkipped) {
             setShowOverlayEditor(true)
