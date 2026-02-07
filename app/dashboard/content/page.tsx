@@ -32,10 +32,16 @@ interface Business {
   id: string
   name: string
   industry: string | null
+  location?: string | null
+  website?: string | null
   logo_url: string | null
   profile_photo_url: string | null
   brand_primary_color?: string | null
+  brand_secondary_color?: string | null
+  brand_accent_color?: string | null
   tagline?: string | null
+  short_about?: string | null
+  social_handles?: string | null
   default_cta_primary?: string | null
   default_cta_secondary?: string | null
   seo_keywords?: string | null
