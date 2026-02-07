@@ -1,6 +1,7 @@
 'use client'
+/** @jsx React.createElement */
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 interface OverlayItem {
   id: string
@@ -52,10 +53,6 @@ interface ImageOverlayEditorProps {
 }
 
 const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', accent: '#6b7280' }
-
-function EditorLayout ({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
-}
 
 export default function ImageOverlayEditor({
   imageUrl,
@@ -234,7 +231,7 @@ export default function ImageOverlayEditor({
   const hasPhoto = overlays.some(o => o.type === 'photo')
   const totalItems = overlays.length + textOverlays.length + (frame ? 1 : 0)
 
-  return <EditorLayout>
+  return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <h3 className="font-semibold text-gray-900">Customize Your Image</h3>
@@ -601,5 +598,5 @@ export default function ImageOverlayEditor({
         </div>
       )}
     </div>
-  </EditorLayout>
+  )
 }
