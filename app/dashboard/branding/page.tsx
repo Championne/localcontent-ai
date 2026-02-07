@@ -181,7 +181,8 @@ export default function BrandingPage() {
         setEditingBusiness(null)
         showMessage('success', 'Saved')
       } else {
-        showMessage('error', data.error || 'Failed to save')
+        const msg = data.details || data.error || 'Failed to save'
+        showMessage('error', msg)
       }
     } catch {
       showMessage('error', 'Failed to save')

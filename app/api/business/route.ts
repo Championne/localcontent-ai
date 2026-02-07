@@ -131,23 +131,24 @@ export async function PATCH(request: Request) {
       updated_at: new Date().toISOString()
     }
 
-    if (name !== undefined) updates.name = name
-    if (industry !== undefined) updates.industry = industry
-    if (description !== undefined) updates.description = description
-    if (location !== undefined) updates.location = location
-    if (website !== undefined) updates.website = website
-    if (phone !== undefined) updates.phone = phone
-    if (brand_primary_color !== undefined) updates.brand_primary_color = brand_primary_color || null
-    if (brand_secondary_color !== undefined) updates.brand_secondary_color = brand_secondary_color || null
-    if (brand_accent_color !== undefined) updates.brand_accent_color = brand_accent_color || null
-    if (tagline !== undefined) updates.tagline = tagline || null
-    if (default_cta_primary !== undefined) updates.default_cta_primary = default_cta_primary || null
-    if (default_cta_secondary !== undefined) updates.default_cta_secondary = default_cta_secondary || null
-    if (seo_keywords !== undefined) updates.seo_keywords = seo_keywords || null
-    if (default_tone !== undefined) updates.default_tone = default_tone || null
-    if (social_handles !== undefined) updates.social_handles = social_handles || null
-    if (service_areas !== undefined) updates.service_areas = service_areas || null
-    if (short_about !== undefined) updates.short_about = short_about || null
+    const toStr = (v: unknown) => (v == null || v === '' ? null : String(v))
+    if (name !== undefined) updates.name = name == null ? '' : String(name)
+    if (industry !== undefined) updates.industry = toStr(industry)
+    if (description !== undefined) updates.description = toStr(description)
+    if (location !== undefined) updates.location = toStr(location)
+    if (website !== undefined) updates.website = toStr(website)
+    if (phone !== undefined) updates.phone = toStr(phone)
+    if (brand_primary_color !== undefined) updates.brand_primary_color = toStr(brand_primary_color)
+    if (brand_secondary_color !== undefined) updates.brand_secondary_color = toStr(brand_secondary_color)
+    if (brand_accent_color !== undefined) updates.brand_accent_color = toStr(brand_accent_color)
+    if (tagline !== undefined) updates.tagline = toStr(tagline)
+    if (default_cta_primary !== undefined) updates.default_cta_primary = toStr(default_cta_primary)
+    if (default_cta_secondary !== undefined) updates.default_cta_secondary = toStr(default_cta_secondary)
+    if (seo_keywords !== undefined) updates.seo_keywords = toStr(seo_keywords)
+    if (default_tone !== undefined) updates.default_tone = toStr(default_tone)
+    if (social_handles !== undefined) updates.social_handles = toStr(social_handles)
+    if (service_areas !== undefined) updates.service_areas = toStr(service_areas)
+    if (short_about !== undefined) updates.short_about = toStr(short_about)
 
     const { data, error } = await supabase
       .from('businesses')
@@ -155,11 +156,21 @@ export async function PATCH(request: Request) {
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error updating business:', error)
-      return NextResponse.json({ error: 'Failed to update business' }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to update business', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Business not found or you don’t have permission to update it' },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({
