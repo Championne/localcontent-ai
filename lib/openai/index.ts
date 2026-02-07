@@ -53,6 +53,9 @@ export interface GenerateContentParams {
   defaultCtaPrimary?: string | null
   defaultCtaSecondary?: string | null
   seoKeywords?: string | null
+  shortAbout?: string | null
+  website?: string | null
+  socialHandles?: string | null
   // GBP-specific fields
   gbpPostType?: GbpPostType
   gbpExpiration?: string
@@ -219,7 +222,7 @@ function buildPrompt(params: GenerateContentParams): string {
 **Language:** Write all content in the same language as the Topic/Subject above. If the topic is in Dutch, write entirely in Dutch; if in another language, write in that language. Only use English if the topic is in English.`
 
   if (location) {
-    prompt += `\n**Location:** ${location}`
+    prompt += `\n**Location:** ${location} — mention naturally (e.g. "in [location]", "serving [location]").`
   }
   if (tagline) {
     prompt += `\n**Tagline (use in sign-off or when appropriate):** ${tagline}`
@@ -230,6 +233,15 @@ function buildPrompt(params: GenerateContentParams): string {
   }
   if (seoKeywords) {
     prompt += `\n**SEO keywords (weave naturally into headings/body):** ${seoKeywords}`
+  }
+  if (params.shortAbout) {
+    prompt += `\n**About the business (use for voice and key points):** ${params.shortAbout}`
+  }
+  if (params.website) {
+    prompt += `\n**Website (use for "Visit our site" / "Learn more" where relevant):** ${params.website}`
+  }
+  if (params.socialHandles) {
+    prompt += `\n**Social handles (use in sign-off or "Follow us" where fitting):** ${params.socialHandles}`
   }
   if (additionalContext) {
     prompt += `\n**Additional Context:** ${additionalContext}`
@@ -381,7 +393,7 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
 **Language:** Write all posts in the same language as the Topic/Subject above. If the topic is in Dutch, write entirely in Dutch; if in another language, write in that language. Only use English if the topic is in English.`
 
   if (location) {
-    context += `\n**Location:** ${location}`
+    context += `\n**Location:** ${location} — mention naturally where it fits.`
   }
   if (tagline) {
     context += `\n**Tagline (use in sign-off or bio where fitting):** ${tagline}`
@@ -392,6 +404,15 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
   }
   if (seoKeywords) {
     context += `\n**SEO / hashtag hints:** Consider these for hashtags or captions: ${seoKeywords}`
+  }
+  if (params.shortAbout) {
+    context += `\n**About the business (voice and key points):** ${params.shortAbout}`
+  }
+  if (params.website) {
+    context += `\n**Website (for "Visit our site" / "Learn more"):** ${params.website}`
+  }
+  if (params.socialHandles) {
+    context += `\n**Social handles (use in sign-off or "Follow us @..."):** ${params.socialHandles}`
   }
   if (additionalContext) {
     context += `\n**Additional Context:** ${additionalContext}`

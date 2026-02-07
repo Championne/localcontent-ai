@@ -5,29 +5,62 @@ import { useState, useRef, useEffect } from 'react'
 interface OverlayItem {
   id: string
   url: string
-  x: number // percentage
-  y: number // percentage
-  scale: number // percentage of image width
+  x: number
+  y: number
+  scale: number
   type: 'logo' | 'photo'
+}
+
+export interface TextOverlayItem {
+  id: string
+  text: string
+  x: number
+  y: number
+  fontSize: number
+  colorKey: 'primary' | 'secondary' | 'accent'
+}
+
+export interface BrandColors {
+  primary: string
+  secondary: string
+  accent: string
+}
+
+export type FrameStyle = 'thin' | 'solid' | 'thick' | 'double' | 'rounded'
+
+export interface OverlayApplyPayload {
+  imageOverlays: OverlayItem[]
+  overlayBorderColors: Record<string, string>
+  tintOverlay: { colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null
+  textOverlays: TextOverlayItem[]
+  frame: { style: FrameStyle; colorKey: 'primary' | 'secondary' | 'accent' } | null
 }
 
 interface ImageOverlayEditorProps {
   imageUrl: string
   logoUrl?: string | null
   photoUrl?: string | null
-  onApply: (overlays: OverlayItem[]) => void
+  brandColors?: BrandColors | null
+  tagline?: string | null
+  website?: string | null
+  socialHandles?: string | null
+  onApply: (payload: OverlayApplyPayload) => void
   onSkip: () => void
   applying?: boolean
-  /** Upload logo file (e.g. from Settings); returns new public URL or null */
   onUploadLogo?: (file: File) => Promise<string | null>
-  /** Upload profile photo file; returns new public URL or null */
   onUploadPhoto?: (file: File) => Promise<string | null>
 }
+
+const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', accent: '#6b7280' }
 
 export default function ImageOverlayEditor({
   imageUrl,
   logoUrl,
   photoUrl,
+  brandColors,
+  tagline,
+  website,
+  socialHandles,
   onApply,
   onSkip,
   applying,
@@ -36,18 +69,27 @@ export default function ImageOverlayEditor({
 }: ImageOverlayEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [overlays, setOverlays] = useState<OverlayItem[]>([])
-  const [draggingNew, setDraggingNew] = useState<'logo' | 'photo' | null>(null)
+  const [overlayBorderColors, setOverlayBorderColors] = useState<Record<string, string>>({})
+  const [tintOverlay, setTintOverlay] = useState<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>(null)
+  const [frame, setFrame] = useState<{ style: FrameStyle; colorKey: 'primary' | 'secondary' | 'accent' } | null>(null)
+  const [textOverlays, setTextOverlays] = useState<TextOverlayItem[]>([])
+  const [draggingNew, setDraggingNew] = useState<'logo' | 'photo' | 'tagline' | 'website' | 'social' | null>(null)
   const [draggingExisting, setDraggingExisting] = useState<string | null>(null)
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 })
-  /** URLs set by drag-and-drop upload in this session (used until parent passes them as logoUrl/photoUrl) */
   const [uploadedLogoUrl, setUploadedLogoUrl] = useState<string | null>(null)
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState<'logo' | 'photo' | null>(null)
   const logoInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
 
+  const colors = brandColors || DEFAULT_BRAND
   const effectiveLogoUrl = logoUrl || uploadedLogoUrl
   const effectivePhotoUrl = photoUrl || uploadedPhotoUrl
+
+  const getHex = (key: 'primary' | 'secondary' | 'accent') => {
+    const hex = colors[key]
+    return /^#[0-9A-Fa-f]{6}$/.test(hex) ? hex : colors.primary
+  }
 
   const handleFileUpload = async (type: 'logo' | 'photo', file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -78,15 +120,12 @@ export default function ImageOverlayEditor({
     e.target.value = ''
   }
 
-  // Handle starting drag from sidebar
-  const handleSidebarDragStart = (type: 'logo' | 'photo', e: React.MouseEvent | React.TouchEvent) => {
-    const url = type === 'logo' ? effectiveLogoUrl : effectivePhotoUrl
-    if (!url) return
+  const handleSidebarDragStart = (type: 'logo' | 'photo' | 'tagline' | 'website' | 'social', e: React.MouseEvent | React.TouchEvent) => {
+    if ((type === 'logo' || type === 'photo') && !(type === 'logo' ? effectiveLogoUrl : effectivePhotoUrl)) return
     e.preventDefault()
     setDraggingNew(type)
-    
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY
     setDragPosition({ x: clientX, y: clientY })
   }
 
@@ -108,68 +147,57 @@ export default function ImageOverlayEditor({
       const rect = containerRef.current.getBoundingClientRect()
       const x = ((clientX - rect.left) / rect.width) * 100
       const y = ((clientY - rect.top) / rect.height) * 100
-      
-      setOverlays(prev => prev.map(o => {
-        if (o.id === draggingExisting) {
-          return {
-            ...o,
-            x: Math.max(0, Math.min(100 - o.scale, x - o.scale / 2)),
-            y: Math.max(0, Math.min(100 - o.scale, y - o.scale / 2))
+      if (draggingExisting.startsWith('text-')) {
+        setTextOverlays(prev => prev.map(t => t.id === draggingExisting ? { ...t, x, y } : t))
+      } else {
+        setOverlays(prev => prev.map(o => {
+          if (o.id === draggingExisting) {
+            return { ...o, x: Math.max(0, Math.min(100 - o.scale, x - o.scale / 2)), y: Math.max(0, Math.min(100 - o.scale, y - o.scale / 2)) }
           }
-        }
-        return o
-      }))
+          return o
+        }))
+      }
     }
   }
 
-  // Handle drop
   const handleEnd = (e: MouseEvent | TouchEvent) => {
     if (draggingNew && containerRef.current) {
-      const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX
-      const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : e.clientY
-      
+      const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : (e as MouseEvent).clientX
+      const clientY = 'changedTouches' in e ? e.changedTouches[0].clientY : (e as MouseEvent).clientY
       const rect = containerRef.current.getBoundingClientRect()
-      
-      // Check if dropped on the image
-      if (clientX >= rect.left && clientX <= rect.right && 
-          clientY >= rect.top && clientY <= rect.bottom) {
-        const x = ((clientX - rect.left) / rect.width) * 100
-        const y = ((clientY - rect.top) / rect.height) * 100
-        const scale = draggingNew === 'photo' ? 20 : 15
-        
+      const onImage = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+      const x = ((clientX - rect.left) / rect.width) * 100
+      const y = ((clientY - rect.top) / rect.height) * 100
+
+      if (draggingNew === 'tagline' || draggingNew === 'website' || draggingNew === 'social') {
+        const text = draggingNew === 'tagline' ? (tagline || 'Your tagline') : draggingNew === 'website' ? (website || 'yoursite.com') : (socialHandles || '@yourhandle')
+        if (onImage) setTextOverlays(prev => [...prev, { id: `text-${draggingNew}-${Date.now()}`, text, x, y, fontSize: 24, colorKey: 'primary' }])
+      } else if (draggingNew === 'logo' || draggingNew === 'photo') {
         const url = draggingNew === 'logo' ? effectiveLogoUrl : effectivePhotoUrl
-        if (url) {
-          // Check if this type already exists
+        if (url && onImage) {
+          const scale = draggingNew === 'photo' ? 20 : 15
           const existing = overlays.find(o => o.type === draggingNew)
           if (existing) {
-            // Update position
-            setOverlays(prev => prev.map(o => 
-              o.type === draggingNew 
-                ? { ...o, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)) }
-                : o
-            ))
+            setOverlays(prev => prev.map(o => o.type === draggingNew ? { ...o, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)) } : o))
           } else {
-            // Add new
-            setOverlays(prev => [...prev, {
-              id: `${draggingNew}-${Date.now()}`,
-              url,
-              x: Math.max(0, Math.min(100 - scale, x - scale / 2)),
-              y: Math.max(0, Math.min(100 - scale, y - scale / 2)),
-              scale,
-              type: draggingNew
-            }])
+            const id = `${draggingNew}-${Date.now()}`
+            setOverlays(prev => [...prev, { id, url, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)), scale, type: draggingNew }])
+            setOverlayBorderColors(prev => ({ ...prev, [id]: getHex('primary') }))
           }
         }
       }
     }
-    
     setDraggingNew(null)
     setDraggingExisting(null)
   }
 
-  // Remove overlay
   const handleRemove = (id: string) => {
-    setOverlays(prev => prev.filter(o => o.id !== id))
+    if (id.startsWith('text-')) {
+      setTextOverlays(prev => prev.filter(t => t.id !== id))
+    } else {
+      setOverlays(prev => prev.filter(o => o.id !== id))
+      setOverlayBorderColors(prev => { const next = { ...prev }; delete next[id]; return next })
+    }
   }
 
   // Adjust scale
@@ -200,17 +228,17 @@ export default function ImageOverlayEditor({
 
   const hasLogo = overlays.some(o => o.type === 'logo')
   const hasPhoto = overlays.some(o => o.type === 'photo')
+  const totalItems = overlays.length + textOverlays.length + (frame ? 1 : 0)
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
         <h3 className="font-semibold text-gray-900">Customize Your Image</h3>
-        <p className="text-sm text-gray-500">Drag your logo or photo onto the image</p>
+        <p className="text-sm text-gray-500">Drag logo, photo, tagline, website or social onto the image. Add a brand border or tint.</p>
       </div>
       
       <div className="flex">
-        {/* Sidebar with draggable items and/or drag-drop upload zones */}
-        <div className="w-28 bg-gray-50 border-r border-gray-200 p-3 flex flex-col gap-4">
+        <div className="w-28 bg-gray-50 border-r border-gray-200 p-3 flex flex-col gap-3 overflow-y-auto max-h-[420px]">
           {/* Logo: show existing or drop zone to upload */}
           <div className="text-center">
             {effectiveLogoUrl ? (
@@ -289,8 +317,43 @@ export default function ImageOverlayEditor({
             {hasPhoto && <span className="text-[10px] text-teal-600">✓ On image</span>}
           </div>
 
-          {!effectiveLogoUrl && !effectivePhotoUrl && !onUploadLogo && !onUploadPhoto && (
-            <p className="text-xs text-gray-400 text-center">Add logo or photo in Settings, or use drop zones above if available.</p>
+          {(tagline || website || socialHandles) && (
+            <>
+              {tagline && (
+                <div
+                  onMouseDown={(e) => handleSidebarDragStart('tagline', e)}
+                  onTouchStart={(e) => handleSidebarDragStart('tagline', e)}
+                  className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
+                >
+                  <span className="text-[9px] text-gray-600 block truncate" title={tagline}>{tagline}</span>
+                  <span className="text-[9px] text-gray-400">Tagline</span>
+                </div>
+              )}
+              {website && (
+                <div
+                  onMouseDown={(e) => handleSidebarDragStart('website', e)}
+                  onTouchStart={(e) => handleSidebarDragStart('website', e)}
+                  className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
+                >
+                  <span className="text-[9px] text-gray-600 block truncate" title={website}>{website}</span>
+                  <span className="text-[9px] text-gray-400">Website</span>
+                </div>
+              )}
+              {socialHandles && (
+                <div
+                  onMouseDown={(e) => handleSidebarDragStart('social', e)}
+                  onTouchStart={(e) => handleSidebarDragStart('social', e)}
+                  className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
+                >
+                  <span className="text-[9px] text-gray-600 block truncate" title={socialHandles}>{socialHandles}</span>
+                  <span className="text-[9px] text-gray-400">Social</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {!effectiveLogoUrl && !effectivePhotoUrl && !onUploadLogo && !onUploadPhoto && !tagline && !website && !socialHandles && (
+            <p className="text-xs text-gray-400 text-center">Add logo or photo in Brand Identity, or use drop zones above.</p>
           )}
         </div>
         
@@ -328,20 +391,43 @@ export default function ImageOverlayEditor({
                   className={`w-full h-full object-${overlay.type === 'photo' ? 'cover' : 'contain'} ${overlay.type === 'photo' ? 'rounded-full' : 'rounded-lg'} shadow-lg ring-2 ring-white`}
                   draggable={false}
                 />
-                {/* Controls */}
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white rounded-lg shadow-lg p-1">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleScaleChange(overlay.id, -2) }}
-                    className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold"
-                  >−</button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleScaleChange(overlay.id, 2) }}
-                    className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold"
-                  >+</button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleRemove(overlay.id) }}
-                    className="w-6 h-6 rounded bg-red-100 hover:bg-red-200 text-red-600 text-xs"
-                  >✕</button>
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 bg-white rounded-lg shadow-lg p-1">
+                  <span className="text-[9px] text-gray-500 mr-0.5">Border:</span>
+                  {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setOverlayBorderColors(prev => ({ ...prev, [overlay.id]: getHex(key) })) }}
+                      className={`w-5 h-5 rounded-full border-2 ${(overlayBorderColors[overlay.id] || getHex('primary')) === getHex(key) ? 'border-gray-800 ring-1 ring-offset-1' : 'border-gray-200'}`}
+                      style={{ backgroundColor: getHex(key) }}
+                      title={key}
+                    />
+                  ))}
+                  <button onClick={(e) => { e.stopPropagation(); handleScaleChange(overlay.id, -2) }} className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold">−</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleScaleChange(overlay.id, 2) }} className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold">+</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleRemove(overlay.id) }} className="w-6 h-6 rounded bg-red-100 hover:bg-red-200 text-red-600 text-xs">✕</button>
+                </div>
+              </div>
+            ))}
+            {textOverlays.map((t) => (
+              <div
+                key={t.id}
+                onMouseDown={(e) => handleOverlayDragStart(t.id, e)}
+                onTouchStart={(e) => handleOverlayDragStart(t.id, e)}
+                className="absolute cursor-move group"
+                style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(-50%, -50%)' }}
+              >
+                <span
+                  className="font-bold drop-shadow-lg px-1"
+                  style={{ color: getHex(t.colorKey), fontSize: Math.min(24, Math.max(12, t.fontSize)) }}
+                >
+                  {t.text}
+                </span>
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 flex gap-0.5 bg-white rounded shadow p-0.5">
+                  {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                    <button key={key} type="button" onClick={(e) => { e.stopPropagation(); setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, colorKey: key } : x)) }} className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: getHex(key) }} title={key} />
+                  ))}
+                  <button onClick={(e) => { e.stopPropagation(); handleRemove(t.id) }} className="w-5 h-5 rounded bg-red-100 text-red-600 text-[10px]">✕</button>
                 </div>
               </div>
             ))}
@@ -356,38 +442,95 @@ export default function ImageOverlayEditor({
             )}
           </div>
           
-          {/* Instructions */}
+          {/* Tint overlay */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-gray-500">Brand tint:</span>
+            {(['primary', 'secondary', 'accent'] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })}
+                className={`w-6 h-6 rounded-full border-2 ${tintOverlay?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`}
+                style={{ backgroundColor: getHex(key) }}
+                title={`Tint with ${key}`}
+              />
+            ))}
+            {tintOverlay && (
+              <label className="flex items-center gap-1 text-xs text-gray-600">
+                Opacity:
+                <input
+                  type="range"
+                  min="0.1"
+                  max="0.8"
+                  step="0.05"
+                  value={tintOverlay.opacity}
+                  onChange={(e) => setTintOverlay(prev => prev ? { ...prev, opacity: parseFloat(e.target.value) } : null)}
+                  className="w-20"
+                />
+                <span>{Math.round(tintOverlay.opacity * 100)}%</span>
+              </label>
+            )}
+          </div>
+          {/* Frame around picture */}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-gray-500">Frame:</span>
+            <select
+              value={frame?.style ?? ''}
+              onChange={(e) => {
+                const v = e.target.value as FrameStyle | ''
+                if (!v) setFrame(null)
+                else setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' }))
+              }}
+              className="text-xs border border-gray-200 rounded px-2 py-1 bg-white"
+            >
+              <option value="">None</option>
+              <option value="thin">Thin</option>
+              <option value="solid">Solid</option>
+              <option value="thick">Thick</option>
+              <option value="double">Double</option>
+              <option value="rounded">Rounded</option>
+            </select>
+            {frame && (
+              <>
+                {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setFrame(prev => prev ? { ...prev, colorKey: key } : null)}
+                    className={`w-5 h-5 rounded-full border-2 ${frame.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`}
+                    style={{ backgroundColor: getHex(key) }}
+                    title={key}
+                  />
+                ))}
+              </>
+            )}
+          </div>
           <p className="text-xs text-gray-400 text-center mt-2">
-            {overlays.length === 0 
-              ? (effectiveLogoUrl || effectivePhotoUrl) ? 'Drag logo or photo from the left onto the image' : 'Upload a logo or photo on the left, then drag onto the image'
-              : 'Drag to reposition • Hover for size controls'}
+            {totalItems === 0 ? 'Drag from the left onto the image' : 'Drag to reposition • Hover for border/colour controls'}
           </p>
         </div>
       </div>
       
-      {/* Action buttons */}
       <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+        <button onClick={onSkip} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Skip</button>
         <button
-          onClick={onSkip}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
-        >
-          Skip
-        </button>
-        <button
-          onClick={() => onApply(overlays)}
-          disabled={applying || overlays.length === 0}
+          onClick={() => onApply({
+            imageOverlays: overlays,
+            overlayBorderColors,
+            tintOverlay,
+            textOverlays,
+            frame
+          })}
+          disabled={applying || (overlays.length === 0 && textOverlays.length === 0 && !frame)}
           className="px-6 py-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
         >
           {applying ? (
             <>
-              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-              </svg>
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
               Applying...
             </>
           ) : (
-            <>Apply {overlays.length > 0 && `(${overlays.length})`}</>
+            <>Apply {totalItems > 0 && `(${totalItems})`}</>
           )}
         </button>
       </div>

@@ -13,14 +13,29 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { imageUrl, logoUrl, position, isCircular = false, brandPrimaryColor } = await request.json()
-    // position: { x: number, y: number, scale: number } - all in percentages
-    // isCircular: boolean - if true, crop overlay image to circle (for profile photos)
-    // brandPrimaryColor: optional hex e.g. #0d9488 - add subtle border/tint
+    const {
+      imageUrl,
+      logoUrl,
+      position,
+      isCircular = false,
+      brandPrimaryColor,
+      overlayBorderColor,
+      tintOverlay,
+      frame,
+    } = await request.json()
+    // frame: optional { style: 'thin'|'solid'|'thick'|'double'|'rounded', color: hex } - border around whole image
 
-    if (!imageUrl || !logoUrl || !position) {
+    if (!imageUrl) {
       return NextResponse.json(
-        { error: 'imageUrl, logoUrl, and position are required' },
+        { error: 'imageUrl is required' },
+        { status: 400 }
+      )
+    }
+    const tintOnly = !logoUrl && tintOverlay?.color
+    const frameOnly = !logoUrl && !tintOverlay?.color && frame?.color
+    if (!tintOnly && !frameOnly && (!logoUrl || !position)) {
+      return NextResponse.json(
+        { error: 'logoUrl and position are required when not using tint only' },
         { status: 400 }
       )
     }
@@ -31,7 +46,7 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-    if (typeof logoUrl !== 'string' || logoUrl.startsWith('blob:') || logoUrl.startsWith('data:')) {
+    if (!tintOnly && !frameOnly && (typeof logoUrl !== 'string' || logoUrl.startsWith('blob:') || logoUrl.startsWith('data:'))) {
       return NextResponse.json(
         { error: 'Logo/photo URL cannot be processed. Please use a saved logo or photo.' },
         { status: 400 }
@@ -41,86 +56,123 @@ export async function POST(request: Request) {
     const fetchOpts: RequestInit = {
       headers: { 'User-Agent': 'GeoSpark-ImageComposite/1.0 (https://geospark.ai)' },
     }
-    // Fetch the base image
     const imageResponse = await fetch(imageUrl, fetchOpts)
     if (!imageResponse.ok) {
       return NextResponse.json({ error: 'Failed to fetch base image' }, { status: 500 })
     }
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer())
 
-    // Fetch the logo/overlay
-    const logoResponse = await fetch(logoUrl, fetchOpts)
-    if (!logoResponse.ok) {
-      return NextResponse.json({ error: 'Failed to fetch logo' }, { status: 500 })
-    }
-    const logoBuffer = Buffer.from(await logoResponse.arrayBuffer())
-
-    // Get base image dimensions
     const baseImage = sharp(imageBuffer)
     const metadata = await baseImage.metadata()
     const { width: imgWidth = 1024, height: imgHeight = 1024 } = metadata
 
-    // Calculate logo dimensions based on scale percentage
-    const logoWidth = Math.round((position.scale / 100) * imgWidth)
-    
-    // Resize logo maintaining aspect ratio
-    let resizedLogo = await sharp(logoBuffer)
-      .resize({ width: logoWidth, height: isCircular ? logoWidth : undefined, fit: isCircular ? 'cover' : 'inside', withoutEnlargement: false })
-      .toBuffer()
+    let composited: Buffer
+    if (tintOnly || frameOnly) {
+      composited = await baseImage.toBuffer()
+    } else {
+      const logoResponse = await fetch(logoUrl!, fetchOpts)
+      if (!logoResponse.ok) {
+        return NextResponse.json({ error: 'Failed to fetch logo' }, { status: 500 })
+      }
+      const logoBuffer = Buffer.from(await logoResponse.arrayBuffer())
+      const logoWidth = Math.round((position.scale / 100) * imgWidth)
+      let resizedLogo = await sharp(logoBuffer)
+        .resize({ width: logoWidth, height: isCircular ? logoWidth : undefined, fit: isCircular ? 'cover' : 'inside', withoutEnlargement: false })
+        .toBuffer()
 
-    // If circular, apply circular mask
-    if (isCircular) {
-      const circleSize = logoWidth
-      const circleSvg = Buffer.from(
-        `<svg><circle cx="${circleSize/2}" cy="${circleSize/2}" r="${circleSize/2}" fill="white"/></svg>`
+      if (isCircular) {
+        const circleSize = logoWidth
+        const circleSvg = Buffer.from(
+          `<svg><circle cx="${circleSize/2}" cy="${circleSize/2}" r="${circleSize/2}" fill="white"/></svg>`
+        )
+        resizedLogo = await sharp(resizedLogo)
+          .resize(circleSize, circleSize, { fit: 'cover' })
+          .composite([{ input: circleSvg, blend: 'dest-in' }])
+          .png()
+          .toBuffer()
+      }
+
+      const logoMeta = await sharp(resizedLogo).metadata()
+      const logoHeight = logoMeta.height || logoWidth
+      const left = Math.round((position.x / 100) * imgWidth)
+      const top = Math.round((position.y / 100) * imgHeight)
+      const boundedLeft = Math.max(0, Math.min(imgWidth - (logoMeta.width || logoWidth), left))
+      const boundedTop = Math.max(0, Math.min(imgHeight - logoHeight, top))
+
+      composited = await baseImage
+        .composite([{ input: resizedLogo, left: boundedLeft, top: boundedTop }])
+        .toBuffer()
+
+      // Optional: ring around overlay (profile/logo) in brand colour
+      const ringHex = (typeof overlayBorderColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(overlayBorderColor))
+        ? overlayBorderColor
+        : (typeof brandPrimaryColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(brandPrimaryColor) ? brandPrimaryColor : null)
+      if (ringHex) {
+        const ringPx = Math.max(2, Math.min(8, Math.round(logoWidth / 32)))
+        const cx = boundedLeft + (logoMeta.width || logoWidth) / 2
+        const cy = boundedTop + logoHeight / 2
+        const r = (logoMeta.width || logoWidth) / 2 + ringPx / 2
+        const ringSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringHex}" stroke-width="${ringPx}"/></svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: ringSvg, left: 0, top: 0 }])
+          .toBuffer()
+      }
+    }
+
+    // Optional: transparent brand colour overlay over whole image
+    const tint = tintOverlay && typeof tintOverlay.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(tintOverlay.color)
+      ? { color: tintOverlay.color, opacity: Math.max(0.1, Math.min(1, Number(tintOverlay.opacity) || 0.3)) }
+      : null
+    if (tint) {
+      const [r, g, b] = [
+        parseInt(tint.color.slice(1, 3), 16),
+        parseInt(tint.color.slice(3, 5), 16),
+        parseInt(tint.color.slice(5, 7), 16),
+      ]
+      const tintSvg = Buffer.from(
+        `<svg width="${imgWidth}" height="${imgHeight}"><rect width="100%" height="100%" fill="rgb(${r},${g},${b})" opacity="${tint.opacity}"/></svg>`
       )
-      resizedLogo = await sharp(resizedLogo)
-        .resize(circleSize, circleSize, { fit: 'cover' })
-        .composite([{
-          input: circleSvg,
-          blend: 'dest-in'
-        }])
-        .png()
+      composited = await sharp(composited)
+        .composite([{ input: tintSvg, left: 0, top: 0, blend: 'over' }])
         .toBuffer()
     }
 
-    // Get resized logo dimensions
-    const logoMeta = await sharp(resizedLogo).metadata()
-    const logoHeight = logoMeta.height || logoWidth
-
-    // Calculate position in pixels from percentages
-    const left = Math.round((position.x / 100) * imgWidth)
-    const top = Math.round((position.y / 100) * imgHeight)
-
-    // Ensure logo stays within bounds
-    const boundedLeft = Math.max(0, Math.min(imgWidth - (logoMeta.width || logoWidth), left))
-    const boundedTop = Math.max(0, Math.min(imgHeight - logoHeight, top))
-
-    // Composite the images
-    let composited = await baseImage
-      .composite([
-        {
-          input: resizedLogo,
-          left: boundedLeft,
-          top: boundedTop,
-        },
-      ])
-      .toBuffer()
-
-    // Optional: add brand colour border
-    const borderHex = typeof brandPrimaryColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(brandPrimaryColor)
-      ? brandPrimaryColor
+    // Optional: frame around whole image (brand colour)
+    const frameOpt = frame && typeof frame.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(frame.color)
+      ? { style: (frame.style === 'thin' || frame.style === 'solid' || frame.style === 'thick' || frame.style === 'double' || frame.style === 'rounded') ? frame.style : 'solid', color: frame.color }
       : null
-    if (borderHex) {
-      const borderPx = Math.max(2, Math.min(12, Math.round(imgWidth / 256)))
-      const [r, g, b] = [
-        parseInt(borderHex.slice(1, 3), 16),
-        parseInt(borderHex.slice(3, 5), 16),
-        parseInt(borderHex.slice(5, 7), 16),
+    if (frameOpt) {
+      const [fr, fg, fb] = [
+        parseInt(frameOpt.color.slice(1, 3), 16),
+        parseInt(frameOpt.color.slice(3, 5), 16),
+        parseInt(frameOpt.color.slice(5, 7), 16),
       ]
+      const pad = frameOpt.style === 'thin' ? 3 : frameOpt.style === 'thick' ? 16 : 8
       composited = await sharp(composited)
-        .extend({ top: borderPx, bottom: borderPx, left: borderPx, right: borderPx, background: { r, g, b, alpha: 1 } })
+        .extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
         .toBuffer()
+      const meta = await sharp(composited).metadata()
+      const fw = meta.width || imgWidth + 2 * pad
+      const fh = meta.height || imgHeight + 2 * pad
+      if (frameOpt.style === 'double') {
+        const innerPad = pad
+        const strokeSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}"><rect x="${innerPad}" y="${innerPad}" width="${fw - 2 * innerPad}" height="${fh - 2 * innerPad}" fill="none" stroke="${frameOpt.color}" stroke-width="2"/></svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: strokeSvg, left: 0, top: 0 }])
+          .toBuffer()
+      } else if (frameOpt.style === 'rounded') {
+        const radius = Math.min(24, pad * 2)
+        const roundSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}"><rect x="0" y="0" width="${fw}" height="${fh}" rx="${radius}" ry="${radius}" fill="white"/></svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: roundSvg, blend: 'dest-in' }])
+          .toBuffer()
+      }
     }
 
     const finalBuffer = await sharp(composited).jpeg({ quality: 90 }).toBuffer()

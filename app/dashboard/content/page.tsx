@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import ImageOverlayEditor from '@/components/ImageOverlayEditor'
+import ImageOverlayEditor, { type OverlayApplyPayload, type BrandColors } from '@/components/ImageOverlayEditor'
 import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ImageTextOverlay } from '@/components/ui/ImageTextOverlay'
@@ -441,17 +441,28 @@ export default function CreateContentPage() {
     }
   }
 
-  // Handle applying multiple overlays from the drag-drop editor
-  const handleApplyOverlays = async (overlays: Array<{ id: string; url: string; x: number; y: number; scale: number; type: 'logo' | 'photo' }>) => {
-    if (!generatedImage || overlays.length === 0) return
+  const getBrandColors = (): BrandColors | null => {
+    if (!currentBusiness) return null
+    const p = currentBusiness.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(currentBusiness.brand_primary_color) ? currentBusiness.brand_primary_color : '#0d9488'
+    const s = currentBusiness.brand_secondary_color && /^#[0-9A-Fa-f]{6}$/.test(currentBusiness.brand_secondary_color) ? currentBusiness.brand_secondary_color : '#6b7280'
+    const a = currentBusiness.brand_accent_color && /^#[0-9A-Fa-f]{6}$/.test(currentBusiness.brand_accent_color) ? currentBusiness.brand_accent_color : '#6b7280'
+    return { primary: p, secondary: s, accent: a }
+  }
+
+  const handleApplyOverlays = async (payload: OverlayApplyPayload) => {
+    if (!generatedImage) return
+    const { imageOverlays, overlayBorderColors, tintOverlay, textOverlays, frame } = payload
+    if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame) return
 
     setOverlayError(null)
     setApplyingLogo(true)
     try {
       let currentImageUrl = generatedImage.url
+      const colors = getBrandColors()
 
-      for (const overlay of overlays) {
-        const response = await fetch('/api/image/composite', {
+      for (const overlay of imageOverlays) {
+        const borderHex = overlayBorderColors[overlay.id] || currentBusiness?.brand_primary_color
+        const res = await fetch('/api/image/composite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -459,24 +470,85 @@ export default function CreateContentPage() {
             logoUrl: overlay.url,
             position: { x: overlay.x, y: overlay.y, scale: overlay.scale },
             isCircular: overlay.type === 'photo',
-            brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+            overlayBorderColor: borderHex || undefined,
           }),
         })
-
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}))
-          setOverlayError(err.error || 'Failed to apply logo/photo. Try again.')
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          setOverlayError(err.error || 'Failed to apply overlay.')
           return
         }
-        const data = await response.json()
-        if (!data.url) {
-          setOverlayError('No image URL returned. Try again.')
-          return
-        }
+        const data = await res.json()
+        if (!data.url) { setOverlayError('No image URL returned.'); return }
         currentImageUrl = data.url
       }
 
-      // Update image so the content area and platform examples show the composited result (cache-bust so browser refetches)
+      if (tintOverlay && colors) {
+        const tintHex = tintOverlay.colorKey === 'primary' ? colors.primary : tintOverlay.colorKey === 'secondary' ? colors.secondary : colors.accent
+        const res = await fetch('/api/image/composite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: currentImageUrl,
+            tintOverlay: { color: tintHex, opacity: tintOverlay.opacity },
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.url) currentImageUrl = data.url
+        }
+      }
+
+      if (textOverlays.length > 0 && colors) {
+        const img = await fetch(currentImageUrl).then(r => r.blob())
+        const bitmap = await createImageBitmap(img)
+        const canvas = document.createElement('canvas')
+        canvas.width = bitmap.width
+        canvas.height = bitmap.height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { setOverlayError('Could not draw text.'); return }
+        ctx.drawImage(bitmap, 0, 0)
+        const scale = bitmap.width / 1024
+        for (const t of textOverlays) {
+          const hex = t.colorKey === 'primary' ? colors.primary : t.colorKey === 'secondary' ? colors.secondary : colors.accent
+          const fontSize = Math.round(Math.min(72, Math.max(14, t.fontSize * scale)))
+          ctx.font = `bold ${fontSize}px Inter, system-ui, sans-serif`
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillStyle = hex
+          ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+          ctx.lineWidth = Math.max(1, fontSize / 16)
+          const px = (t.x / 100) * canvas.width
+          const py = (t.y / 100) * canvas.height
+          ctx.strokeText(t.text, px, py)
+          ctx.fillText(t.text, px, py)
+        }
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+        if (!blob) { setOverlayError('Failed to create image.'); return }
+        const form = new FormData()
+        form.append('file', blob, 'content-image.png')
+        const uploadRes = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
+        if (!uploadRes.ok) { setOverlayError('Failed to upload image.'); return }
+        const uploadData = await uploadRes.json()
+        if (uploadData.url) currentImageUrl = uploadData.url
+      }
+
+      if (frame && colors) {
+        const frameHex = frame.colorKey === 'primary' ? colors.primary : frame.colorKey === 'secondary' ? colors.secondary : colors.accent
+        const frameRes = await fetch('/api/image/composite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageUrl: currentImageUrl,
+            frame: { style: frame.style, color: frameHex },
+          }),
+        })
+        if (frameRes.ok) {
+          const frameData = await frameRes.json()
+          if (frameData.url) currentImageUrl = frameData.url
+        }
+      }
+
       const cacheBustedUrl = `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
       setGeneratedImage((prev) => (prev ? { ...prev, url: cacheBustedUrl } : null))
       setShowOverlayEditor(false)
@@ -735,6 +807,7 @@ export default function CreateContentPage() {
           industry,
           topic,
           tone,
+          location: currentBusiness?.location ?? undefined,
           generateImageFlag: mode === 'text' ? false : generateImageFlag,
           imageSource: effectiveImageSource,
           imageStyle,
@@ -743,6 +816,9 @@ export default function CreateContentPage() {
           defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
           defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
           seoKeywords: currentBusiness?.seo_keywords ?? undefined,
+          shortAbout: currentBusiness?.short_about ?? undefined,
+          website: currentBusiness?.website ?? undefined,
+          socialHandles: currentBusiness?.social_handles ?? undefined,
         }),
       })
 
@@ -1575,6 +1651,10 @@ export default function CreateContentPage() {
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
                 photoUrl={currentBusinessPhoto}
+                brandColors={getBrandColors()}
+                tagline={currentBusiness?.tagline ?? undefined}
+                website={currentBusiness?.website ?? undefined}
+                socialHandles={currentBusiness?.social_handles ?? undefined}
                 onApply={handleApplyOverlays}
                 onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
                 applying={applyingLogo}
@@ -2168,6 +2248,10 @@ export default function CreateContentPage() {
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
                 photoUrl={currentBusinessPhoto}
+                brandColors={getBrandColors()}
+                tagline={currentBusiness?.tagline ?? undefined}
+                website={currentBusiness?.website ?? undefined}
+                socialHandles={currentBusiness?.social_handles ?? undefined}
                 onApply={handleApplyOverlays}
                 onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
                 applying={applyingLogo}
