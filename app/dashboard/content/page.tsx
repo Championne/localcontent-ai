@@ -1041,57 +1041,6 @@ export default function CreateContentPage() {
     }
   }
 
-  const handleGenerateStep3AiImage = async () => {
-    setGeneratingAiImage(true)
-    setError('')
-    try {
-      const res = await fetch('/api/content/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic,
-          industry,
-          businessName,
-          style: imageStyle,
-          contentType: selectedTemplate,
-          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to generate image')
-      setStep3AIImage({ url: data.url, style: data.style, size: data.size, generated_image_id: data.generated_image_id })
-      setGeneratedImage({ url: data.url, style: data.style, generatedAt: new Date().toISOString(), source: 'ai' })
-      setGeneratedImageId(data.generated_image_id || null)
-      if (data.imagesRemaining != null) setImagesRemaining(data.imagesRemaining)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate image')
-    } finally {
-      setGeneratingAiImage(false)
-    }
-  }
-
-  const handleStep3Upload = async (file: File) => {
-    if (!file?.type.startsWith('image/')) {
-      setError('Please select an image file')
-      return
-    }
-    setError('')
-    const form = new FormData()
-    form.append('file', file)
-    try {
-      const res = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
-      if (data.url) {
-        setGeneratedImage({ url: data.url, source: 'upload' })
-        setSelectedStockImage(null)
-        setStep3AIImage(null)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-    }
-  }
-
   const handleRateText = async (rating: number, feedbackReasons?: string[]) => {
     if (!generatedTextId) return
     try {
