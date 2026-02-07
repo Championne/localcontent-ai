@@ -269,7 +269,7 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               <option value="rounded">Rounded</option>
             </select>
             {p.frame && (['primary', 'secondary', 'accent'] as const).map((key) => (
-              <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
+              <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
             ))}
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">{p.totalItems === 0 ? 'Drag from the left onto the image' : 'Drag to reposition • Hover for border/colour controls'}</p>
