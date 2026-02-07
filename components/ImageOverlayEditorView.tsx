@@ -86,7 +86,7 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 <span className="text-[9px] text-gray-400 text-center">No logo</span>
               </div>
             )}
-            <input ref={p.logoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('logo', e)} />
+            <input ref={p.logoInputRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('logo', e)} />
             <span className="text-[10px] text-gray-500 mt-1 block">Logo</span>
             {p.hasLogo && <span className="text-[10px] text-teal-600">✓ On image</span>}
           </div>
@@ -124,7 +124,7 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 <span className="text-[9px] text-gray-400">No photo</span>
               </div>
             )}
-            <input ref={p.photoInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('photo', e)} />
+            <input ref={p.photoInputRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('photo', e)} />
             <span className="text-[10px] text-gray-500 mt-1 block">Photo</span>
             {p.hasPhoto && <span className="text-[10px] text-teal-600">✓ On image</span>}
           </div>
@@ -180,7 +180,7 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             }}
           >
             <div
-              ref={p.containerRef}
+              ref={p.containerRef as React.RefObject<HTMLDivElement>}
               className="relative w-full h-full overflow-hidden"
               style={{
                 aspectRatio: '1',
