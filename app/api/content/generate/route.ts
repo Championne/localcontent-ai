@@ -45,7 +45,9 @@ export async function POST(request: Request) {
       shortAbout,
       website,
       socialHandles,
+      serviceAreas,
       location,
+      brandPrimaryColor,
       // GBP-specific fields
       gbpPostType,
       gbpExpiration,
@@ -132,6 +134,7 @@ export async function POST(request: Request) {
             shortAbout: shortAbout || undefined,
             website: website || undefined,
             socialHandles: socialHandles || undefined,
+            serviceAreas: serviceAreas || undefined,
           })
         } else {
           // Mock social pack for development
@@ -157,7 +160,8 @@ export async function POST(request: Request) {
               businessName,
               industry,
               style: finalImageStyle,
-              contentType: template
+              contentType: template,
+              brandPrimaryColor: brandPrimaryColor || undefined,
             })
             const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
             const imageUrl = permanentUrl || imageResult.url
@@ -310,6 +314,7 @@ export async function POST(request: Request) {
           shortAbout: shortAbout || undefined,
           website: website || undefined,
           socialHandles: socialHandles || undefined,
+          serviceAreas: serviceAreas || undefined,
           gbpPostType: template === 'gmb-post' ? (gbpPostType as GbpPostType || 'update') : undefined,
           gbpExpiration: template === 'gmb-post' && gbpPostType === 'offer' ? gbpExpiration : undefined,
           gbpEventDate: template === 'gmb-post' && gbpPostType === 'event' ? gbpEventDate : undefined,
@@ -338,7 +343,8 @@ export async function POST(request: Request) {
             businessName,
             industry,
             style: finalImageStyle,
-            contentType: template
+            contentType: template,
+            brandPrimaryColor: brandPrimaryColor || undefined,
           })
           const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
           const imageUrl = permanentUrl || imageResult.url

@@ -96,6 +96,8 @@ export interface GenerateImageParams {
   industry: string
   style: ImageStyle
   contentType?: string // Added to determine image size
+  /** Optional: derive warm/cool/neutral mood for lighting tone in the prompt */
+  brandPrimaryColor?: string | null
 }
 
 export interface GenerateImageResult {
@@ -109,6 +111,34 @@ export interface GenerateImageResult {
 // DALL-E 3 often adds text; we put no-text first and repeat it so the model follows it
 const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Screens and displays are off or show only abstract colors. The image must be completely free of written language.`
 
+/** Derive a single mood phrase from brand primary hex for lighting tone (no exact hex in prompt). */
+function getMoodFromHex(hex: string): string {
+  const m = hex.replace(/^#/, '').match(/^([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/)
+  if (!m) return 'Neutral, professional lighting and tone.'
+  const r = parseInt(m[1], 16) / 255
+  const g = parseInt(m[2], 16) / 255
+  const b = parseInt(m[3], 16) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  if (max === min) return 'Neutral, professional lighting and tone.'
+  const d = max - min
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+  const chroma = max - min
+  let h = 0
+  if (chroma > 0) {
+    if (max === r) h = ((g - b) / chroma) % 6
+    else if (max === g) h = (b - r) / chroma + 2
+    else h = (r - g) / chroma + 4
+  }
+  h = h * 60
+  if (h < 0) h += 360
+  // Warm: red/orange/yellow (roughly 0–60, 300–360). Cool: blue/teal/cyan (180–260). Else neutral.
+  if ((h >= 0 && h <= 60) || h >= 300) return 'Warm, inviting lighting and tone.'
+  if (h >= 160 && h <= 260) return 'Clean, cool lighting and tone.'
+  return 'Neutral, professional lighting and tone.'
+}
+
 // Build the image generation prompt with strong anti-text reinforcement (no-text at start and end)
 function buildImagePrompt(params: GenerateImageParams): string {
   const { topic, industry, style, contentType } = params
@@ -120,7 +150,10 @@ function buildImagePrompt(params: GenerateImageParams): string {
   else if (imageSize === '1024x1792') formatDesc = 'Tall portrait format'
 
   // Start with no-text so the model sees it first; keep scene description minimal to reduce text temptation
-  const scene = `Realistic photograph representing the theme "${topic}" for a ${industry} context. ${styleConfig.promptPrefix}. Single main subject, clean uncluttered background, natural lighting. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  let scene = `Realistic photograph representing the theme "${topic}" for a ${industry} context. ${styleConfig.promptPrefix}. Single main subject, clean uncluttered background, natural lighting. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  if (params.brandPrimaryColor && /^#[0-9A-Fa-f]{6}$/.test(params.brandPrimaryColor)) {
+    scene += ` ${getMoodFromHex(params.brandPrimaryColor)}`
+  }
   return `${NO_TEXT_BLOCK} ${scene} ${NO_TEXT_BLOCK}`
 }
 

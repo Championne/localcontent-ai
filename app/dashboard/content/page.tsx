@@ -46,6 +46,7 @@ interface Business {
   default_cta_secondary?: string | null
   seo_keywords?: string | null
   default_tone?: string | null
+  service_areas?: string | null
 }
 
 // Image style definitions (must match backend)
@@ -825,6 +826,8 @@ export default function CreateContentPage() {
           shortAbout: currentBusiness?.short_about ?? undefined,
           website: currentBusiness?.website ?? undefined,
           socialHandles: currentBusiness?.social_handles ?? undefined,
+          serviceAreas: currentBusiness?.service_areas ?? undefined,
+          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
         }),
       })
 

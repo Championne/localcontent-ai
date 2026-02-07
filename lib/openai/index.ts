@@ -56,6 +56,7 @@ export interface GenerateContentParams {
   shortAbout?: string | null
   website?: string | null
   socialHandles?: string | null
+  serviceAreas?: string | null
   // GBP-specific fields
   gbpPostType?: GbpPostType
   gbpExpiration?: string
@@ -243,6 +244,9 @@ function buildPrompt(params: GenerateContentParams): string {
   if (params.socialHandles) {
     prompt += `\n**Social handles (use in sign-off or "Follow us" where fitting):** ${params.socialHandles}`
   }
+  if (params.serviceAreas) {
+    prompt += `\n**Service areas (cities/neighbourhoods served — mention when relevant for local intent):** ${params.serviceAreas}`
+  }
   if (additionalContext) {
     prompt += `\n**Additional Context:** ${additionalContext}`
   }
@@ -413,6 +417,9 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
   }
   if (params.socialHandles) {
     context += `\n**Social handles (use in sign-off or "Follow us @..."):** ${params.socialHandles}`
+  }
+  if (params.serviceAreas) {
+    context += `\n**Service areas (cities/neighbourhoods served — mention where relevant):** ${params.serviceAreas}`
   }
   if (additionalContext) {
     context += `\n**Additional Context:** ${additionalContext}`

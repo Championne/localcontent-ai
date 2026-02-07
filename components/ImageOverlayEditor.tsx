@@ -444,7 +444,15 @@ export default function ImageOverlayEditor({
           
           {/* Tint overlay */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-500">Brand tint:</span>
+            <button
+              type="button"
+              onClick={() => setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })}
+              className="text-xs px-2 py-1 rounded border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100"
+              title="Apply a light brand tint (15% primary colour)"
+            >
+              Light brand tint
+            </button>
+            <span className="text-xs text-gray-500">or pick colour:</span>
             {(['primary', 'secondary', 'accent'] as const).map((key) => (
               <button
                 key={key}
@@ -521,7 +529,7 @@ export default function ImageOverlayEditor({
             textOverlays,
             frame
           })}
-          disabled={applying || (overlays.length === 0 && textOverlays.length === 0 && !frame)}
+          disabled={applying || (overlays.length === 0 && textOverlays.length === 0 && !frame && !tintOverlay)}
           className="px-6 py-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
         >
           {applying ? (

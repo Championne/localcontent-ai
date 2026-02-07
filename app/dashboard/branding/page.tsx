@@ -19,7 +19,6 @@ interface Business {
   seo_keywords: string | null
   default_tone: string | null
   social_handles: string | null
-  service_areas: string | null
   short_about: string | null
   created_at: string
 }
@@ -47,7 +46,7 @@ const TONE_OPTIONS = [
   { value: 'friendly', label: 'Friendly' },
 ]
 
-const BRAND_FIELDS_TOTAL = 14
+const BRAND_FIELDS_TOTAL = 13
 
 function getBrandCompleteness(b: Business): number {
   let set = 0
@@ -63,7 +62,6 @@ function getBrandCompleteness(b: Business): number {
   if (b.default_tone?.trim()) set++
   if (b.seo_keywords?.trim()) set++
   if (b.social_handles?.trim()) set++
-  if (b.service_areas?.trim()) set++
   if (b.short_about?.trim()) set++
   return set
 }
@@ -79,7 +77,6 @@ function getSetBadges(b: Business): { label: string }[] {
   if (b.brand_primary_color?.trim()) badges.push({ label: 'Colours ✓' })
   if (b.seo_keywords?.trim()) badges.push({ label: 'SEO ✓' })
   if (b.website?.trim()) badges.push({ label: 'Website ✓' })
-  if (b.service_areas?.trim()) badges.push({ label: 'Areas ✓' })
   return badges
 }
 
@@ -179,7 +176,6 @@ export default function BrandingPage() {
           seo_keywords: business.seo_keywords,
           default_tone: business.default_tone,
           social_handles: business.social_handles,
-          service_areas: business.service_areas,
           short_about: business.short_about,
         }),
       })
@@ -552,10 +548,12 @@ export default function BrandingPage() {
                   />
                   <label className="block text-xs font-medium text-gray-500 mb-1">Website URL</label>
                   <input
-                    type="url"
+                    type="text"
+                    inputMode="url"
+                    autoComplete="url"
                     value={business.website || ''}
-                    onChange={(e) => updateBusiness(business.id, { website: e.target.value || null })}
-                    placeholder="https://..."
+                    onChange={(e) => updateBusiness(business.id, { website: e.target.value?.trim() || null })}
+                    placeholder="www.example.com or https://..."
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
                   />
 
@@ -626,8 +624,6 @@ export default function BrandingPage() {
                   <input type="text" value={business.seo_keywords || ''} onChange={(e) => updateBusiness(business.id, { seo_keywords: e.target.value || null })} placeholder="plumber near me, drain cleaning [city]" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <label className="block text-xs font-medium text-gray-500 mb-1">Social handles</label>
                   <input type="text" value={business.social_handles || ''} onChange={(e) => updateBusiness(business.id, { social_handles: e.target.value || null })} placeholder="@mybusiness" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Service areas (cities, neighbourhoods)</label>
-                  <input type="text" value={business.service_areas || ''} onChange={(e) => updateBusiness(business.id, { service_areas: e.target.value || null })} placeholder="Austin, Round Rock, Pflugerville" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <label className="block text-xs font-medium text-gray-500 mb-1">Short About (2–4 sentences)</label>
                   <textarea value={business.short_about || ''} onChange={(e) => updateBusiness(business.id, { short_about: e.target.value || null })} placeholder="Used in Google Business Profile, blog author box, About sections" rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" />
 
