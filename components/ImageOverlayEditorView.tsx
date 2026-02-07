@@ -252,7 +252,7 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                         outline: `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
                         outlineOffset: 6,
                         boxSizing: 'border-box',
-                        borderRadius: p.frame?.style === 'rounded' ? 10 : 0,
+                        borderRadius: 0,
                       }
                     : {}
                 }
