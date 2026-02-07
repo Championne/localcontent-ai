@@ -2052,20 +2052,20 @@ export default function CreateContentPage() {
             </div>
           ) : generatedImage && (
             <div className="mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600 flex-shrink-0">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-gray-900 text-sm">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
                     {generatedImage.source !== 'upload' && (
                       <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style || '—'}</p>
                     )}
                     {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
                         Photo by{' '}
                         {generatedImage.photographerUrl ? (
                           <a href={generatedImage.photographerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">{generatedImage.photographerName || 'Photographer'}</a>
@@ -2076,25 +2076,25 @@ export default function CreateContentPage() {
                       </p>
                     )}
                     {generatedImage.source === 'ai' && generatedImage.attribution && (
-                      <p className="text-xs text-gray-400 mt-1">{generatedImage.attribution}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{generatedImage.attribution}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setShowTextOverlay(true)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Add Text
                   </button>
                   <button
                     onClick={() => setShowOverlayEditor(true)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     Customize
@@ -2102,24 +2102,24 @@ export default function CreateContentPage() {
                   <button
                     onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1"
                     title="Re-apply the suggested branding (logo, overlay, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                     ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     )}
-                    Revert to suggested branding
+                    Revert
                   </button>
                   <button
                     onClick={handleDownloadImage}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     Download
                   </button>
@@ -2130,8 +2130,8 @@ export default function CreateContentPage() {
                   key={generatedImage.url}
                   src={generatedImage.url} 
                   alt="Generated content image" 
-                  className="max-w-md w-full rounded-lg shadow-sm"
-                  fallbackClassName="max-w-md w-full h-48 rounded-lg"
+                  className="max-w-[280px] w-full rounded-lg shadow-sm aspect-square object-cover"
+                  fallbackClassName="max-w-[280px] w-full aspect-square rounded-lg bg-gray-200"
                 />
                 {appliedBrandingForImageUrl === generatedImage.url && (
                   <p className="mt-2 text-xs text-teal-600">Recommended branding applied. Customize or add text below.</p>
@@ -2779,15 +2779,15 @@ export default function CreateContentPage() {
           )}
           {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && !showTextOverlay && (
             <div className="mb-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600 flex-shrink-0">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-gray-900 text-sm">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
                     {appliedBrandingForImageUrl === generatedImage.url && (
                       <p className="text-xs text-teal-600 font-medium mt-0.5">Your brand is on it</p>
                     )}
@@ -2795,7 +2795,7 @@ export default function CreateContentPage() {
                       <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style || '—'}</p>
                     )}
                     {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
                         Photo by{' '}
                         {generatedImage.photographerUrl ? (
                           <a href={generatedImage.photographerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">{generatedImage.photographerName || 'Photographer'}</a>
@@ -2806,25 +2806,25 @@ export default function CreateContentPage() {
                       </p>
                     )}
                     {generatedImage.source === 'ai' && generatedImage.attribution && (
-                      <p className="text-xs text-gray-400 mt-1">{generatedImage.attribution}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 truncate">{generatedImage.attribution}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setShowTextOverlay(true)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-600 hover:bg-blue-200 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                     Add Text
                   </button>
                   <button
                     onClick={() => setShowOverlayEditor(true)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     Customize
@@ -2832,23 +2832,23 @@ export default function CreateContentPage() {
                   <button
                     onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1"
                     title="Re-apply the suggested branding (logo, overlay, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                     ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     )}
-                    Revert to suggested branding
+                    Revert
                   </button>
                   <button
                     onClick={handleDownloadImage}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1.5"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     Download
@@ -2860,8 +2860,8 @@ export default function CreateContentPage() {
                   key={generatedImage.url}
                   src={generatedImage.url} 
                   alt="Generated content image" 
-                  className="max-w-md w-full rounded-lg shadow-sm"
-                  fallbackClassName="max-w-md w-full h-48 rounded-lg"
+                  className="max-w-[280px] w-full rounded-lg shadow-sm aspect-square object-cover"
+                  fallbackClassName="max-w-[280px] w-full aspect-square rounded-lg bg-gray-200"
                 />
                 {appliedBrandingForImageUrl === generatedImage.url && (
                   <p className="mt-2 text-xs text-teal-600">Recommended branding applied. Customize or add text below.</p>
