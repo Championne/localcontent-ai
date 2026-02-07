@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import ImageOverlayEditor, { type OverlayApplyPayload, type BrandColors } from '@/components/ImageOverlayEditor'
+import ImageOverlayEditor, { type OverlayApplyPayload, type BrandColors, FRAME_PRESET_COLORS } from '@/components/ImageOverlayEditor'
 import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ImageTextOverlay } from '@/components/ui/ImageTextOverlay'
@@ -218,6 +218,7 @@ export default function CreateContentPage() {
   const [generating, setGenerating] = useState(false)
   const [generationStartTime, setGenerationStartTime] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
   const [generatedContent, setGeneratedContent] = useState('')
   const [socialPack, setSocialPack] = useState<SocialPackResult | null>(null)
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null)
@@ -254,6 +255,11 @@ export default function CreateContentPage() {
   // Text overlay editor
   const [showTextOverlay, setShowTextOverlay] = useState(false)
   const [overlayError, setOverlayError] = useState<string | null>(null)
+
+  // Auto branding recommendation: applied when user selects an image in Step 3
+  const [brandingRecommendationLoading, setBrandingRecommendationLoading] = useState(false)
+  const [appliedBrandingForImageUrl, setAppliedBrandingForImageUrl] = useState<string | null>(null)
+  const [initialOverlayState, setInitialOverlayState] = useState<OverlayApplyPayload | null>(null)
 
   // GBP-specific state
   const [gbpPostType, setGbpPostType] = useState<GbpPostType>('update')
@@ -305,20 +311,177 @@ export default function CreateContentPage() {
     fetchBusinesses()
   }, [])
 
-  // Step 3: fetch 3 stock image options when entering step 3 (no upfront choice)
+  // Step 3: fetch 3 stock image options only when we don't already have any (e.g. from generate response)
   useEffect(() => {
     if (step !== 3 || !topic?.trim() || !industry?.trim() || !selectedTemplate) return
+    if (stockImageOptions.length > 0) return // keep options from generate, don't overwrite with GET
     setStep3StockLoading(true)
     const params = new URLSearchParams({ topic: topic.trim(), industry: industry.trim(), contentType: selectedTemplate })
     fetch(`/api/stock-images?${params}`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data.options)) setStockImageOptions(data.options)
+        if (Array.isArray(data.options) && data.options.length > 0) setStockImageOptions(data.options)
       })
       .catch(() => {})
       .finally(() => setStep3StockLoading(false))
-  }, [step, topic, industry, selectedTemplate])
-  
+  }, [step, topic, industry, selectedTemplate, stockImageOptions.length])
+
+  // Run auto-branding: fetch recommendation and apply to given image URL
+  const runAutoBranding = async (imageUrlToApply: string) => {
+    setBrandingRecommendationLoading(true)
+    try {
+      const res = await fetch('/api/image/branding-recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template: selectedTemplate,
+          hasLogo: !!(currentBusiness?.logo_url),
+          hasPhoto: !!(currentBusiness?.profile_photo_url),
+          tagline: currentBusiness?.tagline?.trim() || undefined,
+        }),
+      })
+      const rec = await res.json()
+      const primaryHex = getBrandColors()?.primary || currentBusiness?.brand_primary_color || '#0d9488'
+      const imageOverlays: OverlayApplyPayload['imageOverlays'] = []
+      const overlayBorderColors: Record<string, string> = {}
+      if (rec.logoPosition && currentBusiness?.logo_url) {
+        const id = 'rec-logo'
+        imageOverlays.push({
+          id,
+          url: currentBusiness.logo_url,
+          x: rec.logoPosition.x,
+          y: rec.logoPosition.y,
+          scale: rec.logoPosition.scale,
+          type: 'logo',
+        })
+        overlayBorderColors[id] = primaryHex
+      }
+      if (rec.photoPosition && currentBusiness?.profile_photo_url) {
+        const id = 'rec-photo'
+        imageOverlays.push({
+          id,
+          url: currentBusiness.profile_photo_url,
+          x: rec.photoPosition.x,
+          y: rec.photoPosition.y,
+          scale: rec.photoPosition.scale,
+          type: 'photo',
+        })
+        overlayBorderColors[id] = primaryHex
+      }
+      const textOverlays: OverlayApplyPayload['textOverlays'] = (rec.textOverlays || []).map(
+        (t: { text: string; x: number; y: number; fontSize?: number; fontFamily?: string; colorKey: 'primary' | 'secondary' | 'accent' }, i: number) => ({
+          id: `rec-text-${i}`,
+          text: t.text,
+          x: t.x,
+          y: t.y,
+          fontSize: t.fontSize ?? 20,
+          fontFamily: (t.fontFamily as 'Inter' | 'Georgia' | 'Playfair Display' | 'system-ui') || 'Inter',
+          colorKey: t.colorKey,
+        })
+      )
+      const payload: OverlayApplyPayload = {
+        imageOverlays,
+        overlayBorderColors,
+        tintOverlay: rec.tint ? { colorKey: rec.tint.colorKey, opacity: rec.tint.opacity } : null,
+        textOverlays,
+        frame: rec.frame ? { style: rec.frame.style, colorKey: rec.frame.colorKey } : null,
+      }
+      const newUrl = await applyPayloadToImage(imageUrlToApply, payload)
+      if (newUrl) {
+        setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+        setInitialOverlayState(payload)
+        setAppliedBrandingForImageUrl(imageUrlToApply)
+        setLogoSkipped(true)
+        setPhotoSkipped(true)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setBrandingRecommendationLoading(false)
+    }
+  }
+
+  // Auto-apply branding recommendation when user selects an image in Step 3
+  useEffect(() => {
+    if (step !== 3 || !generatedImage?.url || generatedImage.url === appliedBrandingForImageUrl) return
+    let cancelled = false
+    const imageUrlToApply = generatedImage.url
+    setBrandingRecommendationLoading(true)
+    fetch('/api/image/branding-recommendation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        template: selectedTemplate,
+        hasLogo: !!(currentBusiness?.logo_url),
+        hasPhoto: !!(currentBusiness?.profile_photo_url),
+        tagline: currentBusiness?.tagline?.trim() || undefined,
+      }),
+    })
+      .then((res) => res.json())
+      .then(async (rec) => {
+        if (cancelled) return
+        const primaryHex = getBrandColors()?.primary || currentBusiness?.brand_primary_color || '#0d9488'
+        const imageOverlays: OverlayApplyPayload['imageOverlays'] = []
+        const overlayBorderColors: Record<string, string> = {}
+        if (rec.logoPosition && currentBusiness?.logo_url) {
+          const id = 'rec-logo'
+          imageOverlays.push({
+            id,
+            url: currentBusiness.logo_url,
+            x: rec.logoPosition.x,
+            y: rec.logoPosition.y,
+            scale: rec.logoPosition.scale,
+            type: 'logo',
+          })
+          overlayBorderColors[id] = primaryHex
+        }
+        if (rec.photoPosition && currentBusiness?.profile_photo_url) {
+          const id = 'rec-photo'
+          imageOverlays.push({
+            id,
+            url: currentBusiness.profile_photo_url,
+            x: rec.photoPosition.x,
+            y: rec.photoPosition.y,
+            scale: rec.photoPosition.scale,
+            type: 'photo',
+          })
+          overlayBorderColors[id] = primaryHex
+        }
+        const textOverlays: OverlayApplyPayload['textOverlays'] = (rec.textOverlays || []).map(
+          (t: { text: string; x: number; y: number; fontSize?: number; fontFamily?: string; colorKey: 'primary' | 'secondary' | 'accent' }, i: number) => ({
+            id: `rec-text-${i}`,
+            text: t.text,
+            x: t.x,
+            y: t.y,
+            fontSize: t.fontSize ?? 20,
+            fontFamily: (t.fontFamily as 'Inter' | 'Georgia' | 'Playfair Display' | 'system-ui') || 'Inter',
+            colorKey: t.colorKey,
+          })
+        )
+        const payload: OverlayApplyPayload = {
+          imageOverlays,
+          overlayBorderColors,
+          tintOverlay: rec.tint ? { colorKey: rec.tint.colorKey, opacity: rec.tint.opacity } : null,
+          textOverlays,
+          frame: rec.frame ? { style: rec.frame.style, colorKey: rec.frame.colorKey } : null,
+        }
+        const newUrl = await applyPayloadToImage(imageUrlToApply, payload)
+        if (cancelled) return
+        if (newUrl) {
+          setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+          setInitialOverlayState(payload)
+          setAppliedBrandingForImageUrl(imageUrlToApply)
+          setLogoSkipped(true)
+          setPhotoSkipped(true)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setBrandingRecommendationLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [step, generatedImage?.url, appliedBrandingForImageUrl, currentBusiness?.logo_url, currentBusiness?.profile_photo_url, currentBusiness?.tagline, selectedTemplate])
+
   // Load content when opening from library (?edit=id)
   useEffect(() => {
     const editId = searchParams.get('edit')
@@ -360,6 +523,7 @@ export default function CreateContentPage() {
               attribution: meta.photographer_name ? `Photo by ${meta.photographer_name} on Unsplash` : undefined,
             }),
           })
+          setAppliedBrandingForImageUrl(imageUrl)
         }
         const genImageId = (item as { generated_image_id?: string }).generated_image_id ?? null
         if (genImageId) setGeneratedImageId(genImageId)
@@ -474,17 +638,13 @@ export default function CreateContentPage() {
     return { primary: p, secondary: s, accent: a }
   }
 
-  const handleApplyOverlays = async (payload: OverlayApplyPayload) => {
-    if (!generatedImage) return
+  // Apply overlay payload to an image URL; returns the new image URL or null on failure
+  const applyPayloadToImage = async (baseImageUrl: string, payload: OverlayApplyPayload): Promise<string | null> => {
     const { imageOverlays, overlayBorderColors, tintOverlay, textOverlays, frame } = payload
-    if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame && !tintOverlay) return
-
-    setOverlayError(null)
-    setApplyingLogo(true)
+    if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame && !tintOverlay) return baseImageUrl
+    let currentImageUrl = baseImageUrl
+    const colors = getBrandColors()
     try {
-      let currentImageUrl = generatedImage.url
-      const colors = getBrandColors()
-
       for (const overlay of imageOverlays) {
         const borderHex = overlayBorderColors[overlay.id] || currentBusiness?.brand_primary_color
         const res = await fetch('/api/image/composite', {
@@ -498,16 +658,11 @@ export default function CreateContentPage() {
             overlayBorderColor: borderHex || undefined,
           }),
         })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          setOverlayError(err.error || 'Failed to apply overlay.')
-          return
-        }
+        if (!res.ok) return null
         const data = await res.json()
-        if (!data.url) { setOverlayError('No image URL returned.'); return }
+        if (!data.url) return null
         currentImageUrl = data.url
       }
-
       if (tintOverlay && colors) {
         const tintHex = tintOverlay.colorKey === 'primary' ? colors.primary : tintOverlay.colorKey === 'secondary' ? colors.secondary : colors.accent
         const res = await fetch('/api/image/composite', {
@@ -523,7 +678,6 @@ export default function CreateContentPage() {
           if (data.url) currentImageUrl = data.url
         }
       }
-
       if (textOverlays.length > 0 && colors) {
         const img = await fetch(currentImageUrl).then(r => r.blob())
         const bitmap = await createImageBitmap(img)
@@ -531,13 +685,14 @@ export default function CreateContentPage() {
         canvas.width = bitmap.width
         canvas.height = bitmap.height
         const ctx = canvas.getContext('2d')
-        if (!ctx) { setOverlayError('Could not draw text.'); return }
+        if (!ctx) return null
         ctx.drawImage(bitmap, 0, 0)
         const scale = bitmap.width / 1024
         for (const t of textOverlays) {
           const hex = t.colorKey === 'primary' ? colors.primary : t.colorKey === 'secondary' ? colors.secondary : colors.accent
-          const fontSize = Math.round(Math.min(72, Math.max(14, t.fontSize * scale)))
-          ctx.font = `bold ${fontSize}px Inter, system-ui, sans-serif`
+          const fontSize = Math.round(Math.min(72, Math.max(14, (t.fontSize ?? 24) * scale)))
+          const fontFamily = (t as { fontFamily?: string }).fontFamily || 'Inter'
+          ctx.font = `bold ${fontSize}px "${fontFamily}", system-ui, sans-serif`
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
           ctx.fillStyle = hex
@@ -549,17 +704,20 @@ export default function CreateContentPage() {
           ctx.fillText(t.text, px, py)
         }
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
-        if (!blob) { setOverlayError('Failed to create image.'); return }
+        if (!blob) return null
         const form = new FormData()
         form.append('file', blob, 'content-image.png')
         const uploadRes = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
-        if (!uploadRes.ok) { setOverlayError('Failed to upload image.'); return }
+        if (!uploadRes.ok) return null
         const uploadData = await uploadRes.json()
         if (uploadData.url) currentImageUrl = uploadData.url
       }
-
-      if (frame && colors) {
-        const frameHex = frame.colorKey === 'primary' ? colors.primary : frame.colorKey === 'secondary' ? colors.secondary : colors.accent
+      if (frame) {
+        const frameHex = frame.colorKey === 'silver' || frame.colorKey === 'gold' || frame.colorKey === 'neutral'
+          ? FRAME_PRESET_COLORS[frame.colorKey]
+          : colors
+            ? (frame.colorKey === 'primary' ? colors.primary : frame.colorKey === 'secondary' ? colors.secondary : colors.accent)
+            : '#0d9488'
         const frameRes = await fetch('/api/image/composite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -573,12 +731,28 @@ export default function CreateContentPage() {
           if (frameData.url) currentImageUrl = frameData.url
         }
       }
+      return `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
+    } catch {
+      return null
+    }
+  }
 
-      const cacheBustedUrl = `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
-      setGeneratedImage((prev) => (prev ? { ...prev, url: cacheBustedUrl } : null))
-      setShowOverlayEditor(false)
-      setLogoSkipped(true)
-      setPhotoSkipped(true)
+  const handleApplyOverlays = async (payload: OverlayApplyPayload) => {
+    if (!generatedImage) return
+    const { imageOverlays, overlayBorderColors, tintOverlay, textOverlays, frame } = payload
+    if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame && !tintOverlay) return
+    setOverlayError(null)
+    setApplyingLogo(true)
+    try {
+      const newUrl = await applyPayloadToImage(generatedImage.url, payload)
+      if (newUrl) {
+        setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+        setShowOverlayEditor(false)
+        setLogoSkipped(true)
+        setPhotoSkipped(true)
+      } else {
+        setOverlayError('Something went wrong. Please try again.')
+      }
     } catch (error) {
       console.error('Overlay apply error:', error)
       setOverlayError('Something went wrong. Please try again.')
@@ -675,6 +849,7 @@ export default function CreateContentPage() {
       id: 'blog-post', 
       name: 'Blog Post', 
       description: 'SEO-optimized blog article for your website',
+      benefit: 'Drive traffic and show expertise',
       color: 'teal',
       time: '~30 sec'
     },
@@ -682,6 +857,7 @@ export default function CreateContentPage() {
       id: 'social-pack', 
       name: 'Social Media Pack', 
       description: '6 optimized posts for all major platforms',
+      benefit: 'One idea, six ready-to-publish posts',
       color: 'orange',
       badge: '6 platforms',
       popular: true,
@@ -691,6 +867,7 @@ export default function CreateContentPage() {
       id: 'gmb-post', 
       name: 'Google Business Post', 
       description: 'Updates, offers, or events for your GMB profile',
+      benefit: 'Stay visible to local searchers',
       color: 'blue',
       time: '~20 sec'
     },
@@ -698,6 +875,7 @@ export default function CreateContentPage() {
       id: 'email', 
       name: 'Email Newsletter', 
       description: 'Professional email content for your customers',
+      benefit: 'Keep your list engaged with value',
       color: 'purple',
       time: '~30 sec'
     },
@@ -907,6 +1085,81 @@ export default function CreateContentPage() {
     }
   }
 
+  // Regenerate both stock options and AI image (keep text unchanged)
+  const handleRegenerateAllImages = async () => {
+    setRegenerateMenuOpen(false)
+    setGenerating(true)
+    setError('')
+    setStockImageOptions([])
+    setSelectedStockImage(null)
+    setGeneratedImage(null)
+    setStep3AIImage(null)
+    setGeneratedImageId(null)
+    setAppliedBrandingForImageUrl(null)
+    setInitialOverlayState(null)
+    const body = {
+      template: selectedTemplate,
+      businessName,
+      industry,
+      topic,
+      tone,
+      location: currentBusiness?.location ?? undefined,
+      generateImageFlag: true,
+      imageStyle,
+      regenerateMode: 'image' as const,
+      tagline: currentBusiness?.tagline ?? undefined,
+      defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
+      defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
+      seoKeywords: currentBusiness?.seo_keywords ?? undefined,
+      shortAbout: currentBusiness?.short_about ?? undefined,
+      website: currentBusiness?.website ?? undefined,
+      socialHandles: currentBusiness?.social_handles ?? undefined,
+      serviceAreas: currentBusiness?.service_areas ?? undefined,
+      brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+    }
+    try {
+      const stockRes = await fetch('/api/content/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, imageSource: 'stock' }),
+      })
+      const stockData = await stockRes.json()
+      if (!stockRes.ok) throw new Error(stockData.error || 'Failed to fetch stock images')
+      if (stockData.stockImageOptions?.length) {
+        setStockImageOptions(stockData.stockImageOptions)
+      }
+      if (stockData.usage?.imagesRemaining != null) setImagesRemaining(stockData.usage.imagesRemaining)
+
+      const aiRes = await fetch('/api/content/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, imageSource: 'ai' }),
+      })
+      const aiData = await aiRes.json()
+      if (!aiRes.ok) throw new Error(aiData.error || 'Failed to generate AI image')
+      if (aiData.image) {
+        setStep3AIImage({
+          url: aiData.image.url,
+          style: aiData.image.style || 'professional',
+          size: (aiData.image as { size?: string }).size || '1024x1024',
+          generated_image_id: aiData.generated_image_id ?? null,
+        })
+        setGeneratedImage(aiData.image)
+        if (aiData.generated_image_id) {
+          setGeneratedImageId(aiData.generated_image_id)
+          setImageRating(null)
+        }
+      }
+      if (aiData.usage?.imagesRemaining != null) setImagesRemaining(aiData.usage.imagesRemaining)
+      setStep(3)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setGenerating(false)
+      setGenerationStartTime(null)
+    }
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setError('')
@@ -954,7 +1207,8 @@ export default function CreateContentPage() {
         throw new Error(data.error || 'Failed to save content')
       }
 
-      router.push('/dashboard/library')
+      setSaveSuccess(true)
+      setTimeout(() => router.push('/dashboard/library'), 1200)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save content')
     } finally {
@@ -1149,9 +1403,9 @@ export default function CreateContentPage() {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center mb-8 bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-        <div className={`flex items-center ${step >= 1 ? 'text-teal-600' : 'text-gray-400'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium ${step >= 1 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+      <div className="flex items-center mb-8 bg-white rounded-xl p-4 border border-gray-100 shadow-sm transition-all duration-300">
+        <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? 'text-teal-600' : 'text-gray-400'}`}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 1 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
             {step > 1 ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1160,9 +1414,9 @@ export default function CreateContentPage() {
           </div>
           <span className="ml-3 font-medium hidden sm:block">Template</span>
         </div>
-        <div className={`flex-1 h-1 mx-4 rounded ${step >= 2 ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
-        <div className={`flex items-center ${step >= 2 ? 'text-teal-600' : 'text-gray-400'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium ${step >= 2 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+        <div className={`flex-1 h-1 mx-4 rounded transition-colors duration-300 ${step >= 2 ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
+        <div className={`flex items-center transition-colors duration-300 ${step >= 2 ? 'text-teal-600' : 'text-gray-400'}`}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 2 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
             {step > 2 ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1171,13 +1425,21 @@ export default function CreateContentPage() {
           </div>
           <span className="ml-3 font-medium hidden sm:block">Details</span>
         </div>
-        <div className={`flex-1 h-1 mx-4 rounded ${step >= 3 ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
-        <div className={`flex items-center ${step >= 3 ? 'text-teal-600' : 'text-gray-400'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium ${step >= 3 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>3</div>
-          <span className="ml-3 font-medium hidden sm:block">Review</span>
+        <div className={`flex-1 h-1 mx-4 rounded transition-colors duration-300 ${step >= 3 ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
+        <div className={`flex items-center transition-colors duration-300 ${step >= 3 ? 'text-teal-600' : 'text-gray-400'}`}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 3 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>3</div>
+          <span className="ml-3 font-medium hidden sm:block">Branding</span>
         </div>
       </div>
 
+      {saveSuccess && (
+        <div className="bg-green-50 border border-green-200 text-green-800 text-sm p-4 rounded-xl mb-6 flex items-center gap-3">
+          <svg className="w-5 h-5 flex-shrink-0 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Saved! Taking you to your library…</span>
+        </div>
+      )}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-xl mb-6 flex items-center gap-3">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1199,12 +1461,12 @@ export default function CreateContentPage() {
           {/* Inspiring Header */}
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-              What will you spark today?
+              What do you want to create today?
               <svg className="w-7 h-7 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </h2>
-            <p className="text-gray-500">Create content that connects with your community</p>
+            <p className="text-gray-500">Pick a content type and we’ll guide you through the rest</p>
           </div>
 
           {/* Quick Starts */}
@@ -1262,7 +1524,9 @@ export default function CreateContentPage() {
                   </div>
                   <h3 className="font-semibold text-gray-900">{template.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{template.description}</p>
-                  
+                  {'benefit' in template && (template as { benefit?: string }).benefit && (
+                    <p className="text-xs text-teal-600 mt-1 font-medium">{(template as { benefit: string }).benefit}</p>
+                  )}
                   {/* Time Estimate */}
                   <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
                     <svg className="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
@@ -1280,7 +1544,8 @@ export default function CreateContentPage() {
       {/* Step 2: Add Details */}
       {!loadingEdit && step === 2 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us about your {templates.find(t => t.id === selectedTemplate)?.name.toLowerCase() || 'content'}</h2>
+          <p className="text-sm text-teal-600 font-medium mb-0.5">You're creating a {templates.find(t => t.id === selectedTemplate)?.name || 'piece of content'}</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us what it's about</h2>
           
           {/* Business Selection */}
           {businesses.length > 1 ? (
@@ -1430,7 +1695,7 @@ export default function CreateContentPage() {
             </div>
 
             <p className="text-sm text-gray-500 border-t border-gray-100 pt-5 mt-5">
-              You&apos;ll choose your image in the next step (stock, AI, or upload) and add your branding.
+              Next: choose your image (stock, AI, or upload), then add your branding.
             </p>
 
             <div className="flex gap-3 pt-4">
@@ -1479,7 +1744,7 @@ export default function CreateContentPage() {
         </div>
       )}
 
-      {/* Step 3: Review & Edit - Social Pack */}
+      {/* Step 3: Branding - Social Pack */}
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div>
           {/* Header with Actions at Top */}
@@ -1544,12 +1809,23 @@ export default function CreateContentPage() {
                     </button>
                     <button
                       onClick={() => handleGenerate('image', 'stock')}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg"
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       Free stock image
+                    </button>
+                    <button
+                      onClick={handleRegenerateAllImages}
+                      disabled={imagesRemaining === 0}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                      </svg>
+                      All images
                     </button>
                   </div>
                 )}
@@ -1691,6 +1967,17 @@ export default function CreateContentPage() {
             </div>
           )}
 
+          {/* Progress: Applying recommended branding */}
+          {brandingRecommendationLoading && (
+            <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+              <p className="text-sm font-medium text-teal-800 mb-2">Applying branding…</p>
+              <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
+                <div className="h-full bg-teal-500 rounded-full animate-pulse w-3/4" style={{ animationDuration: '1.2s' }} />
+              </div>
+              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, frame and tint…</p>
+            </div>
+          )}
+
           {/* Image Overlay Editor - Drag & Drop Logo/Photo (or upload here) */}
           {generatedImage && showOverlayEditor ? (
             <div className="mb-6">
@@ -1700,6 +1987,7 @@ export default function CreateContentPage() {
                 </div>
               )}
               <ImageOverlayEditor
+                key={generatedImage.url}
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
                 photoUrl={currentBusinessPhoto}
@@ -1712,6 +2000,7 @@ export default function CreateContentPage() {
                 applying={applyingLogo}
                 onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
                 onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
+                initialState={appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null}
               />
             </div>
           ) : generatedImage && showTextOverlay ? (
@@ -1782,7 +2071,22 @@ export default function CreateContentPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Add Logo/Photo
+                    Customize
+                  </button>
+                  <button
+                    onClick={() => generatedImage?.url && runAutoBranding(generatedImage.url)}
+                    disabled={brandingRecommendationLoading}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
+                    title="Fetch a new branding suggestion and apply it"
+                  >
+                    {brandingRecommendationLoading ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    )}
+                    Reapply auto-branding
                   </button>
                   <button
                     onClick={handleDownloadImage}
@@ -1795,7 +2099,7 @@ export default function CreateContentPage() {
                   </button>
                 </div>
               </div>
-              <div className="p-4 flex justify-center bg-gray-50">
+              <div className="p-4 flex flex-col items-center bg-gray-50">
                 <SafeImage 
                   key={generatedImage.url}
                   src={generatedImage.url} 
@@ -1803,6 +2107,9 @@ export default function CreateContentPage() {
                   className="max-w-md w-full rounded-lg shadow-sm"
                   fallbackClassName="max-w-md w-full h-48 rounded-lg"
                 />
+                {appliedBrandingForImageUrl === generatedImage.url && (
+                  <p className="mt-2 text-xs text-teal-600">Recommended branding applied. Customize or add text below.</p>
+                )}
               </div>
             </div>
           )}
@@ -2139,7 +2446,7 @@ export default function CreateContentPage() {
         </div>
       )}
 
-      {/* Step 3: Review & Edit - Regular Content (Blog, GMB, Email) */}
+      {/* Step 3: Branding - Regular Content (Blog, GMB, Email) */}
       {!loadingEdit && step === 3 && selectedTemplate !== 'social-pack' && (
         <div>
           {/* Header with Actions at Top */}
@@ -2147,7 +2454,7 @@ export default function CreateContentPage() {
             <div className="flex items-center gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Review your content</h2>
-                <p className="text-gray-500 text-sm">Copy formatted or edit as needed</p>
+                <p className="text-gray-500 text-sm">Copy, edit, or save to your library</p>
               </div>
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2181,7 +2488,7 @@ export default function CreateContentPage() {
                   </svg>
                 </button>
                 {regenerateMenuOpen && !generating && (
-                  <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                  <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                     <button
                       onClick={() => handleGenerate('all')}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
@@ -2192,13 +2499,23 @@ export default function CreateContentPage() {
                       Regenerate All
                     </button>
                     <button
+                      onClick={() => handleRegenerateAllImages()}
+                      disabled={imagesRemaining === 0}
+                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      All images
+                    </button>
+                    <button
                       onClick={() => handleGenerate('text')}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Text Only
+                      Text only
                     </button>
                     <button
                       onClick={() => handleGenerate('image')}
@@ -2208,7 +2525,7 @@ export default function CreateContentPage() {
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      Image Only
+                      AI image only
                     </button>
                   </div>
                 )}
@@ -2242,6 +2559,7 @@ export default function CreateContentPage() {
                 onClick={handleSave}
                 disabled={saving || !generatedImage}
                 className="px-5 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
+                title="Save to library"
               >
                 {saving ? (
                   <>
@@ -2256,16 +2574,17 @@ export default function CreateContentPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Save
+                    Save to library
                   </>
                 )}
               </button>
             </div>
+            <p className="text-xs text-gray-500 mt-2">Ready to save to your library when you're done.</p>
           </div>
           
           {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload) - same as social-pack */}
           <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">Choose your image</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Pick the look that fits your message</h3>
             <p className="text-xs text-gray-500 mb-4">Then add your logo, colours and text below.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               {step3StockLoading ? (
@@ -2372,6 +2691,17 @@ export default function CreateContentPage() {
             </div>
           )}
 
+          {/* Progress: Applying recommended branding */}
+          {brandingRecommendationLoading && (
+            <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
+              <p className="text-sm font-medium text-teal-800 mb-2">Applying branding…</p>
+              <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
+                <div className="h-full bg-teal-500 rounded-full animate-pulse w-3/4" style={{ animationDuration: '1.2s' }} />
+              </div>
+              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, frame and tint…</p>
+            </div>
+          )}
+
           {/* Image Overlay Editor - same as social-pack flow */}
           {generatedImage && showOverlayEditor && (
             <div className="mb-6">
@@ -2381,6 +2711,7 @@ export default function CreateContentPage() {
                 </div>
               )}
               <ImageOverlayEditor
+                key={generatedImage.url}
                 imageUrl={generatedImage.url}
                 logoUrl={currentBusinessLogo}
                 photoUrl={currentBusinessPhoto}
@@ -2393,6 +2724,7 @@ export default function CreateContentPage() {
                 applying={applyingLogo}
                 onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
                 onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
+                initialState={appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null}
               />
             </div>
           )}
@@ -2430,6 +2762,9 @@ export default function CreateContentPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
+                    {appliedBrandingForImageUrl === generatedImage.url && (
+                      <p className="text-xs text-teal-600 font-medium mt-0.5">Your brand is on it</p>
+                    )}
                     {generatedImage.source !== 'upload' && (
                       <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style || '—'}</p>
                     )}
@@ -2466,7 +2801,22 @@ export default function CreateContentPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Add Logo/Photo
+                    Customize
+                  </button>
+                  <button
+                    onClick={() => generatedImage?.url && runAutoBranding(generatedImage.url)}
+                    disabled={brandingRecommendationLoading}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
+                    title="Fetch a new branding suggestion and apply it"
+                  >
+                    {brandingRecommendationLoading ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    )}
+                    Reapply auto-branding
                   </button>
                   <button
                     onClick={handleDownloadImage}
@@ -2479,7 +2829,7 @@ export default function CreateContentPage() {
                   </button>
                 </div>
               </div>
-              <div className="p-4 flex justify-center bg-gray-50">
+              <div className="p-4 flex flex-col items-center bg-gray-50">
                 <SafeImage 
                   key={generatedImage.url}
                   src={generatedImage.url} 
@@ -2487,6 +2837,9 @@ export default function CreateContentPage() {
                   className="max-w-md w-full rounded-lg shadow-sm"
                   fallbackClassName="max-w-md w-full h-48 rounded-lg"
                 />
+                {appliedBrandingForImageUrl === generatedImage.url && (
+                  <p className="mt-2 text-xs text-teal-600">Recommended branding applied. Customize or add text below.</p>
+                )}
               </div>
             </div>
           )}

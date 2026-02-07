@@ -18,12 +18,16 @@ export function getSearchQueryForTopic(topic: string, industry: string): string 
   return `${short} ${ind}`.trim()
 }
 
-/** Optional: return multiple query variants for fallback search */
+/** Return multiple query variants for fallback search when first query returns few results. */
 export function getSearchQueryVariants(topic: string, industry: string): string[] {
   const primary = getSearchQueryForTopic(topic, industry)
+  const ind = industry.trim().toLowerCase()
   const variants: string[] = [primary]
-  if (industry && !primary.toLowerCase().includes(industry.toLowerCase())) {
+  if (ind && !primary.toLowerCase().includes(ind)) {
     variants.push(`${industry} professional`)
+  }
+  if (ind) {
+    variants.push(`${industry} work`, `${industry} team`)
   }
   return [...new Set(variants)]
 }

@@ -1,9 +1,9 @@
 -- Fix: "new row violates row-level security policy" for generated_images / generated_texts
 -- Run once in Supabase Dashboard → SQL Editor → New query → paste → Run
 --
--- If the error happens when uploading an image (e.g. after applying overlays), it may be
--- storage RLS: run the policies in migrations/20260206000000_storage_generated_images_policies.sql
--- and ensure the bucket is named "generated-images".
+-- If the error happens when applying branding (Step 3) or uploading an image, it is
+-- storage RLS: run supabase/FIX_STORAGE_RLS_GENERATED_IMAGES.sql and ensure the bucket
+-- is named "generated-images" in Supabase Storage.
 
 -- Enable RLS (no-op if already enabled)
 ALTER TABLE generated_images ENABLE ROW LEVEL SECURITY;

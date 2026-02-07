@@ -12,12 +12,22 @@ export interface OverlayItem {
   type: 'logo' | 'photo'
 }
 
+export type TextOverlayFont = 'Inter' | 'Georgia' | 'Playfair Display' | 'system-ui'
+
+export const TEXT_FONT_OPTIONS: { value: TextOverlayFont; label: string }[] = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Playfair Display', label: 'Playfair' },
+  { value: 'system-ui', label: 'System' },
+]
+
 export interface TextOverlayItem {
   id: string
   text: string
   x: number
   y: number
   fontSize: number
+  fontFamily: TextOverlayFont
   colorKey: 'primary' | 'secondary' | 'accent'
 }
 
@@ -27,14 +37,35 @@ export interface BrandColors {
   accent: string
 }
 
-export type FrameStyle = 'thin' | 'solid' | 'thick' | 'double' | 'rounded'
+export type FrameStyle =
+  | 'thin'
+  | 'solid'
+  | 'thick'
+  | 'double'
+  | 'rounded'
+  | 'classic'
+  | 'polaroid'
+  | 'dashed'
+  | 'dotted'
+  | 'filmstrip'
+  | 'vignette'
+  | 'neon'
+  | 'shadow'
+
+export type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'neutral'
+
+export const FRAME_PRESET_COLORS: Record<'silver' | 'gold' | 'neutral', string> = {
+  silver: '#C0C0C0',
+  gold: '#D4AF37',
+  neutral: '#9CA3AF',
+}
 
 export interface OverlayApplyPayload {
   imageOverlays: OverlayItem[]
   overlayBorderColors: Record<string, string>
   tintOverlay: { colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null
   textOverlays: TextOverlayItem[]
-  frame: { style: FrameStyle; colorKey: 'primary' | 'secondary' | 'accent' } | null
+  frame: { style: FrameStyle; colorKey: FrameColorKey } | null
 }
 
 interface ImageOverlayEditorProps {
@@ -50,6 +81,8 @@ interface ImageOverlayEditorProps {
   applying?: boolean
   onUploadLogo?: (file: File) => Promise<string | null>
   onUploadPhoto?: (file: File) => Promise<string | null>
+  /** Pre-fill overlay state (e.g. from applied branding recommendation) so user can fine-tune */
+  initialState?: OverlayApplyPayload | null
 }
 
 const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', accent: '#6b7280' }
@@ -67,13 +100,14 @@ export default function ImageOverlayEditor({
   applying,
   onUploadLogo,
   onUploadPhoto,
+  initialState,
 }: ImageOverlayEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [overlays, setOverlays] = useState<OverlayItem[]>([])
-  const [overlayBorderColors, setOverlayBorderColors] = useState<Record<string, string>>({})
-  const [tintOverlay, setTintOverlay] = useState<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>(null)
-  const [frame, setFrame] = useState<{ style: FrameStyle; colorKey: 'primary' | 'secondary' | 'accent' } | null>(null)
-  const [textOverlays, setTextOverlays] = useState<TextOverlayItem[]>([])
+  const [overlays, setOverlays] = useState<OverlayItem[]>(() => initialState?.imageOverlays ?? [])
+  const [overlayBorderColors, setOverlayBorderColors] = useState<Record<string, string>>(() => initialState?.overlayBorderColors ?? {})
+  const [tintOverlay, setTintOverlay] = useState<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>(() => initialState?.tintOverlay ?? null)
+  const [frame, setFrame] = useState<{ style: FrameStyle; colorKey: FrameColorKey } | null>(() => initialState?.frame ?? null)
+  const [textOverlays, setTextOverlays] = useState<TextOverlayItem[]>(() => initialState?.textOverlays ?? [])
   const [draggingNew, setDraggingNew] = useState<'logo' | 'photo' | 'tagline' | 'website' | 'social' | null>(null)
   const [draggingExisting, setDraggingExisting] = useState<string | null>(null)
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 })
@@ -90,6 +124,11 @@ export default function ImageOverlayEditor({
   const getHex = (key: 'primary' | 'secondary' | 'accent') => {
     const hex = colors[key]
     return /^#[0-9A-Fa-f]{6}$/.test(hex) ? hex : colors.primary
+  }
+
+  const getFrameHex = (key: FrameColorKey): string => {
+    if (key === 'silver' || key === 'gold' || key === 'neutral') return FRAME_PRESET_COLORS[key]
+    return getHex(key)
   }
 
   const handleFileUpload = async (type: 'logo' | 'photo', file: File) => {
@@ -172,7 +211,7 @@ export default function ImageOverlayEditor({
 
       if (draggingNew === 'tagline' || draggingNew === 'website' || draggingNew === 'social') {
         const text = draggingNew === 'tagline' ? (tagline || 'Your tagline') : draggingNew === 'website' ? (website || 'yoursite.com') : (socialHandles || '@yourhandle')
-        if (onImage) setTextOverlays(prev => [...prev, { id: `text-${draggingNew}-${Date.now()}`, text, x, y, fontSize: 24, colorKey: 'primary' }])
+        if (onImage) setTextOverlays(prev => [...prev, { id: `text-${draggingNew}-${Date.now()}`, text, x, y, fontSize: 24, fontFamily: 'Inter', colorKey: 'primary' }])
       } else if (draggingNew === 'logo' || draggingNew === 'photo') {
         const url = draggingNew === 'logo' ? effectiveLogoUrl : effectivePhotoUrl
         if (url && onImage) {
@@ -249,6 +288,7 @@ export default function ImageOverlayEditor({
     effectiveLogoUrl,
     effectivePhotoUrl,
     getHex,
+    getFrameHex,
     hasLogo,
     hasPhoto,
     totalItems,

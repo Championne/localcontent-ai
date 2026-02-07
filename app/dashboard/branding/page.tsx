@@ -90,6 +90,7 @@ export default function BrandingPage() {
   const [editingBusiness, setEditingBusiness] = useState<string | null>(null)
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
+  const [copiedHex, setCopiedHex] = useState<string | null>(null)
   const logoInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const businessesRef = useRef<Business[]>([])
@@ -320,12 +321,18 @@ export default function BrandingPage() {
         </div>
       )}
 
+      <div className="mb-8">
+        <p className="text-teal-600 font-medium text-sm mb-1">Brand identity</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Your brand, one place</h1>
+        <p className="text-gray-500 text-sm">Make every post unmistakably yours. Set your logo, colours and voice here.</p>
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Your businesses</h2>
         <button
           type="button"
           onClick={() => setShowAddBusiness(true)}
-          className="px-4 py-2 text-sm font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1"
+          className="px-4 py-2 text-sm font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1 rounded-lg hover:bg-teal-50 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -399,10 +406,15 @@ export default function BrandingPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {businesses.map((business) => (
+          {businesses.map((business) => {
+            const completeness = getBrandCompleteness(business)
+            const pct = Math.round((100 * completeness) / BRAND_FIELDS_TOTAL)
+            const primaryHex = business.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color) ? business.brand_primary_color : null
+            return (
             <div
               key={business.id}
-              className="border border-gray-200 rounded-xl bg-white overflow-hidden"
+              className="border border-gray-200 rounded-xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 hover:-translate-y-0.5"
+              style={primaryHex ? { borderLeftWidth: 4, borderLeftColor: primaryHex } : undefined}
             >
               {/* Header: name, industry, location, edit/delete */}
               <div className="p-4 border-b border-gray-100 flex items-start justify-between gap-4">
@@ -467,15 +479,32 @@ export default function BrandingPage() {
                     {/* Completeness indicator */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="text-xs font-medium text-gray-600">
-                        {getBrandCompleteness(business)} of {BRAND_FIELDS_TOTAL} set
+                        {completeness} of {BRAND_FIELDS_TOTAL} set
+                        <span className="text-teal-600 font-semibold ml-1">({pct}%)</span>
                       </span>
-                      <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[120px]">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div
-                          className="h-full bg-teal-500 rounded-full transition-all"
-                          style={{ width: `${(100 * getBrandCompleteness(business)) / BRAND_FIELDS_TOTAL}%` }}
-                        />
+                          className={`flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[120px] transition-all ${pct === 100 ? 'ring-2 ring-teal-300 ring-offset-1 rounded-full' : ''}`}
+                        >
+                          <div
+                            className="h-full bg-teal-500 rounded-full transition-all duration-300"
+                            style={{ width: `${pct}%`, boxShadow: pct === 100 ? '0 0 8px rgba(20, 184, 166, 0.5)' : undefined }}
+                          />
+                        </div>
+                        {pct === 100 && (
+                          <span className="text-xs font-semibold text-teal-600 whitespace-nowrap" title="All fields filled">
+                            Profile complete
+                          </span>
+                        )}
                       </div>
                     </div>
+                    {/* Milestone message */}
+                    {pct >= 45 && pct <= 55 && pct !== 100 && (
+                      <p className="text-xs text-teal-600 font-medium mb-2">Halfway there — keep going!</p>
+                    )}
+                    {pct === 100 && (
+                      <p className="text-xs text-teal-600 font-medium mb-2">Ready for consistent, on-brand content.</p>
+                    )}
                     {/* Set badges */}
                     {getSetBadges(business).length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-2">
@@ -496,67 +525,103 @@ export default function BrandingPage() {
                     {/* Empty state when logo and profile photo both missing */}
                     {!business.logo_url && !business.profile_photo_url && (
                       <p className="text-xs text-amber-600 mt-1.5">
-                        Add logo & profile photo in Edit.
+                        Add a logo and profile photo so your content feels personal.
                       </p>
                     )}
                   </div>
-                  {/* Colour strip */}
+                  {/* Your palette strip */}
                   {business.brand_primary_color?.trim() && /^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color) && (
-                    <div
-                      className="h-1.5 w-full"
-                      style={{ backgroundColor: business.brand_primary_color }}
-                      title="Brand primary colour"
-                    />
+                    <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100">
+                      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">Your palette</p>
+                      <div className="flex gap-1.5 h-3 rounded-lg overflow-hidden border border-gray-200 shadow-inner">
+                        {[business.brand_primary_color, business.brand_secondary_color || '#e5e7eb', business.brand_accent_color || '#e5e7eb'].map((hex, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(hex).then(() => {
+                                setCopiedHex(hex)
+                                setTimeout(() => setCopiedHex(null), 1500)
+                              })
+                            }}
+                            className={`flex-1 transition-all hover:opacity-90 relative ${copiedHex === hex ? 'ring-2 ring-teal-500 ring-offset-1' : ''}`}
+                            style={{ backgroundColor: hex }}
+                            title={`Copy ${hex}`}
+                          >
+                            {copiedHex === hex && (
+                              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">Copied!</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1">{copiedHex ? 'Copied to clipboard' : 'Click a colour to copy hex'}</p>
+                    </div>
                   )}
                 </>
               )}
 
               {editingBusiness === business.id ? (
                 <form
-                  className="p-4 bg-gray-50 space-y-4"
+                  className="p-4 bg-gray-50 space-y-6"
                   onSubmit={(e) => {
                     e.preventDefault()
                     handleUpdateBusiness(business.id)
                   }}
                 >
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={business.name}
-                    onChange={(e) => updateBusiness(business.id, { name: e.target.value })}
-                    placeholder="Business name"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Industry</label>
-                  <select
-                    value={business.industry || ''}
-                    onChange={(e) => updateBusiness(business.id, { industry: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 outline-none"
-                  >
-                    <option value="">Industry...</option>
-                    {INDUSTRIES.map((ind) => (
-                      <option key={ind.value} value={ind.value}>{ind.label}</option>
-                    ))}
-                  </select>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Location</label>
-                  <input
-                    type="text"
-                    value={business.location || ''}
-                    onChange={(e) => updateBusiness(business.id, { location: e.target.value })}
-                    placeholder="City, neighbourhoods"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Website URL</label>
-                  <input
-                    type="text"
-                    inputMode="url"
-                    autoComplete="url"
-                    value={business.website || ''}
-                    onChange={(e) => updateBusiness(business.id, { website: e.target.value?.trim() || null })}
-                    placeholder="www.example.com or https://..."
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
+                  {/* Identity */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-sm font-medium">1</span>
+                      <h4 className="font-medium text-gray-900">Identity</h4>
+                    </div>
+                    <div className="space-y-3 pl-10">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={business.name}
+                        onChange={(e) => updateBusiness(business.id, { name: e.target.value })}
+                        placeholder="Business name"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Industry</label>
+                      <select
+                        value={business.industry || ''}
+                        onChange={(e) => updateBusiness(business.id, { industry: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500 outline-none"
+                      >
+                        <option value="">Industry...</option>
+                        {INDUSTRIES.map((ind) => (
+                          <option key={ind.value} value={ind.value}>{ind.label}</option>
+                        ))}
+                      </select>
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Location</label>
+                      <input
+                        type="text"
+                        value={business.location || ''}
+                        onChange={(e) => updateBusiness(business.id, { location: e.target.value })}
+                        placeholder="City, neighbourhoods"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                      <label className="block text-xs font-medium text-gray-500 mb-1">Website URL</label>
+                      <input
+                        type="text"
+                        inputMode="url"
+                        autoComplete="url"
+                        value={business.website || ''}
+                        onChange={(e) => updateBusiness(business.id, { website: e.target.value?.trim() || null })}
+                        placeholder="www.example.com or https://..."
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                      />
+                    </div>
+                  </div>
 
+                  {/* Visuals */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-medium">2</span>
+                      <h4 className="font-medium text-gray-900">Visuals</h4>
+                    </div>
+                    <div className="space-y-3 pl-10">
                   <label className="block text-xs font-medium text-gray-500 mb-1">Logo</label>
                   <div className="flex items-center gap-3">
                     {business.logo_url ? (
@@ -619,31 +684,62 @@ export default function BrandingPage() {
                     <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} title="Your secondary" />
                     <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} title="Your accent" />
                   </div>
+                    </div>
+                  </div>
 
+                  {/* Voice */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-medium">3</span>
+                      <h4 className="font-medium text-gray-900">Voice</h4>
+                    </div>
+                    <div className="space-y-3 pl-10">
                   <label className="block text-xs font-medium text-gray-500 mb-1">Tagline</label>
                   <input type="text" value={business.tagline || ''} onChange={(e) => updateBusiness(business.id, { tagline: e.target.value || null })} placeholder="e.g. Your neighbourhood plumber" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Primary call to action</label>
-                  <input type="text" value={business.default_cta_primary || ''} onChange={(e) => updateBusiness(business.id, { default_cta_primary: e.target.value || null })} placeholder="e.g. Book now" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Secondary call to action (optional)</label>
-                  <input type="text" value={business.default_cta_secondary || ''} onChange={(e) => updateBusiness(business.id, { default_cta_secondary: e.target.value || null })} placeholder="e.g. Contact us" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <p className="text-xs text-gray-400 -mt-1">A clear tagline helps every post sound like you.</p>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Default call to action (button text)</label>
+                  <input
+                    type="text"
+                    value={business.default_cta_primary ?? business.default_cta_secondary ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value.trim() || null
+                      updateBusiness(business.id, { default_cta_primary: v, default_cta_secondary: v })
+                    }}
+                    placeholder="e.g. Book now"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  />
+                  <p className="text-xs text-gray-400 -mt-1">Used as primary and link CTA everywhere (e.g. GMB, emails).</p>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Default tone</label>
                   <select value={business.default_tone || ''} onChange={(e) => updateBusiness(business.id, { default_tone: e.target.value || null })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
                     {TONE_OPTIONS.map((o) => (<option key={o.value || 'none'} value={o.value}>{o.label}</option>))}
                   </select>
+                  <p className="text-xs text-gray-400 -mt-1">How your content should sound: professional or friendly.</p>
+                    </div>
+                  </div>
+
+                  {/* Online presence */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">4</span>
+                      <h4 className="font-medium text-gray-900">Online presence</h4>
+                    </div>
+                    <div className="space-y-3 pl-10">
                   <label className="block text-xs font-medium text-gray-500 mb-1">SEO keywords (comma-separated)</label>
                   <input type="text" value={business.seo_keywords || ''} onChange={(e) => updateBusiness(business.id, { seo_keywords: e.target.value || null })} placeholder="plumber near me, drain cleaning [city]" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <label className="block text-xs font-medium text-gray-500 mb-1">Social handles</label>
                   <input type="text" value={business.social_handles || ''} onChange={(e) => updateBusiness(business.id, { social_handles: e.target.value || null })} placeholder="@mybusiness" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <label className="block text-xs font-medium text-gray-500 mb-1">Short About (2–4 sentences)</label>
                   <textarea value={business.short_about || ''} onChange={(e) => updateBusiness(business.id, { short_about: e.target.value || null })} placeholder="Used in Google Business Profile, blog author box, About sections" rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" />
+                    </div>
+                  </div>
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2 border-t border-gray-200">
                     <button
                       type="submit"
                       disabled={saving === business.id}
-                      className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50"
+                      className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50 shadow-sm hover:shadow transition-all"
                     >
-                      {saving === business.id ? 'Saving...' : 'Save'}
+                      {saving === business.id ? 'Saving...' : 'Save & done'}
                     </button>
                     <button type="button" onClick={() => { setEditingBusiness(null); fetchBusinesses() }} className="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm hover:bg-gray-50">
                       Cancel
@@ -652,7 +748,7 @@ export default function BrandingPage() {
                 </form>
               ) : null}
             </div>
-          ))}
+          )})}
         </div>
       )}
     </div>

@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import type { OverlayItem, TextOverlayItem, FrameStyle, OverlayApplyPayload } from './ImageOverlayEditor'
+import type { OverlayItem, TextOverlayItem, FrameStyle, FrameColorKey, OverlayApplyPayload, TextOverlayFont } from './ImageOverlayEditor'
+import { TEXT_FONT_OPTIONS } from './ImageOverlayEditor'
 
 export interface ImageOverlayEditorViewProps {
   imageUrl: string
@@ -12,8 +13,8 @@ export interface ImageOverlayEditorViewProps {
   setOverlayBorderColors: React.Dispatch<React.SetStateAction<Record<string, string>>>
   tintOverlay: { colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null
   setTintOverlay: React.Dispatch<React.SetStateAction<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>>
-  frame: { style: FrameStyle; colorKey: 'primary' | 'secondary' | 'accent' } | null
-  setFrame: React.Dispatch<React.SetStateAction<{ style: FrameStyle; colorKey: 'primary' | 'secondary' | 'accent' } | null>>
+  frame: { style: FrameStyle; colorKey: FrameColorKey } | null
+  setFrame: React.Dispatch<React.SetStateAction<{ style: FrameStyle; colorKey: FrameColorKey } | null>>
   textOverlays: TextOverlayItem[]
   setTextOverlays: React.Dispatch<React.SetStateAction<TextOverlayItem[]>>
   draggingNew: 'logo' | 'photo' | 'tagline' | 'website' | 'social' | null
@@ -21,6 +22,7 @@ export interface ImageOverlayEditorViewProps {
   effectiveLogoUrl: string | null
   effectivePhotoUrl: string | null
   getHex: (key: 'primary' | 'secondary' | 'accent') => string
+  getFrameHex: (key: FrameColorKey) => string
   hasLogo: boolean
   hasPhoto: boolean
   totalItems: number
@@ -174,8 +176,8 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             className="relative bg-gray-100 rounded-lg overflow-hidden"
             style={{
               aspectRatio: '1',
-              padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'thick' ? 16 : 8) : 0,
-              backgroundColor: p.frame ? p.getHex(p.frame.colorKey) : undefined,
+              padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'thick' || p.frame.style === 'classic' ? 16 : p.frame.style === 'polaroid' ? 12 : p.frame.style === 'filmstrip' ? 16 : p.frame.style === 'neon' ? 20 : p.frame.style === 'shadow' ? 20 : p.frame.style === 'vignette' ? 0 : 8) : 0,
+              backgroundColor: p.frame ? (p.frame.style === 'polaroid' || p.frame.style === 'filmstrip' ? '#ffffff' : p.frame.style === 'neon' ? '#1e1e23' : p.frame.style === 'shadow' ? '#f8fafc' : p.frame.style === 'vignette' ? undefined : p.getFrameHex(p.frame.colorKey)) : undefined,
               borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
             }}
           >
@@ -185,7 +187,8 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               style={{
                 aspectRatio: '1',
                 borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
-                border: p.frame?.style === 'double' ? `2px solid ${p.frame ? p.getHex(p.frame.colorKey) : '#e5e7eb'}` : undefined,
+                border: p.frame?.style === 'double' || p.frame?.style === 'classic' ? `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dashed' || p.frame?.style === 'dotted' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e5e7eb' : undefined,
+                boxShadow: p.frame?.style === 'vignette' ? 'inset 0 0 80px rgba(0,0,0,0.4)' : p.frame?.style === 'neon' ? `0 0 20px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}` : undefined,
               }}
             >
               <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} />
@@ -226,12 +229,19 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               })}
               {p.textOverlays.map((t) => (
                 <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(-50%, -50%)' }}>
-                  <span className="font-bold drop-shadow-lg px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(24, Math.max(12, t.fontSize)) }}>{t.text}</span>
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 flex gap-0.5 bg-white rounded shadow p-0.5">
+                  <span className="font-bold drop-shadow-lg px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter' }}>{t.text}</span>
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 flex flex-wrap items-center gap-1 bg-white rounded-lg shadow-lg p-1.5 border border-gray-200 min-w-[140px]">
+                    <span className="text-[9px] text-gray-500 w-full">Color:</span>
                     {(['primary', 'secondary', 'accent'] as const).map((key) => (
                       <button key={key} type="button" onClick={(e) => { e.stopPropagation(); p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, colorKey: key } : x)) }} className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: p.getHex(key) }} title={key} />
                     ))}
-                    <button onClick={(e) => { e.stopPropagation(); p.handleRemove(t.id) }} className="w-5 h-5 rounded bg-red-100 text-red-600 text-[10px]">✕</button>
+                    <span className="text-[9px] text-gray-500 w-full mt-0.5">Size:</span>
+                    <input type="range" min="10" max="32" value={Math.min(32, Math.max(10, t.fontSize))} onChange={(e) => { const v = parseInt(e.target.value, 10); if (!Number.isNaN(v)) p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontSize: v } : x)) }} onClick={(e) => e.stopPropagation()} className="w-16 h-1.5" />
+                    <span className="text-[9px] text-gray-500 w-full">Font:</span>
+                    <select value={t.fontFamily || 'Inter'} onChange={(e) => { const v = e.target.value as TextOverlayFont; p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontFamily: v } : x)) }} onClick={(e) => e.stopPropagation()} className="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white max-w-full">
+                      {TEXT_FONT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                    <button onClick={(e) => { e.stopPropagation(); p.handleRemove(t.id) }} className="w-5 h-5 rounded bg-red-100 text-red-600 text-[10px] ml-auto">✕</button>
                   </div>
                 </div>
               ))}
@@ -260,16 +270,24 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs text-gray-500">Frame:</span>
-            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (!v) p.setFrame(null); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-xs border border-gray-200 rounded px-2 py-1 bg-white">
+            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (!v) p.setFrame(null); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-xs border border-gray-200 rounded px-2 py-1 bg-white max-w-[140px]">
               <option value="">None</option>
               <option value="thin">Thin</option>
               <option value="solid">Solid</option>
               <option value="thick">Thick</option>
               <option value="double">Double</option>
               <option value="rounded">Rounded</option>
+              <option value="classic">Classic (gallery)</option>
+              <option value="polaroid">Polaroid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+              <option value="filmstrip">Film strip</option>
+              <option value="vignette">Vignette</option>
+              <option value="neon">Neon glow</option>
+              <option value="shadow">Shadow (lifted)</option>
             </select>
-            {p.frame && (['primary', 'secondary', 'accent'] as const).map((key) => (
-              <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
+            {p.frame && (['primary', 'secondary', 'accent', 'silver', 'gold', 'neutral'] as const).map((key) => (
+              <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getFrameHex(key) }} title={key} />
             ))}
           </div>
           <p className="text-xs text-gray-400 text-center mt-2">{p.totalItems === 0 ? 'Drag from the left onto the image' : 'Drag to reposition • Hover for border/colour controls'}</p>
