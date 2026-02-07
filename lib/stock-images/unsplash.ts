@@ -86,16 +86,22 @@ export async function searchStockImageOptions(
     links: { download_location?: string }
   }>
   if (!results?.length) return []
-  return results.slice(0, count).map((photo) => {
+  const seen = new Set<string>()
+  const out: StockImageResult[] = []
+  for (const photo of results) {
     const url = photo.urls.regular || photo.urls.small
+    if (!url || seen.has(url)) continue
+    seen.add(url)
     const name = photo.user?.name || 'Unknown'
     const userLink = photo.user?.links?.html || 'https://unsplash.com'
-    return {
+    out.push({
       url,
       attribution: `Photo by ${name} on Unsplash`,
       photographerName: name,
       photographerUrl: userLink,
       downloadLocation: photo.links?.download_location,
-    }
-  })
+    })
+    if (out.length >= count) break
+  }
+  return out
 }

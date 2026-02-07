@@ -142,7 +142,7 @@ export async function POST(request: Request) {
         }
       }
 
-      // Image: stock = return options for picker; AI = single generated image
+      // Image: stock = return options for picker; AI = single generated image. When stock is used, also generate one AI image so user has both as choices.
       let image = null
       let generatedImageId: string | null = null
       let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
@@ -154,7 +154,8 @@ export async function POST(request: Request) {
             const options = await getStockImageOptions({ topic, industry, contentType: template }, 5)
             if (options.length) stockImageOptions = options
           }
-          if (stockImageOptions.length === 0 && canUseAi) {
+          const shouldGenerateAiImage = canUseAi && (stockImageOptions.length === 0 || useStock)
+          if (shouldGenerateAiImage) {
             const imageResult = await generateImage({
               topic,
               businessName,
@@ -325,7 +326,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Image: stock = return options for picker; AI = single generated image
+    // Image: stock = return options for picker; AI = single generated image. When stock is used, also generate one AI image so user has both as choices.
     let image = null
     let generatedImageId: string | null = null
     let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
@@ -337,7 +338,9 @@ export async function POST(request: Request) {
           const options = await getStockImageOptions({ topic, industry, contentType: template }, 5)
           if (options.length) stockImageOptions = options
         }
-        if (stockImageOptions.length === 0 && canUseAi) {
+        // Generate AI image when: no stock options, OR when stock was used (so user has 3 stock + 1 AI + upload as choices)
+        const shouldGenerateAiImage = canUseAi && (stockImageOptions.length === 0 || useStock)
+        if (shouldGenerateAiImage) {
           const imageResult = await generateImage({
             topic,
             businessName,

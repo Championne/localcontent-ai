@@ -263,6 +263,8 @@ export default function CreateContentPage() {
   const [brandingRecommendationLoading, setBrandingRecommendationLoading] = useState(false)
   const [appliedBrandingForImageUrl, setAppliedBrandingForImageUrl] = useState<string | null>(null)
   const [initialOverlayState, setInitialOverlayState] = useState<OverlayApplyPayload | null>(null)
+  // Base image URL that suggested branding was applied to (so "Revert to suggested branding" can re-apply)
+  const [suggestedBrandingBaseImageUrl, setSuggestedBrandingBaseImageUrl] = useState<string | null>(null)
 
   // GBP-specific state
   const [gbpPostType, setGbpPostType] = useState<GbpPostType>('update')
@@ -341,6 +343,8 @@ export default function CreateContentPage() {
           hasLogo: !!(currentBusiness?.logo_url),
           hasPhoto: !!(currentBusiness?.profile_photo_url),
           tagline: currentBusiness?.tagline?.trim() || undefined,
+          businessName: currentBusiness?.name?.trim() || undefined,
+          defaultCtaPrimary: currentBusiness?.default_cta_primary?.trim() || undefined,
         }),
       })
       const rec = await res.json()
@@ -389,6 +393,7 @@ export default function CreateContentPage() {
         textOverlays,
         frame: rec.frame ? { style: rec.frame.style, colorKey: rec.frame.colorKey } : null,
       }
+      setSuggestedBrandingBaseImageUrl(imageUrlToApply)
       const newUrl = await applyPayloadToImage(imageUrlToApply, payload)
       if (newUrl) {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
@@ -396,6 +401,34 @@ export default function CreateContentPage() {
         setAppliedBrandingForImageUrl(imageUrlToApply)
         setLogoSkipped(true)
         setPhotoSkipped(true)
+      } else {
+        // Apply failed (e.g. CORS on text); still save suggestion so overlay editor and Revert can use it
+        setInitialOverlayState(payload)
+        setSuggestedBrandingBaseImageUrl(imageUrlToApply)
+        setShowOverlayEditor(true)
+      }
+    } catch {
+      // ignore
+    } finally {
+      setBrandingRecommendationLoading(false)
+    }
+  }
+
+  // Revert to the last suggested branding (re-apply saved payload to base image)
+  const revertToSuggestedBranding = async () => {
+    if (!generatedImage?.url) return
+    const baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
+    const payload = initialOverlayState
+    if (!payload) {
+      await runAutoBranding(generatedImage.url)
+      return
+    }
+    setBrandingRecommendationLoading(true)
+    try {
+      const newUrl = await applyPayloadToImage(baseUrl, payload)
+      if (newUrl) {
+        setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+        setAppliedBrandingForImageUrl(newUrl)
       }
     } catch {
       // ignore
@@ -418,6 +451,8 @@ export default function CreateContentPage() {
         hasLogo: !!(currentBusiness?.logo_url),
         hasPhoto: !!(currentBusiness?.profile_photo_url),
         tagline: currentBusiness?.tagline?.trim() || undefined,
+        businessName: currentBusiness?.name?.trim() || undefined,
+        defaultCtaPrimary: currentBusiness?.default_cta_primary?.trim() || undefined,
       }),
     })
       .then((res) => res.json())
@@ -468,6 +503,7 @@ export default function CreateContentPage() {
           textOverlays,
           frame: rec.frame ? { style: rec.frame.style, colorKey: rec.frame.colorKey } : null,
         }
+        setSuggestedBrandingBaseImageUrl(imageUrlToApply)
         const newUrl = await applyPayloadToImage(imageUrlToApply, payload)
         if (cancelled) return
         if (newUrl) {
@@ -476,6 +512,9 @@ export default function CreateContentPage() {
           setAppliedBrandingForImageUrl(imageUrlToApply)
           setLogoSkipped(true)
           setPhotoSkipped(true)
+        } else {
+          setInitialOverlayState(payload)
+          setShowOverlayEditor(true)
         }
       })
       .catch(() => {})
@@ -2072,10 +2111,10 @@ export default function CreateContentPage() {
                     Customize
                   </button>
                   <button
-                    onClick={() => generatedImage?.url && runAutoBranding(generatedImage.url)}
+                    onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
-                    title="Fetch a new branding suggestion and apply it"
+                    title="Re-apply the suggested branding (logo, frame, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -2084,7 +2123,7 @@ export default function CreateContentPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     )}
-                    Reapply auto-branding
+                    Revert to suggested branding
                   </button>
                   <button
                     onClick={handleDownloadImage}
@@ -2802,10 +2841,10 @@ export default function CreateContentPage() {
                     Customize
                   </button>
                   <button
-                    onClick={() => generatedImage?.url && runAutoBranding(generatedImage.url)}
+                    onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
-                    title="Fetch a new branding suggestion and apply it"
+                    title="Re-apply the suggested branding (logo, frame, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -2814,7 +2853,7 @@ export default function CreateContentPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     )}
-                    Reapply auto-branding
+                    Revert to suggested branding
                   </button>
                   <button
                     onClick={handleDownloadImage}

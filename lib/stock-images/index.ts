@@ -63,5 +63,8 @@ export async function getStockImageOptions(
     }
   }
 
-  return results.slice(0, count)
+  // Final dedupe by URL so we never return duplicates (e.g. from API quirks)
+  const byUrl = new Map<string, StockImageResult>()
+  for (const r of results) byUrl.set(r.url, r)
+  return Array.from(byUrl.values()).slice(0, count)
 }

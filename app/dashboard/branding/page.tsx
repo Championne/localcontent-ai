@@ -529,34 +529,45 @@ export default function BrandingPage() {
                       </p>
                     )}
                   </div>
-                  {/* Your palette strip */}
-                  {business.brand_primary_color?.trim() && /^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color) && (
-                    <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100">
-                      <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">Your palette</p>
-                      <div className="flex gap-1.5 h-3 rounded-lg overflow-hidden border border-gray-200 shadow-inner">
-                        {[business.brand_primary_color, business.brand_secondary_color || '#e5e7eb', business.brand_accent_color || '#e5e7eb'].map((hex, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(hex).then(() => {
-                                setCopiedHex(hex)
-                                setTimeout(() => setCopiedHex(null), 1500)
-                              })
-                            }}
-                            className={`flex-1 transition-all hover:opacity-90 relative ${copiedHex === hex ? 'ring-2 ring-teal-500 ring-offset-1' : ''}`}
-                            style={{ backgroundColor: hex }}
-                            title={`Copy ${hex}`}
-                          >
-                            {copiedHex === hex && (
-                              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">Copied!</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-[10px] text-gray-400 mt-1">{copiedHex ? 'Copied to clipboard' : 'Click a colour to copy hex'}</p>
-                    </div>
-                  )}
+                  {/* Your palette strip — always show so every card has the same layout */}
+                  <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100">
+                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">Your palette</p>
+                    {business.brand_primary_color?.trim() && /^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color) ? (
+                      <>
+                        <div className="flex gap-1.5 h-3 rounded-lg overflow-hidden border border-gray-200 shadow-inner">
+                          {[business.brand_primary_color, business.brand_secondary_color || '#e5e7eb', business.brand_accent_color || '#e5e7eb'].map((hex, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(hex).then(() => {
+                                  setCopiedHex(hex)
+                                  setTimeout(() => setCopiedHex(null), 1500)
+                                })
+                              }}
+                              className={`flex-1 transition-all hover:opacity-90 relative ${copiedHex === hex ? 'ring-2 ring-teal-500 ring-offset-1' : ''}`}
+                              style={{ backgroundColor: hex }}
+                              title={`Copy ${hex}`}
+                            >
+                              {copiedHex === hex && (
+                                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white drop-shadow-md">Copied!</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">{copiedHex ? 'Copied to clipboard' : 'Click a colour to copy hex'}</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex gap-1.5 h-3 rounded-lg overflow-hidden border border-gray-200 shadow-inner">
+                          {['#e5e7eb', '#d1d5db', '#9ca3af'].map((hex, i) => (
+                            <div key={i} className="flex-1" style={{ backgroundColor: hex }} />
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">Set your brand colours in Edit to see your palette</p>
+                      </>
+                    )}
+                  </div>
                 </>
               )}
 
