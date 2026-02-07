@@ -241,6 +241,9 @@ export default function CreateContentPage() {
   // Multi-business support
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  const currentBusiness = businesses.find(b => b.id === selectedBusinessId)
+  const currentBusinessLogo = currentBusiness?.logo_url || null
+  const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
   
   // Logo positioning
   const [showOverlayEditor, setShowOverlayEditor] = useState(false)
@@ -545,11 +548,6 @@ export default function CreateContentPage() {
       if (business.default_tone) setTone(business.default_tone)
     }
   }
-  
-  // Get current business logo and profile photo
-  const currentBusiness = businesses.find(b => b.id === selectedBusinessId)
-  const currentBusinessLogo = currentBusiness?.logo_url || null
-  const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
 
   // Upload logo or profile photo from overlay editor (drag-and-drop or click)
   const handleUploadLogoInEditor = async (file: File): Promise<string | null> => {
