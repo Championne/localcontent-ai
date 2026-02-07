@@ -59,17 +59,19 @@ export async function searchStockImage(
   }
 }
 
-/** Return multiple results for a picker (e.g. 5). Same shape as searchStockImage. */
+/** Return multiple results for a picker (e.g. 5). Same shape as searchStockImage. page=1 is first page. */
 export async function searchStockImageOptions(
   query: string,
   orientation?: Orientation,
-  count = 5
+  count = 5,
+  page = 1
 ): Promise<StockImageResult[]> {
   const accessKey = getClient()
   const params = new URLSearchParams({
     query: query.slice(0, 100),
     per_page: String(Math.min(10, Math.max(1, count))),
     orientation: orientation || 'landscape',
+    page: String(Math.max(1, page)),
   })
   const res = await fetch(`${UNSPLASH_API}/search/photos?${params}`, {
     headers: { Authorization: `Client-ID ${accessKey}` },

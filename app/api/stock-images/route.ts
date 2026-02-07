@@ -13,13 +13,15 @@ export async function GET(request: Request) {
   const topic = searchParams.get('topic')?.trim()
   const industry = searchParams.get('industry')?.trim()
   const contentType = searchParams.get('contentType')?.trim() || 'social-post'
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1)
   if (!topic || !industry) {
     return NextResponse.json({ error: 'topic and industry are required' }, { status: 400 })
   }
   try {
     const options = await getStockImageOptions(
       { topic, industry, contentType },
-      3
+      3,
+      page
     )
     return NextResponse.json({ options })
   } catch (e) {

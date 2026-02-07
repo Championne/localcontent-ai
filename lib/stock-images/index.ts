@@ -35,10 +35,11 @@ export async function getStockImage(params: GetStockImageParams): Promise<StockI
   return searchStockImage(query, orientation)
 }
 
-/** Get multiple stock image options for the picker (e.g. 5). Uses fallback queries if the first returns fewer than 3. */
+/** Get multiple stock image options for the picker (e.g. 5). Uses fallback queries if the first returns fewer than 3. page > 1 returns different results. */
 export async function getStockImageOptions(
   params: GetStockImageParams,
-  count = 5
+  count = 5,
+  page = 1
 ): Promise<StockImageResult[]> {
   const { topic, industry, contentType } = params
   const variants = getSearchQueryVariants(topic, industry)
@@ -54,7 +55,7 @@ export async function getStockImageOptions(
 
   for (const query of variants) {
     if (results.length >= count) break
-    const options = await searchStockImageOptions(query, orientation, count)
+    const options = await searchStockImageOptions(query, orientation, count, page)
     for (const opt of options) {
       if (seen.has(opt.url)) continue
       seen.add(opt.url)

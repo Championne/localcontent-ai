@@ -59,16 +59,17 @@ const DEFAULT_FRAMES: Array<{ style: FrameStyle; colorKey: FrameColorKey }> = [
   { style: 'shadow', colorKey: 'neutral' },
 ]
 
-function pickFrame(template?: string): { style: FrameStyle; colorKey: FrameColorKey } {
+/** Pick the single best suggested frame for the template (deterministic so every image gets same style). */
+function pickBestFrame(template?: string): { style: FrameStyle; colorKey: FrameColorKey } {
   const options = template && FRAME_BY_TEMPLATE[template] ? FRAME_BY_TEMPLATE[template] : DEFAULT_FRAMES
-  return options[Math.floor(Math.random() * options.length)]
+  return options[0]
 }
 
 /**
  * POST /api/image/branding-recommendation
- * Returns suggested branding to optimize the image for social: logo/photo position, frame, tint, text overlays.
- * Body: { template?, hasLogo?: boolean, hasPhoto?: boolean, tagline?, businessName?, defaultCtaPrimary? }
- * Always suggests frame + tint so something is applied; adds logo/photo positions and text (tagline, business name, CTA) for social.
+ * Returns one best suggested branding: logo/photo position, frame, tint, text overlays (tagline, business name, website, social, CTA).
+ * Body: { template?, hasLogo?, hasPhoto?, tagline?, businessName?, website?, socialHandles?, defaultCtaPrimary? }
+ * Uses a single best format per template so switching images always gets the same recommended style.
  */
 export async function POST(request: Request) {
   try {
@@ -79,8 +80,19 @@ export async function POST(request: Request) {
       hasPhoto = false,
       tagline,
       businessName,
+      website,
+      socialHandles,
       defaultCtaPrimary,
-    } = body as { template?: string; hasLogo?: boolean; hasPhoto?: boolean; tagline?: string; businessName?: string; defaultCtaPrimary?: string }
+    } = body as {
+      template?: string
+      hasLogo?: boolean
+      hasPhoto?: boolean
+      tagline?: string
+      businessName?: string
+      website?: string
+      socialHandles?: string
+      defaultCtaPrimary?: string
+    }
 
     await new Promise((r) => setTimeout(r, 400))
 
@@ -91,7 +103,7 @@ export async function POST(request: Request) {
       tint: { colorKey: 'primary' | 'secondary' | 'accent'; opacity: number }
       textOverlays: Array<{ text: string; x: number; y: number; fontSize: number; fontFamily: 'Inter' | 'Georgia' | 'Playfair Display' | 'system-ui'; colorKey: 'primary' | 'secondary' | 'accent' }>
     } = {
-      frame: pickFrame(template),
+      frame: pickBestFrame(template),
       tint: { colorKey: 'primary', opacity: 0.12 },
       textOverlays: [],
     }
@@ -104,21 +116,11 @@ export async function POST(request: Request) {
     }
 
     const isSocial = template === 'social-pack' || template === 'gmb-post'
-    if (tagline && String(tagline).trim()) {
-      recommendation.textOverlays.push({
-        text: String(tagline).trim().slice(0, 50),
-        x: 50,
-        y: isSocial ? 88 : 90,
-        fontSize: isSocial ? 18 : 20,
-        fontFamily: 'Inter',
-        colorKey: 'primary',
-      })
-    }
     if (businessName && String(businessName).trim() && isSocial) {
       recommendation.textOverlays.push({
         text: String(businessName).trim().slice(0, 40),
         x: 50,
-        y: 12,
+        y: 10,
         fontSize: 16,
         fontFamily: 'Inter',
         colorKey: 'secondary',
@@ -128,10 +130,41 @@ export async function POST(request: Request) {
       recommendation.textOverlays.push({
         text: String(defaultCtaPrimary).trim().slice(0, 30),
         x: 50,
-        y: 94,
+        y: 68,
         fontSize: 14,
         fontFamily: 'Inter',
         colorKey: 'primary',
+      })
+    }
+    if (tagline && String(tagline).trim()) {
+      recommendation.textOverlays.push({
+        text: String(tagline).trim().slice(0, 50),
+        x: 50,
+        y: isSocial ? 80 : 90,
+        fontSize: isSocial ? 18 : 20,
+        fontFamily: 'Inter',
+        colorKey: 'primary',
+      })
+    }
+    if (website && String(website).trim() && isSocial) {
+      const displayUrl = String(website).trim().replace(/^https?:\/\//i, '').slice(0, 32)
+      recommendation.textOverlays.push({
+        text: displayUrl,
+        x: 50,
+        y: 88,
+        fontSize: 12,
+        fontFamily: 'Inter',
+        colorKey: 'accent',
+      })
+    }
+    if (socialHandles && String(socialHandles).trim() && isSocial) {
+      recommendation.textOverlays.push({
+        text: String(socialHandles).trim().slice(0, 28),
+        x: 50,
+        y: 95,
+        fontSize: 11,
+        fontFamily: 'Inter',
+        colorKey: 'secondary',
       })
     }
 

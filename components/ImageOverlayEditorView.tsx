@@ -45,52 +45,77 @@ export interface ImageOverlayEditorViewProps {
   onUploadPhoto?: (file: File) => Promise<string | null>
 }
 
+function hexWithAlpha(hex: string, alpha: number): string {
+  const a = Math.round(alpha * 255).toString(16).padStart(2, '0')
+  return hex + a
+}
+
 export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
+  const primary = p.getHex('primary')
+  const headerBg = hexWithAlpha(primary, 0.08)
+  const sidebarBg = hexWithAlpha(primary, 0.06)
+  const buttonBg = hexWithAlpha(primary, 0.12)
+  const buttonBorder = hexWithAlpha(primary, 0.35)
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h3 className="font-semibold text-gray-900">Customize Your Image</h3>
-        <p className="text-sm text-gray-500">Drag logo, photo, tagline, website or social onto the image. Add a brand border or tint.</p>
+    <div className="rounded-xl overflow-hidden border border-gray-200" style={{ backgroundColor: hexWithAlpha(primary, 0.03) }}>
+      {/* Header: prominent logo top-left so user is immersed in their brand */}
+      <div className="flex items-center gap-4 p-4 border-b border-gray-200/80" style={{ backgroundColor: headerBg }}>
+        <div className="flex-shrink-0">
+          {p.effectiveLogoUrl ? (
+            <div className="w-16 h-16 rounded-xl overflow-hidden border-2 shadow-sm" style={{ borderColor: buttonBorder }}>
+              <img src={p.effectiveLogoUrl} alt="Your brand" className="w-full h-full object-contain bg-white" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300 bg-white/80" style={{ borderColor: buttonBorder }}>
+              <span className="text-[10px] font-medium text-gray-400 text-center px-1">Your logo</span>
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-gray-900">Customize Your Image</h3>
+          <p className="text-sm text-gray-600 mt-0.5">Drag logo, photo, tagline, website or social onto the image. Add a brand border or tint.</p>
+        </div>
       </div>
 
       <div className="flex">
-        <div className="w-28 bg-gray-50 border-r border-gray-200 p-3 flex flex-col gap-3 overflow-y-auto max-h-[420px]">
+        <div className="w-32 sm:w-36 border-r border-gray-200/80 p-3 flex flex-col gap-3 overflow-y-auto max-h-[420px]" style={{ backgroundColor: sidebarBg }}>
           <div className="text-center">
             {p.effectiveLogoUrl ? (
               <div
                 onMouseDown={(e) => p.handleSidebarDragStart('logo', e)}
                 onTouchStart={(e) => p.handleSidebarDragStart('logo', e)}
-                className={`w-16 h-16 mx-auto rounded-lg border-2 border-dashed cursor-grab active:cursor-grabbing transition-all ${
-                  p.hasLogo ? 'border-teal-400 bg-teal-50' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50'
-                }`}
+                className="w-14 h-14 mx-auto rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all overflow-hidden flex items-center justify-center"
+                style={{ borderColor: p.hasLogo ? primary : buttonBorder, backgroundColor: p.hasLogo ? hexWithAlpha(primary, 0.15) : 'white' }}
               >
-                <img src={p.effectiveLogoUrl} alt="Logo" className="w-full h-full object-contain rounded-lg" />
+                <img src={p.effectiveLogoUrl} alt="Logo" className="w-full h-full object-contain" />
               </div>
             ) : p.onUploadLogo ? (
               <div
-                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-teal-400') }}
-                onDragLeave={(e) => { e.currentTarget.classList.remove('ring-2', 'ring-teal-400') }}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.boxShadow = `0 0 0 2px ${primary}` }}
+                onDragLeave={(e) => { e.currentTarget.style.boxShadow = '' }}
                 onDrop={(e) => p.handleDropOnZone('logo', e)}
                 onClick={() => p.logoInputRef.current?.click()}
-                className="w-16 h-16 mx-auto rounded-lg border-2 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/50 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all"
+                className="w-14 h-14 mx-auto rounded-lg border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all bg-white"
+                style={{ borderColor: buttonBorder }}
               >
                 {p.uploading === 'logo' ? (
-                  <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  <svg className="animate-spin w-5 h-5" style={{ color: primary }} fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                 ) : (
                   <>
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
-                    <span className="text-[9px] text-gray-500">Drop or click</span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
+                    <span className="text-[8px] text-gray-500">Drop or click</span>
                   </>
                 )}
               </div>
             ) : (
-              <div className="w-16 h-16 mx-auto rounded-lg border-2 border-dashed border-gray-200 bg-gray-100 flex items-center justify-center">
-                <span className="text-[9px] text-gray-400 text-center">No logo</span>
+              <div className="w-14 h-14 mx-auto rounded-lg border-2 border-dashed border-gray-200 bg-white/60 flex items-center justify-center">
+                <span className="text-[8px] text-gray-400 text-center">No logo</span>
               </div>
             )}
             <input ref={p.logoInputRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('logo', e)} />
-            <span className="text-[10px] text-gray-500 mt-1 block">Logo</span>
-            {p.hasLogo && <span className="text-[10px] text-teal-600">✓ On image</span>}
+            <span className="text-[10px] font-medium mt-1 block" style={{ color: primary }}>Logo</span>
+            {p.hasLogo && <span className="text-[9px] font-medium" style={{ color: primary }}>✓ On image</span>}
           </div>
 
           <div className="text-center">
@@ -98,72 +123,84 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               <div
                 onMouseDown={(e) => p.handleSidebarDragStart('photo', e)}
                 onTouchStart={(e) => p.handleSidebarDragStart('photo', e)}
-                className={`w-16 h-16 mx-auto rounded-full border-2 border-dashed cursor-grab active:cursor-grabbing transition-all overflow-hidden ${
-                  p.hasPhoto ? 'border-teal-400 bg-teal-50' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50'
-                }`}
+                className="w-14 h-14 mx-auto rounded-full border-2 cursor-grab active:cursor-grabbing transition-all overflow-hidden flex items-center justify-center"
+                style={{ borderColor: p.hasPhoto ? primary : buttonBorder, backgroundColor: p.hasPhoto ? hexWithAlpha(primary, 0.15) : 'white' }}
               >
                 <img src={p.effectivePhotoUrl} alt="Photo" className="w-full h-full object-cover" />
               </div>
             ) : p.onUploadPhoto ? (
               <div
-                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('ring-2', 'ring-teal-400') }}
-                onDragLeave={(e) => { e.currentTarget.classList.remove('ring-2', 'ring-teal-400') }}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.boxShadow = `0 0 0 2px ${primary}` }}
+                onDragLeave={(e) => { e.currentTarget.style.boxShadow = '' }}
                 onDrop={(e) => p.handleDropOnZone('photo', e)}
                 onClick={() => p.photoInputRef.current?.click()}
-                className="w-16 h-16 mx-auto rounded-full border-2 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/50 cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all"
+                className="w-14 h-14 mx-auto rounded-full border-2 border-dashed cursor-pointer flex flex-col items-center justify-center gap-0.5 transition-all bg-white"
+                style={{ borderColor: buttonBorder }}
               >
                 {p.uploading === 'photo' ? (
-                  <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  <svg className="animate-spin w-5 h-5" style={{ color: primary }} fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                 ) : (
                   <>
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                    <span className="text-[9px] text-gray-500">Drop or click</span>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    <span className="text-[8px] text-gray-500">Drop or click</span>
                   </>
                 )}
               </div>
             ) : (
-              <div className="w-16 h-16 mx-auto rounded-full border-2 border-dashed border-gray-200 bg-gray-100 flex items-center justify-center">
-                <span className="text-[9px] text-gray-400">No photo</span>
+              <div className="w-14 h-14 mx-auto rounded-full border-2 border-dashed border-gray-200 bg-white/60 flex items-center justify-center">
+                <span className="text-[8px] text-gray-400">No photo</span>
               </div>
             )}
             <input ref={p.photoInputRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('photo', e)} />
-            <span className="text-[10px] text-gray-500 mt-1 block">Photo</span>
-            {p.hasPhoto && <span className="text-[10px] text-teal-600">✓ On image</span>}
+            <span className="text-[10px] font-medium mt-1 block" style={{ color: primary }}>Photo</span>
+            {p.hasPhoto && <span className="text-[9px] font-medium" style={{ color: primary }}>✓ On image</span>}
           </div>
 
           {(p.tagline || p.website || p.socialHandles) && (
-            <>
+            <div className="space-y-2">
               {p.tagline && (
                 <div
                   onMouseDown={(e) => p.handleSidebarDragStart('tagline', e)}
                   onTouchStart={(e) => p.handleSidebarDragStart('tagline', e)}
-                  className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
+                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-sm border text-left"
+                  style={{ backgroundColor: buttonBg, borderColor: buttonBorder }}
                 >
-                  <span className="text-[9px] text-gray-600 block truncate" title={p.tagline}>{p.tagline}</span>
-                  <span className="text-[9px] text-gray-400">Add Tagline</span>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primary }}>Tagline</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-gray-800 block truncate" title={p.tagline}>{p.tagline}</span>
                 </div>
               )}
               {p.website && (
                 <div
                   onMouseDown={(e) => p.handleSidebarDragStart('website', e)}
                   onTouchStart={(e) => p.handleSidebarDragStart('website', e)}
-                  className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
+                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-sm border text-left"
+                  style={{ backgroundColor: buttonBg, borderColor: buttonBorder }}
                 >
-                  <span className="text-[9px] text-gray-600 block truncate" title={p.website}>{p.website}</span>
-                  <span className="text-[9px] text-gray-400">Add website</span>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primary }}>Website</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-gray-800 block truncate" title={p.website}>{p.website}</span>
                 </div>
               )}
               {p.socialHandles && (
                 <div
                   onMouseDown={(e) => p.handleSidebarDragStart('social', e)}
                   onTouchStart={(e) => p.handleSidebarDragStart('social', e)}
-                  className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
+                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-sm border text-left"
+                  style={{ backgroundColor: buttonBg, borderColor: buttonBorder }}
                 >
-                  <span className="text-[9px] text-gray-600 block truncate" title={p.socialHandles}>{p.socialHandles}</span>
-                  <span className="text-[9px] text-gray-400">Add social</span>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-3-4H9a2 2 0 01-2-2v-2H5a2 2 0 01-2-2V6a2 2 0 012-2h2v4l3 4h4v2z" /></svg>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primary }}>Social</span>
+                  </div>
+                  <span className="text-[11px] font-medium text-gray-800 block truncate" title={p.socialHandles}>{p.socialHandles}</span>
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {!p.effectiveLogoUrl && !p.effectivePhotoUrl && !p.onUploadLogo && !p.onUploadPhoto && !p.tagline && !p.website && !p.socialHandles && (
@@ -177,7 +214,13 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             style={{
               aspectRatio: '1',
               padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'thick' || p.frame.style === 'classic' || p.frame.style === 'gold' || p.frame.style === 'silver' || p.frame.style === 'copper' ? 16 : p.frame.style === 'polaroid' ? 14 : p.frame.style === 'filmstrip' ? 28 : p.frame.style === 'neon' ? 24 : p.frame.style === 'shadow' ? 32 : p.frame.style === 'vignette' ? 0 : 8) : 0,
-              backgroundColor: p.frame ? (p.frame.style === 'polaroid' ? '#fcf9f2' : p.frame.style === 'filmstrip' ? '#121212' : p.frame.style === 'neon' ? '#0a0a0e' : p.frame.style === 'shadow' ? '#f5f7fa' : p.frame.style === 'vignette' ? undefined : p.frame.style === 'gold' ? '#b8860b' : p.frame.style === 'silver' ? '#a0a0a0' : p.frame.style === 'copper' ? '#8b4513' : p.getFrameHex(p.frame.colorKey)) : undefined,
+              ...(p.frame?.style === 'classic'
+                ? {
+                    background: `linear-gradient(135deg, rgba(255,255,255,0.28) 0%, transparent 50%), linear-gradient(315deg, rgba(0,0,0,0.3) 0%, transparent 50%), ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
+                  }
+                : {
+                    backgroundColor: p.frame ? (p.frame.style === 'polaroid' ? '#fcf9f2' : p.frame.style === 'filmstrip' ? '#121212' : p.frame.style === 'neon' ? '#0a0a0e' : p.frame.style === 'shadow' ? '#f5f7fa' : p.frame.style === 'vignette' ? undefined : p.frame.style === 'gold' ? '#b8860b' : p.frame.style === 'silver' ? '#a0a0a0' : p.frame.style === 'copper' ? '#8b4513' : p.getFrameHex(p.frame.colorKey)) : undefined,
+                  }),
               borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
             }}
           >
@@ -187,10 +230,33 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 style={{
                 aspectRatio: '1',
                 borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
-                border: p.frame?.style === 'double' || p.frame?.style === 'classic' ? `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'gold' ? '2px solid #fff8dc' : p.frame?.style === 'silver' ? '2px solid #ffffff' : p.frame?.style === 'copper' ? '2px solid #f5d0b0' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
-                boxShadow: p.frame?.style === 'shadow' ? '0 16px 32px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.12)' : p.frame?.style === 'neon' ? `0 0 28px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 12px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}80` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,248,220,0.4)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.5)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(245,208,176,0.4)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
+                ...(p.frame?.style === 'double'
+                  ? {
+                      padding: '8px',
+                      background: '#ffffff',
+                      boxSizing: 'border-box',
+                    }
+                  : {}),
+                ...(p.frame?.style !== 'double' && {
+                  border: p.frame?.style === 'classic' ? undefined : p.frame?.style === 'gold' ? '2px solid #fff8dc' : p.frame?.style === 'silver' ? '2px solid #ffffff' : p.frame?.style === 'copper' ? '2px solid #f5d0b0' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
+                }),
+                boxShadow: p.frame?.style === 'classic' ? 'inset 0 0 0 2px rgba(255,255,255,0.5)' : p.frame?.style === 'shadow' ? '0 16px 32px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.12)' : p.frame?.style === 'neon' ? `0 0 28px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 12px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}80` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,248,220,0.4)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.5)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(245,208,176,0.4)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
               }}
             >
+              <div
+                className="relative w-full h-full overflow-hidden"
+                style={
+                  p.frame?.style === 'double'
+                    ? {
+                        border: `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
+                        outline: `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
+                        outlineOffset: 6,
+                        boxSizing: 'border-box',
+                        borderRadius: p.frame?.style === 'rounded' ? 10 : 0,
+                      }
+                    : {}
+                }
+              >
               <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : undefined} />
               {p.frame?.style === 'vignette' && (
                 <div
@@ -289,15 +355,24 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               ))}
 
               {p.draggingNew && (
-                <div className="absolute inset-0 bg-teal-500/10 border-2 border-dashed border-teal-500 flex items-center justify-center">
-                  <span className="bg-teal-500 text-white px-3 py-1 rounded-full text-sm font-medium">Drop here</span>
+                <div className="absolute inset-0 border-2 border-dashed flex items-center justify-center" style={{ backgroundColor: hexWithAlpha(primary, 0.1), borderColor: primary }}>
+                  <span className="text-white px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: primary }}>Drop here</span>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })} className="text-xs px-2 py-1 rounded border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100" title="Apply a light brand tint (15% primary colour)">Light brand tint</button>
+            <button
+              type="button"
+              onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })}
+              className="text-xs px-2 py-1 rounded border font-medium transition-colors"
+              style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}
+              title="Apply a light brand tint (15% primary colour)"
+            >
+              Light brand tint
+            </button>
             <span className="text-xs text-gray-500">or pick colour:</span>
             {(['primary', 'secondary', 'accent'] as const).map((key) => (
               <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-6 h-6 rounded-full border-2 ${p.tintOverlay?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={`Tint with ${key}`} />
@@ -339,9 +414,14 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
         </div>
       </div>
 
-      <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+      <div className="p-4 border-t border-gray-200 flex justify-between" style={{ backgroundColor: headerBg }}>
         <button onClick={p.onSkip} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Skip</button>
-        <button onClick={() => p.onApply({ imageOverlays: p.overlays, overlayBorderColors: p.overlayBorderColors, tintOverlay: p.tintOverlay, textOverlays: p.textOverlays, frame: p.frame })} disabled={p.applying || (p.overlays.length === 0 && p.textOverlays.length === 0 && !p.frame && !p.tintOverlay)} className="px-6 py-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+        <button
+          onClick={() => p.onApply({ imageOverlays: p.overlays, overlayBorderColors: p.overlayBorderColors, tintOverlay: p.tintOverlay, textOverlays: p.textOverlays, frame: p.frame })}
+          disabled={p.applying || (p.overlays.length === 0 && p.textOverlays.length === 0 && !p.frame && !p.tintOverlay)}
+          className="px-6 py-2 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2 hover:opacity-95"
+          style={{ backgroundColor: (p.applying || (p.overlays.length === 0 && p.textOverlays.length === 0 && !p.frame && !p.tintOverlay)) ? undefined : primary }}
+        >
           {p.applying ? (<><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Applying...</>) : (<>Apply {p.totalItems > 0 && `(${p.totalItems})`}</>)}
         </button>
       </div>

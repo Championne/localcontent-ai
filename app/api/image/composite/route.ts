@@ -372,17 +372,17 @@ export async function POST(request: Request) {
           .composite([{ input: filmSvg, left: 0, top: 0 }])
           .toBuffer()
       }
-      // Painting frame: deep bevel (strong dark/light contrast), inner liner; draw only the frame band (donut)
+      // Classic art / painting frame: 4-edge bevel (light inner, dark outer), inner liner like a gallery frame
       else if (style === 'classic') {
-        const frameWidth = 30
-        const darken = 0.42
-        const lighten = 1.65
+        const frameWidth = 28
+        const darken = 0.35
+        const lighten = 1.7
         const dr = Math.round(Math.min(255, fr * darken))
         const dg = Math.round(Math.min(255, fg * darken))
         const db = Math.round(Math.min(255, fb * darken))
-        const lr = Math.round(Math.min(255, fr * lighten))
-        const lg = Math.round(Math.min(255, fg * lighten))
-        const lb = Math.round(Math.min(255, fb * lighten))
+        const lr = Math.round(Math.min(255, fr * lighten + 42))
+        const lg = Math.round(Math.min(255, fg * lighten + 42))
+        const lb = Math.round(Math.min(255, fb * lighten + 42))
         const darkHex = `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`
         const lightHex = `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`
         composited = await sharp(composited)
@@ -391,26 +391,23 @@ export async function POST(request: Request) {
         const meta = await sharp(composited).metadata()
         const fw = meta.width!
         const fh = meta.height!
-        const cx = fw / 2
-        const cy = fh / 2
-        const outerR = Math.sqrt(cx * cx + cy * cy)
-        const innerR = Math.max(1, outerR - frameWidth)
-        const innerStop = (innerR / outerR) * 100
         const inner = frameWidth
         const iw = fw - 2 * inner
         const ih = fh - 2 * inner
-        const donutPath = `M 0 0 h ${fw} v ${fh} h -${fw} Z M ${inner} ${inner} v ${ih} h ${iw} v -${ih} Z`
+        // Four rectangles (top, right, bottom, left) each with linear gradient: inner edge light, outer edge dark = 3D bevel
         const paintingSvg = Buffer.from(
           `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <radialGradient id="bevel" cx="${cx}" cy="${cy}" r="${outerR}" fx="${cx}" fy="${cy}">
-                <stop offset="0%" stop-color="${lightHex}"/>
-                <stop offset="${innerStop}%" stop-color="${frameOpt.color}"/>
-                <stop offset="100%" stop-color="${darkHex}"/>
-              </radialGradient>
+              <linearGradient id="bevelTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="${darkHex}"/><stop offset="100%" stop-color="${lightHex}"/></linearGradient>
+              <linearGradient id="bevelRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${lightHex}"/><stop offset="100%" stop-color="${darkHex}"/></linearGradient>
+              <linearGradient id="bevelBottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${lightHex}"/><stop offset="100%" stop-color="${darkHex}"/></linearGradient>
+              <linearGradient id="bevelLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${lightHex}"/><stop offset="100%" stop-color="${darkHex}"/></linearGradient>
             </defs>
-            <path fill-rule="evenodd" fill="url(#bevel)" d="${donutPath}"/>
-            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${lightHex}" stroke-width="1.5"/>
+            <rect x="0" y="0" width="${fw}" height="${inner}" fill="url(#bevelTop)"/>
+            <rect x="${fw - inner}" y="0" width="${inner}" height="${fh}" fill="url(#bevelRight)"/>
+            <rect x="0" y="${fh - inner}" width="${fw}" height="${inner}" fill="url(#bevelBottom)"/>
+            <rect x="0" y="0" width="${inner}" height="${fh}" fill="url(#bevelLeft)"/>
+            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${lightHex}" stroke-width="2"/>
           </svg>`
         )
         composited = await sharp(composited)
@@ -487,8 +484,10 @@ export async function POST(request: Request) {
       else {
         const doublePad = style === 'double' ? 18 : pad
         const extendPad = style === 'double' ? doublePad : pad
+        // For double frame use white background so the gap between the two lines is visible (not same as frame color)
+        const extendBg = style === 'double' ? { r: 255, g: 255, b: 255, alpha: 1 } : { r: fr, g: fg, b: fb, alpha: 1 }
         composited = await sharp(composited)
-          .extend({ top: extendPad, bottom: extendPad, left: extendPad, right: extendPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
+          .extend({ top: extendPad, bottom: extendPad, left: extendPad, right: extendPad, background: extendBg })
           .toBuffer()
         const meta = await sharp(composited).metadata()
         const fw = meta.width || imgWidth + 2 * extendPad
@@ -503,7 +502,7 @@ export async function POST(request: Request) {
           const innerW = fw - 2 * innerInset
           const innerH = fh - 2 * innerInset
           const doubleSvg = Buffer.from(
-            `<svg width="${fw}" height="${fh}">
+            `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
               <rect x="${outerInset}" y="${outerInset}" width="${outerW}" height="${outerH}" fill="none" stroke="${frameOpt.color}" stroke-width="${lineWidth}"/>
               <rect x="${innerInset}" y="${innerInset}" width="${innerW}" height="${innerH}" fill="none" stroke="${frameOpt.color}" stroke-width="${lineWidth}"/>
             </svg>`
