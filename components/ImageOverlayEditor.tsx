@@ -326,7 +326,7 @@ export default function ImageOverlayEditor({
                   className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
                 >
                   <span className="text-[9px] text-gray-600 block truncate" title={tagline}>{tagline}</span>
-                  <span className="text-[9px] text-gray-400">Tagline</span>
+                  <span className="text-[9px] text-gray-400">Add Tagline</span>
                 </div>
               )}
               {website && (
@@ -336,7 +336,7 @@ export default function ImageOverlayEditor({
                   className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
                 >
                   <span className="text-[9px] text-gray-600 block truncate" title={website}>{website}</span>
-                  <span className="text-[9px] text-gray-400">Website</span>
+                  <span className="text-[9px] text-gray-400">Add website</span>
                 </div>
               )}
               {socialHandles && (
@@ -346,7 +346,7 @@ export default function ImageOverlayEditor({
                   className="text-center cursor-grab active:cursor-grabbing p-1.5 rounded border border-dashed border-gray-300 hover:border-teal-400 bg-white"
                 >
                   <span className="text-[9px] text-gray-600 block truncate" title={socialHandles}>{socialHandles}</span>
-                  <span className="text-[9px] text-gray-400">Social</span>
+                  <span className="text-[9px] text-gray-400">Add social</span>
                 </div>
               )}
             </>
@@ -359,20 +359,46 @@ export default function ImageOverlayEditor({
         
         {/* Main image canvas */}
         <div className="flex-1 p-4">
-          <div 
-            ref={containerRef}
+          {/* Frame live preview: padding + background color */}
+          <div
             className="relative bg-gray-100 rounded-lg overflow-hidden"
-            style={{ aspectRatio: '1' }}
+            style={{
+              aspectRatio: '1',
+              padding: frame ? (frame.style === 'thin' ? 3 : frame.style === 'thick' ? 16 : 8) : 0,
+              backgroundColor: frame ? getHex(frame.colorKey) : undefined,
+              borderRadius: frame?.style === 'rounded' ? 12 : 0,
+            }}
           >
-            <img 
-              src={imageUrl} 
-              alt="Generated" 
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
+            <div
+              ref={containerRef}
+              className="relative w-full h-full overflow-hidden"
+              style={{
+                aspectRatio: '1',
+                borderRadius: frame?.style === 'rounded' ? 12 : 0,
+                border: frame?.style === 'double' ? `2px solid ${frame ? getHex(frame.colorKey) : '#e5e7eb'}` : undefined,
+              }}
+            >
+              <img 
+                src={imageUrl} 
+                alt="Generated" 
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+              {/* Tint overlay - live preview */}
+              {tintOverlay && (
+                <div
+                  className="absolute inset-0 pointer-events-none z-[1]"
+                  style={{
+                    backgroundColor: getHex(tintOverlay.colorKey),
+                    opacity: typeof tintOverlay.opacity === 'number' ? tintOverlay.opacity : 0.25,
+                  }}
+                />
+              )}
             
-            {/* Rendered overlays */}
-            {overlays.map(overlay => (
+            {/* Rendered overlays - border color updates live */}
+            {overlays.map(overlay => {
+              const borderHex = overlayBorderColors[overlay.id] || getHex('primary')
+              return (
               <div
                 key={overlay.id}
                 onMouseDown={(e) => handleOverlayDragStart(overlay.id, e)}
@@ -385,12 +411,17 @@ export default function ImageOverlayEditor({
                   height: `${overlay.scale}%`,
                 }}
               >
-                <img 
-                  src={overlay.url} 
-                  alt="" 
-                  className={`w-full h-full object-${overlay.type === 'photo' ? 'cover' : 'contain'} ${overlay.type === 'photo' ? 'rounded-full' : 'rounded-lg'} shadow-lg ring-2 ring-white`}
-                  draggable={false}
-                />
+                <span
+                  className={`block w-full h-full ${overlay.type === 'photo' ? 'rounded-full' : 'rounded-lg'}`}
+                  style={{ boxShadow: `0 0 0 2px ${borderHex}` }}
+                >
+                  <img 
+                    src={overlay.url} 
+                    alt="" 
+                    className={`w-full h-full object-${overlay.type === 'photo' ? 'cover' : 'contain'} ${overlay.type === 'photo' ? 'rounded-full' : 'rounded-lg'} shadow-lg`}
+                    draggable={false}
+                  />
+                </span>
                 <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 bg-white rounded-lg shadow-lg p-1">
                   <span className="text-[9px] text-gray-500 mr-0.5">Border:</span>
                   {(['primary', 'secondary', 'accent'] as const).map((key) => (
@@ -408,7 +439,8 @@ export default function ImageOverlayEditor({
                   <button onClick={(e) => { e.stopPropagation(); handleRemove(overlay.id) }} className="w-6 h-6 rounded bg-red-100 hover:bg-red-200 text-red-600 text-xs">✕</button>
                 </div>
               </div>
-            ))}
+            );
+            })}
             {textOverlays.map((t) => (
               <div
                 key={t.id}
@@ -471,11 +503,14 @@ export default function ImageOverlayEditor({
                   min="0.1"
                   max="0.8"
                   step="0.05"
-                  value={tintOverlay.opacity}
-                  onChange={(e) => setTintOverlay(prev => prev ? { ...prev, opacity: parseFloat(e.target.value) } : null)}
+                  value={typeof tintOverlay.opacity === 'number' ? tintOverlay.opacity : 0.25}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value)
+                    if (!Number.isNaN(v)) setTintOverlay(prev => prev ? { ...prev, opacity: v } : null)
+                  }}
                   className="w-20"
                 />
-                <span>{Math.round(tintOverlay.opacity * 100)}%</span>
+                <span>{Math.round((typeof tintOverlay.opacity === 'number' ? tintOverlay.opacity : 0.25) * 100)}%</span>
               </label>
             )}
           </div>

@@ -20,9 +20,9 @@ interface SocialPackResult {
 
 interface GeneratedImage {
   url: string
-  style: string
-  generatedAt: string
-  source?: 'stock' | 'ai'
+  style?: string
+  generatedAt?: string
+  source?: 'stock' | 'ai' | 'upload'
   attribution?: string
   photographerName?: string
   photographerUrl?: string
@@ -262,9 +262,13 @@ export default function CreateContentPage() {
   const [eventDate, setEventDate] = useState('')
   const [eventTime, setEventTime] = useState('')
 
-  // Stock image picker (when imageSource === 'stock', user picks one)
+  // Step 3: Choose your image (3 stock + 1 AI + 1 upload)
   const [stockImageOptions, setStockImageOptions] = useState<Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }>>([])
   const [selectedStockImage, setSelectedStockImage] = useState<typeof stockImageOptions[0] | null>(null)
+  const [step3StockLoading, setStep3StockLoading] = useState(false)
+  const [step3AIImage, setStep3AIImage] = useState<{ url: string; style: string; size: string; generated_image_id?: string | null } | null>(null)
+  const [generatingAiImage, setGeneratingAiImage] = useState(false)
+  const step3UploadInputRef = useRef<HTMLInputElement>(null)
 
   // Quality ratings: link to generated_images / generated_texts when saving
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
@@ -300,6 +304,20 @@ export default function CreateContentPage() {
     }
     fetchBusinesses()
   }, [])
+
+  // Step 3: fetch 3 stock image options when entering step 3 (no upfront choice)
+  useEffect(() => {
+    if (step !== 3 || !topic?.trim() || !industry?.trim() || !selectedTemplate) return
+    setStep3StockLoading(true)
+    const params = new URLSearchParams({ topic: topic.trim(), industry: industry.trim(), contentType: selectedTemplate })
+    fetch(`/api/stock-images?${params}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data.options)) setStockImageOptions(data.options)
+      })
+      .catch(() => {})
+      .finally(() => setStep3StockLoading(false))
+  }, [step, topic, industry, selectedTemplate])
   
   // Load content when opening from library (?edit=id)
   useEffect(() => {
@@ -459,7 +477,7 @@ export default function CreateContentPage() {
   const handleApplyOverlays = async (payload: OverlayApplyPayload) => {
     if (!generatedImage) return
     const { imageOverlays, overlayBorderColors, tintOverlay, textOverlays, frame } = payload
-    if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame) return
+    if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame && !tintOverlay) return
 
     setOverlayError(null)
     setApplyingLogo(true)
@@ -797,6 +815,8 @@ export default function CreateContentPage() {
       setGeneratedImage(null)
       setStockImageOptions([])
       setSelectedStockImage(null)
+      setGeneratedImageId(null)
+      setStep3AIImage(null)
     }
     // For mode === 'image' we clear after we get a successful response with new options/image below
     
@@ -815,8 +835,8 @@ export default function CreateContentPage() {
           topic,
           tone,
           location: currentBusiness?.location ?? undefined,
-          generateImageFlag: mode === 'text' ? false : generateImageFlag,
-          imageSource: effectiveImageSource,
+          generateImageFlag: mode === 'text' ? false : (mode === 'image' ? true : false),
+          imageSource: mode === 'image' ? effectiveImageSource : 'stock',
           imageStyle,
           regenerateMode: mode,
           tagline: currentBusiness?.tagline ?? undefined,
@@ -948,6 +968,7 @@ export default function CreateContentPage() {
 
   const handlePickStockImage = async (opt: typeof stockImageOptions[0]) => {
     setSelectedStockImage(opt)
+    setStep3AIImage(null)
     setGeneratedImage({
       url: opt.url,
       style: imageStyle,
@@ -957,7 +978,6 @@ export default function CreateContentPage() {
       photographerName: opt.photographerName,
       photographerUrl: opt.photographerUrl,
     })
-    // Unsplash production requirement: trigger download when user uses a photo
     if (opt.downloadLocation) {
       try {
         await fetch('/api/stock-images/trigger-download', {
@@ -966,6 +986,109 @@ export default function CreateContentPage() {
           body: JSON.stringify({ downloadLocation: opt.downloadLocation }),
         })
       } catch (_) {}
+    }
+  }
+
+  const handleGenerateStep3AiImage = async () => {
+    setGeneratingAiImage(true)
+    setError('')
+    try {
+      const res = await fetch('/api/content/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          industry,
+          businessName,
+          style: imageStyle,
+          contentType: selectedTemplate,
+          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate image')
+      setStep3AIImage({ url: data.url, style: data.style, size: data.size, generated_image_id: data.generated_image_id })
+      setSelectedStockImage(null)
+      setGeneratedImage({
+        url: data.url,
+        style: data.style,
+        generatedAt: new Date().toISOString(),
+        source: 'ai',
+      })
+      if (data.generated_image_id) setGeneratedImageId(data.generated_image_id)
+      if (data.imagesRemaining != null) setImagesRemaining(data.imagesRemaining)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to generate image')
+    } finally {
+      setGeneratingAiImage(false)
+    }
+  }
+
+  const handleStep3Upload = async (file: File) => {
+    if (!file?.type.startsWith('image/')) return
+    const form = new FormData()
+    form.append('file', file, file.name)
+    try {
+      const res = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed')
+      setSelectedStockImage(null)
+      setStep3AIImage(null)
+      setGeneratedImage({ url: data.url, source: 'upload' })
+      setGeneratedImageId(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+    }
+  }
+
+  const handleGenerateStep3AiImage = async () => {
+    setGeneratingAiImage(true)
+    setError('')
+    try {
+      const res = await fetch('/api/content/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic,
+          industry,
+          businessName,
+          style: imageStyle,
+          contentType: selectedTemplate,
+          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate image')
+      setStep3AIImage({ url: data.url, style: data.style, size: data.size, generated_image_id: data.generated_image_id })
+      setGeneratedImage({ url: data.url, style: data.style, generatedAt: new Date().toISOString(), source: 'ai' })
+      setGeneratedImageId(data.generated_image_id || null)
+      if (data.imagesRemaining != null) setImagesRemaining(data.imagesRemaining)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate image')
+    } finally {
+      setGeneratingAiImage(false)
+    }
+  }
+
+  const handleStep3Upload = async (file: File) => {
+    if (!file?.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    setError('')
+    const form = new FormData()
+    form.append('file', file)
+    try {
+      const res = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      if (data.url) {
+        setGeneratedImage({ url: data.url, source: 'upload' })
+        setSelectedStockImage(null)
+        setStep3AIImage(null)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
     }
   }
 
@@ -1349,82 +1472,9 @@ export default function CreateContentPage() {
               </div>
             </div>
 
-            {/* Image (required for every post) */}
-            <div className="border-t border-gray-100 pt-5 mt-5">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700">Image (required)</span>
-                {/* Image Quota Counter (only for AI) */}
-                {imageSource === 'ai' && imagesRemaining !== null && (
-                  <div>
-                    {imagesRemaining === -1 ? (
-                      <span className="text-xs text-teal-600 font-medium">✨ Unlimited images</span>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[100px]">
-                          <div 
-                            className={`h-full rounded-full transition-all ${
-                              imagesRemaining <= 5 ? 'bg-red-500' : imagesRemaining <= 10 ? 'bg-amber-500' : 'bg-teal-500'
-                            }`}
-                            style={{ width: `${Math.min(100, (imagesRemaining / 30) * 100)}%` }}
-                          />
-                        </div>
-                        <span className={`text-xs font-medium ${
-                          imagesRemaining <= 5 ? 'text-red-600' : imagesRemaining <= 10 ? 'text-amber-600' : 'text-gray-600'
-                        }`}>
-                          {imagesRemaining} left
-                        </span>
-                        {imagesRemaining <= 5 && imagesRemaining > 0 && (
-                          <a href="/pricing" className="text-xs text-teal-600 hover:underline">Upgrade</a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {imageSource === 'ai' && imagesRemaining === 0 && (
-                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                  You've used all your AI images this month. Use &quot;Free stock photo&quot; or <a href="/pricing" className="font-medium underline">upgrade</a>.
-                </div>
-              )}
-              <div className="mt-3 flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="imageSource"
-                    checked={imageSource === 'stock'}
-                    onChange={() => setImageSource('stock')}
-                    className="text-teal-600 border-gray-300 focus:ring-teal-500"
-                  />
-                  <span className="text-sm text-gray-700">Free stock photo</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="imageSource"
-                    checked={imageSource === 'ai'}
-                    onChange={() => setImageSource('ai')}
-                    className="text-teal-600 border-gray-300 focus:ring-teal-500"
-                  />
-                  <span className="text-sm text-gray-700">Generate with AI</span>
-                </label>
-              </div>
-              {imageSource === 'ai' && imagesRemaining !== 0 && (
-                <div className="mt-4 ml-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Image Style</label>
-                  <select
-                    value={imageStyle}
-                    onChange={(e) => setImageStyle(e.target.value as ImageStyleKey)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow bg-white"
-                  >
-                    {Object.entries(IMAGE_STYLES).map(([key, style]) => (
-                      <option key={key} value={key}>
-                        {style.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
+            <p className="text-sm text-gray-500 border-t border-gray-100 pt-5 mt-5">
+              You&apos;ll choose your image in the next step (stock, AI, or upload) and add your branding.
+            </p>
 
             <div className="flex gap-3 pt-4">
               <button
@@ -1549,7 +1599,7 @@ export default function CreateContentPage() {
               </div>
               <button
                 onClick={handleSave}
-                disabled={saving || (stockImageOptions.length > 0 && !generatedImage)}
+                disabled={saving || !generatedImage}
                 className="px-5 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
               >
                 {saving ? (
@@ -1572,34 +1622,105 @@ export default function CreateContentPage() {
             </div>
           </div>
           
-          {/* Stock image picker: choose one (required for post) */}
-          {stockImageOptions.length > 0 && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-              <p className="text-sm font-medium text-gray-800 mb-2">Choose an image for your post (required)</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {stockImageOptions.map((opt, i) => (
+          {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload), then branding overlays */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Choose your image</h3>
+            <p className="text-xs text-gray-500 mb-4">Then add your logo, colours and text below.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {/* 3 stock options */}
+              {step3StockLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />
+                ))
+              ) : (
+                stockImageOptions.slice(0, 3).map((opt, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => handlePickStockImage(opt)}
                     className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
-                      selectedStockImage?.url === opt.url
+                      generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url
                         ? 'border-teal-500 ring-2 ring-teal-200'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <img src={opt.url} alt="" className="w-full h-full object-cover" />
-                    {selectedStockImage?.url === opt.url && (
+                    {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && (
                       <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </span>
                     )}
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Stock</span>
                   </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Images from Unsplash. Attribution will be included.</p>
+                ))
+              )}
+              {/* AI image */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (step3AIImage) {
+                    setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' })
+                    setGeneratedImageId(step3AIImage.generated_image_id || null)
+                    setSelectedStockImage(null)
+                  } else {
+                    handleGenerateStep3AiImage()
+                  }
+                }}
+                disabled={generatingAiImage || imagesRemaining === 0}
+                className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square flex flex-col items-center justify-center bg-white ${
+                  generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
+                } ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}
+              >
+                {generatingAiImage ? (
+                  <svg className="animate-spin w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                ) : step3AIImage ? (
+                  <>
+                    <img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                    {generatedImage?.source === 'ai' && (
+                      <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white z-10">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      </span>
+                    )}
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center z-10">AI</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <span className="text-xs text-gray-600">Generate with AI</span>
+                    {imagesRemaining === 0 && <span className="text-[10px] text-red-600 mt-0.5">Limit reached</span>}
+                  </>
+                )}
+              </button>
+              {/* Upload your own */}
+              <button
+                type="button"
+                onClick={() => step3UploadInputRef.current?.click()}
+                className={`relative rounded-lg overflow-hidden border-2 border-dashed transition-all aspect-square flex flex-col items-center justify-center bg-white ${
+                  generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'
+                }`}
+              >
+                <input
+                  ref={step3UploadInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }}
+                />
+                {generatedImage?.source === 'upload' ? (
+                  <>
+                    <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Your image</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    <span className="text-xs text-gray-600">Upload your own</span>
+                  </>
+                )}
+              </button>
             </div>
-          )}
+            <p className="text-xs text-gray-500 mt-2">Stock from Unsplash · AI uses your quota · Upload any image. Then customize with logo and branding below.</p>
+          </div>
           
           {/* Progress Bar for Regeneration */}
           {generating && (
@@ -1612,41 +1733,6 @@ export default function CreateContentPage() {
               />
             </div>
           )}
-
-          {/* In-flow rating: one for text, one for image (show both when applicable) */}
-          {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
-              <div className="flex flex-wrap gap-6">
-                {generatedTextId && (
-                  <div className="min-w-[200px]">
-                    <RatingStars
-                      type="text"
-                      label="Rate this text"
-                      value={textRating}
-                      onChange={handleRateText}
-                      onSkip={() => {}}
-                      showSkip
-                    />
-                  </div>
-                )}
-                {(generatedImageId || generatedImage) && (
-                  <div className="min-w-[200px]">
-                    <RatingStars
-                      type="image"
-                      label="Rate this image"
-                      value={imageRating}
-                      onChange={handleRateImage}
-                      onSkip={() => {}}
-                      showSkip
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          
 
           {/* Image Overlay Editor - Drag & Drop Logo/Photo (or upload here) */}
           {generatedImage && showOverlayEditor ? (
@@ -1702,8 +1788,10 @@ export default function CreateContentPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Generated Image</h3>
-                    <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
+                    <h3 className="font-medium text-gray-900">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
+                    {generatedImage.source !== 'upload' && (
+                      <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style || '—'}</p>
+                    )}
                     {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
                       <p className="text-xs text-gray-500 mt-1">
                         Photo by{' '}
@@ -1758,6 +1846,39 @@ export default function CreateContentPage() {
                   className="max-w-md w-full rounded-lg shadow-sm"
                   fallbackClassName="max-w-md w-full h-48 rounded-lg"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* In-flow rating: between customize-your-image and example blocks */}
+          {(generatedTextId || generatedImageId || generatedImage) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
+              <div className="flex flex-wrap gap-6">
+                {generatedTextId && (
+                  <div className="min-w-[200px]">
+                    <RatingStars
+                      type="text"
+                      label="Rate this text"
+                      value={textRating}
+                      onChange={handleRateText}
+                      onSkip={() => {}}
+                      showSkip
+                    />
+                  </div>
+                )}
+                {(generatedImageId || generatedImage) && (
+                  <div className="min-w-[200px]">
+                    <RatingStars
+                      type="image"
+                      label="Rate this image"
+                      value={imageRating}
+                      onChange={handleRateImage}
+                      onSkip={() => {}}
+                      showSkip
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2162,7 +2283,7 @@ export default function CreateContentPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || (stockImageOptions.length > 0 && !generatedImage)}
+                disabled={saving || !generatedImage}
                 className="px-5 py-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
               >
                 {saving ? (
@@ -2185,34 +2306,102 @@ export default function CreateContentPage() {
             </div>
           </div>
           
-          {/* Stock image picker (blog/gmb/email): choose one required */}
-          {stockImageOptions.length > 0 && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-              <p className="text-sm font-medium text-gray-800 mb-2">Choose an image for your post (required)</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {stockImageOptions.map((opt, i) => (
+          {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload) - same as social-pack */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Choose your image</h3>
+            <p className="text-xs text-gray-500 mb-4">Then add your logo, colours and text below.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {step3StockLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />
+                ))
+              ) : (
+                stockImageOptions.slice(0, 3).map((opt, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => handlePickStockImage(opt)}
                     className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
-                      selectedStockImage?.url === opt.url
+                      generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url
                         ? 'border-teal-500 ring-2 ring-teal-200'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <img src={opt.url} alt="" className="w-full h-full object-cover" />
-                    {selectedStockImage?.url === opt.url && (
+                    {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && (
                       <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       </span>
                     )}
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Stock</span>
                   </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">Images from Unsplash. Attribution will be included.</p>
+                ))
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (step3AIImage) {
+                    setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' })
+                    setGeneratedImageId(step3AIImage.generated_image_id || null)
+                    setSelectedStockImage(null)
+                  } else {
+                    handleGenerateStep3AiImage()
+                  }
+                }}
+                disabled={generatingAiImage || imagesRemaining === 0}
+                className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square flex flex-col items-center justify-center bg-white ${
+                  generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
+                } ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}
+              >
+                {generatingAiImage ? (
+                  <svg className="animate-spin w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                ) : step3AIImage ? (
+                  <>
+                    <img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                    {generatedImage?.source === 'ai' && (
+                      <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white z-10">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      </span>
+                    )}
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center z-10">AI</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <span className="text-xs text-gray-600">Generate with AI</span>
+                    {imagesRemaining === 0 && <span className="text-[10px] text-red-600 mt-0.5">Limit reached</span>}
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => step3UploadInputRef.current?.click()}
+                className={`relative rounded-lg overflow-hidden border-2 border-dashed transition-all aspect-square flex flex-col items-center justify-center bg-white ${
+                  generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'
+                }`}
+              >
+                <input
+                  ref={step3UploadInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }}
+                />
+                {generatedImage?.source === 'upload' ? (
+                  <>
+                    <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Your image</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    <span className="text-xs text-gray-600">Upload your own</span>
+                  </>
+                )}
+              </button>
             </div>
-          )}
+            <p className="text-xs text-gray-500 mt-2">Stock from Unsplash · AI uses your quota · Upload any image. Then customize with logo and branding below.</p>
+          </div>
           
           {/* Progress Bar for Regeneration */}
           {generating && (
@@ -2223,25 +2412,6 @@ export default function CreateContentPage() {
                 startTime={generationStartTime ?? undefined}
                 size="md"
               />
-            </div>
-          )}
-
-          {/* In-flow rating: one for text, one for image (show both when applicable) */}
-          {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
-              <div className="flex flex-wrap gap-6">
-                {generatedTextId && (
-                  <div className="min-w-[200px]">
-                    <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
-                  </div>
-                )}
-                {(generatedImageId || generatedImage) && (
-                  <div className="min-w-[200px]">
-                    <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
@@ -2302,8 +2472,10 @@ export default function CreateContentPage() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">Generated Image</h3>
-                    <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style}</p>
+                    <h3 className="font-medium text-gray-900">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
+                    {generatedImage.source !== 'upload' && (
+                      <p className="text-xs text-gray-500">Style: {IMAGE_STYLES[generatedImage.style as ImageStyleKey]?.name || generatedImage.style || '—'}</p>
+                    )}
                     {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
                       <p className="text-xs text-gray-500 mt-1">
                         Photo by{' '}
@@ -2358,6 +2530,25 @@ export default function CreateContentPage() {
                   className="max-w-md w-full rounded-lg shadow-sm"
                   fallbackClassName="max-w-md w-full h-48 rounded-lg"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* In-flow rating: between customize-your-image and content/example blocks */}
+          {(generatedTextId || generatedImageId || generatedImage) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
+              <div className="flex flex-wrap gap-6">
+                {generatedTextId && (
+                  <div className="min-w-[200px]">
+                    <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
+                  </div>
+                )}
+                {(generatedImageId || generatedImage) && (
+                  <div className="min-w-[200px]">
+                    <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -589,6 +589,16 @@ export default function BrandingPage() {
                     <span className="text-xs text-gray-500">{uploadingPhoto === business.id ? 'Uploading...' : 'Click to upload'}</span>
                   </div>
 
+                  {/* Example palette bar so roles are visible when choosing colours */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-1.5">Example: Primary · Secondary · Accent</p>
+                    <div className="flex gap-1 h-10 rounded-lg overflow-hidden border border-gray-200 shadow-inner">
+                      <div className="flex-1 flex flex-col items-center justify-end pb-1" style={{ backgroundColor: '#0d9488' }} title="Primary (e.g. teal)"><span className="text-[10px] font-medium text-white drop-shadow">Primary</span></div>
+                      <div className="flex-1 flex flex-col items-center justify-end pb-1" style={{ backgroundColor: '#6b7280' }} title="Secondary (e.g. gray)"><span className="text-[10px] font-medium text-white drop-shadow">Secondary</span></div>
+                      <div className="flex-1 flex flex-col items-center justify-end pb-1" style={{ backgroundColor: '#f59e0b' }} title="Accent (e.g. amber)"><span className="text-[10px] font-medium text-white drop-shadow">Accent</span></div>
+                    </div>
+                  </div>
+
                   <label className="block text-xs font-medium text-gray-500 mb-1">Primary colour</label>
                   <div className="flex gap-2 items-center">
                     <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color || '') ? business.brand_primary_color! : '#0d9488'} onChange={(e) => updateBusiness(business.id, { brand_primary_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
@@ -605,9 +615,9 @@ export default function BrandingPage() {
                     <input type="text" value={business.brand_accent_color || ''} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value || null })} placeholder="#hex" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   </div>
                   <div className="flex gap-1 h-8 rounded-lg overflow-hidden border border-gray-200">
-                    <div className="flex-1" style={{ backgroundColor: business.brand_primary_color || '#0d9488' }} />
-                    <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} />
-                    <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_primary_color || '#0d9488' }} title="Your primary" />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} title="Your secondary" />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} title="Your accent" />
                   </div>
 
                   <label className="block text-xs font-medium text-gray-500 mb-1">Tagline</label>
