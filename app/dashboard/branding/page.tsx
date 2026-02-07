@@ -95,10 +95,15 @@ export default function BrandingPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
   const logoInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const photoInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const businessesRef = useRef<Business[]>([])
+  const messageRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchBusinesses()
   }, [])
+  useEffect(() => {
+    businessesRef.current = businesses
+  }, [businesses])
 
 
 
@@ -119,6 +124,7 @@ export default function BrandingPage() {
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text })
     setTimeout(() => setMessage(null), 4000)
+    setTimeout(() => messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50)
   }
 
   const handleAddBusiness = async () => {
@@ -149,12 +155,14 @@ export default function BrandingPage() {
     }
   }
 
-  const handleUpdateBusiness = async (business: Business) => {
+  const handleUpdateBusiness = async (businessId: string) => {
+    const business = businessesRef.current.find((b) => b.id === businessId)
     if (!business?.id) return
     setSaving(business.id)
     try {
       const res = await fetch('/api/business', {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: business.id,
@@ -184,7 +192,8 @@ export default function BrandingPage() {
         const msg = data.details || data.error || 'Failed to save'
         showMessage('error', msg)
       }
-    } catch {
+    } catch (err) {
+      console.error('Save business error:', err)
       showMessage('error', 'Failed to save')
     } finally {
       setSaving(null)
@@ -304,6 +313,7 @@ export default function BrandingPage() {
 
       {message && (
         <div
+          ref={messageRef}
           className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
             message.type === 'success'
               ? 'bg-green-50 text-green-800 border border-green-200'
@@ -506,7 +516,13 @@ export default function BrandingPage() {
               )}
 
               {editingBusiness === business.id ? (
-                <div className="p-4 bg-gray-50 space-y-4">
+                <form
+                  className="p-4 bg-gray-50 space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleUpdateBusiness(business.id)
+                  }}
+                >
                   <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
                   <input
                     type="text"
@@ -617,8 +633,7 @@ export default function BrandingPage() {
 
                   <div className="flex gap-2 pt-2">
                     <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUpdateBusiness(business) }}
+                      type="submit"
                       disabled={saving === business.id}
                       className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50"
                     >
@@ -628,7 +643,7 @@ export default function BrandingPage() {
                       Cancel
                     </button>
                   </div>
-                </div>
+                </form>
               ) : null}
             </div>
           ))}
