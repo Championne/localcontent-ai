@@ -68,7 +68,6 @@ function getBrandCompleteness(b: Business): number {
 
 function getSetBadges(b: Business): { label: string }[] {
   const badges: { label: string }[] = []
-  if (b.tagline?.trim()) badges.push({ label: 'Tagline ✓' })
   const toneLabel = TONE_OPTIONS.find((o) => o.value === b.default_tone)?.label
   if (b.default_tone && toneLabel && toneLabel !== 'Not set') badges.push({ label: `Tone: ${toneLabel}` })
   if (b.default_cta_primary?.trim()) badges.push({ label: 'CTA ✓' })
@@ -76,7 +75,6 @@ function getSetBadges(b: Business): { label: string }[] {
   if (b.profile_photo_url) badges.push({ label: 'Photo ✓' })
   if (b.brand_primary_color?.trim()) badges.push({ label: 'Colours ✓' })
   if (b.seo_keywords?.trim()) badges.push({ label: 'SEO ✓' })
-  if (b.website?.trim()) badges.push({ label: 'Website ✓' })
   return badges
 }
 
@@ -301,45 +299,50 @@ export default function BrandingPage() {
     )
   }
 
+  const pagePrimary = businesses[0]?.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(businesses[0].brand_primary_color) ? businesses[0].brand_primary_color : '#0d9488'
+    const pageSecondary = businesses[0]?.brand_secondary_color && /^#[0-9A-Fa-f]{6}$/.test(businesses[0].brand_secondary_color) ? businesses[0].brand_secondary_color : '#0f766e'
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Brand Identity</h1>
-      <p className="text-gray-600 text-sm mb-6">
-        Set up each business: name, logo, colours, tagline, and calls to action. Used in content, overlays, and AI prompts.
-      </p>
+    <div
+      className="min-h-screen transition-colors duration-300"
+      style={{
+        background: `linear-gradient(160deg, ${pagePrimary}08 0%, ${pageSecondary}06 40%, transparent 70%)`,
+      }}
+    >
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {message && (
+          <div
+            ref={messageRef}
+            className={`mb-6 p-4 rounded-xl flex items-center gap-2 shadow-sm ${
+              message.type === 'success'
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-red-50 text-red-800 border border-red-200'
+            }`}
+          >
+            {message.text}
+          </div>
+        )}
 
-      {message && (
-        <div
-          ref={messageRef}
-          className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-            message.type === 'success'
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
-        >
-          {message.text}
+        <div className="mb-8">
+          <p className="font-medium text-sm mb-1 transition-colors" style={{ color: pagePrimary }}>Brand identity</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Your brand, one place</h1>
+          <p className="text-gray-500 text-sm">Make every post unmistakably yours. Set your logo, colours and voice here.</p>
         </div>
-      )}
 
-      <div className="mb-8">
-        <p className="text-teal-600 font-medium text-sm mb-1">Brand identity</p>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Your brand, one place</h1>
-        <p className="text-gray-500 text-sm">Make every post unmistakably yours. Set your logo, colours and voice here.</p>
-      </div>
-
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Your businesses</h2>
-        <button
-          type="button"
-          onClick={() => setShowAddBusiness(true)}
-          className="px-4 py-2 text-sm font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1 rounded-lg hover:bg-teal-50 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add business
-        </button>
-      </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">Your businesses</h2>
+          <button
+            type="button"
+            onClick={() => setShowAddBusiness(true)}
+            className="px-5 py-2.5 text-sm font-semibold text-white rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
+            style={{ backgroundColor: pagePrimary }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add business
+          </button>
+        </div>
 
       {showAddBusiness && (
         <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
@@ -413,23 +416,23 @@ export default function BrandingPage() {
             return (
             <div
               key={business.id}
-              className="border border-gray-200 rounded-xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 hover:-translate-y-0.5"
-              style={primaryHex ? { borderLeftWidth: 4, borderLeftColor: primaryHex } : undefined}
+              className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2"
+              style={primaryHex ? { borderColor: primaryHex, backgroundColor: `${primaryHex}06` } : { borderColor: '#e5e7eb', backgroundColor: '#fff' }}
             >
               {/* Header: name, industry, location, edit/delete */}
-              <div className="p-4 border-b border-gray-100 flex items-start justify-between gap-4">
+              <div className="p-4 border-b flex items-start justify-between gap-4" style={{ borderColor: primaryHex ? `${primaryHex}20` : '#f3f4f6' }}>
                 <div className="flex gap-3 min-w-0 flex-1">
-                  {/* Logo + profile photo in view */}
+                  {/* Logo + profile photo in view — borders in brand colour */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {business.logo_url ? (
-                      <img src={business.logo_url} alt="" className="w-10 h-10 rounded-lg object-contain border border-gray-200 bg-white" />
+                      <img src={business.logo_url} alt="" className="w-11 h-11 rounded-xl object-contain bg-white shadow-inner" style={{ border: `2px solid ${primaryHex || '#e5e7eb'}` }} />
                     ) : (
-                      <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 text-lg" title="Logo">🖼️</div>
+                      <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 text-lg border-2 border-dashed" style={{ borderColor: primaryHex ? `${primaryHex}50` : '#d1d5db' }} title="Logo">🖼️</div>
                     )}
                     {business.profile_photo_url ? (
-                      <img src={business.profile_photo_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" />
+                      <img src={business.profile_photo_url} alt="" className="w-11 h-11 rounded-full object-cover shadow-inner" style={{ border: `2px solid ${primaryHex || '#e5e7eb'}` }} />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center text-gray-400 text-lg" title="Profile photo">👤</div>
+                      <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-lg border-2 border-dashed" style={{ borderColor: primaryHex ? `${primaryHex}50` : '#d1d5db' }} title="Profile photo">👤</div>
                     )}
                   </div>
                   <div className="min-w-0">
@@ -762,6 +765,7 @@ export default function BrandingPage() {
           )})}
         </div>
       )}
+      </div>
     </div>
   )
 }

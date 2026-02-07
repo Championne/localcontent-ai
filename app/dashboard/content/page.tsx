@@ -700,15 +700,23 @@ export default function CreateContentPage() {
         if (!data.url) return null
         currentImageUrl = data.url
       }
-      if (tintOverlay && colors) {
-        const tintHex = tintOverlay.colorKey === 'primary' ? colors.primary : tintOverlay.colorKey === 'secondary' ? colors.secondary : colors.accent
+      // Tint and frame: send in one composite request when no logo/photo (more reliable than two round-trips)
+      if ((tintOverlay || frame) && colors) {
+        const body: Record<string, unknown> = { imageUrl: currentImageUrl }
+        if (tintOverlay) {
+          const tintHex = tintOverlay.colorKey === 'primary' ? colors.primary : tintOverlay.colorKey === 'secondary' ? colors.secondary : colors.accent
+          body.tintOverlay = { color: tintHex, opacity: tintOverlay.opacity }
+        }
+        if (frame) {
+          const frameHex = frame.colorKey === 'silver' || frame.colorKey === 'gold' || frame.colorKey === 'copper' || frame.colorKey === 'neutral'
+            ? (FRAME_PRESET_COLORS[frame.colorKey] ?? '#e5e7eb')
+            : frame.colorKey === 'primary' ? colors.primary : frame.colorKey === 'secondary' ? colors.secondary : colors.accent
+          body.frame = { style: frame.style, color: frameHex }
+        }
         const res = await fetch('/api/image/composite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageUrl: currentImageUrl,
-            tintOverlay: { color: tintHex, opacity: tintOverlay.opacity },
-          }),
+          body: JSON.stringify(body),
         })
         if (res.ok) {
           const data = await res.json()
@@ -748,25 +756,6 @@ export default function CreateContentPage() {
         if (!uploadRes.ok) return null
         const uploadData = await uploadRes.json()
         if (uploadData.url) currentImageUrl = uploadData.url
-      }
-      if (frame) {
-        const frameHex = frame.colorKey === 'silver' || frame.colorKey === 'gold' || frame.colorKey === 'neutral'
-          ? FRAME_PRESET_COLORS[frame.colorKey]
-          : colors
-            ? (frame.colorKey === 'primary' ? colors.primary : frame.colorKey === 'secondary' ? colors.secondary : colors.accent)
-            : '#0d9488'
-        const frameRes = await fetch('/api/image/composite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            imageUrl: currentImageUrl,
-            frame: { style: frame.style, color: frameHex },
-          }),
-        })
-        if (frameRes.ok) {
-          const frameData = await frameRes.json()
-          if (frameData.url) currentImageUrl = frameData.url
-        }
       }
       return `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
     } catch {
@@ -2011,7 +2000,7 @@ export default function CreateContentPage() {
               <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
                 <div className="h-full bg-teal-500 rounded-full animate-pulse w-3/4" style={{ animationDuration: '1.2s' }} />
               </div>
-              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, frame and tint…</p>
+              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, overlay and tint…</p>
             </div>
           )}
 
@@ -2114,7 +2103,7 @@ export default function CreateContentPage() {
                     onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
-                    title="Re-apply the suggested branding (logo, frame, tint, text)"
+                    title="Re-apply the suggested branding (logo, overlay, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -2735,7 +2724,7 @@ export default function CreateContentPage() {
               <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
                 <div className="h-full bg-teal-500 rounded-full animate-pulse w-3/4" style={{ animationDuration: '1.2s' }} />
               </div>
-              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, frame and tint…</p>
+              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, overlay and tint…</p>
             </div>
           )}
 
@@ -2844,7 +2833,7 @@ export default function CreateContentPage() {
                     onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1.5"
-                    title="Re-apply the suggested branding (logo, frame, tint, text)"
+                    title="Re-apply the suggested branding (logo, overlay, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>

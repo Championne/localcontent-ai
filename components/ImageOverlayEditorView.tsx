@@ -176,22 +176,64 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             className="relative bg-gray-100 rounded-lg overflow-hidden"
             style={{
               aspectRatio: '1',
-              padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'thick' || p.frame.style === 'classic' ? 16 : p.frame.style === 'polaroid' ? 12 : p.frame.style === 'filmstrip' ? 16 : p.frame.style === 'neon' ? 20 : p.frame.style === 'shadow' ? 20 : p.frame.style === 'vignette' ? 0 : 8) : 0,
-              backgroundColor: p.frame ? (p.frame.style === 'polaroid' || p.frame.style === 'filmstrip' ? '#ffffff' : p.frame.style === 'neon' ? '#1e1e23' : p.frame.style === 'shadow' ? '#f8fafc' : p.frame.style === 'vignette' ? undefined : p.getFrameHex(p.frame.colorKey)) : undefined,
+              padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'thick' || p.frame.style === 'classic' || p.frame.style === 'gold' || p.frame.style === 'silver' || p.frame.style === 'copper' ? 16 : p.frame.style === 'polaroid' ? 14 : p.frame.style === 'filmstrip' ? 28 : p.frame.style === 'neon' ? 24 : p.frame.style === 'shadow' ? 32 : p.frame.style === 'vignette' ? 0 : 8) : 0,
+              backgroundColor: p.frame ? (p.frame.style === 'polaroid' ? '#fcf9f2' : p.frame.style === 'filmstrip' ? '#121212' : p.frame.style === 'neon' ? '#0a0a0e' : p.frame.style === 'shadow' ? '#f5f7fa' : p.frame.style === 'vignette' ? undefined : p.frame.style === 'gold' ? '#b8860b' : p.frame.style === 'silver' ? '#a0a0a0' : p.frame.style === 'copper' ? '#8b4513' : p.getFrameHex(p.frame.colorKey)) : undefined,
               borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
             }}
           >
             <div
               ref={p.containerRef as React.RefObject<HTMLDivElement>}
               className="relative w-full h-full overflow-hidden"
-              style={{
+                style={{
                 aspectRatio: '1',
                 borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
-                border: p.frame?.style === 'double' || p.frame?.style === 'classic' ? `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dashed' || p.frame?.style === 'dotted' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e5e7eb' : undefined,
-                boxShadow: p.frame?.style === 'vignette' ? 'inset 0 0 80px rgba(0,0,0,0.4)' : p.frame?.style === 'neon' ? `0 0 20px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}` : undefined,
+                border: p.frame?.style === 'double' || p.frame?.style === 'classic' ? `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'gold' ? '2px solid #fff8dc' : p.frame?.style === 'silver' ? '2px solid #ffffff' : p.frame?.style === 'copper' ? '2px solid #f5d0b0' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
+                boxShadow: p.frame?.style === 'shadow' ? '0 16px 32px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.12)' : p.frame?.style === 'neon' ? `0 0 28px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 12px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}80` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,248,220,0.4)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.5)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(245,208,176,0.4)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
               }}
             >
-              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} />
+              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : undefined} />
+              {p.frame?.style === 'vignette' && (
+                <div
+                  className="absolute inset-0 pointer-events-none z-[2]"
+                  style={{
+                    background: 'radial-gradient(ellipse 72% 72% at 50% 50%, transparent 0%, transparent 50%, rgba(0,0,0,0.28) 72%, rgba(0,0,0,0.72) 100%)',
+                  }}
+                  aria-hidden
+                />
+              )}
+              {(p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper') && (
+                <div
+                  className="absolute inset-0 pointer-events-none z-[2]"
+                  style={{
+                    backgroundColor: p.frame.style === 'gold' ? 'rgba(212,175,55,0.14)' : p.frame.style === 'silver' ? 'rgba(192,192,192,0.12)' : 'rgba(184,115,51,0.14)',
+                  }}
+                  aria-hidden
+                />
+              )}
+              {p.frame?.style === 'filmstrip' && (
+                <>
+                  <div
+                    className="absolute top-0 left-0 bottom-0 w-5 pointer-events-none z-[2]"
+                    style={{
+                      backgroundImage: 'radial-gradient(circle at 10px 14px, #000 2.5px, #2a2a2a 3px, #121212 3.5px)',
+                      backgroundSize: '20px 22px',
+                      backgroundRepeat: 'repeat',
+                      backgroundPosition: '0 2px',
+                    }}
+                    aria-hidden
+                  />
+                  <div
+                    className="absolute top-0 right-0 bottom-0 w-5 pointer-events-none z-[2]"
+                    style={{
+                      backgroundImage: 'radial-gradient(circle at 10px 14px, #000 2.5px, #2a2a2a 3px, #121212 3.5px)',
+                      backgroundSize: '20px 22px',
+                      backgroundRepeat: 'repeat',
+                      backgroundPosition: '0 2px',
+                    }}
+                    aria-hidden
+                  />
+                </>
+              )}
               {p.tintOverlay && (
                 <div
                   className="absolute inset-0 pointer-events-none z-[1]"
@@ -269,24 +311,27 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             )}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-500">Frame:</span>
-            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (!v) p.setFrame(null); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-xs border border-gray-200 rounded px-2 py-1 bg-white max-w-[140px]">
+            <span className="text-xs text-gray-500">Overlay options:</span>
+            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-xs border border-gray-200 rounded px-2 py-1 bg-white max-w-[180px]">
               <option value="">None</option>
-              <option value="thin">Thin</option>
-              <option value="solid">Solid</option>
-              <option value="thick">Thick</option>
-              <option value="double">Double</option>
-              <option value="rounded">Rounded</option>
-              <option value="classic">Classic (gallery)</option>
+              <option value="thin">Thin line</option>
+              <option value="solid">Solid border</option>
+              <option value="thick">Thick border</option>
+              <option value="double">Double line</option>
+              <option value="rounded">Rounded corners</option>
+              <option value="classic">Painting frame</option>
               <option value="polaroid">Polaroid</option>
-              <option value="dashed">Dashed</option>
-              <option value="dotted">Dotted</option>
+              <option value="dashed">Dashed border</option>
+              <option value="dotted">Dotted border</option>
               <option value="filmstrip">Film strip</option>
               <option value="vignette">Vignette</option>
               <option value="neon">Neon glow</option>
-              <option value="shadow">Shadow (lifted)</option>
+              <option value="shadow">Floating shadow</option>
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="copper">Copper</option>
             </select>
-            {p.frame && (['primary', 'secondary', 'accent', 'silver', 'gold', 'neutral'] as const).map((key) => (
+            {p.frame && !['gold', 'silver', 'copper'].includes(p.frame.style) && (['primary', 'secondary', 'accent', 'silver', 'gold', 'copper', 'neutral'] as const).map((key) => (
               <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getFrameHex(key) }} title={key} />
             ))}
           </div>

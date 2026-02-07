@@ -14,7 +14,10 @@ type FrameStyle =
   | 'vignette'
   | 'neon'
   | 'shadow'
-type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'neutral'
+  | 'gold'
+  | 'silver'
+  | 'copper'
+type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'copper' | 'neutral'
 
 /** Frame suggestions per template: style + colorKey for auto branding */
 const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: FrameColorKey }>> = {
@@ -27,6 +30,7 @@ const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: Fra
   ],
   'blog-post': [
     { style: 'classic', colorKey: 'gold' },
+    { style: 'gold', colorKey: 'gold' },
     { style: 'vignette', colorKey: 'neutral' },
     { style: 'solid', colorKey: 'neutral' },
     { style: 'thin', colorKey: 'primary' },
@@ -48,6 +52,8 @@ const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: Fra
 const DEFAULT_FRAMES: Array<{ style: FrameStyle; colorKey: FrameColorKey }> = [
   { style: 'solid', colorKey: 'neutral' },
   { style: 'classic', colorKey: 'gold' },
+  { style: 'gold', colorKey: 'gold' },
+  { style: 'silver', colorKey: 'silver' },
   { style: 'polaroid', colorKey: 'neutral' },
   { style: 'vignette', colorKey: 'neutral' },
   { style: 'shadow', colorKey: 'neutral' },

@@ -51,12 +51,16 @@ export type FrameStyle =
   | 'vignette'
   | 'neon'
   | 'shadow'
+  | 'gold'
+  | 'silver'
+  | 'copper'
 
-export type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'neutral'
+export type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'copper' | 'neutral'
 
-export const FRAME_PRESET_COLORS: Record<'silver' | 'gold' | 'neutral', string> = {
+export const FRAME_PRESET_COLORS: Record<'silver' | 'gold' | 'copper' | 'neutral', string> = {
   silver: '#C0C0C0',
   gold: '#D4AF37',
+  copper: '#B87333',
   neutral: '#9CA3AF',
 }
 
@@ -127,7 +131,7 @@ export default function ImageOverlayEditor({
   }
 
   const getFrameHex = (key: FrameColorKey): string => {
-    if (key === 'silver' || key === 'gold' || key === 'neutral') return FRAME_PRESET_COLORS[key]
+    if (key === 'silver' || key === 'gold' || key === 'copper' || key === 'neutral') return FRAME_PRESET_COLORS[key]
     return getHex(key)
   }
 

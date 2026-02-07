@@ -140,7 +140,7 @@ export async function POST(request: Request) {
     }
 
     // Optional: frame around whole image (brand colour or effect)
-    const frameStyles = ['thin', 'solid', 'thick', 'double', 'rounded', 'classic', 'polaroid', 'dashed', 'dotted', 'filmstrip', 'vignette', 'neon', 'shadow'] as const
+    const frameStyles = ['thin', 'solid', 'thick', 'double', 'rounded', 'classic', 'polaroid', 'dashed', 'dotted', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper'] as const
     const frameOpt = frame && typeof frame.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(frame.color)
       ? { style: frameStyles.includes(frame.style as typeof frameStyles[number]) ? frame.style : 'solid', color: frame.color }
       : null
@@ -153,47 +153,78 @@ export async function POST(request: Request) {
       const style = frameOpt.style
       const pad = style === 'thin' ? 3 : style === 'thick' ? 16 : 8
 
-      // Vignette: no extend, just overlay radial gradient
+      // Vignette: cinematic edge darkening (elliptical, stronger at corners)
       if (style === 'vignette') {
         const vw = imgWidth
         const vh = imgHeight
         const cx = vw / 2
         const cy = vh / 2
-        const r = Math.max(vw, vh) * 0.7
+        const r = Math.max(vw, vh) * 0.72
         const vignetteSvg = Buffer.from(
-          `<svg width="${vw}" height="${vh}"><defs><radialGradient id="vg" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="transparent"/><stop offset="100%" stop-color="black" stop-opacity="0.5"/></radialGradient></defs><rect x="0" y="0" width="100%" height="100%" fill="url(#vg)"/></svg>`
+          `<svg width="${vw}" height="${vh}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="vg" cx="${cx}" cy="${cy}" r="${r}" fx="${cx}" fy="${cy}"><stop offset="0%" stop-color="transparent"/><stop offset="50%" stop-color="black" stop-opacity="0"/><stop offset="72%" stop-color="black" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.72"/></radialGradient></defs><rect x="0" y="0" width="${vw}" height="${vh}" fill="url(#vg)"/></svg>`
         )
         composited = await sharp(composited)
           .composite([{ input: vignetteSvg, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
       }
-      // Polaroid: white frame, extra bottom lip
+      // Polaroid: warm paper, thick top/sides, large bottom lip, inner photo edge, drop shadow
       else if (style === 'polaroid') {
-        const sidePad = 12
-        const bottomLip = 48
-        const topPad = sidePad
-        const leftPad = sidePad
-        const rightPad = sidePad
-        const bottomPad = sidePad + bottomLip
-        composited = await sharp(composited)
-          .extend({ top: topPad, bottom: bottomPad, left: leftPad, right: rightPad, background: { r: 255, g: 255, b: 255, alpha: 1 } })
+        const topPad = 28
+        const leftPad = 28
+        const rightPad = 28
+        const bottomLip = 80
+        const polaroidW = imgWidth + leftPad + rightPad
+        const polaroidH = imgHeight + topPad + bottomLip
+        const polaroidWhite = { r: 252, g: 249, b: 242 }
+        const shadowMargin = 24
+        const shadowOffset = 12
+        const shadowBlur = 20
+        const totalW = polaroidW + 2 * shadowMargin + shadowBlur + shadowOffset
+        const totalH = polaroidH + 2 * shadowMargin + shadowBlur + shadowOffset
+        const bg = await sharp({
+          create: { width: totalW, height: totalH, channels: 3, background: { r: 238, g: 240, b: 242 } },
+        })
+          .jpeg()
           .toBuffer()
-        const meta = await sharp(composited).metadata()
-        const fw = meta.width || imgWidth + leftPad + rightPad
-        const fh = meta.height || imgHeight + topPad + bottomPad
-        const strokeSvg = Buffer.from(
-          `<svg width="${fw}" height="${fh}"><rect x="0" y="0" width="${fw}" height="${fh}" fill="none" stroke="#e5e7eb" stroke-width="2"/></svg>`
+        const shadowSvg = Buffer.from(
+          `<svg width="${polaroidW + shadowBlur * 2}" height="${polaroidH + shadowBlur * 2}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="ps"><feGaussianBlur in="SourceGraphic" stdDeviation="${shadowBlur}"/></filter></defs><rect x="${shadowBlur}" y="${shadowBlur}" width="${polaroidW}" height="${polaroidH}" rx="2" ry="2" fill="black" opacity="0.24" filter="url(#ps)"/></svg>`
         )
-        composited = await sharp(composited)
-          .composite([{ input: strokeSvg, left: 0, top: 0 }])
+        const polaroidBg = await sharp({
+          create: { width: polaroidW, height: polaroidH, channels: 3, background: polaroidWhite },
+        })
+          .jpeg()
+          .toBuffer()
+        const withPhoto = await sharp(polaroidBg)
+          .composite([{ input: composited, left: leftPad, top: topPad }])
+          .toBuffer()
+        const innerStroke = 1.5
+        const innerRectSvg = Buffer.from(
+          `<svg width="${polaroidW}" height="${polaroidH}" xmlns="http://www.w3.org/2000/svg"><rect x="${leftPad}" y="${topPad}" width="${imgWidth}" height="${imgHeight}" fill="none" stroke="#c9c4b8" stroke-width="${innerStroke}"/></svg>`
+        )
+        const withInner = await sharp(withPhoto)
+          .composite([{ input: innerRectSvg, left: 0, top: 0 }])
+          .toBuffer()
+        const outerStroke = 2
+        const outerRectSvg = Buffer.from(
+          `<svg width="${polaroidW}" height="${polaroidH}" xmlns="http://www.w3.org/2000/svg"><rect x="${outerStroke / 2}" y="${outerStroke / 2}" width="${polaroidW - outerStroke}" height="${polaroidH - outerStroke}" rx="2" ry="2" fill="none" stroke="#e6e2d8" stroke-width="${outerStroke}"/></svg>`
+        )
+        const polaroidFinal = await sharp(withInner)
+          .composite([{ input: outerRectSvg, left: 0, top: 0 }])
+          .toBuffer()
+        composited = await sharp(bg)
+          .composite([
+            { input: shadowSvg, left: shadowMargin + shadowOffset - shadowBlur, top: shadowMargin + shadowOffset - shadowBlur },
+            { input: polaroidFinal, left: shadowMargin, top: shadowMargin },
+          ])
           .toBuffer()
       }
-      // Shadow (lifted): light background, drop shadow behind, image with thin border on top
+      // Floating shadow: card lift with soft shadow + subtle top-edge highlight
       else if (style === 'shadow') {
-        const borderPad = 4
-        const margin = 24
-        const shadowOffset = 10
-        const shadowBlur = 14
+        const borderPad = 5
+        const margin = 32
+        const shadowOffset = 14
+        const shadowBlur = 24
+        const shadowOpacity = 0.52
         const imgWithBorder = await sharp(composited)
           .extend({ top: borderPad, bottom: borderPad, left: borderPad, right: borderPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
           .toBuffer()
@@ -203,112 +234,285 @@ export async function POST(request: Request) {
         const fullW = iw + 2 * margin
         const fullH = ih + 2 * margin
         const shadowSvg = Buffer.from(
-          `<svg width="${iw + shadowBlur * 2}" height="${ih + shadowBlur * 2}"><defs><filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="${shadowBlur}"/></filter></defs><rect x="${shadowBlur}" y="${shadowBlur}" width="${iw}" height="${ih}" fill="black" opacity="0.4" filter="url(#blur)"/></svg>`
+          `<svg width="${iw + shadowBlur * 2}" height="${ih + shadowBlur * 2}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="${shadowBlur}"/></filter></defs><rect x="${shadowBlur}" y="${shadowBlur}" width="${iw}" height="${ih}" rx="2" ry="2" fill="black" opacity="${shadowOpacity}" filter="url(#blur)"/></svg>`
+        )
+        const highlightSvg = Buffer.from(
+          `<svg width="${iw}" height="${ih}" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="${iw}" height="1" fill="white" opacity="0.25"/><rect x="0" y="0" width="1" height="${ih}" fill="white" opacity="0.15"/></svg>`
         )
         const bg = await sharp({
-          create: { width: fullW, height: fullH, channels: 3, background: { r: 248, g: 250, b: 252 } },
+          create: { width: fullW, height: fullH, channels: 3, background: { r: 242, g: 244, b: 248 } },
         })
           .jpeg()
+          .toBuffer()
+        const withHighlight = await sharp(imgWithBorder)
+          .composite([{ input: highlightSvg, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
         composited = await sharp(bg)
           .composite([
             { input: shadowSvg, left: margin + shadowOffset, top: margin + shadowOffset },
-            { input: imgWithBorder, left: margin, top: margin },
+            { input: withHighlight, left: margin, top: margin },
           ])
           .toBuffer()
       }
-      // Neon: dark extend + thick glow (blurred stroke) + sharp inner stroke
-      else if (style === 'neon') {
-        const neonPad = 28
+      // Gold / Silver / Copper: metallic tint + high-contrast gradient frame for real shine
+      else if (style === 'gold' || style === 'silver' || style === 'copper') {
+        const metal = style === 'gold'
+          ? { tint: { r: 212, g: 175, b: 55 }, tintOpacity: 0.15, dark: '#4a3a0a', mid: '#b8860b', light: '#f8ecd0', highlight: '#fffef5' }
+          : style === 'silver'
+          ? { tint: { r: 200, g: 200, b: 208 }, tintOpacity: 0.13, dark: '#303030', mid: '#9a9a9a', light: '#f5f5f5', highlight: '#ffffff' }
+          : { tint: { r: 184, g: 115, b: 51 }, tintOpacity: 0.15, dark: '#3d2508', mid: '#8b4513', light: '#f0d4b8', highlight: '#fdf0e0' }
+        const tintSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" opacity="${metal.tintOpacity}"/></svg>`
+        )
         composited = await sharp(composited)
-          .extend({ top: neonPad, bottom: neonPad, left: neonPad, right: neonPad, background: { r: 30, g: 30, b: 35, alpha: 1 } })
+          .composite([{ input: tintSvg, left: 0, top: 0, blend: 'over' }])
+          .toBuffer()
+        const frameWidth = 26
+        const [dr, dg, db] = [parseInt(metal.dark.slice(1, 3), 16), parseInt(metal.dark.slice(3, 5), 16), parseInt(metal.dark.slice(5, 7), 16)]
+        composited = await sharp(composited)
+          .extend({ top: frameWidth, bottom: frameWidth, left: frameWidth, right: frameWidth, background: { r: dr, g: dg, b: db, alpha: 1 } })
+          .toBuffer()
+        const meta = await sharp(composited).metadata()
+        const fw = meta.width!
+        const fh = meta.height!
+        const inner = frameWidth
+        const iw = fw - 2 * inner
+        const ih = fh - 2 * inner
+        const donutPath = `M 0 0 h ${fw} v ${fh} h -${fw} Z M ${inner} ${inner} v ${ih} h ${iw} v -${ih} Z`
+        const metalSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="${metal.light}"/>
+                <stop offset="45%" stop-color="${metal.mid}"/>
+                <stop offset="100%" stop-color="${metal.dark}"/>
+              </linearGradient>
+            </defs>
+            <path fill-rule="evenodd" fill="url(#metalGrad)" d="${donutPath}"/>
+            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${metal.highlight}" stroke-width="1.5"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: metalSvg, left: 0, top: 0 }])
+          .toBuffer()
+      }
+      // Neon: full-on neon – user's color for tint + glow, near-black bg, multi-layer glow, bright core
+      else if (style === 'neon') {
+        const neonTintOpacity = 0.18
+        const [ntR, ntG, ntB] = [
+          parseInt(frameOpt.color.slice(1, 3), 16),
+          parseInt(frameOpt.color.slice(3, 5), 16),
+          parseInt(frameOpt.color.slice(5, 7), 16),
+        ]
+        const neonTintSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${ntR},${ntG},${ntB})" opacity="${neonTintOpacity}"/></svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: neonTintSvg, left: 0, top: 0, blend: 'over' }])
+          .toBuffer()
+
+        const neonPad = 44
+        composited = await sharp(composited)
+          .extend({ top: neonPad, bottom: neonPad, left: neonPad, right: neonPad, background: { r: 4, g: 4, b: 8, alpha: 1 } })
           .toBuffer()
         const meta = await sharp(composited).metadata()
         const fw = meta.width!
         const fh = meta.height!
         const inner = 10
-        const glowSvg = Buffer.from(
-          `<svg width="${fw}" height="${fh}"><defs><filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="14" opacity="0.9" filter="url(#glow)"/><rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="2"/></svg>`
+        const strokeW = 4
+        const glowW = 28
+        const blur1 = 16
+        const blur2 = 8
+        const blur3 = 4
+        const neonGlowSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg"><defs>
+            <filter id="ng1"><feGaussianBlur stdDeviation="${blur1}" result="b1"/><feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="ng2"><feGaussianBlur stdDeviation="${blur2}" result="b2"/><feMerge><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <filter id="ng3"><feGaussianBlur stdDeviation="${blur3}" result="b3"/><feMerge><feMergeNode in="b3"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="${glowW}" opacity="0.85" filter="url(#ng1)"/>
+          <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="${glowW * 0.6}" opacity="0.7" filter="url(#ng2)"/>
+          <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="${glowW * 0.25}" opacity="0.6" filter="url(#ng3)"/>
+          <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="white" stroke-width="${strokeW}" opacity="0.5"/>
+          <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="${strokeW}"/>
+          </svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: glowSvg, left: 0, top: 0 }])
+          .composite([{ input: neonGlowSvg, left: 0, top: 0 }])
           .toBuffer()
       }
-      // Film strip: white border, sprocket holes on left/right
+      // Film strip: real 35mm look – slight desaturation, black strip, sprocket holes with rim, film edge line
       else if (style === 'filmstrip') {
-        const edgePad = 20
-        const holeRows = 6
-        const holeR = 5
-        const holeSpacing = Math.floor(imgHeight / (holeRows + 1))
         composited = await sharp(composited)
-          .extend({ top: edgePad, bottom: edgePad, left: edgePad, right: edgePad, background: { r: 255, g: 255, b: 255, alpha: 1 } })
+          .modulate({ saturation: 0.88 })
+          .toBuffer()
+        const edgePad = 32
+        const holeRows = 10
+        const holeR = 5
+        const holeSpacing = Math.floor((imgHeight + 2 * edgePad) / (holeRows + 1))
+        const filmBlack = { r: 18, g: 18, b: 18 }
+        composited = await sharp(composited)
+          .extend({ top: edgePad, bottom: edgePad, left: edgePad, right: edgePad, background: filmBlack })
           .toBuffer()
         const meta = await sharp(composited).metadata()
         const fw = meta.width!
         const fh = meta.height!
         let holes = ''
         for (let row = 0; row < holeRows; row++) {
-          const y = edgePad + holeSpacing * (row + 1)
-          holes += `<circle cx="${edgePad / 2}" cy="${y}" r="${holeR}" fill="black"/>`
-          holes += `<circle cx="${fw - edgePad / 2}" cy="${y}" r="${holeR}" fill="black"/>`
+          const y = holeSpacing * (row + 1)
+          const cxL = edgePad / 2
+          const cxR = fw - edgePad / 2
+          holes += `<circle cx="${cxL}" cy="${y}" r="${holeR}" fill="#000" stroke="#3a3a3a" stroke-width="1"/>`
+          holes += `<circle cx="${cxR}" cy="${y}" r="${holeR}" fill="#000" stroke="#3a3a3a" stroke-width="1"/>`
         }
-        const filmSvg = Buffer.from(`<svg width="${fw}" height="${fh}">${holes}</svg>`)
+        const filmSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">${holes}<rect x="1" y="1" width="${fw - 2}" height="${fh - 2}" fill="none" stroke="#2a2a2a" stroke-width="1"/><rect x="${edgePad}" y="${edgePad}" width="${fw - 2 * edgePad}" height="${fh - 2 * edgePad}" fill="none" stroke="#4a4a4a" stroke-width="0.8"/></svg>`
+        )
         composited = await sharp(composited)
           .composite([{ input: filmSvg, left: 0, top: 0 }])
           .toBuffer()
       }
-      // Classic (gallery): thick border with inner and outer line
+      // Painting frame: deep bevel (strong dark/light contrast), inner liner; draw only the frame band (donut)
       else if (style === 'classic') {
-        const classicPad = 20
+        const frameWidth = 30
+        const darken = 0.42
+        const lighten = 1.65
+        const dr = Math.round(Math.min(255, fr * darken))
+        const dg = Math.round(Math.min(255, fg * darken))
+        const db = Math.round(Math.min(255, fb * darken))
+        const lr = Math.round(Math.min(255, fr * lighten))
+        const lg = Math.round(Math.min(255, fg * lighten))
+        const lb = Math.round(Math.min(255, fb * lighten))
+        const darkHex = `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`
+        const lightHex = `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`
         composited = await sharp(composited)
-          .extend({ top: classicPad, bottom: classicPad, left: classicPad, right: classicPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
+          .extend({ top: frameWidth, bottom: frameWidth, left: frameWidth, right: frameWidth, background: { r: dr, g: dg, b: db, alpha: 1 } })
           .toBuffer()
         const meta = await sharp(composited).metadata()
         const fw = meta.width!
         const fh = meta.height!
-        const inner = 6
-        const outer = 2
-        const classicSvg = Buffer.from(
-          `<svg width="${fw}" height="${fh}"><rect x="${outer}" y="${outer}" width="${fw - 2 * outer}" height="${fh - 2 * outer}" fill="none" stroke="${frameOpt.color}" stroke-width="${outer * 2}"/><rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" fill="none" stroke="${frameOpt.color}" stroke-width="1" opacity="0.6"/></svg>`
+        const cx = fw / 2
+        const cy = fh / 2
+        const outerR = Math.sqrt(cx * cx + cy * cy)
+        const innerR = Math.max(1, outerR - frameWidth)
+        const innerStop = (innerR / outerR) * 100
+        const inner = frameWidth
+        const iw = fw - 2 * inner
+        const ih = fh - 2 * inner
+        const donutPath = `M 0 0 h ${fw} v ${fh} h -${fw} Z M ${inner} ${inner} v ${ih} h ${iw} v -${ih} Z`
+        const paintingSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="bevel" cx="${cx}" cy="${cy}" r="${outerR}" fx="${cx}" fy="${cy}">
+                <stop offset="0%" stop-color="${lightHex}"/>
+                <stop offset="${innerStop}%" stop-color="${frameOpt.color}"/>
+                <stop offset="100%" stop-color="${darkHex}"/>
+              </radialGradient>
+            </defs>
+            <path fill-rule="evenodd" fill="url(#bevel)" d="${donutPath}"/>
+            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${lightHex}" stroke-width="1.5"/>
+          </svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: classicSvg, left: 0, top: 0 }])
+          .composite([{ input: paintingSvg, left: 0, top: 0 }])
           .toBuffer()
       }
-      // Dashed / Dotted: solid extend + SVG stroke-dasharray
-      else if (style === 'dashed' || style === 'dotted') {
+      // Dotted: padding + actual circles along the border (Sharp often ignores stroke-dasharray)
+      else if (style === 'dotted') {
+        const dotPad = 14
+        const dotRadius = 3.5
+        const dotSpacing = 12
         composited = await sharp(composited)
-          .extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
+          .extend({ top: dotPad, bottom: dotPad, left: dotPad, right: dotPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
           .toBuffer()
         const meta = await sharp(composited).metadata()
         const fw = meta.width!
         const fh = meta.height!
-        const dashArray = style === 'dashed' ? '12,8' : '2,6'
-        const strokeSvg = Buffer.from(
-          `<svg width="${fw}" height="${fh}"><rect x="${pad}" y="${pad}" width="${fw - 2 * pad}" height="${fh - 2 * pad}" fill="none" stroke="${frameOpt.color}" stroke-width="${style === 'dotted' ? 3 : 4}" stroke-dasharray="${dashArray}"/></svg>`
+        const innerW = fw - 2 * dotPad
+        const innerH = fh - 2 * dotPad
+        const circles: string[] = []
+        const addDot = (cx: number, cy: number) => {
+          circles.push(`<circle cx="${cx}" cy="${cy}" r="${dotRadius}" fill="${frameOpt.color}"/>`)
+        }
+        for (let x = dotPad; x <= fw - dotPad; x += dotSpacing) addDot(x, dotPad)
+        for (let y = dotPad + dotSpacing; y <= fh - dotPad - dotSpacing; y += dotSpacing) addDot(fw - dotPad, y)
+        for (let x = fw - dotPad - dotSpacing; x >= dotPad; x -= dotSpacing) addDot(x, fh - dotPad)
+        for (let y = fh - dotPad - dotSpacing; y >= dotPad + dotSpacing; y -= dotSpacing) addDot(dotPad, y)
+        const dotSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">${circles.join('')}</svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: strokeSvg, left: 0, top: 0 }])
+          .composite([{ input: dotSvg, left: 0, top: 0 }])
+          .toBuffer()
+      }
+      // Dashed: padding + explicit dash segments (Sharp often ignores stroke-dasharray)
+      else if (style === 'dashed') {
+        const dashPad = 14
+        const dashLen = 18
+        const gapLen = 10
+        const strokeW = 4
+        const period = dashLen + gapLen
+        composited = await sharp(composited)
+          .extend({ top: dashPad, bottom: dashPad, left: dashPad, right: dashPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
+          .toBuffer()
+        const meta = await sharp(composited).metadata()
+        const fw = meta.width!
+        const fh = meta.height!
+        const segments: string[] = []
+        const half = strokeW / 2
+        // Top: horizontal dashes
+        for (let x = dashPad; x + dashLen <= fw - dashPad; x += period) {
+          segments.push(`<rect x="${x}" y="${dashPad - half}" width="${dashLen}" height="${strokeW}" fill="${frameOpt.color}"/>`)
+        }
+        // Right: vertical dashes
+        for (let y = dashPad; y + dashLen <= fh - dashPad; y += period) {
+          segments.push(`<rect x="${fw - dashPad - half}" y="${y}" width="${strokeW}" height="${dashLen}" fill="${frameOpt.color}"/>`)
+        }
+        // Bottom: horizontal dashes
+        for (let x = dashPad; x + dashLen <= fw - dashPad; x += period) {
+          segments.push(`<rect x="${x}" y="${fh - dashPad - half}" width="${dashLen}" height="${strokeW}" fill="${frameOpt.color}"/>`)
+        }
+        // Left: vertical dashes
+        for (let y = dashPad; y + dashLen <= fh - dashPad; y += period) {
+          segments.push(`<rect x="${dashPad - half}" y="${y}" width="${strokeW}" height="${dashLen}" fill="${frameOpt.color}"/>`)
+        }
+        const dashSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">${segments.join('')}</svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: dashSvg, left: 0, top: 0 }])
           .toBuffer()
       }
       // Default: thin, solid, thick, double, rounded
       else {
+        const doublePad = style === 'double' ? 18 : pad
+        const extendPad = style === 'double' ? doublePad : pad
         composited = await sharp(composited)
-          .extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
+          .extend({ top: extendPad, bottom: extendPad, left: extendPad, right: extendPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
           .toBuffer()
         const meta = await sharp(composited).metadata()
-        const fw = meta.width || imgWidth + 2 * pad
-        const fh = meta.height || imgHeight + 2 * pad
+        const fw = meta.width || imgWidth + 2 * extendPad
+        const fh = meta.height || imgHeight + 2 * extendPad
         if (style === 'double') {
-          const innerPad = pad
-          const strokeSvg = Buffer.from(
-            `<svg width="${fw}" height="${fh}"><rect x="${innerPad}" y="${innerPad}" width="${fw - 2 * innerPad}" height="${fh - 2 * innerPad}" fill="none" stroke="${frameOpt.color}" stroke-width="2"/></svg>`
+          const lineWidth = 3
+          const gap = 6
+          const outerInset = 2
+          const innerInset = outerInset + lineWidth + gap
+          const outerW = fw - 2 * outerInset
+          const outerH = fh - 2 * outerInset
+          const innerW = fw - 2 * innerInset
+          const innerH = fh - 2 * innerInset
+          const doubleSvg = Buffer.from(
+            `<svg width="${fw}" height="${fh}">
+              <rect x="${outerInset}" y="${outerInset}" width="${outerW}" height="${outerH}" fill="none" stroke="${frameOpt.color}" stroke-width="${lineWidth}"/>
+              <rect x="${innerInset}" y="${innerInset}" width="${innerW}" height="${innerH}" fill="none" stroke="${frameOpt.color}" stroke-width="${lineWidth}"/>
+            </svg>`
           )
           composited = await sharp(composited)
-            .composite([{ input: strokeSvg, left: 0, top: 0 }])
+            .composite([{ input: doubleSvg, left: 0, top: 0 }])
             .toBuffer()
         } else if (style === 'rounded') {
-          const radius = Math.min(24, pad * 2)
+          const radius = Math.min(28, Math.round(extendPad * 1.8))
           const roundSvg = Buffer.from(
             `<svg width="${fw}" height="${fh}"><rect x="0" y="0" width="${fw}" height="${fh}" rx="${radius}" ry="${radius}" fill="white"/></svg>`
           )
