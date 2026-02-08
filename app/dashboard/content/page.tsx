@@ -1489,7 +1489,7 @@ export default function CreateContentPage() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen pt-4 sm:pt-6 pb-12 sm:pb-16"
       style={
         {
           ['--brand-primary']: primary,
@@ -1500,7 +1500,7 @@ export default function CreateContentPage() {
       }
     >
       {/* Top bar: client logo (top-left, as big as fits) + page title */}
-      <div className="flex items-start gap-4 mb-6 pb-6 border-b rounded-b-xl" style={{ backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
+      <div className="flex items-start gap-4 mb-6 pb-6 pt-4 px-4 sm:px-6 border-b rounded-xl" style={{ backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
         <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
           {currentBusinessLogo ? (
             <img
@@ -1524,7 +1524,7 @@ export default function CreateContentPage() {
         </div>
       </div>
 
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto pb-8">
       {/* Progress Steps */}
       <div className="flex items-center mb-8 rounded-xl p-4 border shadow-sm transition-all duration-300" style={{ backgroundColor: hexToRgba(primary, 0.14), borderColor: hexToRgba(primary, 0.35) }}>
         <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? '' : 'text-gray-400'}`} style={step >= 1 ? { color: primary } : undefined}>
@@ -1692,8 +1692,8 @@ export default function CreateContentPage() {
                   </option>
                 ))}
               </select>
-              <a href="/dashboard/settings" className="text-xs mt-1 inline-block hover:opacity-90" style={{ color: primary }}>
-                Manage businesses
+              <a href="/dashboard/branding" className="text-xs mt-1 pl-2 inline-block hover:opacity-90" style={{ color: primary }}>
+                Brand Identity
               </a>
             </div>
           ) : businessName ? (
@@ -1814,8 +1814,8 @@ export default function CreateContentPage() {
                     onClick={() => setTone(t)}
                     className={`px-4 py-2.5 border-2 rounded-lg text-sm font-medium capitalize transition-all ${
                       tone === t 
-                        ? 'border-teal-500 bg-teal-50 text-teal-700' 
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-sm' 
+                        : 'bg-white border-gray-300 text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50'
                     }`}
                   >
                     {t}
@@ -1837,7 +1837,7 @@ export default function CreateContentPage() {
                     className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${
                       imageStyle === key
                         ? 'border-[var(--brand-primary)] shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                        : 'bg-white border-gray-300 text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50'
                     }`}
                     style={imageStyle === key ? { backgroundColor: hexToRgba(primary, 0.08), borderColor: primary } : undefined}
                   >
