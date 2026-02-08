@@ -92,6 +92,13 @@ interface ImageOverlayEditorProps {
 
 const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', accent: '#6b7280' }
 
+// Predefined positions (percent) so logo, photo, tagline, website and social are always in the same place when a picture is selected
+const DEFAULT_LOGO = { x: 5, y: 5, scale: 16 }
+const DEFAULT_PHOTO = { x: 77, y: 5, scale: 18 }
+const DEFAULT_TAGLINE = { x: 50, y: 86, fontSize: 22 }
+const DEFAULT_WEBSITE = { x: 15, y: 92, fontSize: 14 }
+const DEFAULT_SOCIAL = { x: 85, y: 92, fontSize: 14 }
+
 export default function ImageOverlayEditor({
   imageUrl,
   logoUrl,
@@ -108,6 +115,8 @@ export default function ImageOverlayEditor({
   initialState,
 }: ImageOverlayEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const hadInitialStateRef = useRef(!!initialState?.imageOverlays?.length || !!initialState?.textOverlays?.length)
+  const appliedDefaultsRef = useRef(false)
   const [overlays, setOverlays] = useState<OverlayItem[]>(() => initialState?.imageOverlays ?? [])
   const [overlayBorderColors, setOverlayBorderColors] = useState<Record<string, string>>(() => initialState?.overlayBorderColors ?? {})
   const [tintOverlay, setTintOverlay] = useState<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>(() => initialState?.tintOverlay ?? null)
@@ -125,6 +134,49 @@ export default function ImageOverlayEditor({
   const colors = brandColors || DEFAULT_BRAND
   const effectiveLogoUrl = logoUrl || uploadedLogoUrl
   const effectivePhotoUrl = photoUrl || uploadedPhotoUrl
+
+  // Reset default-placement flag when image changes so a newly selected picture gets predefined layout again
+  const prevImageUrlRef = useRef(imageUrl)
+  useEffect(() => {
+    if (prevImageUrlRef.current !== imageUrl) {
+      prevImageUrlRef.current = imageUrl
+      appliedDefaultsRef.current = false
+    }
+  }, [imageUrl])
+
+  // When a picture is selected and no prior state: place logo, photo, tagline, website, social at predefined locations
+  useEffect(() => {
+    if (!imageUrl || hadInitialStateRef.current || appliedDefaultsRef.current) return
+    const hasAnything = effectiveLogoUrl || effectivePhotoUrl || (tagline && tagline.trim()) || (website && website.trim()) || (socialHandles && socialHandles.trim())
+    if (!hasAnything) return
+    const primaryHex = /^#[0-9A-Fa-f]{6}$/.test(colors.primary) ? colors.primary : '#0d9488'
+    const nextOverlays: OverlayItem[] = []
+    const nextBorderColors: Record<string, string> = {}
+    if (effectiveLogoUrl) {
+      nextOverlays.push({ id: 'logo-default', url: effectiveLogoUrl, x: DEFAULT_LOGO.x, y: DEFAULT_LOGO.y, scale: DEFAULT_LOGO.scale, type: 'logo' })
+      nextBorderColors['logo-default'] = primaryHex
+    }
+    if (effectivePhotoUrl) {
+      nextOverlays.push({ id: 'photo-default', url: effectivePhotoUrl, x: DEFAULT_PHOTO.x, y: DEFAULT_PHOTO.y, scale: DEFAULT_PHOTO.scale, type: 'photo' })
+      nextBorderColors['photo-default'] = primaryHex
+    }
+    const nextText: TextOverlayItem[] = []
+    if (tagline?.trim()) {
+      nextText.push({ id: 'text-tagline-default', text: tagline.trim(), x: DEFAULT_TAGLINE.x, y: DEFAULT_TAGLINE.y, fontSize: DEFAULT_TAGLINE.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
+    }
+    if (website?.trim()) {
+      nextText.push({ id: 'text-website-default', text: website.trim(), x: DEFAULT_WEBSITE.x, y: DEFAULT_WEBSITE.y, fontSize: DEFAULT_WEBSITE.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
+    }
+    if (socialHandles?.trim()) {
+      nextText.push({ id: 'text-social-default', text: socialHandles.trim(), x: DEFAULT_SOCIAL.x, y: DEFAULT_SOCIAL.y, fontSize: DEFAULT_SOCIAL.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
+    }
+    if (nextOverlays.length > 0 || nextText.length > 0) {
+      setOverlays(nextOverlays)
+      if (Object.keys(nextBorderColors).length > 0) setOverlayBorderColors(nextBorderColors)
+      setTextOverlays(nextText)
+      appliedDefaultsRef.current = true
+    }
+  }, [imageUrl, effectiveLogoUrl, effectivePhotoUrl, tagline, website, socialHandles, colors.primary])
 
   const getHex = (key: 'primary' | 'secondary' | 'accent') => {
     const hex = colors[key]

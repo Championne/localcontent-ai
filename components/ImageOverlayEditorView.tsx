@@ -219,12 +219,12 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
           </p>
         </div>
 
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 flex flex-col items-center min-w-0 max-w-[360px]">
           <div
-            className="relative bg-gray-100 rounded-lg overflow-hidden"
+            className="relative bg-gray-100 rounded-lg overflow-hidden w-full"
             style={{
               aspectRatio: '1',
-              ...(p.frame?.style === 'polaroid' ? { paddingTop: 12, paddingLeft: 12, paddingRight: 12, paddingBottom: 28 } : { padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'classic' || p.frame.style === 'wooden' ? 20 : p.frame.style === 'thick' || p.frame.style === 'gold' || p.frame.style === 'silver' || p.frame.style === 'copper' ? 16 : p.frame.style === 'filmstrip' ? 28 : p.frame.style === 'neon' ? 32 : p.frame.style === 'shadow' ? 40 : p.frame.style === 'vignette' ? 0 : 8) : 0 }),
+              ...(p.frame?.style === 'polaroid' ? { paddingTop: 12, paddingLeft: 12, paddingRight: 12, paddingBottom: 28 } : { padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'classic' || p.frame.style === 'wooden' ? 20 : p.frame.style === 'thick' || p.frame.style === 'gold' || p.frame.style === 'silver' || p.frame.style === 'copper' ? 16 : p.frame.style === 'filmstrip' ? 32 : p.frame.style === 'neon' ? 32 : p.frame.style === 'shadow' ? 40 : p.frame.style === 'vignette' ? 0 : 8) : 0 }),
               ...(p.frame?.style === 'classic'
                 ? {
                     background: 'linear-gradient(135deg, #f5e6a8 0%, #e8c547 25%, #b8860b 55%, #7d6510 85%, #5c4a1a 100%), linear-gradient(315deg, rgba(0,0,0,0.15) 0%, transparent 40%)',
@@ -301,23 +301,29 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               )}
               {p.frame?.style === 'filmstrip' && (
                 <>
+                  {/* Left film strip overlay: dark strip + oval perforations (35mm style), overlaid on picture */}
                   <div
-                    className="absolute top-0 left-0 bottom-0 w-5 pointer-events-none z-[2]"
+                    className="absolute top-0 left-0 bottom-0 w-8 pointer-events-none z-[2]"
                     style={{
-                      backgroundImage: 'radial-gradient(circle at 10px 14px, #000 2.5px, #2a2a2a 3px, #121212 3.5px)',
-                      backgroundSize: '20px 22px',
-                      backgroundRepeat: 'repeat',
-                      backgroundPosition: '0 2px',
+                      backgroundColor: '#0a0a0a',
+                      backgroundImage: 'radial-gradient(ellipse 45% 55% at 50% 50%, #1c1c1c 0%, #0a0a0a 58%)',
+                      backgroundSize: '100% 16.666%',
+                      backgroundRepeat: 'repeat-y',
+                      backgroundPosition: '0 0',
+                      boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.08)',
                     }}
                     aria-hidden
                   />
+                  {/* Right film strip overlay */}
                   <div
-                    className="absolute top-0 right-0 bottom-0 w-5 pointer-events-none z-[2]"
+                    className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none z-[2]"
                     style={{
-                      backgroundImage: 'radial-gradient(circle at 10px 14px, #000 2.5px, #2a2a2a 3px, #121212 3.5px)',
-                      backgroundSize: '20px 22px',
-                      backgroundRepeat: 'repeat',
-                      backgroundPosition: '0 2px',
+                      backgroundColor: '#0a0a0a',
+                      backgroundImage: 'radial-gradient(ellipse 45% 55% at 50% 50%, #1c1c1c 0%, #0a0a0a 58%)',
+                      backgroundSize: '100% 16.666%',
+                      backgroundRepeat: 'repeat-y',
+                      backgroundPosition: '0 0',
+                      boxShadow: 'inset 1px 0 0 rgba(255,255,255,0.08)',
                     }}
                     aria-hidden
                   />
