@@ -254,13 +254,13 @@ export async function POST(request: Request) {
           ])
           .toBuffer()
       }
-      // Gold / Silver / Copper: metallic tint + high-contrast gradient frame for real shine
+      // Gold / Silver / Copper: metallic tint + shiny gradient frame with highlight sheen
       else if (style === 'gold' || style === 'silver' || style === 'copper') {
         const metal = style === 'gold'
-          ? { tint: { r: 212, g: 175, b: 55 }, tintOpacity: 0.15, dark: '#4a3a0a', mid: '#b8860b', light: '#f8ecd0', highlight: '#fffef5' }
+          ? { tint: { r: 212, g: 175, b: 55 }, tintOpacity: 0.15, dark: '#4a3a0a', midDark: '#6b5210', mid: '#b8860b', midLight: '#e8c547', light: '#f8ecd0', highlight: '#fffef8', edge: '#fffef5' }
           : style === 'silver'
-          ? { tint: { r: 200, g: 200, b: 208 }, tintOpacity: 0.13, dark: '#303030', mid: '#9a9a9a', light: '#f5f5f5', highlight: '#ffffff' }
-          : { tint: { r: 184, g: 115, b: 51 }, tintOpacity: 0.15, dark: '#3d2508', mid: '#8b4513', light: '#f0d4b8', highlight: '#fdf0e0' }
+          ? { tint: { r: 200, g: 200, b: 208 }, tintOpacity: 0.13, dark: '#282828', midDark: '#505050', mid: '#909090', midLight: '#c8c8c8', light: '#e8e8e8', highlight: '#ffffff', edge: '#f8f8f8' }
+          : { tint: { r: 184, g: 115, b: 51 }, tintOpacity: 0.15, dark: '#3d1f06', midDark: '#5c2e0a', mid: '#8b4513', midLight: '#c48450', light: '#e8c4a0', highlight: '#fdf0e0', edge: '#fdf5eb' }
         const tintSvg = Buffer.from(
           `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" opacity="${metal.tintOpacity}"/></svg>`
         )
@@ -283,13 +283,21 @@ export async function POST(request: Request) {
           `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="${metal.light}"/>
-                <stop offset="45%" stop-color="${metal.mid}"/>
+                <stop offset="0%" stop-color="${metal.highlight}"/>
+                <stop offset="8%" stop-color="${metal.light}"/>
+                <stop offset="25%" stop-color="${metal.midLight}"/>
+                <stop offset="50%" stop-color="${metal.mid}"/>
+                <stop offset="75%" stop-color="${metal.midDark}"/>
                 <stop offset="100%" stop-color="${metal.dark}"/>
+              </linearGradient>
+              <linearGradient id="metalShine" x1="0%" y1="0%" x2="30%" y2="30%">
+                <stop offset="0%" stop-color="white" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="white" stop-opacity="0"/>
               </linearGradient>
             </defs>
             <path fill-rule="evenodd" fill="url(#metalGrad)" d="${donutPath}"/>
-            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${metal.highlight}" stroke-width="1.5"/>
+            <path fill-rule="evenodd" fill="url(#metalShine)" d="${donutPath}"/>
+            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${metal.edge}" stroke-width="2"/>
           </svg>`
         )
         composited = await sharp(composited)

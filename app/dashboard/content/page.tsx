@@ -274,8 +274,18 @@ export default function CreateContentPage() {
   const [eventTime, setEventTime] = useState('')
 
   // Step 3: Choose your image (3 stock + 1 AI + 1 upload)
-  const [stockImageOptions, setStockImageOptions] = useState<Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }>>([])
-  const [selectedStockImage, setSelectedStockImage] = useState<typeof stockImageOptions[0] | null>(null)
+  type StockOption = { url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }
+  const dedupeStockOptionsByUrl = (opts: StockOption[] | undefined): StockOption[] => {
+    if (!Array.isArray(opts) || opts.length === 0) return []
+    const seen = new Set<string>()
+    return opts.filter((o) => {
+      if (seen.has(o.url)) return false
+      seen.add(o.url)
+      return true
+    })
+  }
+  const [stockImageOptions, setStockImageOptions] = useState<StockOption[]>([])
+  const [selectedStockImage, setSelectedStockImage] = useState<StockOption | null>(null)
   const [step3StockLoading, setStep3StockLoading] = useState(false)
   const [regeneratingStockIndex, setRegeneratingStockIndex] = useState<number | null>(null)
   const [step3AIImage, setStep3AIImage] = useState<{ url: string; style: string; size: string; generated_image_id?: string | null } | null>(null)
@@ -326,7 +336,8 @@ export default function CreateContentPage() {
     fetch(`/api/stock-images?${params}`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data.options) && data.options.length > 0) setStockImageOptions(data.options)
+        const deduped = dedupeStockOptionsByUrl(data.options)
+        if (deduped.length > 0) setStockImageOptions(deduped)
       })
       .catch(() => {})
       .finally(() => setStep3StockLoading(false))
@@ -682,6 +693,17 @@ export default function CreateContentPage() {
     return { primary: p, secondary: s, accent: a }
   }
 
+  const brand = getBrandColors()
+  const primary = brand?.primary ?? '#0d9488'
+  const secondary = brand?.secondary ?? '#6b7280'
+  const accent = brand?.accent ?? '#6b7280'
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r},${g},${b},${alpha})`
+  }
+
   // Apply overlay payload to an image URL; returns the new image URL or null on failure
   const applyPayloadToImage = async (baseImageUrl: string, payload: OverlayApplyPayload): Promise<string | null> => {
     const { imageOverlays, overlayBorderColors, tintOverlay, textOverlays, frame } = payload
@@ -984,18 +1006,19 @@ export default function CreateContentPage() {
     }
   }
 
-  const getColorClasses = (color: string, isSelected: boolean) => {
+  const getColorClasses = (color: string, isSelected: boolean): { bg: string; border: string; icon: string; iconStyle?: React.CSSProperties; borderStyle?: React.CSSProperties; bgStyle?: React.CSSProperties } => {
+    const useBrand = color === 'teal' || color === 'orange'
+    if (useBrand) {
+      return {
+        bg: isSelected ? '' : 'bg-white',
+        border: isSelected ? '' : 'border-gray-200',
+        icon: '',
+        bgStyle: isSelected ? { backgroundColor: hexToRgba(primary, 0.12) } : undefined,
+        borderStyle: isSelected ? { borderColor: primary, borderWidth: 2 } : undefined,
+        iconStyle: { backgroundColor: hexToRgba(primary, 0.2), color: primary },
+      }
+    }
     const colors: Record<string, { bg: string; border: string; icon: string }> = {
-      teal: {
-        bg: isSelected ? 'bg-teal-50' : 'bg-white',
-        border: isSelected ? 'border-teal-500' : 'border-gray-200 hover:border-teal-300',
-        icon: 'bg-teal-100 text-teal-600'
-      },
-      orange: {
-        bg: isSelected ? 'bg-orange-50' : 'bg-white',
-        border: isSelected ? 'border-orange-500' : 'border-gray-200 hover:border-orange-300',
-        icon: 'bg-orange-100 text-orange-600'
-      },
       blue: {
         bg: isSelected ? 'bg-blue-50' : 'bg-white',
         border: isSelected ? 'border-blue-500' : 'border-gray-200 hover:border-blue-300',
@@ -1007,7 +1030,7 @@ export default function CreateContentPage() {
         icon: 'bg-purple-100 text-purple-600'
       }
     }
-    return colors[color] || colors.teal
+    return colors[color] || { bg: isSelected ? '' : 'bg-white', border: isSelected ? '' : 'border-gray-200', icon: '', bgStyle: isSelected ? { backgroundColor: hexToRgba(primary, 0.12) } : undefined, borderStyle: isSelected ? { borderColor: primary } : undefined, iconStyle: { backgroundColor: hexToRgba(primary, 0.2), color: primary } }
   }
 
   const handleQuickStart = (quickStart: typeof quickStarts[0]) => {
@@ -1080,30 +1103,47 @@ export default function CreateContentPage() {
       // Only update image-related state when we requested image (all or image). When regenerating text only, preserve current image.
       if (mode === 'all' || mode === 'image') {
         if (data.stockImageOptions?.length) {
-          setStockImageOptions(data.stockImageOptions)
-          setSelectedStockImage(null)
-          setGeneratedImage(null)
+          const deduped = dedupeStockOptionsByUrl(data.stockImageOptions)
+          setStockImageOptions(deduped)
+          const firstStock = deduped[0]
+          setSelectedStockImage(firstStock)
+          setGeneratedImage({
+            url: firstStock.url,
+            style: imageStyle,
+            generatedAt: new Date().toISOString(),
+            source: 'stock',
+            attribution: firstStock.attribution,
+            photographerName: firstStock.photographerName,
+            photographerUrl: firstStock.photographerUrl,
+          })
           setGeneratedImageId(null)
+          setAppliedBrandingForImageUrl(null)
         } else {
           setStockImageOptions([])
           setSelectedStockImage(null)
         }
         if (data.image) {
-          setGeneratedImage(data.image)
-          if ((data.image as { source?: string }).source === 'ai') {
-            setStep3AIImage({
-              url: data.image.url,
-              style: data.image.style || 'professional',
-              size: (data.image as { size?: string }).size || '1024x1024',
-              generated_image_id: data.generated_image_id ?? null,
-            })
+          const isAi = (data.image as { source?: string }).source === 'ai'
+          setStep3AIImage(isAi ? {
+            url: data.image.url,
+            style: data.image.style || 'professional',
+            size: (data.image as { size?: string }).size || '1024x1024',
+            generated_image_id: data.generated_image_id ?? null,
+          } : null)
+          if (!data.stockImageOptions?.length) {
+            setGeneratedImage(data.image)
+            setAppliedBrandingForImageUrl(null)
+            if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
           }
           const businessLogo = businesses.find(b => b.id === selectedBusinessId)?.logo_url
           if (businessLogo && !logoSkipped) {
             setShowOverlayEditor(true)
           }
         }
-        if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
+        if (data.generated_image_id && !data.stockImageOptions?.length) {
+          setGeneratedImageId(data.generated_image_id)
+          setImageRating(null)
+        }
       }
       if (data.generated_text_id) { setGeneratedTextId(data.generated_text_id); setTextRating(null) }
       if (data.usage) {
@@ -1161,7 +1201,7 @@ export default function CreateContentPage() {
       const stockData = await stockRes.json()
       if (!stockRes.ok) throw new Error(stockData.error || 'Failed to fetch stock images')
       if (stockData.stockImageOptions?.length) {
-        setStockImageOptions(stockData.stockImageOptions)
+        setStockImageOptions(dedupeStockOptionsByUrl(stockData.stockImageOptions))
       }
       if (stockData.usage?.imagesRemaining != null) setImagesRemaining(stockData.usage.imagesRemaining)
 
@@ -1208,11 +1248,14 @@ export default function CreateContentPage() {
       const res = await fetch(`/api/stock-images?topic=${encodeURIComponent(topic)}&industry=${encodeURIComponent(industry)}&contentType=${contentType}&page=${page}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to fetch stock image')
-      const options = data.options as Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }>
+      const options = data.options as StockOption[]
       if (options?.length) {
         setStockImageOptions((prev) => {
+          const existingUrls = new Set(prev.map((o) => o.url))
+          const chosen = options.find((o) => !existingUrls.has(o.url))
+          if (!chosen) return prev
           const next = [...prev]
-          next[slotIndex] = options[0]
+          next[slotIndex] = chosen
           return next
         })
       }
@@ -1291,9 +1334,10 @@ export default function CreateContentPage() {
     } catch (_) {}
   }
 
-  const handlePickStockImage = async (opt: typeof stockImageOptions[0]) => {
+  const handlePickStockImage = async (opt: StockOption) => {
     setSelectedStockImage(opt)
     setStep3AIImage(null)
+    setAppliedBrandingForImageUrl(null)
     setGeneratedImage({
       url: opt.url,
       style: imageStyle,
@@ -1359,6 +1403,7 @@ export default function CreateContentPage() {
       if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed')
       setSelectedStockImage(null)
       setStep3AIImage(null)
+      setAppliedBrandingForImageUrl(null)
       setGeneratedImage({ url: data.url, source: 'upload' })
       setGeneratedImageId(null)
     } catch (err) {
@@ -1458,17 +1503,49 @@ export default function CreateContentPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Create Content</h1>
-        <p className="text-gray-500">Generate AI-powered, locally-optimized content in minutes</p>
+    <div
+      className="min-h-screen"
+      style={
+        {
+          ['--brand-primary']: primary,
+          ['--brand-secondary']: secondary,
+          ['--brand-accent']: accent,
+        } as React.CSSProperties
+      }
+    >
+      {/* Top bar: client logo (top-left, as big as fits) + page title */}
+      <div className="flex items-start gap-4 mb-6 pb-6 border-b border-gray-200">
+        <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
+          {currentBusinessLogo ? (
+            <img
+              src={currentBusinessLogo}
+              alt={currentBusiness?.name ? `${currentBusiness.name} logo` : 'Brand logo'}
+              className="w-full h-auto object-contain"
+              style={{ maxHeight: 80 }}
+            />
+          ) : (
+            <div
+              className="w-full aspect-square max-h-20 rounded-lg flex items-center justify-center text-gray-300 text-xs font-medium border border-dashed border-gray-200"
+              style={{ backgroundColor: hexToRgba(primary, 0.08) }}
+            >
+              Your logo
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 pt-0.5">
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">Create Content</h1>
+          <p className="text-gray-500 text-sm">Generate AI-powered, locally-optimized content in minutes</p>
+        </div>
       </div>
 
+    <div className="max-w-4xl mx-auto">
       {/* Progress Steps */}
       <div className="flex items-center mb-8 bg-white rounded-xl p-4 border border-gray-100 shadow-sm transition-all duration-300">
-        <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? 'text-teal-600' : 'text-gray-400'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 1 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+        <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? '' : 'text-gray-400'}`} style={step >= 1 ? { color: primary } : undefined}>
+          <div
+            className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 1 ? 'text-white' : 'bg-gray-100 text-gray-500'}`}
+            style={step >= 1 ? { backgroundColor: primary } : undefined}
+          >
             {step > 1 ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1477,9 +1554,9 @@ export default function CreateContentPage() {
           </div>
           <span className="ml-3 font-medium hidden sm:block">Template</span>
         </div>
-        <div className={`flex-1 h-1 mx-4 rounded transition-colors duration-300 ${step >= 2 ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
-        <div className={`flex items-center transition-colors duration-300 ${step >= 2 ? 'text-teal-600' : 'text-gray-400'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 2 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+        <div className="flex-1 h-1 mx-4 rounded transition-colors duration-300 bg-gray-200" style={step >= 2 ? { backgroundColor: primary } : undefined}></div>
+        <div className={`flex items-center transition-colors duration-300 ${step >= 2 ? '' : 'text-gray-400'}`} style={step >= 2 ? { color: primary } : undefined}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 2 ? 'text-white' : 'bg-gray-100 text-gray-500'}`} style={step >= 2 ? { backgroundColor: primary } : undefined}>
             {step > 2 ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -1488,9 +1565,9 @@ export default function CreateContentPage() {
           </div>
           <span className="ml-3 font-medium hidden sm:block">Details</span>
         </div>
-        <div className={`flex-1 h-1 mx-4 rounded transition-colors duration-300 ${step >= 3 ? 'bg-teal-600' : 'bg-gray-200'}`}></div>
-        <div className={`flex items-center transition-colors duration-300 ${step >= 3 ? 'text-teal-600' : 'text-gray-400'}`}>
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 3 ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-500'}`}>3</div>
+        <div className="flex-1 h-1 mx-4 rounded transition-colors duration-300 bg-gray-200" style={step >= 3 ? { backgroundColor: primary } : undefined}></div>
+        <div className={`flex items-center transition-colors duration-300 ${step >= 3 ? '' : 'text-gray-400'}`} style={step >= 3 ? { color: primary } : undefined}>
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 3 ? 'text-white' : 'bg-gray-100 text-gray-500'}`} style={step >= 3 ? { backgroundColor: primary } : undefined}>3</div>
           <span className="ml-3 font-medium hidden sm:block">Branding</span>
         </div>
       </div>
@@ -1525,7 +1602,7 @@ export default function CreateContentPage() {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
               What do you want to create today?
-              <svg className="w-7 h-7 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" style={{ color: accent }}>
                 <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </h2>
@@ -1542,7 +1619,9 @@ export default function CreateContentPage() {
                 <button
                   key={qs.id}
                   onClick={() => handleQuickStart(qs)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-teal-400 hover:bg-teal-50 transition-all hover:shadow-md"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 transition-all hover:shadow-md"
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.backgroundColor = hexToRgba(primary, 0.08) }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.backgroundColor = '' }}
                 >
                   <span>{qs.icon}</span>
                   {qs.label}
@@ -1555,7 +1634,7 @@ export default function CreateContentPage() {
           <p className="text-sm text-gray-500 mb-4">Or choose a content type:</p>
           <div className="grid md:grid-cols-2 gap-4">
             {templates.map((template) => {
-              const colors = getColorClasses(template.color, selectedTemplate === template.id)
+              const colorClasses = getColorClasses(template.color, selectedTemplate === template.id)
               return (
                 <button
                   key={template.id}
@@ -1563,12 +1642,13 @@ export default function CreateContentPage() {
                     setSelectedTemplate(template.id)
                     setStep(2)
                   }}
-                  className={`p-5 border-2 rounded-xl text-left transition-all duration-200 ${colors.bg} ${colors.border} relative hover:-translate-y-1 hover:shadow-lg`}
+                  className={`p-5 border-2 rounded-xl text-left transition-all duration-200 ${colorClasses.bg} ${colorClasses.border} relative hover:-translate-y-1 hover:shadow-lg`}
+                  style={{ ...colorClasses.bgStyle, ...colorClasses.borderStyle }}
                 >
-                  {/* Badges */}
+                  {/* Badges - use brand accent/primary */}
                   <div className="absolute top-3 right-3 flex gap-2">
                     {template.popular && (
-                      <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-medium rounded-full flex items-center gap-1">
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full flex items-center gap-1" style={{ backgroundColor: hexToRgba(accent, 0.9), color: '#fff' }}>
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                         </svg>
@@ -1576,23 +1656,23 @@ export default function CreateContentPage() {
                       </span>
                     )}
                     {template.badge && (
-                      <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-medium rounded-full">
+                      <span className="px-2 py-0.5 text-white text-xs font-medium rounded-full" style={{ backgroundColor: primary }}>
                         {template.badge}
                       </span>
                     )}
                   </div>
 
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 ${colors.icon}`}>
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 ${colorClasses.icon}`} style={colorClasses.iconStyle}>
                     {getTemplateIcon(template.id)}
                   </div>
                   <h3 className="font-semibold text-gray-900">{template.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{template.description}</p>
                   {'benefit' in template && (template as { benefit?: string }).benefit && (
-                    <p className="text-xs text-teal-600 mt-1 font-medium">{(template as { benefit: string }).benefit}</p>
+                    <p className="text-xs mt-1 font-medium" style={{ color: primary }}>{(template as { benefit: string }).benefit}</p>
                   )}
                   {/* Time Estimate */}
                   <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
-                    <svg className="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" style={{ color: accent }} fill="currentColor" viewBox="0 0 24 24">
                       <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                     Ready in {template.time}
@@ -1607,7 +1687,7 @@ export default function CreateContentPage() {
       {/* Step 2: Add Details */}
       {!loadingEdit && step === 2 && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <p className="text-sm text-teal-600 font-medium mb-0.5">You're creating a {templates.find(t => t.id === selectedTemplate)?.name || 'piece of content'}</p>
+          <p className="text-sm font-medium mb-0.5" style={{ color: primary }}>You're creating a {templates.find(t => t.id === selectedTemplate)?.name || 'piece of content'}</p>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us what it's about</h2>
           
           {/* Business Selection */}
@@ -1617,7 +1697,8 @@ export default function CreateContentPage() {
               <select
                 value={selectedBusinessId || ''}
                 onChange={(e) => handleBusinessChange(e.target.value)}
-                className="w-full max-w-md px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                className="w-full max-w-md px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 outline-none bg-white focus:border-transparent"
+                style={{ ['--tw-ring-color' as string]: primary } as React.CSSProperties}
               >
                 {businesses.map((biz) => (
                   <option key={biz.id} value={biz.id}>
@@ -1625,7 +1706,7 @@ export default function CreateContentPage() {
                   </option>
                 ))}
               </select>
-              <a href="/dashboard/settings" className="text-xs text-teal-600 hover:text-teal-700 mt-1 inline-block">
+              <a href="/dashboard/settings" className="text-xs mt-1 inline-block hover:opacity-90" style={{ color: primary }}>
                 Manage businesses
               </a>
             </div>
@@ -1634,10 +1715,10 @@ export default function CreateContentPage() {
               <span>Creating for:</span>
               <span className="font-medium text-gray-900">{businessName}</span>
               {industry && <span className="text-gray-400">({industry})</span>}
-              <a href="/dashboard/settings" className="text-teal-600 hover:text-teal-700 ml-1">edit</a>
+              <a href="/dashboard/settings" className="ml-1 hover:opacity-90" style={{ color: primary }}>edit</a>
             </div>
           ) : (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+            <div className="mb-6 p-3 rounded-lg text-sm" style={{ backgroundColor: hexToRgba(accent, 0.12), borderWidth: 1, borderColor: hexToRgba(accent, 0.4), color: '#92400e' }}>
               <a href="/dashboard/settings" className="font-medium underline">Set up your business profile</a> to get personalized content
             </div>
           )}
@@ -1657,7 +1738,7 @@ export default function CreateContentPage() {
                   <select
                     value={gbpPostType}
                     onChange={(e) => setGbpPostType(e.target.value as GbpPostType)}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none bg-white"
                   >
                     {Object.entries(GBP_POST_TYPES).map(([key, type]) => (
                       <option key={key} value={key}>
@@ -1677,7 +1758,7 @@ export default function CreateContentPage() {
                     <select
                       value={offerExpiration}
                       onChange={(e) => setOfferExpiration(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none bg-white"
                     >
                       {OFFER_EXPIRATION_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -1691,7 +1772,7 @@ export default function CreateContentPage() {
                         value={offerCustomDate}
                         onChange={(e) => setOfferCustomDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
-                        className="mt-2 w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                        className="mt-2 w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none"
                       />
                     )}
                     <p className="mt-1.5 text-xs text-gray-500">
@@ -1711,7 +1792,7 @@ export default function CreateContentPage() {
                         onChange={(e) => setEventDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none"
                       />
                     </div>
                     <div>
@@ -1720,7 +1801,7 @@ export default function CreateContentPage() {
                         type="time"
                         value={eventTime}
                         onChange={(e) => setEventTime(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none"
                       />
                     </div>
                   </div>
@@ -1733,7 +1814,7 @@ export default function CreateContentPage() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-shadow resize-none"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none transition-shadow resize-none"
                 placeholder="e.g., Spring cleaning tips for homeowners, our new seasonal menu, 20% off promotion this week..."
               />
             </div>
@@ -1771,7 +1852,8 @@ export default function CreateContentPage() {
               <button
                 onClick={() => handleGenerate('all')}
                 disabled={!businessName || !industry || !topic || generating || (selectedTemplate === 'gmb-post' && gbpPostType === 'event' && !eventDate)}
-                className="flex-1 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-5 py-2.5 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 hover:opacity-95"
+                style={{ backgroundColor: accent }}
               >
                 {generating ? (
                   <>
@@ -1929,7 +2011,8 @@ export default function CreateContentPage() {
                 type="button"
                 onClick={() => handleRegenerateAllImages()}
                 disabled={generating}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-teal-100 text-teal-700 hover:bg-teal-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-white"
+                style={{ backgroundColor: primary }}
               >
                 {generating ? (
                   <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -1996,6 +2079,7 @@ export default function CreateContentPage() {
                   type="button"
                   onClick={() => {
                     if (step3AIImage) {
+                      setAppliedBrandingForImageUrl(null)
                       setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' })
                       setGeneratedImageId(step3AIImage.generated_image_id || null)
                       setSelectedStockImage(null)
@@ -2094,12 +2178,12 @@ export default function CreateContentPage() {
 
           {/* Progress: Applying recommended branding */}
           {brandingRecommendationLoading && (
-            <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
-              <p className="text-sm font-medium text-teal-800 mb-2">Applying branding…</p>
-              <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-500 rounded-full animate-pulse w-3/4" style={{ animationDuration: '1.2s' }} />
+            <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.08), borderColor: hexToRgba(primary, 0.3) }}>
+              <p className="text-sm font-medium mb-2" style={{ color: primary }}>Applying branding…</p>
+              <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.2) }}>
+                <div className="h-full rounded-full animate-pulse w-3/4" style={{ backgroundColor: primary, animationDuration: '1.2s' }} />
               </div>
-              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, overlay and tint…</p>
+              <p className="text-xs mt-1" style={{ color: primary }}>Preparing your recommended logo, overlay and tint…</p>
             </div>
           )}
 
@@ -2191,7 +2275,8 @@ export default function CreateContentPage() {
                   </button>
                   <button
                     onClick={() => setShowOverlayEditor(true)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 flex items-center gap-1"
+                style={{ backgroundColor: hexToRgba(primary, 0.15), color: primary }}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2201,7 +2286,8 @@ export default function CreateContentPage() {
                   <button
                     onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+                style={{ backgroundColor: hexToRgba(accent, 0.2), color: '#92400e' }}
                     title="Re-apply the suggested branding (logo, overlay, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
@@ -2742,6 +2828,7 @@ export default function CreateContentPage() {
                 type="button"
                 onClick={() => {
                   if (step3AIImage) {
+                    setAppliedBrandingForImageUrl(null)
                     setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' })
                     setGeneratedImageId(step3AIImage.generated_image_id || null)
                     setSelectedStockImage(null)
@@ -2818,12 +2905,12 @@ export default function CreateContentPage() {
 
           {/* Progress: Applying recommended branding */}
           {brandingRecommendationLoading && (
-            <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-xl">
-              <p className="text-sm font-medium text-teal-800 mb-2">Applying branding…</p>
-              <div className="h-2 bg-teal-100 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-500 rounded-full animate-pulse w-3/4" style={{ animationDuration: '1.2s' }} />
+            <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.08), borderColor: hexToRgba(primary, 0.3) }}>
+              <p className="text-sm font-medium mb-2" style={{ color: primary }}>Applying branding…</p>
+              <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.2) }}>
+                <div className="h-full rounded-full animate-pulse w-3/4" style={{ backgroundColor: primary, animationDuration: '1.2s' }} />
               </div>
-              <p className="text-xs text-teal-600 mt-1">Preparing your recommended logo, overlay and tint…</p>
+              <p className="text-xs mt-1" style={{ color: primary }}>Preparing your recommended logo, overlay and tint…</p>
             </div>
           )}
 
@@ -2921,7 +3008,8 @@ export default function CreateContentPage() {
                   </button>
                   <button
                     onClick={() => setShowOverlayEditor(true)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-teal-100 text-teal-600 hover:bg-teal-200 flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 flex items-center gap-1"
+                style={{ backgroundColor: hexToRgba(primary, 0.15), color: primary }}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -2931,7 +3019,8 @@ export default function CreateContentPage() {
                   <button
                     onClick={() => revertToSuggestedBranding()}
                     disabled={brandingRecommendationLoading}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-50 flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+                style={{ backgroundColor: hexToRgba(accent, 0.2), color: '#92400e' }}
                     title="Re-apply the suggested branding (logo, overlay, tint, text)"
                   >
                     {brandingRecommendationLoading ? (
@@ -3078,6 +3167,7 @@ export default function CreateContentPage() {
           )}
         </div>
       )}
+    </div>
     </div>
   )
 }

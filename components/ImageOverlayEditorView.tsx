@@ -218,8 +218,14 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 ? {
                     background: `linear-gradient(135deg, rgba(255,255,255,0.28) 0%, transparent 50%), linear-gradient(315deg, rgba(0,0,0,0.3) 0%, transparent 50%), ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
                   }
+                : p.frame?.style === 'gold'
+                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.08) 18%, transparent 32%), linear-gradient(135deg, #fffef8 0%, #f8ecd0 12%, #e8c547 35%, #b8860b 55%, #8b6914 78%, #5c4a0f 100%)' }
+                : p.frame?.style === 'silver'
+                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.12) 18%, transparent 32%), linear-gradient(135deg, #ffffff 0%, #e8e8e8 15%, #c0c0c0 40%, #909090 65%, #606060 85%, #383838 100%)' }
+                : p.frame?.style === 'copper'
+                ? { background: 'linear-gradient(135deg, rgba(255,248,240,0.45) 0%, rgba(255,235,200,0.1) 18%, transparent 32%), linear-gradient(135deg, #fdf0e0 0%, #e8c4a0 15%, #b87333 45%, #8b4513 70%, #5c2e0a 90%, #3d1f06 100%)' }
                 : {
-                    backgroundColor: p.frame ? (p.frame.style === 'polaroid' ? '#fcf9f2' : p.frame.style === 'filmstrip' ? '#121212' : p.frame.style === 'neon' ? '#0a0a0e' : p.frame.style === 'shadow' ? '#f5f7fa' : p.frame.style === 'vignette' ? undefined : p.frame.style === 'gold' ? '#b8860b' : p.frame.style === 'silver' ? '#a0a0a0' : p.frame.style === 'copper' ? '#8b4513' : p.getFrameHex(p.frame.colorKey)) : undefined,
+                    backgroundColor: p.frame ? (p.frame.style === 'polaroid' ? '#fcf9f2' : p.frame.style === 'filmstrip' ? '#121212' : p.frame.style === 'neon' ? '#0a0a0e' : p.frame.style === 'shadow' ? '#f5f7fa' : p.frame.style === 'vignette' ? undefined : p.getFrameHex(p.frame.colorKey)) : undefined,
                   }),
               borderRadius: p.frame?.style === 'rounded' ? 12 : 0,
             }}
@@ -238,9 +244,9 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                     }
                   : {}),
                 ...(p.frame?.style !== 'double' && {
-                  border: p.frame?.style === 'classic' ? undefined : p.frame?.style === 'gold' ? '2px solid #fff8dc' : p.frame?.style === 'silver' ? '2px solid #ffffff' : p.frame?.style === 'copper' ? '2px solid #f5d0b0' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
+                  border: p.frame?.style === 'classic' ? undefined : p.frame?.style === 'gold' ? '2px solid rgba(255,248,220,0.9)' : p.frame?.style === 'silver' ? '2px solid rgba(255,255,255,0.95)' : p.frame?.style === 'copper' ? '2px solid rgba(253,240,224,0.9)' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
                 }),
-                boxShadow: p.frame?.style === 'classic' ? 'inset 0 0 0 2px rgba(255,255,255,0.5)' : p.frame?.style === 'shadow' ? '0 16px 32px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.12)' : p.frame?.style === 'neon' ? `0 0 28px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 12px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}80` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,248,220,0.4)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.5)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(245,208,176,0.4)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
+                boxShadow: p.frame?.style === 'classic' ? 'inset 0 0 0 2px rgba(255,255,255,0.5)' : p.frame?.style === 'shadow' ? '0 16px 32px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.12)' : p.frame?.style === 'neon' ? `0 0 28px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 12px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}80` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,254,248,0.85), inset 0 2px 4px -2px rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 2px 4px -2px rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.25)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(253,248,240,0.9), inset 0 2px 4px -2px rgba(255,240,220,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
               }}
             >
               <div
@@ -271,7 +277,8 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 <div
                   className="absolute inset-0 pointer-events-none z-[2]"
                   style={{
-                    backgroundColor: p.frame.style === 'gold' ? 'rgba(212,175,55,0.14)' : p.frame.style === 'silver' ? 'rgba(192,192,192,0.12)' : 'rgba(184,115,51,0.14)',
+                    backgroundColor: p.frame.style === 'gold' ? 'rgba(212,175,55,0.12)' : p.frame.style === 'silver' ? 'rgba(192,192,192,0.1)' : 'rgba(184,115,51,0.12)',
+                    boxShadow: p.frame.style === 'gold' ? 'inset 0 0 40px rgba(255,248,220,0.08)' : p.frame.style === 'silver' ? 'inset 0 0 40px rgba(255,255,255,0.06)' : 'inset 0 0 40px rgba(253,240,224,0.06)',
                   }}
                   aria-hidden
                 />
@@ -406,6 +413,37 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               <option value="silver">Silver</option>
               <option value="copper">Copper</option>
             </select>
+            {/* Metallic frame presets: shiny swatch when selected */}
+            {(['gold', 'silver', 'copper'] as const).map((metal) => {
+              const isSelected = p.frame?.style === metal
+              const grad = metal === 'gold'
+                ? 'linear-gradient(135deg, #fffef8 0%, #e8c547 30%, #b8860b 60%, #5c4a0f 100%)'
+                : metal === 'silver'
+                ? 'linear-gradient(135deg, #fff 0%, #c0c0c0 40%, #606060 80%, #282828 100%)'
+                : 'linear-gradient(135deg, #fdf0e0 0%, #b87333 50%, #3d1f06 100%)'
+              const metallicShine = metal === 'gold'
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 25%, transparent 50%)'
+                : metal === 'silver'
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.15) 25%, transparent 50%)'
+                : 'linear-gradient(135deg, rgba(255,248,235,0.45) 0%, rgba(255,235,210,0.1) 25%, transparent 50%)'
+              const selectedGlow = metal === 'gold' ? '0 0 14px rgba(184,134,11,0.45)' : metal === 'silver' ? '0 0 14px rgba(192,192,192,0.5)' : '0 0 14px rgba(184,115,51,0.45)'
+              return (
+                <button
+                  key={metal}
+                  type="button"
+                  onClick={() => p.setFrame(isSelected ? null : { style: metal, colorKey: metal })}
+                  className={`w-7 h-7 rounded-full border-2 flex-shrink-0 transition-all ${isSelected ? 'ring-2 ring-offset-1 scale-110' : 'border-gray-200'}`}
+                  style={{
+                    background: isSelected ? `${metallicShine}, ${grad}` : grad,
+                    boxShadow: isSelected
+                      ? `inset 0 1px 0 rgba(255,255,255,0.65), inset 0 2px 4px -1px rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15), ${selectedGlow}, 0 2px 8px rgba(0,0,0,0.2)`
+                      : 'inset 0 1px 0 rgba(255,255,255,0.25)',
+                    borderColor: isSelected ? (metal === 'gold' ? '#8b6914' : metal === 'silver' ? '#505050' : '#5c2e0a') : undefined,
+                  }}
+                  title={metal.charAt(0).toUpperCase() + metal.slice(1)}
+                />
+              )
+            })}
             {p.frame && !['gold', 'silver', 'copper'].includes(p.frame.style) && (['primary', 'secondary', 'accent', 'silver', 'gold', 'copper', 'neutral'] as const).map((key) => (
               <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getFrameHex(key) }} title={key} />
             ))}
