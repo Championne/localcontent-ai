@@ -70,6 +70,29 @@ export async function POST(request: Request) {
       ? requestedStyle
       : detectBestStyle(topic)
 
+    // Fetch AI prompt overrides for this user
+    let sceneHintOverride: string | null = null
+    let stylePrefixOverride: string | null = null
+    try {
+      const { data: aiOverrides } = await supabase
+        .from('ai_prompt_overrides')
+        .select('override_type, key, prompt_text')
+        .eq('user_id', user.id)
+        .in('key', [industry.trim().toLowerCase(), finalStyle])
+      if (aiOverrides) {
+        for (const ov of aiOverrides) {
+          if (ov.override_type === 'scene_hint' && ov.key === industry.trim().toLowerCase()) {
+            sceneHintOverride = ov.prompt_text
+          }
+          if (ov.override_type === 'style_prefix' && ov.key === finalStyle) {
+            stylePrefixOverride = ov.prompt_text
+          }
+        }
+      }
+    } catch {
+      // Non-critical: continue without overrides
+    }
+
     const imageResult = await generateImage({
       topic,
       businessName,
@@ -79,6 +102,8 @@ export async function POST(request: Request) {
       brandPrimaryColor: brandPrimaryColor || undefined,
       brandSecondaryColor: brandSecondaryColor || undefined,
       brandAccentColor: brandAccentColor || undefined,
+      sceneHintOverride,
+      stylePrefixOverride,
     })
 
     const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)

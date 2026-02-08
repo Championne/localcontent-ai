@@ -100,6 +100,10 @@ export interface GenerateImageParams {
   brandPrimaryColor?: string | null
   brandSecondaryColor?: string | null
   brandAccentColor?: string | null
+  /** Optional: override scene hint for this industry (from Supabase) */
+  sceneHintOverride?: string | null
+  /** Optional: override style prefix (from Supabase) */
+  stylePrefixOverride?: string | null
 }
 
 export interface GenerateImageResult {
@@ -114,7 +118,7 @@ export interface GenerateImageResult {
 const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Screens and displays are off or show only abstract colors. The image must be completely free of written language.`
 
 /** Industry-normalized key to concrete scene subject hints so the image clearly shows that business (not generic interiors). */
-const INDUSTRY_SCENE_HINTS: Record<string, string> = {
+export const INDUSTRY_SCENE_HINTS: Record<string, string> = {
   hvac: 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
   'hvac / heating & cooling': 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
   plumbing: 'Plumber at work, or plumbing tools and pipes, or service van',
@@ -132,7 +136,7 @@ const INDUSTRY_SCENE_HINTS: Record<string, string> = {
   'auto repair': 'Mechanic at work, or car repair shop, or auto parts',
 }
 
-function getIndustrySceneHint(industry: string): string {
+export function getIndustrySceneHint(industry: string): string {
   const key = industry.trim().toLowerCase().replace(/\s*&\s*/g, ' and ')
   return INDUSTRY_SCENE_HINTS[key] ?? INDUSTRY_SCENE_HINTS[key.replace(/\s+and\s+/g, ' & ')] ?? `${industry} professional at work or ${industry} equipment and service`
 }
@@ -207,8 +211,9 @@ function buildImagePrompt(params: GenerateImageParams): string {
   else if (imageSize === '1024x1792') formatDesc = 'Tall portrait format'
 
   // Lead with industry-specific subject so the image clearly shows that business (not generic interiors/showrooms)
-  const industrySubject = getIndustrySceneHint(industry)
-  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${styleConfig.promptPrefix}. Theme or mood: ${topic}. Single main subject, clean uncluttered background, natural lighting. Colour palette: natural and muted, avoid oversaturated or intensely vivid colours. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  const industrySubject = params.sceneHintOverride || getIndustrySceneHint(industry)
+  const stylePrefix = params.stylePrefixOverride || styleConfig.promptPrefix
+  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${stylePrefix}. Theme or mood: ${topic}. Single main subject, clean uncluttered background, natural lighting. Colour palette: natural and muted, avoid oversaturated or intensely vivid colours. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
   const hexRe = /^#[0-9A-Fa-f]{6}$/
   const primaryHex = params.brandPrimaryColor && hexRe.test(params.brandPrimaryColor) ? params.brandPrimaryColor : null
   const secondaryHex = params.brandSecondaryColor && hexRe.test(params.brandSecondaryColor) ? params.brandSecondaryColor : null

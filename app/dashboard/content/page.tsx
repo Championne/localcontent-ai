@@ -279,6 +279,8 @@ export default function CreateContentPage() {
   const [selectedStockImage, setSelectedStockImage] = useState<StockOption | null>(null)
   const [step3StockLoading, setStep3StockLoading] = useState(false)
   const [regeneratingStockIndex, setRegeneratingStockIndex] = useState<number | null>(null)
+  // Session dedup: track all stock image URLs shown so regenerate never repeats
+  const usedStockUrlsRef = useRef<Set<string>>(new Set())
   const [step3AIImage, setStep3AIImage] = useState<{ url: string; style: string; size: string; generated_image_id?: string | null } | null>(null)
   const [generatingAiImage, setGeneratingAiImage] = useState(false)
   const step3UploadInputRef = useRef<HTMLInputElement>(null)
@@ -334,12 +336,17 @@ export default function CreateContentPage() {
     if (step !== 3 || !topic?.trim() || !industry?.trim() || !selectedTemplate) return
     if (stockImageOptions.length > 0) return // keep options from generate, don't overwrite with GET
     setStep3StockLoading(true)
+    const usedArr = Array.from(usedStockUrlsRef.current)
     const params = new URLSearchParams({ topic: topic.trim(), industry: industry.trim(), contentType: selectedTemplate })
+    if (usedArr.length > 0) params.set('usedUrls', usedArr.join(','))
     fetch(`/api/stock-images?${params}`)
       .then(res => res.json())
       .then(data => {
         const deduped = dedupeStockOptionsByUrl(data.options)
-        if (deduped.length > 0) setStockImageOptions(deduped)
+        if (deduped.length > 0) {
+          setStockImageOptions(deduped)
+          deduped.forEach((o: StockOption) => usedStockUrlsRef.current.add(o.url))
+        }
       })
       .catch(() => {})
       .finally(() => setStep3StockLoading(false))
@@ -1239,15 +1246,20 @@ export default function CreateContentPage() {
     }
   }
 
-  // Regenerate a single stock slot with a new image (uses page param for variety).
+  // Regenerate a single stock slot with a new image (uses page param + usedUrls for dedup).
+  const stockRegenerateCountRef = useRef(1)
   const handleRegenerateStockSlot = async (slotIndex: number) => {
     if (!topic?.trim() || !industry?.trim()) return
     setRegeneratingStockIndex(slotIndex)
     setError('')
     const contentType = selectedTemplate === 'social-pack' ? 'social-pack' : (selectedTemplate === 'blog-post' ? 'blog-post' : 'social-post')
-    const page = 2 + Math.floor(Math.random() * 3) // 2–4 for different results
+    stockRegenerateCountRef.current += 1
+    const page = stockRegenerateCountRef.current
+    const usedArr = Array.from(usedStockUrlsRef.current)
     try {
-      const res = await fetch(`/api/stock-images?topic=${encodeURIComponent(topic)}&industry=${encodeURIComponent(industry)}&contentType=${contentType}&page=${page}`)
+      const params = new URLSearchParams({ topic: topic.trim(), industry: industry.trim(), contentType, page: String(page) })
+      if (usedArr.length > 0) params.set('usedUrls', usedArr.join(','))
+      const res = await fetch(`/api/stock-images?${params}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to fetch stock image')
       const options = data.options as StockOption[]
@@ -1256,6 +1268,7 @@ export default function CreateContentPage() {
           const existingUrls = new Set(prev.map((o) => o.url))
           const chosen = options.find((o) => !existingUrls.has(o.url))
           if (!chosen) return prev
+          usedStockUrlsRef.current.add(chosen.url)
           const next = [...prev]
           next[slotIndex] = chosen
           return next
