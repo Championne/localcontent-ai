@@ -71,7 +71,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto py-8">
+      <div className="max-w-2xl mx-auto py-8">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-48 bg-gray-200 rounded"></div>
@@ -82,8 +82,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Settings</h1>
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
 
       {/* Tab navigation */}
       <div className="flex gap-1 border-b border-gray-200 mb-6">

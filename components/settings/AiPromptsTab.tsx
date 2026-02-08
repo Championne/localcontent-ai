@@ -180,7 +180,7 @@ export default function AiPromptsTab() {
       )}
 
       {/* Industry Scene Hints */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Industry Scene Hints</h3>
         <p className="text-xs text-gray-500 mb-4">These describe what the AI image should show for each industry. Override to get more relevant images.</p>
         <div className="space-y-3">
@@ -237,10 +237,10 @@ export default function AiPromptsTab() {
       </div>
 
       {/* Image Styles */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Image Styles</h3>
         <p className="text-xs text-gray-500 mb-4">Style prefixes define the overall look and feel of AI-generated images.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           {Object.entries(DEFAULT_STYLE_PREFIXES).map(([key, style]) => {
             const override = getOverrideValue('style_prefix', key)
             const isEditing = editingStyle?.key === key
@@ -295,9 +295,9 @@ export default function AiPromptsTab() {
       </div>
 
       {/* Test Panel */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Test AI Image Generation</h3>
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="space-y-3 mb-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Industry</label>
             <select
@@ -364,7 +364,7 @@ export default function AiPromptsTab() {
             {testResult.imageUrl && (
               <div>
                 <h4 className="text-xs font-semibold text-gray-600 mb-1">Generated Image</h4>
-                <img src={testResult.imageUrl} alt="Test generation" className="w-64 h-64 object-cover rounded-lg border border-gray-200" />
+                <img src={testResult.imageUrl} alt="Test generation" className="w-48 h-48 object-cover rounded-lg border border-gray-200" />
               </div>
             )}
           </div>
