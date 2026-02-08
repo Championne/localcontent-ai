@@ -1522,7 +1522,7 @@ export default function CreateContentPage() {
 
   return (
     <div
-      className="min-h-screen pt-8 sm:pt-10 pb-20 sm:pb-28 px-4 sm:px-6"
+      className="-m-4 -mt-20 lg:-m-6 lg:-mt-6 p-4 pt-20 lg:p-6 lg:pt-6 min-h-screen"
       style={
         {
           ['--brand-primary']: primary,
@@ -1532,6 +1532,7 @@ export default function CreateContentPage() {
         } as React.CSSProperties
       }
     >
+    <div className="pt-8 sm:pt-10 pb-20 sm:pb-28 px-4 sm:px-6">
       {/* Top bar: client logo (top-left, as big as fits) + page title */}
       <div className={`flex items-start gap-4 mb-6 pb-6 pt-4 px-4 sm:px-5 ${step === 3 ? 'border-b border-gray-200/60' : 'border-b rounded-xl'}`} style={step === 3 ? undefined : { backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
         <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
@@ -3221,6 +3222,7 @@ export default function CreateContentPage() {
           )}
         </div>
       )}
+    </div>
     </div>
     </div>
   )
