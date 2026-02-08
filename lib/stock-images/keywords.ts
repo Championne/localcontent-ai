@@ -14,7 +14,7 @@ const INDUSTRY_SEARCH_TERMS: Record<string, string[]> = {
   landscaping: ['landscaping garden', 'landscaper at work', 'garden maintenance', 'lawn care'],
   cleaning: ['cleaning service', 'professional cleaner', 'cleaning supplies', 'house cleaning'],
   pest: ['pest control', 'exterminator', 'pest control technician', 'termite inspection'],
-  real estate: ['real estate agent', 'house for sale', 'real estate professional', 'home showing'],
+  'real estate': ['real estate agent', 'house for sale', 'real estate professional', 'home showing'],
   restaurant: ['restaurant kitchen', 'chef cooking', 'restaurant food', 'restaurant interior'],
   dental: ['dental office', 'dentist patient', 'dental care', 'dental clinic'],
   legal: ['lawyer office', 'legal professional', 'law firm', 'attorney'],
