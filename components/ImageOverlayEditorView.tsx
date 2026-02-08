@@ -335,25 +335,40 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
 
               {p.overlays.map(overlay => {
                 const borderHex = p.overlayBorderColors[overlay.id] || p.getHex('primary')
+                const showPanelLeft = overlay.x > 55
+                const isPhoto = overlay.type === 'photo'
                 return (
                   <div
                     key={overlay.id}
                     onMouseDown={(e) => p.handleOverlayDragStart(overlay.id, e)}
                     onTouchStart={(e) => p.handleOverlayDragStart(overlay.id, e)}
-                    className="absolute cursor-move group"
+                    className="absolute cursor-move group z-10"
                     style={{ left: `${overlay.x}%`, top: `${overlay.y}%`, width: `${overlay.scale}%`, height: `${overlay.scale}%` }}
                   >
-                    <span className={`block w-full h-full ${overlay.type === 'photo' ? 'rounded-full' : 'rounded-lg'}`} style={{ boxShadow: `0 0 0 2px ${borderHex}` }}>
-                      <img src={overlay.url} alt="" className={`w-full h-full object-${overlay.type === 'photo' ? 'cover' : 'contain'} ${overlay.type === 'photo' ? 'rounded-full' : 'rounded-lg'} shadow-lg`} draggable={false} />
+                    <span className={`block w-full h-full ${isPhoto ? 'rounded-full' : 'rounded-lg'}`} style={{ boxShadow: `0 0 0 2px ${borderHex}` }}>
+                      <img src={overlay.url} alt="" className={`w-full h-full object-${isPhoto ? 'cover' : 'contain'} ${isPhoto ? 'rounded-full' : 'rounded-lg'} shadow-lg`} draggable={false} />
                     </span>
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1 bg-white rounded-lg shadow-lg p-1">
-                      <span className="text-[9px] text-gray-500 mr-0.5">Border:</span>
-                      {(['primary', 'secondary', 'accent'] as const).map((key) => (
-                        <button key={key} type="button" onClick={(e) => { e.stopPropagation(); p.setOverlayBorderColors(prev => ({ ...prev, [overlay.id]: p.getHex(key) })) }} className={`w-5 h-5 rounded-full border-2 ${(p.overlayBorderColors[overlay.id] || p.getHex('primary')) === p.getHex(key) ? 'border-gray-800 ring-1 ring-offset-1' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
-                      ))}
-                      <button onClick={(e) => { e.stopPropagation(); p.handleScaleChange(overlay.id, -2) }} className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold">−</button>
-                      <button onClick={(e) => { e.stopPropagation(); p.handleScaleChange(overlay.id, 2) }} className="w-6 h-6 rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold">+</button>
-                      <button onClick={(e) => { e.stopPropagation(); p.handleRemove(overlay.id) }} className="w-6 h-6 rounded bg-red-100 hover:bg-red-200 text-red-600 text-xs">✕</button>
+                    <div
+                      className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 shadow-xl border bg-white/95 backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                      style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{isPhoto ? 'Edit photo' : 'Edit logo'}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); p.handleRemove(overlay.id) }} className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Remove">✕</button>
+                      </div>
+                      <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1.5">
+                        <span className="text-[10px] font-medium text-gray-600">Border</span>
+                        <div className="flex gap-1.5">
+                          {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                            <button key={key} type="button" onClick={(e) => { e.stopPropagation(); p.setOverlayBorderColors(prev => ({ ...prev, [overlay.id]: p.getHex(key) })) }} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${(p.overlayBorderColors[overlay.id] || p.getHex('primary')) === p.getHex(key) ? 'ring-2 ring-offset-1' : 'border-gray-200'}`} style={{ borderColor: (p.overlayBorderColors[overlay.id] || p.getHex('primary')) === p.getHex(key) ? primary : undefined, backgroundColor: p.getHex(key) }} title={key} />
+                          ))}
+                        </div>
+                        <span className="text-[10px] font-medium text-gray-600">Size</span>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={(e) => { e.stopPropagation(); p.handleScaleChange(overlay.id, -2) }} className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm transition-colors" style={{ color: primary }}>−</button>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); p.handleScaleChange(overlay.id, 2) }} className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm transition-colors" style={{ color: primary }}>+</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )

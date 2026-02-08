@@ -16,6 +16,13 @@ const INDUSTRY_SEARCH_TERMS: Record<string, string[]> = {
   pest: ['pest control', 'exterminator', 'pest control technician', 'termite inspection'],
   'real estate': ['real estate agent', 'house for sale', 'real estate professional', 'home showing'],
   restaurant: ['restaurant kitchen', 'chef cooking', 'restaurant food', 'restaurant interior'],
+  pizza: ['fresh pizza', 'pizza restaurant', 'wood fired pizza', 'pizza delivery', 'pizzeria'],
+  pizzeria: ['fresh pizza', 'pizza restaurant', 'wood fired pizza', 'pizzeria interior', 'pizza oven'],
+  'pizza restaurant': ['fresh pizza', 'pizza restaurant', 'wood fired pizza', 'pizza delivery', 'pizzeria'],
+  'food truck': ['food truck', 'street food', 'food truck service', 'outdoor food'],
+  catering: ['catering food', 'catering buffet', 'professional catering', 'event catering'],
+  bakery: ['artisan bakery', 'fresh bread', 'bakery shop', 'pastry'],
+  cafe: ['cafe interior', 'coffee shop', 'cafe food', 'coffee and pastry'],
   dental: ['dental office', 'dentist patient', 'dental care', 'dental clinic'],
   legal: ['lawyer office', 'legal professional', 'law firm', 'attorney'],
   accounting: ['accountant office', 'accounting professional', 'tax preparation', 'financial advisor'],
@@ -26,7 +33,13 @@ const INDUSTRY_SEARCH_TERMS: Record<string, string[]> = {
 function getIndustrySearchTerms(industry: string): string[] {
   const key = industry.trim().toLowerCase()
   if (!key) return []
-  return INDUSTRY_SEARCH_TERMS[key] ?? INDUSTRY_SEARCH_TERMS[key.replace(/\s*&\s*/g, ' and ')] ?? []
+  const exact = INDUSTRY_SEARCH_TERMS[key] ?? INDUSTRY_SEARCH_TERMS[key.replace(/\s*&\s*/g, ' and ')]
+  if (exact?.length) return exact
+  // Fallback: industry contains a known segment (e.g. "promotional pizza business" -> pizza terms)
+  for (const [k, terms] of Object.entries(INDUSTRY_SEARCH_TERMS)) {
+    if (key.includes(k) && terms.length) return terms
+  }
+  return []
 }
 
 export function getSearchQueryForTopic(topic: string, industry: string): string {
