@@ -5,9 +5,9 @@ import OpenAI from 'openai'
 export const IMAGE_STYLES = {
   promotional: {
     name: 'Promotional',
-    description: 'Clean marketing images for sales and offers',
+    description: 'Playful or stylized images for sales and offers',
     keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    promptPrefix: 'Clean marketing photograph of physical objects only. Product photography with shallow depth of field. All surfaces are blank and unmarked. No signage exists in this scene'
+    promptPrefix: 'Playful, stylized or slightly abstract image. Can be illustrative or conceptual, not necessarily photorealistic. Clean composition, no text. No showroom, no pedestals, no gallery lighting, no literal mood-board frames or color swatches. Surfaces and objects free of signage or writing'
   },
   professional: {
     name: 'Professional',
