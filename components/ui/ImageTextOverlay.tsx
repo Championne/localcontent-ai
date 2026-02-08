@@ -22,6 +22,8 @@ interface ImageTextOverlayProps {
   onSave?: (imageWithText: Blob) => void | Promise<void>
   onClose?: () => void
   className?: string
+  /** When true, image is shown in a 280px square to match social post preview size */
+  matchPreviewSize?: boolean
 }
 
 // Smart color selection based on image brightness analysis
@@ -129,7 +131,8 @@ export function ImageTextOverlay({
   businessName,
   onSave,
   onClose,
-  className = ''
+  className = '',
+  matchPreviewSize = false
 }: ImageTextOverlayProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -438,7 +441,7 @@ export function ImageTextOverlay({
       {/* Image with overlay */}
       <div 
         ref={containerRef}
-        className="relative bg-gray-100 select-none"
+        className={`relative bg-gray-100 select-none ${matchPreviewSize ? 'max-w-[280px] w-full mx-auto aspect-square overflow-hidden rounded-lg' : ''}`}
         style={{ touchAction: 'none' }}
         onClick={() => setSelectedId(null)}
       >
@@ -454,7 +457,7 @@ export function ImageTextOverlay({
         <img
           src={imageUrl}
           alt="Content"
-          className="w-full h-auto"
+          className={matchPreviewSize ? 'absolute inset-0 w-full h-full object-cover' : 'w-full h-auto'}
           onLoad={() => setImageLoaded(true)}
           draggable={false}
         />

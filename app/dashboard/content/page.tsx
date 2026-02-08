@@ -221,6 +221,7 @@ export default function CreateContentPage() {
   
   // Regenerate dropdown menu
   const [regenerateMenuOpen, setRegenerateMenuOpen] = useState(false)
+  const [aiRegenerateMenuOpen, setAiRegenerateMenuOpen] = useState(false)
   
   // Image generation options (Option C: stock default, AI optional)
   const [generateImageFlag] = useState(true) // Always generate images
@@ -281,6 +282,7 @@ export default function CreateContentPage() {
   const [step3AIImage, setStep3AIImage] = useState<{ url: string; style: string; size: string; generated_image_id?: string | null } | null>(null)
   const [generatingAiImage, setGeneratingAiImage] = useState(false)
   const step3UploadInputRef = useRef<HTMLInputElement>(null)
+  const aiRegenerateMenuRef = useRef<HTMLDivElement>(null)
 
   // Quality ratings: link to generated_images / generated_texts when saving
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
@@ -316,6 +318,16 @@ export default function CreateContentPage() {
     }
     fetchBusinesses()
   }, [])
+
+  // Close AI regenerate style dropdown when clicking outside
+  useEffect(() => {
+    if (!aiRegenerateMenuOpen) return
+    const close = (e: MouseEvent) => {
+      if (aiRegenerateMenuRef.current && !aiRegenerateMenuRef.current.contains(e.target as Node)) setAiRegenerateMenuOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [aiRegenerateMenuOpen])
 
   // Step 3: fetch 3 stock image options only when we don't already have any (e.g. from generate response)
   useEffect(() => {
@@ -1348,9 +1360,10 @@ export default function CreateContentPage() {
     }
   }
 
-  const handleGenerateStep3AiImage = async () => {
+  const handleGenerateStep3AiImage = async (styleOverride?: ImageStyleKey) => {
     setGeneratingAiImage(true)
     setError('')
+    const styleToUse = styleOverride ?? imageStyle
     try {
       const res = await fetch('/api/content/generate-image', {
         method: 'POST',
@@ -1359,7 +1372,7 @@ export default function CreateContentPage() {
           topic,
           industry,
           businessName,
-          style: imageStyle,
+          style: styleToUse,
           contentType: selectedTemplate,
           brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
           brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
@@ -1982,7 +1995,7 @@ export default function CreateContentPage() {
                 {regenerateMenuOpen && !generating && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                     <button
-                      onClick={() => handleGenerate('text')}
+                      onClick={() => { setRegenerateMenuOpen(false); handleGenerate('text') }}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1992,26 +2005,7 @@ export default function CreateContentPage() {
                       Text only
                     </button>
                     <button
-                      onClick={() => handleGenerate('image', 'ai')}
-                      disabled={imagesRemaining === 0}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      AI image
-                    </button>
-                    <button
-                      onClick={() => handleGenerate('image', 'stock')}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Free stock image
-                    </button>
-                    <button
-                      onClick={handleRegenerateAllImages}
+                      onClick={() => { setRegenerateMenuOpen(false); handleRegenerateAllImages() }}
                       disabled={imagesRemaining === 0}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -2079,11 +2073,11 @@ export default function CreateContentPage() {
                 ))
               ) : (
                 stockImageOptions.slice(0, 3).map((opt, i) => (
-                  <div key={i} className="group relative aspect-square">
+                  <div key={i} className="flex flex-col">
                     <button
                       type="button"
                       onClick={() => handlePickStockImage(opt)}
-                      className={`relative w-full h-full rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all ${
                         generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url
                           ? 'border-teal-500 ring-2 ring-teal-200'
                           : 'border-gray-200 hover:border-gray-300'
@@ -2100,30 +2094,16 @@ export default function CreateContentPage() {
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                         </span>
                       )}
-                      <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Stock</span>
                     </button>
-                    {regeneratingStockIndex !== i && (
-                      <div
-                        className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg z-10 pointer-events-none"
-                        aria-hidden
-                      >
-                        <span className="text-white text-xs font-medium">Regenerate</span>
-                      </div>
-                    )}
-                    {regeneratingStockIndex !== i && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }}
-                        className="absolute inset-x-2 bottom-6 py-1 rounded bg-white/90 text-gray-800 text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-white"
-                      >
-                        Regenerate
-                      </button>
-                    )}
+                    <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
+                      <span className="text-[10px] font-medium text-gray-600">Stock</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }} disabled={regeneratingStockIndex === i} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 disabled:opacity-50">New image</button>
+                    </div>
                   </div>
                 ))
               )}
               {/* AI image */}
-              <div className="group relative aspect-square">
+              <div className="flex flex-col">
                 <button
                   type="button"
                   onClick={() => {
@@ -2137,7 +2117,7 @@ export default function CreateContentPage() {
                     }
                   }}
                   disabled={generatingAiImage || imagesRemaining === 0}
-                  className={`relative w-full h-full rounded-lg overflow-hidden border-2 transition-all flex flex-col items-center justify-center bg-white ${
+                  className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all flex flex-col items-center justify-center bg-white ${
                     generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
                   } ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}
                 >
@@ -2151,7 +2131,6 @@ export default function CreateContentPage() {
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                         </span>
                       )}
-                      <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center z-10">AI</span>
                     </>
                   ) : (
                     <>
@@ -2161,37 +2140,39 @@ export default function CreateContentPage() {
                     </>
                   )}
                 </button>
-                {step3AIImage && !generatingAiImage && imagesRemaining !== 0 && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }}
-                    className="absolute inset-x-2 bottom-6 py-1 rounded bg-white/90 text-gray-800 text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-white"
-                  >
-                    Regenerate
-                  </button>
-                )}
+                <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
+                  <span className="text-[10px] font-medium text-gray-600">AI</span>
+                  {step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? (
+                    <div ref={aiRegenerateMenuRef} className="relative">
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setAiRegenerateMenuOpen(!aiRegenerateMenuOpen) }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 flex items-center gap-0.5">
+                        Regenerate <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      {aiRegenerateMenuOpen && (
+                        <div className="absolute right-0 top-full mt-0.5 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1">
+                          <button type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage() }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">Same style</button>
+                          {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
+                            <button key={key} type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage(key) }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">{config.name}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : !step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }} className="text-[10px] font-medium text-teal-600 hover:underline">Generate</button>
+                  ) : null}
+                </div>
               </div>
               {/* Upload your own */}
-              <div className="group relative aspect-square">
+              <div className="flex flex-col">
                 <button
                   type="button"
                   onClick={() => step3UploadInputRef.current?.click()}
-                  className={`relative w-full h-full rounded-lg overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center bg-white ${
+                  className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 border-dashed transition-all flex flex-col items-center justify-center bg-white ${
                     generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'
                   }`}
                 >
-                  <input
-                    ref={step3UploadInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }}
-                  />
+                  <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
                   {generatedImage?.source === 'upload' ? (
-                    <>
-                      <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
-                      <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Your image</span>
-                    </>
+                    <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
                   ) : (
                     <>
                       <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
@@ -2199,15 +2180,12 @@ export default function CreateContentPage() {
                     </>
                   )}
                 </button>
-                {generatedImage?.source === 'upload' && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); step3UploadInputRef.current?.click() }}
-                    className="absolute inset-x-2 bottom-6 py-1 rounded bg-white/90 text-gray-800 text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-white"
-                  >
-                    Replace
-                  </button>
-                )}
+                <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
+                  <span className="text-[10px] font-medium text-gray-600">{generatedImage?.source === 'upload' ? 'Your image' : 'Upload'}</span>
+                  {generatedImage?.source === 'upload' && (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); step3UploadInputRef.current?.click() }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600">Replace</button>
+                  )}
+                </div>
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">Stock from Unsplash · AI uses your quota · Upload any image. Then customize with logo and branding below.</p>
@@ -2280,6 +2258,7 @@ export default function CreateContentPage() {
                 businessName={businessName}
                 onSave={handleTextOverlaySave}
                 onClose={() => { setShowTextOverlay(false); setOverlayError(null) }}
+                matchPreviewSize
               />
             </div>
           ) : generatedImage && (
@@ -2750,27 +2729,8 @@ export default function CreateContentPage() {
                 {regenerateMenuOpen && !generating && (
                   <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
                     <button
-                      onClick={() => handleGenerate('all')}
+                      onClick={() => { setRegenerateMenuOpen(false); handleGenerate('text') }}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-t-lg"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Regenerate All
-                    </button>
-                    <button
-                      onClick={() => handleRegenerateAllImages()}
-                      disabled={imagesRemaining === 0}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
-                    >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      All images
-                    </button>
-                    <button
-                      onClick={() => handleGenerate('text')}
-                      className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -2778,14 +2738,14 @@ export default function CreateContentPage() {
                       Text only
                     </button>
                     <button
-                      onClick={() => handleGenerate('image')}
+                      onClick={() => { setRegenerateMenuOpen(false); handleRegenerateAllImages() }}
                       disabled={imagesRemaining === 0}
                       className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100 rounded-b-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      AI image only
+                      All images
                     </button>
                   </div>
                 )}
@@ -2842,7 +2802,7 @@ export default function CreateContentPage() {
             <p className="text-xs text-gray-500 mt-2">Ready to save to your library when you're done.</p>
           </div>
           
-          {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload) - same as social-pack */}
+          {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload) - same card layout as social-pack */}
           <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.28) }}>
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Pick the look that fits your message</h3>
             <p className="text-xs text-gray-500 mb-4">Then add your logo, colours and text below.</p>
@@ -2853,89 +2813,116 @@ export default function CreateContentPage() {
                 ))
               ) : (
                 stockImageOptions.slice(0, 3).map((opt, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => handlePickStockImage(opt)}
-                    className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square ${
-                      generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url
-                        ? 'border-teal-500 ring-2 ring-teal-200'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <img src={opt.url} alt="" className="w-full h-full object-cover" />
-                    {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && (
-                      <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      </span>
-                    )}
-                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Stock</span>
-                  </button>
+                  <div key={i} className="flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => handlePickStockImage(opt)}
+                      className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all ${
+                        generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {regeneratingStockIndex === i && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/40 z-10">
+                          <svg className="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        </div>
+                      )}
+                      <img src={opt.url} alt="" className="w-full h-full object-cover" />
+                      {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && (
+                        <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        </span>
+                      )}
+                    </button>
+                    <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
+                      <span className="text-[10px] font-medium text-gray-600">Stock</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }} disabled={regeneratingStockIndex === i} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 disabled:opacity-50">New image</button>
+                    </div>
+                  </div>
                 ))
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  if (step3AIImage) {
-                    setAppliedBrandingForImageUrl(null)
-                    setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' })
-                    setGeneratedImageId(step3AIImage.generated_image_id || null)
-                    setSelectedStockImage(null)
-                  } else {
-                    handleGenerateStep3AiImage()
-                  }
-                }}
-                disabled={generatingAiImage || imagesRemaining === 0}
-                className={`relative rounded-lg overflow-hidden border-2 transition-all aspect-square flex flex-col items-center justify-center bg-white ${
-                  generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
-                } ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}
-              >
-                {generatingAiImage ? (
-                  <svg className="animate-spin w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                ) : step3AIImage ? (
-                  <>
-                    <img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
-                    {generatedImage?.source === 'ai' && (
-                      <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white z-10">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      </span>
-                    )}
-                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center z-10">AI</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <span className="text-xs text-gray-600">Generate with AI</span>
-                    {imagesRemaining === 0 && <span className="text-[10px] text-red-600 mt-0.5">Limit reached</span>}
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => step3UploadInputRef.current?.click()}
-                className={`relative rounded-lg overflow-hidden border-2 border-dashed transition-all aspect-square flex flex-col items-center justify-center bg-white ${
-                  generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'
-                }`}
-              >
-                <input
-                  ref={step3UploadInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }}
-                />
-                {generatedImage?.source === 'upload' ? (
-                  <>
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (step3AIImage) {
+                      setAppliedBrandingForImageUrl(null)
+                      setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' })
+                      setGeneratedImageId(step3AIImage.generated_image_id || null)
+                      setSelectedStockImage(null)
+                    } else {
+                      handleGenerateStep3AiImage()
+                    }
+                  }}
+                  disabled={generatingAiImage || imagesRemaining === 0}
+                  className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all flex flex-col items-center justify-center bg-white ${
+                    generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
+                  } ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}
+                >
+                  {generatingAiImage ? (
+                    <svg className="animate-spin w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  ) : step3AIImage ? (
+                    <>
+                      <img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                      {generatedImage?.source === 'ai' && (
+                        <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white z-10">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <span className="text-xs text-gray-600">Generate with AI</span>
+                      {imagesRemaining === 0 && <span className="text-[10px] text-red-600 mt-0.5">Limit reached</span>}
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
+                  <span className="text-[10px] font-medium text-gray-600">AI</span>
+                  {step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? (
+                    <div ref={aiRegenerateMenuRef} className="relative">
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setAiRegenerateMenuOpen(!aiRegenerateMenuOpen) }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 flex items-center gap-0.5">
+                        Regenerate <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      {aiRegenerateMenuOpen && (
+                        <div className="absolute right-0 top-full mt-0.5 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1">
+                          <button type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage() }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">Same style</button>
+                          {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
+                            <button key={key} type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage(key) }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">{config.name}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : !step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }} className="text-[10px] font-medium text-teal-600 hover:underline">Generate</button>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => step3UploadInputRef.current?.click()}
+                  className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 border-dashed transition-all flex flex-col items-center justify-center bg-white ${
+                    generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'
+                  }`}
+                >
+                  <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
+                  {generatedImage?.source === 'upload' ? (
                     <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
-                    <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center">Your image</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                    <span className="text-xs text-gray-600">Upload your own</span>
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                      <span className="text-xs text-gray-600">Upload your own</span>
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
+                  <span className="text-[10px] font-medium text-gray-600">{generatedImage?.source === 'upload' ? 'Your image' : 'Upload'}</span>
+                  {generatedImage?.source === 'upload' && (
+                    <button type="button" onClick={(e) => { e.stopPropagation(); step3UploadInputRef.current?.click() }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600">Replace</button>
+                  )}
+                </div>
+              </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">Stock from Unsplash · AI uses your quota · Upload any image. Then customize with logo and branding below.</p>
           </div>
@@ -3009,6 +2996,7 @@ export default function CreateContentPage() {
                 businessName={businessName}
                 onSave={handleTextOverlaySave}
                 onClose={() => { setShowTextOverlay(false); setOverlayError(null) }}
+                matchPreviewSize
               />
             </div>
           )}
