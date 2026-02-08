@@ -3,11 +3,12 @@
  * with template literals inside Record/object initializers.
  */
 import type { CSSProperties } from 'react'
+import type { FrameColorKey } from './ImageOverlayEditorTypes'
 
 interface FrameStyleInput {
   frameStyle: string | undefined
-  getFrameHex: (key: string) => string
-  frameColorKey: string | undefined
+  getFrameHex: (key: FrameColorKey) => string
+  frameColorKey: FrameColorKey | undefined
 }
 
 export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties {
