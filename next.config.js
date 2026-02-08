@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Use Terser instead of SWC for minification (Babel mode)
+  swcMinify: false,
   async redirects() {
     return [
       { source: '/dashboard/pictures', destination: '/dashboard/generations?filter=images', permanent: false },
