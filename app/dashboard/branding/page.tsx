@@ -678,6 +678,13 @@ export default function BrandingPage() {
                     </div>
                   </div>
 
+                  {/* Selected colour bar — your current palette */}
+                  <div className="flex gap-1 h-8 rounded-lg overflow-hidden border border-gray-200 mb-3">
+                    <div className="flex-1" style={{ backgroundColor: business.brand_primary_color || '#0d9488' }} title="Your primary" />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} title="Your secondary" />
+                    <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} title="Your accent" />
+                  </div>
+
                   <label className="block text-xs font-medium text-gray-500 mb-1">Primary colour</label>
                   <div className="flex gap-2 items-center">
                     <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_primary_color || '') ? business.brand_primary_color! : '#0d9488'} onChange={(e) => updateBusiness(business.id, { brand_primary_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
@@ -692,11 +699,6 @@ export default function BrandingPage() {
                   <div className="flex gap-2 items-center">
                     <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_accent_color || '') ? business.brand_accent_color! : '#6b7280'} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
                     <input type="text" value={business.brand_accent_color || ''} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value || null })} placeholder="#hex" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                  </div>
-                  <div className="flex gap-1 h-8 rounded-lg overflow-hidden border border-gray-200">
-                    <div className="flex-1" style={{ backgroundColor: business.brand_primary_color || '#0d9488' }} title="Your primary" />
-                    <div className="flex-1" style={{ backgroundColor: business.brand_secondary_color || '#e5e7eb' }} title="Your secondary" />
-                    <div className="flex-1" style={{ backgroundColor: business.brand_accent_color || '#e5e7eb' }} title="Your accent" />
                   </div>
                     </div>
                   </div>
