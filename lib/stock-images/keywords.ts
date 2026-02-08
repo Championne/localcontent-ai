@@ -6,8 +6,38 @@
 
 /** Industry-normalized key to Unsplash-friendly search phrases (tried first for better relevance). */
 const INDUSTRY_SEARCH_TERMS: Record<string, string[]> = {
-  hvac: ['HVAC technician', 'air conditioning unit', 'heating cooling repair', 'HVAC equipment'],
-  'hvac / heating & cooling': ['HVAC technician', 'air conditioning unit', 'heating cooling repair', 'HVAC equipment'],
+  hvac: [
+    'HVAC technician repair',
+    'air conditioner installation',
+    'HVAC service technician',
+    'furnace maintenance',
+    'air conditioning unit outdoor',
+    'HVAC equipment ductwork',
+    'heating cooling repair',
+    'AC unit repair',
+  ],
+  'hvac / heating & cooling': [
+    'HVAC technician repair',
+    'air conditioner installation',
+    'HVAC service technician',
+    'furnace maintenance',
+    'air conditioning unit outdoor',
+    'HVAC equipment ductwork',
+    'heating cooling repair',
+    'AC unit repair',
+  ],
+  'heating and cooling': [
+    'HVAC technician repair',
+    'air conditioner installation',
+    'furnace maintenance',
+    'heating cooling service',
+  ],
+  'heating & cooling': [
+    'HVAC technician repair',
+    'air conditioner installation',
+    'furnace maintenance',
+    'heating cooling service',
+  ],
   plumbing: ['plumber at work', 'plumbing repair', 'plumber technician', 'plumbing tools'],
   electrical: ['electrician at work', 'electrical repair', 'electrician technician', 'electrical panel'],
   roofing: ['roofer at work', 'roofing repair', 'roof installation', 'roofing contractor'],

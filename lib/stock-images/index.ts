@@ -35,7 +35,15 @@ export async function getStockImage(params: GetStockImageParams): Promise<StockI
   return searchStockImage(query, orientation)
 }
 
-/** Get multiple stock image options for the picker (e.g. 5). Uses fallback queries if the first returns fewer than 3. page > 1 returns different results. */
+/** Max results to request per query (Unsplash allows 10 per request). */
+const PER_QUERY_PAGE_SIZE = 10
+
+/**
+ * Get multiple stock image options for the picker.
+ * Uses multiple query variants and takes a few results from each so variety is better
+ * (e.g. for HVAC we mix "HVAC technician", "air conditioning unit", "furnace" instead of 3 from one search).
+ * page > 1 returns different results.
+ */
 export async function getStockImageOptions(
   params: GetStockImageParams,
   count = 5,
@@ -53,9 +61,24 @@ export async function getStockImageOptions(
   const seen = new Set<string>()
   const results: StockImageResult[] = []
 
+  // Take up to 2 results per variant so we mix different search phrases (e.g. HVAC technician + AC unit + furnace)
+  const perVariant = Math.max(1, Math.min(2, count))
   for (const query of variants) {
     if (results.length >= count) break
-    const options = await searchStockImageOptions(query, orientation, count, page)
+    const need = count - results.length
+    const toFetch = Math.min(perVariant, need, PER_QUERY_PAGE_SIZE)
+    const options = await searchStockImageOptions(query, orientation, toFetch, page)
+    for (const opt of options) {
+      if (seen.has(opt.url)) continue
+      seen.add(opt.url)
+      results.push(opt)
+      if (results.length >= count) break
+    }
+  }
+
+  // If we still need more, do a second pass with larger per-query fetch from first variant
+  if (results.length < count && variants.length > 0) {
+    const options = await searchStockImageOptions(variants[0], orientation, PER_QUERY_PAGE_SIZE, page)
     for (const opt of options) {
       if (seen.has(opt.url)) continue
       seen.add(opt.url)

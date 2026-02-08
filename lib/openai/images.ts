@@ -7,25 +7,25 @@ export const IMAGE_STYLES = {
     name: 'Promotional',
     description: 'Playful or stylized images for sales and offers',
     keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    promptPrefix: 'Promotional-style image that clearly shows the business type: technician at work, equipment, vehicle, or service in context. Bright, inviting, suitable for a sale or offer. No generic interiors, no furniture showrooms, no pedestals, no abstract decor or mood boards. Single clear subject from the business world. All surfaces and objects free of text or signage'
+    promptPrefix: 'Promotional-style image that clearly shows the business type: technician at work, equipment, vehicle, or service in context. Inviting but with natural, muted colours—no oversaturation or neon. Suitable for a sale or offer. No generic interiors, no furniture showrooms, no pedestals, no abstract decor or mood boards. Single clear subject from the business world. All surfaces and objects free of text or signage'
   },
   professional: {
     name: 'Professional',
     description: 'Authentic business photography',
     keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service'],
-    promptPrefix: 'Authentic professional photograph with realistic lighting. Simple clean composition showing only physical objects and environments. All surfaces blank and unmarked. No signage in scene'
+    promptPrefix: 'Authentic professional photograph with realistic lighting and natural, muted colour palette—avoid oversaturated or intense colours. Simple clean composition showing only physical objects and environments. All surfaces blank and unmarked. No signage in scene'
   },
   friendly: {
     name: 'Friendly',
     description: 'Warm, approachable photography',
     keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love'],
-    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel. Shows only physical objects and people. All clothing is plain solid colors. All surfaces blank. No signage anywhere'
+    promptPrefix: 'Warm natural photograph with soft lighting, candid authentic feel. Colours should be soft and natural, not vivid or intense. Shows only physical objects and people. All clothing is plain solid colors. All surfaces blank. No signage anywhere'
   },
   seasonal: {
     name: 'Seasonal',
     description: 'Subtle seasonal themed photography',
     keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween'],
-    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements. Only physical decorations and objects. All surfaces blank and unmarked. No signage, no greeting cards, no written messages'
+    promptPrefix: 'Tasteful seasonal photograph with subtle holiday elements. Muted, natural colour palette—no oversaturated or garish colours. Only physical decorations and objects. All surfaces blank and unmarked. No signage, no greeting cards, no written messages'
   }
 } as const
 
@@ -208,7 +208,7 @@ function buildImagePrompt(params: GenerateImageParams): string {
 
   // Lead with industry-specific subject so the image clearly shows that business (not generic interiors/showrooms)
   const industrySubject = getIndustrySceneHint(industry)
-  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${styleConfig.promptPrefix}. Theme or mood: ${topic}. Single main subject, clean uncluttered background, natural lighting. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${styleConfig.promptPrefix}. Theme or mood: ${topic}. Single main subject, clean uncluttered background, natural lighting. Colour palette: natural and muted, avoid oversaturated or intensely vivid colours. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
   const hexRe = /^#[0-9A-Fa-f]{6}$/
   const primaryHex = params.brandPrimaryColor && hexRe.test(params.brandPrimaryColor) ? params.brandPrimaryColor : null
   const secondaryHex = params.brandSecondaryColor && hexRe.test(params.brandSecondaryColor) ? params.brandSecondaryColor : null
@@ -216,7 +216,7 @@ function buildImagePrompt(params: GenerateImageParams): string {
   const hasBrandColor = !!primaryHex
   if (hasBrandColor) {
     scene += ` ${getMoodFromHex(primaryHex)}`
-    // Promotional style: use bright branding colours (primary, secondary, accent when available) for strong visual impact
+    // Promotional style: use brand colours subtly so the image stays natural, not overly intense
     if (style === 'promotional') {
       const colorNames: string[] = [getColorNameFromHex(primaryHex)]
       if (secondaryHex) colorNames.push(getColorNameFromHex(secondaryHex))
@@ -226,7 +226,7 @@ function buildImagePrompt(params: GenerateImageParams): string {
         : colorNames.length === 2
           ? `${colorNames[0]} and ${colorNames[1]}`
           : `${colorNames[0]}, ${colorNames[1]}, and ${colorNames[2]}`
-      scene += ` Use bright ${colorPhrase} as bold accents or highlights in the scene—e.g. uniform or equipment detail, vehicle stripe, or soft background wash—to create strong promotional impact. Keep the palette vibrant and eye-catching.`
+      scene += ` Use subtle, muted ${colorPhrase} as gentle accents or hints in the scene—e.g. uniform or equipment detail, vehicle stripe, or soft background wash—without oversaturating. Keep the overall palette natural and restrained.`
     }
   }
   return `${NO_TEXT_BLOCK} ${scene} ${NO_TEXT_BLOCK}`
