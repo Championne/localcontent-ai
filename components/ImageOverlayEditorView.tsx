@@ -65,9 +65,10 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
   const sidebarBg = hexWithAlpha(primary, 0.06)
   const buttonBg = hexWithAlpha(primary, 0.12)
   const buttonBorder = hexWithAlpha(primary, 0.35)
+  const rootBg = hexWithAlpha(primary, 0.03)
 
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm" style={{ backgroundColor: hexWithAlpha(primary, 0.03) }}>
+    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
       {/* Header: compact */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80" style={{ backgroundColor: headerBg }}>
         <div className="flex-shrink-0">
