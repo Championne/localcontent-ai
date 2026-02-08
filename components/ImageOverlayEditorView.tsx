@@ -58,15 +58,19 @@ function darkenHex(hex: string, factor: number): string {
   return '#' + [r, g, b].map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('')
 }
 
-export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
-  const primary = p.getHex('primary')
-  const primaryDark = darkenHex(primary, 0.5)
-  const headerBg = hexWithAlpha(primary, 0.08)
-  const sidebarBg = hexWithAlpha(primary, 0.06)
-  const buttonBg = hexWithAlpha(primary, 0.12)
-  const buttonBorder = hexWithAlpha(primary, 0.35)
-  const rootBg = hexWithAlpha(primary, 0.03)
+type ViewComputed = {
+  primary: string
+  primaryDark: string
+  headerBg: string
+  sidebarBg: string
+  buttonBg: string
+  buttonBorder: string
+  rootBg: string
+}
 
+function ImageOverlayEditorViewRoot(props: { p: ImageOverlayEditorViewProps; c: ViewComputed }) {
+  const p = props.p
+  const { primary, primaryDark, headerBg, sidebarBg, buttonBg, buttonBorder, rootBg } = props.c
   return (
     <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
       {/* Header: compact */}
@@ -577,4 +581,16 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
       )}
     </div>
   )
+}
+
+export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
+  const primary = p.getHex('primary')
+  const primaryDark = darkenHex(primary, 0.5)
+  const headerBg = hexWithAlpha(primary, 0.08)
+  const sidebarBg = hexWithAlpha(primary, 0.06)
+  const buttonBg = hexWithAlpha(primary, 0.12)
+  const buttonBorder = hexWithAlpha(primary, 0.35)
+  const rootBg = hexWithAlpha(primary, 0.03)
+  const computed: ViewComputed = { primary, primaryDark, headerBg, sidebarBg, buttonBg, buttonBorder, rootBg }
+  return <ImageOverlayEditorViewRoot p={p} c={computed} />
 }
