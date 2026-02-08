@@ -4,7 +4,7 @@ import React from 'react'
 import { TEXT_FONT_OPTIONS } from './ImageOverlayEditor'
 import { hexWithAlpha } from './ImageOverlayEditorTypes'
 import type { ImageOverlayEditorViewProps, ViewComputed } from './ImageOverlayEditorTypes'
-import type { TextOverlayFont } from './ImageOverlayEditorTypes'
+import type { TextOverlayFont, FrameStyle } from './ImageOverlayEditorTypes'
 export type { ImageOverlayEditorViewProps, ViewComputed } from './ImageOverlayEditorTypes'
 export { hexWithAlpha } from './ImageOverlayEditorTypes'
 
@@ -472,6 +472,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
