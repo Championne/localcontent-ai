@@ -1510,11 +1510,12 @@ export default function CreateContentPage() {
           ['--brand-primary']: primary,
           ['--brand-secondary']: secondary,
           ['--brand-accent']: accent,
+          background: `linear-gradient(180deg, ${hexToRgba(primary, 0.06)} 0%, ${hexToRgba(secondary, 0.04)} 50%, ${hexToRgba(primary, 0.04)} 100%)`,
         } as React.CSSProperties
       }
     >
       {/* Top bar: client logo (top-left, as big as fits) + page title */}
-      <div className="flex items-start gap-4 mb-6 pb-6 border-b border-gray-200">
+      <div className="flex items-start gap-4 mb-6 pb-6 border-b rounded-b-xl" style={{ backgroundColor: hexToRgba(primary, 0.08), borderColor: hexToRgba(primary, 0.2) }}>
         <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
           {currentBusinessLogo ? (
             <img
@@ -1540,7 +1541,7 @@ export default function CreateContentPage() {
 
     <div className="max-w-4xl mx-auto">
       {/* Progress Steps */}
-      <div className="flex items-center mb-8 bg-white rounded-xl p-4 border border-gray-100 shadow-sm transition-all duration-300">
+      <div className="flex items-center mb-8 rounded-xl p-4 border shadow-sm transition-all duration-300" style={{ backgroundColor: hexToRgba(primary, 0.08), borderColor: hexToRgba(primary, 0.22) }}>
         <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? '' : 'text-gray-400'}`} style={step >= 1 ? { color: primary } : undefined}>
           <div
             className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 1 ? 'text-white' : 'bg-gray-100 text-gray-500'}`}
@@ -1893,7 +1894,7 @@ export default function CreateContentPage() {
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div>
           {/* Header with Actions at Top */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 pt-4 px-4 -mx-0 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.25) }}>
             <div className="flex items-center gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Your Social Media Pack</h2>
@@ -2001,7 +2002,7 @@ export default function CreateContentPage() {
           </div>
           
           {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload), then branding overlays */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.28) }}>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-1">Choose your image</h3>
@@ -2234,8 +2235,8 @@ export default function CreateContentPage() {
               />
             </div>
           ) : generatedImage && (
-            <div className="mb-6 bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="mb-6 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
+              <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600 flex-shrink-0">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2310,7 +2311,7 @@ export default function CreateContentPage() {
                   </button>
                 </div>
               </div>
-              <div className="p-4 flex flex-col items-center bg-gray-50">
+              <div className="p-4 flex flex-col items-center rounded-b-xl" style={{ backgroundColor: hexToRgba(secondary, 0.08) }}>
                 <SafeImage 
                   key={generatedImage.url}
                   src={generatedImage.url} 
@@ -2327,7 +2328,7 @@ export default function CreateContentPage() {
 
           {/* In-flow rating: between customize-your-image and example blocks */}
           {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
               <div className="flex flex-wrap gap-6">
                 {generatedTextId && (
@@ -2794,7 +2795,7 @@ export default function CreateContentPage() {
           </div>
           
           {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload) - same as social-pack */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.28) }}>
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Pick the look that fits your message</h3>
             <p className="text-xs text-gray-500 mb-4">Then add your logo, colours and text below.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
@@ -2964,8 +2965,8 @@ export default function CreateContentPage() {
             </div>
           )}
           {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && !showTextOverlay && (
-            <div className="mb-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="mb-4 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
+              <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600 flex-shrink-0">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3043,7 +3044,7 @@ export default function CreateContentPage() {
                   </button>
                 </div>
               </div>
-              <div className="p-4 flex flex-col items-center bg-gray-50">
+              <div className="p-4 flex flex-col items-center rounded-b-xl" style={{ backgroundColor: hexToRgba(secondary, 0.08) }}>
                 <SafeImage 
                   key={generatedImage.url}
                   src={generatedImage.url} 
@@ -3060,7 +3061,7 @@ export default function CreateContentPage() {
 
           {/* In-flow rating: between customize-your-image and content/example blocks */}
           {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
               <div className="flex flex-wrap gap-6">
                 {generatedTextId && (

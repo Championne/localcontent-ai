@@ -112,18 +112,7 @@ export default async function DashboardPage() {
             <h3 className="font-medium text-gray-900 mb-1">Social Media Post</h3>
             <p className="text-sm text-gray-500">Engaging posts for your audience</p>
           </Link>
-          <Link 
-            href="/dashboard/templates" 
-            className="group bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-teal-200 hover:shadow-md transition-all"
-          >
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-              </svg>
-            </div>
-            <h3 className="font-medium text-gray-900 mb-1">Browse Ideas</h3>
-            <p className="text-sm text-gray-500">Pre-built content frameworks</p>
-          </Link>
+          {/* Need a spark? / Browse Ideas (templates) hidden until further notice */}
         </div>
       </div>
 
