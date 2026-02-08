@@ -1489,7 +1489,7 @@ export default function CreateContentPage() {
 
   return (
     <div
-      className="min-h-screen pt-4 sm:pt-6 pb-12 sm:pb-16"
+      className="min-h-screen pt-8 sm:pt-10 pb-20 sm:pb-28 px-4 sm:px-6"
       style={
         {
           ['--brand-primary']: primary,
@@ -1500,7 +1500,7 @@ export default function CreateContentPage() {
       }
     >
       {/* Top bar: client logo (top-left, as big as fits) + page title */}
-      <div className="flex items-start gap-4 mb-6 pb-6 pt-4 px-4 sm:px-6 border-b rounded-xl" style={{ backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
+      <div className="flex items-start gap-4 mb-6 pb-6 pt-4 px-4 sm:px-5 border-b rounded-xl" style={{ backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
         <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
           {currentBusinessLogo ? (
             <img
@@ -1524,7 +1524,7 @@ export default function CreateContentPage() {
         </div>
       </div>
 
-    <div className="max-w-4xl mx-auto pb-8">
+    <div className="max-w-4xl mx-auto pb-12 sm:pb-16">
       {/* Progress Steps */}
       <div className="flex items-center mb-8 rounded-xl p-4 border shadow-sm transition-all duration-300" style={{ backgroundColor: hexToRgba(primary, 0.14), borderColor: hexToRgba(primary, 0.35) }}>
         <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? '' : 'text-gray-400'}`} style={step >= 1 ? { color: primary } : undefined}>

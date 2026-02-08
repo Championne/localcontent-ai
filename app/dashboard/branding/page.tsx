@@ -716,7 +716,7 @@ export default function BrandingPage() {
                     type="text"
                     value={business.default_cta_primary ?? business.default_cta_secondary ?? ''}
                     onChange={(e) => {
-                      const v = e.target.value.trim() || null
+                      const v = e.target.value || null
                       updateBusiness(business.id, { default_cta_primary: v, default_cta_secondary: v })
                     }}
                     placeholder="e.g. Book now"
