@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       imageSource = 'stock', // 'stock' | 'ai': default free stock, optional AI
       imageStyle,
       regenerateMode = 'all', // 'all' | 'text' | 'image'
+      stockPage, // optional 1-based page for stock images; when omitted, use random page so regenerate returns new pictures
       // Branding (from Brand identity)
       tagline,
       defaultCtaPrimary,
@@ -48,6 +49,8 @@ export async function POST(request: Request) {
       serviceAreas,
       location,
       brandPrimaryColor,
+      brandSecondaryColor,
+      brandAccentColor,
       // GBP-specific fields
       gbpPostType,
       gbpExpiration,
@@ -58,6 +61,11 @@ export async function POST(request: Request) {
     // Determine what to generate based on mode
     const shouldGenerateText = regenerateMode === 'all' || regenerateMode === 'text'
     const shouldGenerateImage = (regenerateMode === 'all' || regenerateMode === 'image') && generateImageFlag
+    // Use random stock page when not specified so "Generate all (images)" returns different results each time
+    const stockImagePage =
+      typeof stockPage === 'number' && stockPage >= 1 && stockPage <= 20
+        ? stockPage
+        : Math.floor(1 + Math.random() * 8)
 
     // Validate required fields
     if (!template || !businessName || !industry || !topic) {
@@ -151,7 +159,7 @@ export async function POST(request: Request) {
         const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
         try {
           if (useStock) {
-            const options = await getStockImageOptions({ topic, industry, contentType: template }, 5)
+            const options = await getStockImageOptions({ topic, industry, contentType: template }, 5, stockImagePage)
             if (options.length) stockImageOptions = options
           }
           const shouldGenerateAiImage = canUseAi && (stockImageOptions.length === 0 || useStock)
@@ -163,6 +171,8 @@ export async function POST(request: Request) {
               style: finalImageStyle,
               contentType: template,
               brandPrimaryColor: brandPrimaryColor || undefined,
+              brandSecondaryColor: brandSecondaryColor || undefined,
+              brandAccentColor: brandAccentColor || undefined,
             })
             const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
             const imageUrl = permanentUrl || imageResult.url
@@ -335,7 +345,7 @@ export async function POST(request: Request) {
       const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
       try {
         if (useStock) {
-          const options = await getStockImageOptions({ topic, industry, contentType: template }, 5)
+          const options = await getStockImageOptions({ topic, industry, contentType: template }, 5, stockImagePage)
           if (options.length) stockImageOptions = options
         }
         // Generate AI image when: no stock options, OR when stock was used (so user has 3 stock + 1 AI + upload as choices)
@@ -348,6 +358,8 @@ export async function POST(request: Request) {
             style: finalImageStyle,
             contentType: template,
             brandPrimaryColor: brandPrimaryColor || undefined,
+            brandSecondaryColor: brandSecondaryColor || undefined,
+            brandAccentColor: brandAccentColor || undefined,
           })
           const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
           const imageUrl = permanentUrl || imageResult.url

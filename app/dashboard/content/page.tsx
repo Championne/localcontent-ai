@@ -1067,6 +1067,8 @@ export default function CreateContentPage() {
           socialHandles: currentBusiness?.social_handles ?? undefined,
           serviceAreas: currentBusiness?.service_areas ?? undefined,
           brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+          brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+          brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
         }),
       })
 
@@ -1176,6 +1178,8 @@ export default function CreateContentPage() {
       socialHandles: currentBusiness?.social_handles ?? undefined,
       serviceAreas: currentBusiness?.service_areas ?? undefined,
       brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+      brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+      brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
     }
     try {
       const stockRes = await fetch('/api/content/generate', {
@@ -1357,6 +1361,8 @@ export default function CreateContentPage() {
           style: imageStyle,
           contentType: selectedTemplate,
           brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+          brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+          brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
         }),
       })
       const data = await res.json()
@@ -1852,38 +1858,68 @@ export default function CreateContentPage() {
               Next: choose your image (stock, AI, or upload), then add your branding.
             </p>
 
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="px-5 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); handleGenerate('all') }}
-                disabled={!businessName || !industry || !topic || generating || (selectedTemplate === 'gmb-post' && gbpPostType === 'event' && !eventDate)}
-                className="flex-1 px-5 py-2.5 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 hover:opacity-95"
-                style={{ backgroundColor: accent }}
-              >
-                {generating ? (
-                  <>
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {selectedTemplate === 'social-pack' ? 'Generating 6 posts & images...' : 'Generating content & image...'}
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Generate Content
-                  </>
-                )}
-              </button>
+            <div className="flex flex-col gap-3 pt-4">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="px-5 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleGenerate('all')}
+                  disabled={
+                    !businessName?.trim() ||
+                    !industry?.trim() ||
+                    !topic?.trim() ||
+                    generating ||
+                    (selectedTemplate === 'gmb-post' && gbpPostType === 'event' && !eventDate)
+                  }
+                  title={
+                    generating
+                      ? 'Generating...'
+                      : !topic?.trim()
+                        ? 'Enter what the content should be about (topic) above'
+                        : !businessName?.trim()
+                          ? 'Select or set up your business first'
+                          : !industry?.trim()
+                            ? 'Business industry is required'
+                            : selectedTemplate === 'gmb-post' && gbpPostType === 'event' && !eventDate
+                              ? 'Set event date and time for GBP event posts'
+                              : undefined
+                  }
+                  className="flex-1 px-5 py-2.5 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 hover:opacity-95 disabled:hover:opacity-100"
+                  style={{ backgroundColor: accent }}
+                >
+                  {generating ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {selectedTemplate === 'social-pack' ? 'Generating 6 posts & images...' : 'Generating content & image...'}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Generate Content
+                    </>
+                  )}
+                </button>
+              </div>
+              {!generating && (!businessName?.trim() || !industry?.trim() || !topic?.trim()) && (
+                <p className="text-xs text-gray-500">
+                  {!topic?.trim()
+                    ? 'Enter what the content should be about above to enable Generate Content.'
+                    : !businessName?.trim()
+                      ? 'Set up or select a business to continue.'
+                      : 'Add your business industry in Brand Identity or settings.'}
+                </p>
+              )}
             </div>
             
             {/* Progress Bar */}

@@ -12,7 +12,7 @@ import { persistContentImage } from '@/lib/content-image'
 /**
  * POST /api/content/generate-image
  * Generate a single AI image for Step 3 "Choose your image".
- * Body: { topic, industry, businessName, style?, contentType?, brandPrimaryColor? }
+ * Body: { topic, industry, businessName, style?, contentType?, brandPrimaryColor?, brandSecondaryColor?, brandAccentColor? }
  */
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -33,6 +33,8 @@ export async function POST(request: Request) {
       style: requestedStyle,
       contentType = 'social-post',
       brandPrimaryColor,
+      brandSecondaryColor,
+      brandAccentColor,
     } = body
 
     if (!topic || !industry || !businessName) {
@@ -75,6 +77,8 @@ export async function POST(request: Request) {
       style: finalStyle,
       contentType,
       brandPrimaryColor: brandPrimaryColor || undefined,
+      brandSecondaryColor: brandSecondaryColor || undefined,
+      brandAccentColor: brandAccentColor || undefined,
     })
 
     const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)

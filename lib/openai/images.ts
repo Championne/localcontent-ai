@@ -7,7 +7,7 @@ export const IMAGE_STYLES = {
     name: 'Promotional',
     description: 'Playful or stylized images for sales and offers',
     keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    promptPrefix: 'Playful, stylized or slightly abstract image. Can be illustrative or conceptual, not necessarily photorealistic. Clean composition, no text. No showroom, no pedestals, no gallery lighting, no literal mood-board frames or color swatches. Surfaces and objects free of signage or writing'
+    promptPrefix: 'Promotional-style image that clearly shows the business type: technician at work, equipment, vehicle, or service in context. Bright, inviting, suitable for a sale or offer. No generic interiors, no furniture showrooms, no pedestals, no abstract decor or mood boards. Single clear subject from the business world. All surfaces and objects free of text or signage'
   },
   professional: {
     name: 'Professional',
@@ -96,8 +96,10 @@ export interface GenerateImageParams {
   industry: string
   style: ImageStyle
   contentType?: string // Added to determine image size
-  /** Optional: derive warm/cool/neutral mood for lighting tone in the prompt */
+  /** Optional: derive warm/cool/neutral mood and promotional accents from brand colours */
   brandPrimaryColor?: string | null
+  brandSecondaryColor?: string | null
+  brandAccentColor?: string | null
 }
 
 export interface GenerateImageResult {
@@ -111,6 +113,30 @@ export interface GenerateImageResult {
 // DALL-E 3 often adds text; we put no-text first and repeat it so the model follows it
 const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Screens and displays are off or show only abstract colors. The image must be completely free of written language.`
 
+/** Industry-normalized key to concrete scene subject hints so the image clearly shows that business (not generic interiors). */
+const INDUSTRY_SCENE_HINTS: Record<string, string> = {
+  hvac: 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
+  'hvac / heating & cooling': 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
+  plumbing: 'Plumber at work, or plumbing tools and pipes, or service van',
+  electrical: 'Electrician at work, or electrical panel and tools, or service van',
+  roofing: 'Roofer at work, or roofing materials and tools, or roof repair',
+  landscaping: 'Landscaper at work, or garden and lawn care equipment',
+  cleaning: 'Professional cleaner at work, or cleaning supplies and equipment',
+  pest: 'Pest control technician at work, or equipment and vehicle',
+  'real estate': 'Real estate agent with client, or house exterior, or key and sign',
+  restaurant: 'Chef cooking, or restaurant kitchen, or plated food',
+  dental: 'Dentist or hygienist with patient, or dental office equipment',
+  legal: 'Lawyer in office, or professional with client',
+  accounting: 'Accountant or advisor in office, or documents and calculator',
+  auto: 'Mechanic at work, or car repair shop, or auto parts',
+  'auto repair': 'Mechanic at work, or car repair shop, or auto parts',
+}
+
+function getIndustrySceneHint(industry: string): string {
+  const key = industry.trim().toLowerCase().replace(/\s*&\s*/g, ' and ')
+  return INDUSTRY_SCENE_HINTS[key] ?? INDUSTRY_SCENE_HINTS[key.replace(/\s+and\s+/g, ' & ')] ?? `${industry} professional at work or ${industry} equipment and service`
+}
+
 /** Derive a single mood phrase from brand primary hex for lighting tone (no exact hex in prompt). */
 function getMoodFromHex(hex: string): string {
   const m = hex.replace(/^#/, '').match(/^([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/)
@@ -123,7 +149,6 @@ function getMoodFromHex(hex: string): string {
   const l = (max + min) / 2
   if (max === min) return 'Neutral, professional lighting and tone.'
   const d = max - min
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
   const chroma = max - min
   let h = 0
   if (chroma > 0) {
@@ -139,6 +164,38 @@ function getMoodFromHex(hex: string): string {
   return 'Neutral, professional lighting and tone.'
 }
 
+/** Approximate hex to a simple colour name for prompt use (no hex in prompt). Used for promotional brand-colour impact. */
+function getColorNameFromHex(hex: string): string {
+  const m = hex.replace(/^#/, '').match(/^([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/)
+  if (!m) return 'bold accent colour'
+  const r = parseInt(m[1], 16)
+  const g = parseInt(m[2], 16)
+  const b = parseInt(m[3], 16)
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  const l = (max + min) / 2
+  if (max === min) return 'grey'
+  const d = max - min
+  let h = 0
+  if (d > 0) {
+    if (max === r) h = ((g - b) / d) % 6
+    else if (max === g) h = (b - r) / d + 2
+    else h = (r - g) / d + 4
+  }
+  h = Math.round(h * 60)
+  if (h < 0) h += 360
+  const s = l < 128 ? (d / (max + min)) : (d / (512 - max - min))
+  if (s < 0.15) return 'neutral'
+  if (h < 25) return 'red'
+  if (h < 45) return 'orange'
+  if (h < 70) return 'yellow'
+  if (h < 150) return 'green'
+  if (h < 200) return 'cyan'
+  if (h < 260) return 'blue'
+  if (h < 330) return 'purple'
+  return 'red'
+}
+
 // Build the image generation prompt with strong anti-text reinforcement (no-text at start and end)
 function buildImagePrompt(params: GenerateImageParams): string {
   const { topic, industry, style, contentType } = params
@@ -149,10 +206,28 @@ function buildImagePrompt(params: GenerateImageParams): string {
   if (imageSize === '1792x1024') formatDesc = 'Wide landscape format'
   else if (imageSize === '1024x1792') formatDesc = 'Tall portrait format'
 
-  // Start with no-text so the model sees it first; keep scene description minimal to reduce text temptation
-  let scene = `Realistic photograph representing the theme "${topic}" for a ${industry} context. ${styleConfig.promptPrefix}. Single main subject, clean uncluttered background, natural lighting. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
-  if (params.brandPrimaryColor && /^#[0-9A-Fa-f]{6}$/.test(params.brandPrimaryColor)) {
-    scene += ` ${getMoodFromHex(params.brandPrimaryColor)}`
+  // Lead with industry-specific subject so the image clearly shows that business (not generic interiors/showrooms)
+  const industrySubject = getIndustrySceneHint(industry)
+  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${styleConfig.promptPrefix}. Theme or mood: ${topic}. Single main subject, clean uncluttered background, natural lighting. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  const hexRe = /^#[0-9A-Fa-f]{6}$/
+  const primaryHex = params.brandPrimaryColor && hexRe.test(params.brandPrimaryColor) ? params.brandPrimaryColor : null
+  const secondaryHex = params.brandSecondaryColor && hexRe.test(params.brandSecondaryColor) ? params.brandSecondaryColor : null
+  const accentHex = params.brandAccentColor && hexRe.test(params.brandAccentColor) ? params.brandAccentColor : null
+  const hasBrandColor = !!primaryHex
+  if (hasBrandColor) {
+    scene += ` ${getMoodFromHex(primaryHex)}`
+    // Promotional style: use bright branding colours (primary, secondary, accent when available) for strong visual impact
+    if (style === 'promotional') {
+      const colorNames: string[] = [getColorNameFromHex(primaryHex)]
+      if (secondaryHex) colorNames.push(getColorNameFromHex(secondaryHex))
+      if (accentHex) colorNames.push(getColorNameFromHex(accentHex))
+      const colorPhrase = colorNames.length === 1
+        ? colorNames[0]
+        : colorNames.length === 2
+          ? `${colorNames[0]} and ${colorNames[1]}`
+          : `${colorNames[0]}, ${colorNames[1]}, and ${colorNames[2]}`
+      scene += ` Use bright ${colorPhrase} as bold accents or highlights in the scene—e.g. uniform or equipment detail, vehicle stripe, or soft background wash—to create strong promotional impact. Keep the palette vibrant and eye-catching.`
+    }
   }
   return `${NO_TEXT_BLOCK} ${scene} ${NO_TEXT_BLOCK}`
 }
