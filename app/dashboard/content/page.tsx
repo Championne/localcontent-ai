@@ -1336,7 +1336,7 @@ export default function CreateContentPage() {
 
   const handlePickStockImage = async (opt: StockOption) => {
     setSelectedStockImage(opt)
-    setStep3AIImage(null)
+    // Keep step3AIImage so user can switch back to AI without losing it
     setAppliedBrandingForImageUrl(null)
     setGeneratedImage({
       url: opt.url,
@@ -1402,7 +1402,7 @@ export default function CreateContentPage() {
       const data = await res.json()
       if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed')
       setSelectedStockImage(null)
-      setStep3AIImage(null)
+      // Keep step3AIImage so user can switch back to AI without losing it
       setAppliedBrandingForImageUrl(null)
       setGeneratedImage({ url: data.url, source: 'upload' })
       setGeneratedImageId(null)
