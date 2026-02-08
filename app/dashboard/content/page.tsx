@@ -187,16 +187,6 @@ function WordCount({ count }: { count: number }) {
 
 
 
-function detectBestStyle(topic: string): ImageStyleKey {
-  const topicLower = topic.toLowerCase()
-  for (const [style, config] of Object.entries(IMAGE_STYLES)) {
-    if (config.keywords.some(kw => topicLower.includes(kw))) {
-      return style as ImageStyleKey
-    }
-  }
-  return 'professional'
-}
-
 // Motivational tips for impact card
 const MOTIVATIONAL_TIPS = [
   { icon: '📈', text: 'Businesses posting 3x/week see 40% more customer inquiries' },
@@ -892,12 +882,7 @@ export default function CreateContentPage() {
     }
   }
 
-  // Auto-detect best image style when topic changes
-  useEffect(() => {
-    if (topic) {
-      setImageStyle(detectBestStyle(topic))
-    }
-  }, [topic])
+  // Image style is set only by the user on Step 2 (Details) and kept for regeneration
 
   const templates = [
     { 
@@ -1510,12 +1495,12 @@ export default function CreateContentPage() {
           ['--brand-primary']: primary,
           ['--brand-secondary']: secondary,
           ['--brand-accent']: accent,
-          background: `linear-gradient(180deg, ${hexToRgba(primary, 0.06)} 0%, ${hexToRgba(secondary, 0.04)} 50%, ${hexToRgba(primary, 0.04)} 100%)`,
+          background: `linear-gradient(180deg, ${hexToRgba(primary, 0.14)} 0%, ${hexToRgba(secondary, 0.10)} 50%, ${hexToRgba(primary, 0.12)} 100%)`,
         } as React.CSSProperties
       }
     >
       {/* Top bar: client logo (top-left, as big as fits) + page title */}
-      <div className="flex items-start gap-4 mb-6 pb-6 border-b rounded-b-xl" style={{ backgroundColor: hexToRgba(primary, 0.08), borderColor: hexToRgba(primary, 0.2) }}>
+      <div className="flex items-start gap-4 mb-6 pb-6 border-b rounded-b-xl" style={{ backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
         <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
           {currentBusinessLogo ? (
             <img
@@ -1527,7 +1512,7 @@ export default function CreateContentPage() {
           ) : (
             <div
               className="w-full aspect-square max-h-20 rounded-lg flex items-center justify-center text-gray-300 text-xs font-medium border border-dashed border-gray-200"
-              style={{ backgroundColor: hexToRgba(primary, 0.08) }}
+              style={{ backgroundColor: hexToRgba(primary, 0.14) }}
             >
               Your logo
             </div>
@@ -1541,7 +1526,7 @@ export default function CreateContentPage() {
 
     <div className="max-w-4xl mx-auto">
       {/* Progress Steps */}
-      <div className="flex items-center mb-8 rounded-xl p-4 border shadow-sm transition-all duration-300" style={{ backgroundColor: hexToRgba(primary, 0.08), borderColor: hexToRgba(primary, 0.22) }}>
+      <div className="flex items-center mb-8 rounded-xl p-4 border shadow-sm transition-all duration-300" style={{ backgroundColor: hexToRgba(primary, 0.14), borderColor: hexToRgba(primary, 0.35) }}>
         <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? '' : 'text-gray-400'}`} style={step >= 1 ? { color: primary } : undefined}>
           <div
             className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 1 ? 'text-white' : 'bg-gray-100 text-gray-500'}`}
@@ -1687,7 +1672,7 @@ export default function CreateContentPage() {
 
       {/* Step 2: Add Details */}
       {!loadingEdit && step === 2 && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className="rounded-xl border shadow-sm p-6" style={{ backgroundColor: hexToRgba(primary, 0.12), borderColor: hexToRgba(primary, 0.4) }}>
           <p className="text-sm font-medium mb-0.5" style={{ color: primary }}>You're creating a {templates.find(t => t.id === selectedTemplate)?.name || 'piece of content'}</p>
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us what it's about</h2>
           
@@ -1839,19 +1824,45 @@ export default function CreateContentPage() {
               </div>
             </div>
 
+            {/* AI image style: used when user picks "Generate with AI" in Step 3 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">AI image style</label>
+              <p className="text-xs text-gray-500 mb-3">Choose the look for AI-generated images (used when you select &quot;Generate with AI&quot; in the next step).</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setImageStyle(key)}
+                    className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${
+                      imageStyle === key
+                        ? 'border-[var(--brand-primary)] shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    }`}
+                    style={imageStyle === key ? { backgroundColor: hexToRgba(primary, 0.08), borderColor: primary } : undefined}
+                  >
+                    <span className="block font-medium text-sm">{config.name}</span>
+                    <span className="block text-xs mt-0.5 opacity-80">{config.description}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <p className="text-sm text-gray-500 border-t border-gray-100 pt-5 mt-5">
               Next: choose your image (stock, AI, or upload), then add your branding.
             </p>
 
             <div className="flex gap-3 pt-4">
               <button
+                type="button"
                 onClick={() => setStep(1)}
                 className="px-5 py-2.5 border border-gray-200 rounded-lg font-medium text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Back
               </button>
               <button
-                onClick={() => handleGenerate('all')}
+                type="button"
+                onClick={(e) => { e.preventDefault(); handleGenerate('all') }}
                 disabled={!businessName || !industry || !topic || generating || (selectedTemplate === 'gmb-post' && gbpPostType === 'event' && !eventDate)}
                 className="flex-1 px-5 py-2.5 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 hover:opacity-95"
                 style={{ backgroundColor: accent }}
