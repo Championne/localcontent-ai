@@ -285,6 +285,14 @@ export function ImageTextOverlay({
     ))
   }
 
+  // Update font size for selected overlay
+  const updateFontSize = (id: string, fontSize: number) => {
+    const size = Math.round(Math.max(12, Math.min(96, fontSize)))
+    setOverlays(prev => prev.map(o => 
+      o.id === id ? { ...o, fontSize: size } : o
+    ))
+  }
+
   // Remove overlay (drag out of bounds)
   const removeOverlay = (id: string) => {
     setOverlays(prev => prev.filter(o => o.id !== id))
@@ -463,11 +471,11 @@ export function ImageTextOverlay({
           </>
         )}
         
-        {/* Text overlays */}
+        {/* Text overlays - z-20 so drag hint and settings never block them */}
         {overlays.map((overlay) => (
           <div
             key={overlay.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move transition-opacity ${
+            className={`absolute z-20 transform -translate-x-1/2 -translate-y-1/2 cursor-move transition-opacity ${
               isOutOfBounds(overlay) ? 'opacity-40' : ''
             } ${selectedId === overlay.id ? 'ring-2 ring-blue-500 ring-offset-2 rounded' : ''}`}
             style={{
@@ -510,18 +518,18 @@ export function ImageTextOverlay({
           </div>
         ))}
         
-        {/* Drag hint */}
+        {/* Drag hint - z-10 so it sits below draggable text overlays */}
         {overlays.length > 0 && !isDragging && selectedId && (
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+          <div className="absolute z-10 bottom-2 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
             <Move className="w-3 h-3" />
             <span>Drag to move • Double-click to edit</span>
           </div>
         )}
       </div>
 
-      {/* Text editing section */}
+      {/* Text editing section - sits below image, does not overlap */}
       {selectedId && overlays.length > 0 && (
-        <div className="px-4 py-3 border-t bg-gray-50">
+        <div className="px-4 py-3 border-t bg-gray-50 relative z-0">
           <label className="block text-sm font-medium text-gray-700 mb-1">Edit Text</label>
           <input
             type="text"
@@ -530,7 +538,22 @@ export function ImageTextOverlay({
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             placeholder="Enter your text..."
           />
-          
+          {/* Font size slider */}
+          <div className="mt-3">
+            <label className="flex items-center justify-between text-sm text-gray-700 mb-1">
+              <span>Text size</span>
+              <span className="text-gray-500 tabular-nums">{overlays.find(o => o.id === selectedId)?.fontSize ?? 24}px</span>
+            </label>
+            <input
+              type="range"
+              min={12}
+              max={96}
+              step={2}
+              value={overlays.find(o => o.id === selectedId)?.fontSize ?? 24}
+              onChange={(e) => updateFontSize(selectedId, Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            />
+          </div>
           {/* Suggested texts */}
           {suggestedTexts.length > 1 && (
             <div className="mt-2">

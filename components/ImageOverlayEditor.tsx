@@ -44,6 +44,7 @@ export type FrameStyle =
   | 'double'
   | 'rounded'
   | 'classic'
+  | 'wooden'
   | 'polaroid'
   | 'dashed'
   | 'dotted'

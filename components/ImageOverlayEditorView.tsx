@@ -50,8 +50,16 @@ function hexWithAlpha(hex: string, alpha: number): string {
   return hex + a
 }
 
+function darkenHex(hex: string, factor: number): string {
+  const r = Math.round(parseInt(hex.slice(1, 3), 16) * factor)
+  const g = Math.round(parseInt(hex.slice(3, 5), 16) * factor)
+  const b = Math.round(parseInt(hex.slice(5, 7), 16) * factor)
+  return '#' + [r, g, b].map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('')
+}
+
 export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
   const primary = p.getHex('primary')
+  const primaryDark = darkenHex(primary, 0.5)
   const headerBg = hexWithAlpha(primary, 0.08)
   const sidebarBg = hexWithAlpha(primary, 0.06)
   const buttonBg = hexWithAlpha(primary, 0.12)
@@ -114,8 +122,8 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               </div>
             )}
             <input ref={p.logoInputRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('logo', e)} />
-            <span className="text-[10px] font-medium mt-1 block" style={{ color: primary }}>Logo</span>
-            {p.hasLogo && <span className="text-[9px] font-medium" style={{ color: primary }}>✓ On image</span>}
+            <span className="text-[10px] font-medium mt-1 block" style={{ color: primaryDark }}>Logo</span>
+            {p.hasLogo && <span className="text-[9px] font-medium" style={{ color: primaryDark }}>✓ On image</span>}
           </div>
 
           <div className="text-center">
@@ -152,8 +160,8 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
               </div>
             )}
             <input ref={p.photoInputRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" className="hidden" onChange={(e) => p.handleFileInput('photo', e)} />
-            <span className="text-[10px] font-medium mt-1 block" style={{ color: primary }}>Photo</span>
-            {p.hasPhoto && <span className="text-[9px] font-medium" style={{ color: primary }}>✓ On image</span>}
+            <span className="text-[10px] font-medium mt-1 block" style={{ color: primaryDark }}>Photo</span>
+            {p.hasPhoto && <span className="text-[9px] font-medium" style={{ color: primaryDark }}>✓ On image</span>}
           </div>
 
           {(p.tagline || p.website || p.socialHandles) && (
@@ -162,12 +170,12 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 <div
                   onMouseDown={(e) => p.handleSidebarDragStart('tagline', e)}
                   onTouchStart={(e) => p.handleSidebarDragStart('tagline', e)}
-                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-sm border text-left"
-                  style={{ backgroundColor: buttonBg, borderColor: buttonBorder }}
+                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-md border-2 bg-white text-left"
+                  style={{ borderColor: buttonBorder }}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
-                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primary }}>Tagline</span>
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primaryDark }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primaryDark }}>Tagline</span>
                   </div>
                   <span className="text-[11px] font-medium text-gray-800 block truncate" title={p.tagline}>{p.tagline}</span>
                 </div>
@@ -176,12 +184,12 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 <div
                   onMouseDown={(e) => p.handleSidebarDragStart('website', e)}
                   onTouchStart={(e) => p.handleSidebarDragStart('website', e)}
-                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-sm border text-left"
-                  style={{ backgroundColor: buttonBg, borderColor: buttonBorder }}
+                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-md border-2 bg-white text-left"
+                  style={{ borderColor: buttonBorder }}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primary }}>Website</span>
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primaryDark }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primaryDark }}>Website</span>
                   </div>
                   <span className="text-[11px] font-medium text-gray-800 block truncate" title={p.website}>{p.website}</span>
                 </div>
@@ -190,12 +198,12 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                 <div
                   onMouseDown={(e) => p.handleSidebarDragStart('social', e)}
                   onTouchStart={(e) => p.handleSidebarDragStart('social', e)}
-                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-sm border text-left"
-                  style={{ backgroundColor: buttonBg, borderColor: buttonBorder }}
+                  className="cursor-grab active:cursor-grabbing p-2.5 rounded-lg transition-all hover:shadow-md border-2 bg-white text-left"
+                  style={{ borderColor: buttonBorder }}
                 >
                   <div className="flex items-center gap-1.5 mb-1">
-                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-3-4H9a2 2 0 01-2-2v-2H5a2 2 0 01-2-2V6a2 2 0 012-2h2v4l3 4h4v2z" /></svg>
-                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primary }}>Social</span>
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: primaryDark }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-3-4H9a2 2 0 01-2-2v-2H5a2 2 0 01-2-2V6a2 2 0 012-2h2v4l3 4h4v2z" /></svg>
+                    <span className="text-[9px] font-semibold uppercase tracking-wide" style={{ color: primaryDark }}>Social</span>
                   </div>
                   <span className="text-[11px] font-medium text-gray-800 block truncate" title={p.socialHandles}>{p.socialHandles}</span>
                 </div>
@@ -206,6 +214,9 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
           {!p.effectiveLogoUrl && !p.effectivePhotoUrl && !p.onUploadLogo && !p.onUploadPhoto && !p.tagline && !p.website && !p.socialHandles && (
             <p className="text-xs text-gray-400 text-center">Add logo or photo in Brand Identity, or use drop zones above.</p>
           )}
+          <p className="text-xs text-gray-400 text-center mt-3 pt-2 border-t border-gray-200/60">
+            {p.totalItems === 0 ? 'Drag from the left onto the image' : 'Drag to reposition • Hover for border/colour controls'}
+          </p>
         </div>
 
         <div className="flex-1 p-4">
@@ -213,17 +224,23 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             className="relative bg-gray-100 rounded-lg overflow-hidden"
             style={{
               aspectRatio: '1',
-              padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'thick' || p.frame.style === 'classic' || p.frame.style === 'gold' || p.frame.style === 'silver' || p.frame.style === 'copper' ? 16 : p.frame.style === 'polaroid' ? 14 : p.frame.style === 'filmstrip' ? 28 : p.frame.style === 'neon' ? 24 : p.frame.style === 'shadow' ? 32 : p.frame.style === 'vignette' ? 0 : 8) : 0,
+              ...(p.frame?.style === 'polaroid' ? { paddingTop: 12, paddingLeft: 12, paddingRight: 12, paddingBottom: 28 } : { padding: p.frame ? (p.frame.style === 'thin' ? 3 : p.frame.style === 'classic' || p.frame.style === 'wooden' ? 20 : p.frame.style === 'thick' || p.frame.style === 'gold' || p.frame.style === 'silver' || p.frame.style === 'copper' ? 16 : p.frame.style === 'filmstrip' ? 28 : p.frame.style === 'neon' ? 32 : p.frame.style === 'shadow' ? 40 : p.frame.style === 'vignette' ? 0 : 8) : 0 }),
               ...(p.frame?.style === 'classic'
                 ? {
-                    background: `linear-gradient(135deg, rgba(255,255,255,0.28) 0%, transparent 50%), linear-gradient(315deg, rgba(0,0,0,0.3) 0%, transparent 50%), ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
+                    background: 'linear-gradient(135deg, #f5e6a8 0%, #e8c547 25%, #b8860b 55%, #7d6510 85%, #5c4a1a 100%), linear-gradient(315deg, rgba(0,0,0,0.15) 0%, transparent 40%)',
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,254,248,0.4)',
+                  }
+                : p.frame?.style === 'wooden'
+                ? {
+                    background: 'linear-gradient(135deg, #d4a574 0%, #a67c52 30%, #7d5a3a 60%, #5c3d2e 85%, #3d2817 100%), linear-gradient(315deg, rgba(0,0,0,0.12) 0%, transparent 45%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,235,215,0.25), inset 0 -1px 0 rgba(0,0,0,0.2)',
                   }
                 : p.frame?.style === 'gold'
-                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0.08) 18%, transparent 32%), linear-gradient(135deg, #fffef8 0%, #f8ecd0 12%, #e8c547 35%, #b8860b 55%, #8b6914 78%, #5c4a0f 100%)' }
+                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 25%, transparent 45%), linear-gradient(135deg, #fffce0 0%, #f0d84a 8%, #d4a817 25%, #a67c0a 45%, #5c4a0a 75%, #3d3008 100%)' }
                 : p.frame?.style === 'silver'
-                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.12) 18%, transparent 32%), linear-gradient(135deg, #ffffff 0%, #e8e8e8 15%, #c0c0c0 40%, #909090 65%, #606060 85%, #383838 100%)' }
+                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.25) 25%, transparent 45%), linear-gradient(135deg, #ffffff 0%, #e8e8e8 12%, #c0c0c0 35%, #808080 60%, #404040 85%, #1a1a1a 100%)' }
                 : p.frame?.style === 'copper'
-                ? { background: 'linear-gradient(135deg, rgba(255,248,240,0.45) 0%, rgba(255,235,200,0.1) 18%, transparent 32%), linear-gradient(135deg, #fdf0e0 0%, #e8c4a0 15%, #b87333 45%, #8b4513 70%, #5c2e0a 90%, #3d1f06 100%)' }
+                ? { background: 'linear-gradient(135deg, rgba(255,253,248,0.5) 0%, rgba(255,240,220,0.15) 25%, transparent 45%), linear-gradient(135deg, #fdf5eb 0%, #e8b878 15%, #c48450 40%, #8b4513 68%, #5c2e0a 88%, #2d1804 100%)' }
                 : {
                     backgroundColor: p.frame ? (p.frame.style === 'polaroid' ? '#fcf9f2' : p.frame.style === 'filmstrip' ? '#121212' : p.frame.style === 'neon' ? '#0a0a0e' : p.frame.style === 'shadow' ? '#f5f7fa' : p.frame.style === 'vignette' ? undefined : p.getFrameHex(p.frame.colorKey)) : undefined,
                   }),
@@ -240,13 +257,14 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                   ? {
                       padding: '8px',
                       background: '#ffffff',
+                      border: `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
                       boxSizing: 'border-box',
                     }
                   : {}),
                 ...(p.frame?.style !== 'double' && {
-                  border: p.frame?.style === 'classic' ? undefined : p.frame?.style === 'gold' ? '2px solid rgba(255,248,220,0.9)' : p.frame?.style === 'silver' ? '2px solid rgba(255,255,255,0.95)' : p.frame?.style === 'copper' ? '2px solid rgba(253,240,224,0.9)' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
+                  border: p.frame?.style === 'classic' || p.frame?.style === 'wooden' ? undefined : p.frame?.style === 'gold' ? '2px solid rgba(255,248,220,0.9)' : p.frame?.style === 'silver' ? '2px solid rgba(255,255,255,0.95)' : p.frame?.style === 'copper' ? '2px solid rgba(253,240,224,0.9)' : p.frame?.style === 'dashed' ? `3px dashed ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'dotted' ? `3px dotted ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}` : p.frame?.style === 'polaroid' ? '2px solid #e6e2d8' : p.frame?.style === 'filmstrip' ? '1px solid #2a2a2a' : undefined,
                 }),
-                boxShadow: p.frame?.style === 'classic' ? 'inset 0 0 0 2px rgba(255,255,255,0.5)' : p.frame?.style === 'shadow' ? '0 16px 32px rgba(0,0,0,0.2), 0 8px 16px rgba(0,0,0,0.12)' : p.frame?.style === 'neon' ? `0 0 28px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 12px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}80` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,254,248,0.85), inset 0 2px 4px -2px rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.95), inset 0 2px 4px -2px rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.25)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(253,248,240,0.9), inset 0 2px 4px -2px rgba(255,240,220,0.2), inset 0 -1px 0 rgba(0,0,0,0.2)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
+                boxShadow: p.frame?.style === 'classic' ? 'inset 0 0 0 2px rgba(255,255,255,0.5)' : p.frame?.style === 'wooden' ? 'inset 0 0 0 1px rgba(0,0,0,0.15)' : p.frame?.style === 'shadow' ? '0 24px 48px rgba(0,0,0,0.4), 0 12px 24px rgba(0,0,0,0.25)' : p.frame?.style === 'neon' ? `0 0 40px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}, 0 0 20px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}99, 0 0 8px ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#0d9488'}` : p.frame?.style === 'gold' ? 'inset 0 1px 0 rgba(255,252,224,0.9), inset 0 3px 8px -2px rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.25)' : p.frame?.style === 'silver' ? 'inset 0 1px 0 rgba(255,255,255,0.98), inset 0 3px 8px -2px rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.3)' : p.frame?.style === 'copper' ? 'inset 0 1px 0 rgba(253,245,235,0.95), inset 0 3px 8px -2px rgba(255,248,235,0.25), inset 0 -2px 0 rgba(0,0,0,0.25)' : p.frame?.style === 'polaroid' ? '0 6px 16px rgba(0,0,0,0.12)' : undefined,
               }}
             >
               <div
@@ -255,15 +273,13 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                   p.frame?.style === 'double'
                     ? {
                         border: `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
-                        outline: `2px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
-                        outlineOffset: 6,
                         boxSizing: 'border-box',
                         borderRadius: 0,
                       }
                     : {}
                 }
               >
-              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : undefined} />
+              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : p.frame?.style === 'polaroid' ? { filter: 'saturate(0.88) contrast(0.97)' } : undefined} />
               {p.frame?.style === 'vignette' && (
                 <div
                   className="absolute inset-0 pointer-events-none z-[2]"
@@ -342,24 +358,40 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
                   </div>
                 )
               })}
-              {p.textOverlays.map((t) => (
-                <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(-50%, -50%)' }}>
+              {p.textOverlays.map((t) => {
+                const showPanelLeft = t.x > 60
+                return (
+                <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(-50%, -50%)' }}>
                   <span className="font-bold drop-shadow-lg px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter' }}>{t.text}</span>
-                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 flex flex-wrap items-center gap-1 bg-white rounded-lg shadow-lg p-1.5 border border-gray-200 min-w-[140px]">
-                    <span className="text-[9px] text-gray-500 w-full">Color:</span>
-                    {(['primary', 'secondary', 'accent'] as const).map((key) => (
-                      <button key={key} type="button" onClick={(e) => { e.stopPropagation(); p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, colorKey: key } : x)) }} className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: p.getHex(key) }} title={key} />
-                    ))}
-                    <span className="text-[9px] text-gray-500 w-full mt-0.5">Size:</span>
-                    <input type="range" min="10" max="32" value={Math.min(32, Math.max(10, t.fontSize))} onChange={(e) => { const v = parseInt(e.target.value, 10); if (!Number.isNaN(v)) p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontSize: v } : x)) }} onClick={(e) => e.stopPropagation()} className="w-16 h-1.5" />
-                    <span className="text-[9px] text-gray-500 w-full">Font:</span>
-                    <select value={t.fontFamily || 'Inter'} onChange={(e) => { const v = e.target.value as TextOverlayFont; p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontFamily: v } : x)) }} onClick={(e) => e.stopPropagation()} className="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white max-w-full">
-                      {TEXT_FONT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                    <button onClick={(e) => { e.stopPropagation(); p.handleRemove(t.id) }} className="w-5 h-5 rounded bg-red-100 text-red-600 text-[10px] ml-auto">✕</button>
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 shadow-xl border bg-white/95 backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                    style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Edit text</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); p.handleRemove(t.id) }} className="w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Remove">✕</button>
+                    </div>
+                    <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1.5">
+                      <span className="text-[10px] font-medium text-gray-600">Color</span>
+                      <div className="flex gap-1.5">
+                        {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                          <button key={key} type="button" onClick={(e) => { e.stopPropagation(); p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, colorKey: key } : x)) }} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-110 ${t.colorKey === key ? 'ring-2 ring-offset-1' : 'border-gray-200'}`} style={{ borderColor: t.colorKey === key ? primary : undefined, backgroundColor: p.getHex(key) }} title={key} />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-medium text-gray-600">Size</span>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="10" max="32" value={Math.min(32, Math.max(10, t.fontSize))} onChange={(e) => { const v = parseInt(e.target.value, 10); if (!Number.isNaN(v)) p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontSize: v } : x)) }} onClick={(e) => e.stopPropagation()} className="flex-1 h-2 rounded-full accent-gray-600" style={{ accentColor: primary }} />
+                        <span className="text-[10px] tabular-nums text-gray-500 w-6">{t.fontSize}</span>
+                      </div>
+                      <span className="text-[10px] font-medium text-gray-600">Font</span>
+                      <select value={t.fontFamily || 'Inter'} onChange={(e) => { const v = e.target.value as TextOverlayFont; p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontFamily: v } : x)) }} onClick={(e) => e.stopPropagation()} className="text-[11px] border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-offset-0 outline-none" style={{ borderColor: hexWithAlpha(primary, 0.2) }}>
+                        {TEXT_FONT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
 
               {p.draggingNew && (
                 <div className="absolute inset-0 border-2 border-dashed flex items-center justify-center" style={{ backgroundColor: hexWithAlpha(primary, 0.1), borderColor: primary }}>
@@ -370,85 +402,117 @@ export function ImageOverlayEditorView(p: ImageOverlayEditorViewProps) {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })}
-              className="text-xs px-2 py-1 rounded border font-medium transition-colors"
-              style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}
-              title="Apply a light brand tint (15% primary colour)"
-            >
-              Light brand tint
-            </button>
-            <span className="text-xs text-gray-500">or pick colour:</span>
-            {(['primary', 'secondary', 'accent'] as const).map((key) => (
-              <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-6 h-6 rounded-full border-2 ${p.tintOverlay?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={`Tint with ${key}`} />
-            ))}
-            {p.tintOverlay && (
-              <label className="flex items-center gap-1 text-xs text-gray-600">
-                Opacity:
-                <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-20" />
-                <span>{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
-              </label>
+          {/* Colour tint */}
+          <div className="mt-4 rounded-xl border border-gray-200/80 bg-gray-50/80 p-3">
+            <p className="text-xs font-medium text-gray-600 mb-2">Colour tint</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })}
+                className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-all hover:shadow-sm"
+                style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}
+                title="Apply a light brand tint (15% primary colour)"
+              >
+                Light brand tint
+              </button>
+              <span className="text-xs text-gray-400">or</span>
+              <div className="flex items-center gap-1.5">
+                {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                  <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-2 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={`Tint with ${key}`} />
+                ))}
+              </div>
+              {p.tintOverlay && (
+                <label className="flex items-center gap-2 text-xs text-gray-600 ml-1">
+                  <span>Opacity</span>
+                  <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-24 h-1.5 accent-gray-600" />
+                  <span className="tabular-nums w-8">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
+                </label>
+              )}
+            </div>
+            {p.frame && ['gold', 'silver', 'copper', 'neon', 'polaroid', 'filmstrip', 'vignette'].includes(p.frame.style) && (
+              <p className="text-xs text-gray-500 italic mt-2">Tint is set by the {p.frame.style === 'filmstrip' ? 'film strip' : p.frame.style} effect</p>
             )}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-500">Overlay options:</span>
-            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-xs border border-gray-200 rounded px-2 py-1 bg-white max-w-[180px]">
-              <option value="">None</option>
-              <option value="thin">Thin line</option>
-              <option value="solid">Solid border</option>
-              <option value="thick">Thick border</option>
-              <option value="double">Double line</option>
-              <option value="rounded">Rounded corners</option>
-              <option value="classic">Painting frame</option>
-              <option value="polaroid">Polaroid</option>
-              <option value="dashed">Dashed border</option>
-              <option value="dotted">Dotted border</option>
-              <option value="filmstrip">Film strip</option>
-              <option value="vignette">Vignette</option>
-              <option value="neon">Neon glow</option>
-              <option value="shadow">Floating shadow</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-              <option value="copper">Copper</option>
-            </select>
-            {/* Metallic frame presets: shiny swatch when selected */}
-            {(['gold', 'silver', 'copper'] as const).map((metal) => {
-              const isSelected = p.frame?.style === metal
-              const grad = metal === 'gold'
-                ? 'linear-gradient(135deg, #fffef8 0%, #e8c547 30%, #b8860b 60%, #5c4a0f 100%)'
-                : metal === 'silver'
-                ? 'linear-gradient(135deg, #fff 0%, #c0c0c0 40%, #606060 80%, #282828 100%)'
-                : 'linear-gradient(135deg, #fdf0e0 0%, #b87333 50%, #3d1f06 100%)'
-              const metallicShine = metal === 'gold'
-                ? 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 25%, transparent 50%)'
-                : metal === 'silver'
-                ? 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.15) 25%, transparent 50%)'
-                : 'linear-gradient(135deg, rgba(255,248,235,0.45) 0%, rgba(255,235,210,0.1) 25%, transparent 50%)'
-              const selectedGlow = metal === 'gold' ? '0 0 14px rgba(184,134,11,0.45)' : metal === 'silver' ? '0 0 14px rgba(192,192,192,0.5)' : '0 0 14px rgba(184,115,51,0.45)'
-              return (
-                <button
-                  key={metal}
-                  type="button"
-                  onClick={() => p.setFrame(isSelected ? null : { style: metal, colorKey: metal })}
-                  className={`w-7 h-7 rounded-full border-2 flex-shrink-0 transition-all ${isSelected ? 'ring-2 ring-offset-1 scale-110' : 'border-gray-200'}`}
-                  style={{
-                    background: isSelected ? `${metallicShine}, ${grad}` : grad,
-                    boxShadow: isSelected
-                      ? `inset 0 1px 0 rgba(255,255,255,0.65), inset 0 2px 4px -1px rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15), ${selectedGlow}, 0 2px 8px rgba(0,0,0,0.2)`
-                      : 'inset 0 1px 0 rgba(255,255,255,0.25)',
-                    borderColor: isSelected ? (metal === 'gold' ? '#8b6914' : metal === 'silver' ? '#505050' : '#5c2e0a') : undefined,
-                  }}
-                  title={metal.charAt(0).toUpperCase() + metal.slice(1)}
-                />
-              )
-            })}
-            {p.frame && !['gold', 'silver', 'copper'].includes(p.frame.style) && (['primary', 'secondary', 'accent', 'silver', 'gold', 'copper', 'neutral'] as const).map((key) => (
-              <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-5 h-5 rounded-full border-2 ${p.frame?.colorKey === key ? 'border-gray-800' : 'border-gray-200'}`} style={{ backgroundColor: p.getFrameHex(key) }} title={key} />
-            ))}
+
+          {/* Special effects */}
+          <div className="mt-3 rounded-xl border border-gray-200/80 bg-gray-50/80 p-3">
+            <p className="text-xs font-medium text-gray-600 mb-2">Special effects</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={p.frame?.style ?? ''}
+                onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'polaroid' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
+                className="text-xs border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-800 shadow-sm focus:ring-2 focus:ring-gray-300 focus:border-gray-400 outline-none min-w-[160px]"
+              >
+                <option value="">None</option>
+                <optgroup label="Borders">
+                  <option value="thin">Thin line</option>
+                  <option value="solid">Solid border</option>
+                  <option value="thick">Thick border</option>
+                  <option value="double">Double line</option>
+                  <option value="rounded">Rounded corners</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                </optgroup>
+                <optgroup label="Frames">
+                  <option value="classic">Painting frame</option>
+                  <option value="wooden">Wooden frame</option>
+                  <option value="polaroid">Polaroid</option>
+                  <option value="shadow">Floating shadow</option>
+                </optgroup>
+                <optgroup label="Mood">
+                  <option value="vignette">Vignette</option>
+                  <option value="neon">Neon glow</option>
+                  <option value="filmstrip">Film strip</option>
+                </optgroup>
+                <optgroup label="Metallic">
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                  <option value="copper">Copper</option>
+                </optgroup>
+              </select>
+              <span className="text-xs text-gray-400 hidden sm:inline">or quick pick:</span>
+              {(['gold', 'silver', 'copper'] as const).map((metal) => {
+                const isSelected = p.frame?.style === metal
+                const grad = metal === 'gold'
+                  ? 'linear-gradient(135deg, #fffce0 0%, #f0d84a 15%, #a67c0a 50%, #3d3008 100%)'
+                  : metal === 'silver'
+                  ? 'linear-gradient(135deg, #fff 0%, #c0c0c0 35%, #808080 70%, #1a1a1a 100%)'
+                  : 'linear-gradient(135deg, #fdf5eb 0%, #c48450 40%, #5c2e0a 80%, #2d1804 100%)'
+                const metallicShine = metal === 'gold'
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 25%, transparent 45%)'
+                  : metal === 'silver'
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.25) 25%, transparent 45%)'
+                  : 'linear-gradient(135deg, rgba(255,253,248,0.5) 0%, rgba(255,240,220,0.15) 25%, transparent 45%)'
+                const selectedGlow = metal === 'gold' ? '0 0 14px rgba(184,134,11,0.45)' : metal === 'silver' ? '0 0 14px rgba(192,192,192,0.5)' : '0 0 14px rgba(184,115,51,0.45)'
+                return (
+                  <button
+                    key={metal}
+                    type="button"
+                    onClick={() => { if (!isSelected) p.setTintOverlay(null); p.setFrame(isSelected ? null : { style: metal, colorKey: metal }) }}
+                    className={`w-8 h-8 rounded-full border-2 flex-shrink-0 transition-all ${isSelected ? 'ring-2 ring-offset-1 scale-110' : 'border-gray-200 hover:scale-105'}`}
+                    style={{
+                      background: isSelected ? `${metallicShine}, ${grad}` : grad,
+                      boxShadow: isSelected
+                        ? `inset 0 1px 0 rgba(255,255,255,0.65), inset 0 2px 4px -1px rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15), ${selectedGlow}, 0 2px 8px rgba(0,0,0,0.2)`
+                        : 'inset 0 1px 0 rgba(255,255,255,0.25)',
+                      borderColor: isSelected ? (metal === 'gold' ? '#8b6914' : metal === 'silver' ? '#505050' : '#5c2e0a') : undefined,
+                    }}
+                    title={metal.charAt(0).toUpperCase() + metal.slice(1)}
+                  />
+                )
+              })}
+            </div>
+            {p.frame && !['gold', 'silver', 'copper'].includes(p.frame.style) && (
+              <div className="mt-2 pt-2 border-t border-gray-200/60">
+                <p className="text-xs text-gray-500 mb-1.5">Frame colour</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(['primary', 'secondary', 'accent', 'silver', 'gold', 'copper', 'neutral'] as const).map((key) => (
+                    <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.frame?.colorKey === key ? 'border-gray-800 ring-2 ring-offset-0.5 ring-gray-500' : 'border-gray-200'}`} style={{ backgroundColor: p.getFrameHex(key) }} title={key} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-gray-400 text-center mt-2">{p.totalItems === 0 ? 'Drag from the left onto the image' : 'Drag to reposition • Hover for border/colour controls'}</p>
         </div>
       </div>
 

@@ -722,7 +722,8 @@ export default function CreateContentPage() {
       // Tint and frame: send in one composite request when no logo/photo (more reliable than two round-trips)
       if ((tintOverlay || frame) && colors) {
         const body: Record<string, unknown> = { imageUrl: currentImageUrl }
-        if (tintOverlay) {
+        const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'polaroid', 'filmstrip', 'vignette'].includes(frame.style)
+        if (tintOverlay && !frameOverridesTint) {
           const tintHex = tintOverlay.colorKey === 'primary' ? colors.primary : tintOverlay.colorKey === 'secondary' ? colors.secondary : colors.accent
           body.tintOverlay = { color: tintHex, opacity: tintOverlay.opacity }
         }
@@ -1506,7 +1507,7 @@ export default function CreateContentPage() {
       }
     >
       {/* Top bar: client logo (top-left, as big as fits) + page title */}
-      <div className="flex items-start gap-4 mb-6 pb-6 pt-4 px-4 sm:px-5 border-b rounded-xl" style={{ backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
+      <div className={`flex items-start gap-4 mb-6 pb-6 pt-4 px-4 sm:px-5 ${step === 3 ? 'border-b border-gray-200/60' : 'border-b rounded-xl'}`} style={step === 3 ? undefined : { backgroundColor: hexToRgba(primary, 0.16), borderColor: hexToRgba(primary, 0.35) }}>
         <div className="flex-shrink-0 w-24 sm:w-28 md:w-32">
           {currentBusinessLogo ? (
             <img
@@ -1530,9 +1531,9 @@ export default function CreateContentPage() {
         </div>
       </div>
 
-    <div className="max-w-4xl mx-auto pb-12 sm:pb-16">
+    <div className={`pb-12 sm:pb-16 ${step === 3 ? 'w-full max-w-full' : 'max-w-4xl mx-auto'}`}>
       {/* Progress Steps */}
-      <div className="flex items-center mb-8 rounded-xl p-4 border shadow-sm transition-all duration-300" style={{ backgroundColor: hexToRgba(primary, 0.14), borderColor: hexToRgba(primary, 0.35) }}>
+      <div className={`flex items-center mb-8 p-4 transition-all duration-300 ${step === 3 ? '' : 'rounded-xl border shadow-sm'}`} style={step === 3 ? undefined : { backgroundColor: hexToRgba(primary, 0.14), borderColor: hexToRgba(primary, 0.35) }}>
         <div className={`flex items-center transition-colors duration-300 ${step >= 1 ? '' : 'text-gray-400'}`} style={step >= 1 ? { color: primary } : undefined}>
           <div
             className={`w-9 h-9 rounded-full flex items-center justify-center font-medium transition-all duration-300 ${step >= 1 ? 'text-white' : 'bg-gray-100 text-gray-500'}`}
@@ -1939,9 +1940,9 @@ export default function CreateContentPage() {
 
       {/* Step 3: Branding - Social Pack */}
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
-        <div>
+        <div className="w-full">
           {/* Header with Actions at Top */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 pt-4 px-4 -mx-0 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.25) }}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 pt-4">
             <div className="flex items-center gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Your Social Media Pack</h2>
@@ -2049,7 +2050,7 @@ export default function CreateContentPage() {
           </div>
           
           {/* Step 3: Choose your image (3 stock + 1 AI + 1 upload), then branding overlays */}
-          <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.28) }}>
+          <div className="mb-6 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-1">Choose your image</h3>
