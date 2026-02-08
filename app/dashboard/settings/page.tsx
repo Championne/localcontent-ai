@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense, lazy } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 const ImageQueriesTab = lazy(() => import('@/components/settings/ImageQueriesTab'))
@@ -14,7 +15,9 @@ interface UserProfile {
 type SettingsTab = 'profile' | 'image-queries' | 'ai-prompts'
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
+  const searchParams = useSearchParams()
+  const initialTab = (['profile', 'image-queries', 'ai-prompts'] as const).includes(searchParams.get('tab') as SettingsTab) ? (searchParams.get('tab') as SettingsTab) : 'profile'
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab)
   const [profile, setProfile] = useState<UserProfile>({ email: '', full_name: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState<string | null>(null)
