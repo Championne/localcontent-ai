@@ -1,71 +1,28 @@
 'use client'
 
 import React from 'react'
-import type { OverlayItem, TextOverlayItem, FrameStyle, FrameColorKey, OverlayApplyPayload, TextOverlayFont } from './ImageOverlayEditor'
 import { TEXT_FONT_OPTIONS } from './ImageOverlayEditor'
+import { hexWithAlpha } from './ImageOverlayEditorTypes'
+import type { ImageOverlayEditorViewProps, ViewComputed } from './ImageOverlayEditorTypes'
+import type { TextOverlayFont } from './ImageOverlayEditorTypes'
+export type { ImageOverlayEditorViewProps, ViewComputed } from './ImageOverlayEditorTypes'
+export { hexWithAlpha } from './ImageOverlayEditorTypes'
 
-export interface ImageOverlayEditorViewProps {
-  imageUrl: string
-  containerRef: React.RefObject<HTMLDivElement | null>
-  overlays: OverlayItem[]
-  setOverlays: React.Dispatch<React.SetStateAction<OverlayItem[]>>
-  overlayBorderColors: Record<string, string>
-  setOverlayBorderColors: React.Dispatch<React.SetStateAction<Record<string, string>>>
-  tintOverlay: { colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null
-  setTintOverlay: React.Dispatch<React.SetStateAction<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>>
-  frame: { style: FrameStyle; colorKey: FrameColorKey } | null
-  setFrame: React.Dispatch<React.SetStateAction<{ style: FrameStyle; colorKey: FrameColorKey } | null>>
-  textOverlays: TextOverlayItem[]
-  setTextOverlays: React.Dispatch<React.SetStateAction<TextOverlayItem[]>>
-  draggingNew: 'logo' | 'photo' | 'tagline' | 'website' | 'social' | null
-  dragPosition: { x: number; y: number }
-  effectiveLogoUrl: string | null
-  effectivePhotoUrl: string | null
-  getHex: (key: 'primary' | 'secondary' | 'accent') => string
-  getFrameHex: (key: FrameColorKey) => string
-  hasLogo: boolean
-  hasPhoto: boolean
-  totalItems: number
-  onApply: (payload: OverlayApplyPayload) => void
-  onSkip: () => void
-  applying?: boolean
-  handleSidebarDragStart: (type: 'logo' | 'photo' | 'tagline' | 'website' | 'social', e: React.MouseEvent | React.TouchEvent) => void
-  handleOverlayDragStart: (id: string, e: React.MouseEvent | React.TouchEvent) => void
-  handleScaleChange: (id: string, delta: number) => void
-  handleRemove: (id: string) => void
-  handleFileInput: (type: 'logo' | 'photo', e: React.ChangeEvent<HTMLInputElement>) => void
-  handleDropOnZone: (type: 'logo' | 'photo', e: React.DragEvent) => void
-  logoInputRef: React.RefObject<HTMLInputElement | null>
-  photoInputRef: React.RefObject<HTMLInputElement | null>
-  uploading: 'logo' | 'photo' | null
-  tagline?: string | null
-  website?: string | null
-  socialHandles?: string | null
-  onUploadLogo?: (file: File) => Promise<string | null>
-  onUploadPhoto?: (file: File) => Promise<string | null>
-  onArrangeAll?: () => void
-}
-
-export function hexWithAlpha(hex: string, alpha: number): string {
-  const a = Math.round(alpha * 255).toString(16).padStart(2, '0')
-  return hex + a
-}
-
-export type ViewComputed = {
-  primary: string
-  primaryDark: string
-  headerBg: string
-  sidebarBg: string
-  buttonBg: string
-  buttonBorder: string
-  rootBg: string
-  frameWrapperStyle: React.CSSProperties
-  containerStyle: React.CSSProperties
-}
-
-export default function ImageOverlayEditorViewRoot(props: { p: ImageOverlayEditorViewProps; c: ViewComputed }) {
+export default function ImageOverlayEditorViewRoot(props: {
+  p: ImageOverlayEditorViewProps
+  c: ViewComputed
+}) {
   const p = props.p
-  const { primary, primaryDark, headerBg, sidebarBg, buttonBg, buttonBorder, rootBg, frameWrapperStyle, containerStyle } = props.c
+  const c = props.c
+  const primary = c.primary
+  const primaryDark = c.primaryDark
+  const headerBg = c.headerBg
+  const sidebarBg = c.sidebarBg
+  const buttonBg = c.buttonBg
+  const buttonBorder = c.buttonBorder
+  const rootBg = c.rootBg
+  const frameWrapperStyle = c.frameWrapperStyle
+  const containerStyle = c.containerStyle
   return (
     <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
       {/* Header: compact */}

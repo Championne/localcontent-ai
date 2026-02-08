@@ -1,11 +1,10 @@
 'use client'
 
 import ImageOverlayEditorViewRoot from './ImageOverlayEditorViewRoot'
-import { hexWithAlpha } from './ImageOverlayEditorViewRoot'
-import type { ViewComputed } from './ImageOverlayEditorViewRoot'
-export type { ImageOverlayEditorViewProps } from './ImageOverlayEditorViewRoot'
-import type { ImageOverlayEditorViewProps } from './ImageOverlayEditorViewRoot'
+import { hexWithAlpha } from './ImageOverlayEditorTypes'
 import { computeFrameWrapperStyle, computeContainerStyle } from './frameStyles'
+import type { ImageOverlayEditorViewProps, ViewComputed } from './ImageOverlayEditorTypes'
+export type { ImageOverlayEditorViewProps } from './ImageOverlayEditorTypes'
 
 function darkenHex(hex: string, factor: number): string {
   const r = Math.round(parseInt(hex.slice(1, 3), 16) * factor)
