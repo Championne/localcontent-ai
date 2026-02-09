@@ -278,50 +278,63 @@ export default function ImageOverlayEditorViewRoot(props: {
                   {/* ── Atmospheric & Texture Overlays (Vintage Look) ── */}
 
                   {/* 1. Film grain & noise — organic texture that breaks digital sharpness */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-[3]" style={{ mixBlendMode: 'overlay' as const, opacity: 0.38 }} aria-hidden="true">
-                    <defs>
-                      <filter id="filmGrain">
-                        <feTurbulence type="fractalNoise" baseFrequency={0.78} numOctaves={4} stitchTiles="stitch" />
-                      </filter>
-                    </defs>
-                    <rect width="100%" height="100%" filter="url(#filmGrain)" />
-                  </svg>
+                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{ mixBlendMode: 'overlay' as const, opacity: 0.55 }} aria-hidden>
+                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <filter id="filmGrainCSS" x="0%" y="0%" width="100%" height="100%">
+                          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves={4} stitchTiles="stitch" result="noise" />
+                          <feColorMatrix type="saturate" values="0" in="noise" />
+                        </filter>
+                      </defs>
+                      <rect x="0" y="0" width="100%" height="100%" filter="url(#filmGrainCSS)" opacity="1" />
+                    </svg>
+                  </div>
 
                   {/* 2. Dust and scratches — physical wear-and-tear of old celluloid */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-[3]" style={{ mixBlendMode: 'screen' as const, opacity: 0.14 }} aria-hidden="true">
-                    {/* Vertical scratches */}
-                    <line x1="15%" y1="0" x2="14%" y2="100%" stroke="rgba(255,255,255,0.6)" strokeWidth="0.5" />
-                    <line x1="42%" y1="5%" x2="43%" y2="85%" stroke="rgba(255,255,255,0.45)" strokeWidth="0.3" />
-                    <line x1="67%" y1="10%" x2="66%" y2="95%" stroke="rgba(255,255,255,0.5)" strokeWidth="0.4" />
-                    <line x1="88%" y1="0" x2="89%" y2="70%" stroke="rgba(255,255,255,0.35)" strokeWidth="0.3" />
-                    <line x1="30%" y1="3%" x2="31%" y2="60%" stroke="rgba(255,255,255,0.3)" strokeWidth="0.25" />
-                    {/* Dust specks */}
-                    <circle cx="25%" cy="30%" r="1.2" fill="rgba(255,255,255,0.5)" />
-                    <circle cx="55%" cy="15%" r="0.9" fill="rgba(255,255,255,0.45)" />
-                    <circle cx="80%" cy="60%" r="1.5" fill="rgba(255,255,255,0.35)" />
-                    <circle cx="35%" cy="75%" r="0.7" fill="rgba(255,255,255,0.5)" />
-                    <circle cx="70%" cy="45%" r="1" fill="rgba(255,255,255,0.4)" />
-                    <circle cx="10%" cy="85%" r="1.3" fill="rgba(255,255,255,0.3)" />
-                    <circle cx="48%" cy="52%" r="0.6" fill="rgba(255,255,255,0.35)" />
-                    <circle cx="92%" cy="20%" r="0.8" fill="rgba(255,255,255,0.25)" />
-                  </svg>
+                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{ mixBlendMode: 'screen' as const, opacity: 0.35 }} aria-hidden>
+                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                      {/* Vertical scratches — thicker, more visible */}
+                      <line x1="15%" y1="0" x2="14%" y2="100%" stroke="rgba(255,255,255,0.8)" strokeWidth="1" />
+                      <line x1="42%" y1="5%" x2="43%" y2="85%" stroke="rgba(255,255,255,0.65)" strokeWidth="0.8" />
+                      <line x1="67%" y1="10%" x2="66%" y2="95%" stroke="rgba(255,255,255,0.7)" strokeWidth="0.9" />
+                      <line x1="88%" y1="0" x2="89%" y2="70%" stroke="rgba(255,255,255,0.55)" strokeWidth="0.7" />
+                      <line x1="30%" y1="3%" x2="31%" y2="60%" stroke="rgba(255,255,255,0.5)" strokeWidth="0.6" />
+                      <line x1="55%" y1="8%" x2="54%" y2="92%" stroke="rgba(255,255,255,0.45)" strokeWidth="0.5" />
+                      <line x1="78%" y1="12%" x2="79%" y2="75%" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" />
+                      {/* Dust specks — larger */}
+                      <circle cx="25%" cy="30%" r="2" fill="rgba(255,255,255,0.6)" />
+                      <circle cx="55%" cy="15%" r="1.5" fill="rgba(255,255,255,0.55)" />
+                      <circle cx="80%" cy="60%" r="2.5" fill="rgba(255,255,255,0.5)" />
+                      <circle cx="35%" cy="75%" r="1.2" fill="rgba(255,255,255,0.6)" />
+                      <circle cx="70%" cy="45%" r="1.8" fill="rgba(255,255,255,0.5)" />
+                      <circle cx="10%" cy="85%" r="2.2" fill="rgba(255,255,255,0.45)" />
+                      <circle cx="48%" cy="52%" r="1" fill="rgba(255,255,255,0.5)" />
+                      <circle cx="92%" cy="20%" r="1.5" fill="rgba(255,255,255,0.4)" />
+                    </svg>
+                  </div>
 
                   {/* 3. Light leaks — red/orange/white streaks simulating light hitting the film */}
                   <div className="absolute inset-0 pointer-events-none z-[3]" style={{
-                    background: 'linear-gradient(105deg, rgba(255,120,50,0.18) 0%, rgba(255,180,80,0.06) 18%, transparent 38%), linear-gradient(250deg, rgba(255,60,60,0.10) 0%, rgba(255,140,60,0.04) 12%, transparent 32%)',
+                    background: 'linear-gradient(105deg, rgba(255,120,50,0.35) 0%, rgba(255,180,80,0.15) 18%, transparent 42%), linear-gradient(250deg, rgba(255,60,60,0.25) 0%, rgba(255,140,60,0.10) 14%, transparent 36%)',
                     mixBlendMode: 'screen' as const,
                   }} aria-hidden />
 
                   {/* 4. Film burns — "hot" spots / orange flares at edges of reel */}
                   <div className="absolute inset-0 pointer-events-none z-[3]" style={{
-                    background: 'radial-gradient(ellipse 40% 60% at 2% 50%, rgba(255,140,40,0.22) 0%, rgba(255,100,20,0.06) 50%, transparent 75%), radial-gradient(ellipse 25% 35% at 98% 22%, rgba(255,180,80,0.12) 0%, transparent 65%), radial-gradient(ellipse 35% 25% at 50% 98%, rgba(255,120,40,0.08) 0%, transparent 55%)',
+                    background: 'radial-gradient(ellipse 45% 65% at 2% 50%, rgba(255,140,40,0.40) 0%, rgba(255,100,20,0.12) 50%, transparent 75%), radial-gradient(ellipse 30% 40% at 98% 22%, rgba(255,180,80,0.25) 0%, transparent 65%), radial-gradient(ellipse 40% 30% at 50% 98%, rgba(255,120,40,0.18) 0%, transparent 55%)',
                     mixBlendMode: 'screen' as const,
                   }} aria-hidden />
 
-                  {/* 5. Warm vintage color cast */}
+                  {/* 5. Warm vintage color cast — sepia tint */}
                   <div className="absolute inset-0 pointer-events-none z-[3]" style={{
-                    backgroundColor: 'rgba(160,120,60,0.06)',
+                    backgroundColor: 'rgba(160,120,60,0.12)',
                     mixBlendMode: 'multiply' as const,
+                  }} aria-hidden />
+
+                  {/* 6. Overall desaturation + warmth via CSS gradient */}
+                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{
+                    background: 'linear-gradient(180deg, rgba(180,140,80,0.08) 0%, rgba(120,80,30,0.10) 100%)',
+                    mixBlendMode: 'color' as const,
                   }} aria-hidden />
                 </>
               )}

@@ -457,7 +457,7 @@ export async function POST(request: Request) {
         const filmW = filmMeta.width!
         const filmH = filmMeta.height!
 
-        // 1. Film grain & noise — organic texture that breaks digital sharpness
+        // 1. Film grain & noise — organic texture, stronger alpha for visible effect
         const grainPixels = filmW * filmH
         const grainData = Buffer.alloc(grainPixels * 4)
         for (let i = 0; i < grainPixels; i++) {
@@ -466,7 +466,7 @@ export async function POST(request: Request) {
           grainData[j] = v
           grainData[j + 1] = v
           grainData[j + 2] = v
-          grainData[j + 3] = 45
+          grainData[j + 3] = 85 // increased from 45 for more visible grain
         }
         const grainBuffer = await sharp(grainData, { raw: { width: filmW, height: filmH, channels: 4 } })
           .png()
@@ -475,40 +475,42 @@ export async function POST(request: Request) {
           .composite([{ input: grainBuffer, blend: 'overlay' }])
           .toBuffer()
 
-        // 2. Dust and scratches — physical wear of old celluloid
+        // 2. Dust and scratches — thicker, more visible marks
         const dustSvg = Buffer.from(
           `<svg width="${filmW}" height="${filmH}" xmlns="http://www.w3.org/2000/svg">
-            <line x1="${filmW * 0.15}" y1="0" x2="${filmW * 0.14}" y2="${filmH}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-            <line x1="${filmW * 0.42}" y1="${filmH * 0.05}" x2="${filmW * 0.43}" y2="${filmH * 0.85}" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
-            <line x1="${filmW * 0.67}" y1="${filmH * 0.1}" x2="${filmW * 0.66}" y2="${filmH * 0.95}" stroke="rgba(255,255,255,0.12)" stroke-width="0.6"/>
-            <line x1="${filmW * 0.88}" y1="0" x2="${filmW * 0.89}" y2="${filmH * 0.7}" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
-            <line x1="${filmW * 0.30}" y1="${filmH * 0.03}" x2="${filmW * 0.31}" y2="${filmH * 0.60}" stroke="rgba(255,255,255,0.07)" stroke-width="0.5"/>
-            <circle cx="${filmW * 0.25}" cy="${filmH * 0.3}" r="2.5" fill="rgba(255,255,255,0.15)"/>
-            <circle cx="${filmW * 0.55}" cy="${filmH * 0.15}" r="2" fill="rgba(255,255,255,0.12)"/>
-            <circle cx="${filmW * 0.80}" cy="${filmH * 0.6}" r="3" fill="rgba(255,255,255,0.10)"/>
-            <circle cx="${filmW * 0.35}" cy="${filmH * 0.75}" r="1.5" fill="rgba(255,255,255,0.15)"/>
-            <circle cx="${filmW * 0.70}" cy="${filmH * 0.45}" r="2" fill="rgba(255,255,255,0.12)"/>
-            <circle cx="${filmW * 0.10}" cy="${filmH * 0.85}" r="2.5" fill="rgba(255,255,255,0.08)"/>
-            <circle cx="${filmW * 0.48}" cy="${filmH * 0.52}" r="1.2" fill="rgba(255,255,255,0.10)"/>
-            <circle cx="${filmW * 0.92}" cy="${filmH * 0.2}" r="1.8" fill="rgba(255,255,255,0.07)"/>
+            <line x1="${filmW * 0.15}" y1="0" x2="${filmW * 0.14}" y2="${filmH}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+            <line x1="${filmW * 0.42}" y1="${filmH * 0.05}" x2="${filmW * 0.43}" y2="${filmH * 0.85}" stroke="rgba(255,255,255,0.28)" stroke-width="1.2"/>
+            <line x1="${filmW * 0.67}" y1="${filmH * 0.1}" x2="${filmW * 0.66}" y2="${filmH * 0.95}" stroke="rgba(255,255,255,0.30)" stroke-width="1.0"/>
+            <line x1="${filmW * 0.88}" y1="0" x2="${filmW * 0.89}" y2="${filmH * 0.7}" stroke="rgba(255,255,255,0.22)" stroke-width="0.8"/>
+            <line x1="${filmW * 0.30}" y1="${filmH * 0.03}" x2="${filmW * 0.31}" y2="${filmH * 0.60}" stroke="rgba(255,255,255,0.20)" stroke-width="0.8"/>
+            <line x1="${filmW * 0.55}" y1="${filmH * 0.08}" x2="${filmW * 0.54}" y2="${filmH * 0.92}" stroke="rgba(255,255,255,0.18)" stroke-width="0.7"/>
+            <line x1="${filmW * 0.78}" y1="${filmH * 0.12}" x2="${filmW * 0.79}" y2="${filmH * 0.75}" stroke="rgba(255,255,255,0.16)" stroke-width="0.7"/>
+            <circle cx="${filmW * 0.25}" cy="${filmH * 0.3}" r="4" fill="rgba(255,255,255,0.25)"/>
+            <circle cx="${filmW * 0.55}" cy="${filmH * 0.15}" r="3" fill="rgba(255,255,255,0.22)"/>
+            <circle cx="${filmW * 0.80}" cy="${filmH * 0.6}" r="5" fill="rgba(255,255,255,0.20)"/>
+            <circle cx="${filmW * 0.35}" cy="${filmH * 0.75}" r="2.5" fill="rgba(255,255,255,0.25)"/>
+            <circle cx="${filmW * 0.70}" cy="${filmH * 0.45}" r="3.5" fill="rgba(255,255,255,0.20)"/>
+            <circle cx="${filmW * 0.10}" cy="${filmH * 0.85}" r="4" fill="rgba(255,255,255,0.18)"/>
+            <circle cx="${filmW * 0.48}" cy="${filmH * 0.52}" r="2" fill="rgba(255,255,255,0.20)"/>
+            <circle cx="${filmW * 0.92}" cy="${filmH * 0.2}" r="3" fill="rgba(255,255,255,0.15)"/>
           </svg>`
         )
         composited = await sharp(composited)
           .composite([{ input: dustSvg, blend: 'screen' }])
           .toBuffer()
 
-        // 3. Light leaks — red/orange/white streaks simulating light hitting the film
+        // 3. Light leaks — stronger red/orange/white streaks
         const leakSvg = Buffer.from(
           `<svg width="${filmW}" height="${filmH}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="leak1" x1="0" y1="0.3" x2="0.38" y2="0.5">
-                <stop offset="0%" stop-color="rgb(255,120,50)" stop-opacity="0.20"/>
-                <stop offset="45%" stop-color="rgb(255,180,80)" stop-opacity="0.06"/>
+              <linearGradient id="leak1" x1="0" y1="0.3" x2="0.42" y2="0.5">
+                <stop offset="0%" stop-color="rgb(255,120,50)" stop-opacity="0.38"/>
+                <stop offset="45%" stop-color="rgb(255,180,80)" stop-opacity="0.15"/>
                 <stop offset="100%" stop-color="rgb(255,200,100)" stop-opacity="0"/>
               </linearGradient>
-              <linearGradient id="leak2" x1="1" y1="0" x2="0.68" y2="0.32">
-                <stop offset="0%" stop-color="rgb(255,60,60)" stop-opacity="0.12"/>
-                <stop offset="35%" stop-color="rgb(255,140,60)" stop-opacity="0.04"/>
+              <linearGradient id="leak2" x1="1" y1="0" x2="0.64" y2="0.36">
+                <stop offset="0%" stop-color="rgb(255,60,60)" stop-opacity="0.28"/>
+                <stop offset="35%" stop-color="rgb(255,140,60)" stop-opacity="0.10"/>
                 <stop offset="100%" stop-color="rgb(255,200,100)" stop-opacity="0"/>
               </linearGradient>
             </defs>
@@ -520,21 +522,21 @@ export async function POST(request: Request) {
           .composite([{ input: leakSvg, blend: 'screen' }])
           .toBuffer()
 
-        // 4. Film burns — orange hot-spots at edges, like beginning/end of a reel
+        // 4. Film burns — stronger orange hot-spots at edges
         const burnSvg = Buffer.from(
           `<svg width="${filmW}" height="${filmH}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <radialGradient id="burn1" cx="0.03" cy="0.5" r="0.35" fx="0.03" fy="0.5">
-                <stop offset="0%" stop-color="rgb(255,140,40)" stop-opacity="0.25"/>
-                <stop offset="50%" stop-color="rgb(255,100,20)" stop-opacity="0.08"/>
+              <radialGradient id="burn1" cx="0.03" cy="0.5" r="0.38" fx="0.03" fy="0.5">
+                <stop offset="0%" stop-color="rgb(255,140,40)" stop-opacity="0.42"/>
+                <stop offset="50%" stop-color="rgb(255,100,20)" stop-opacity="0.14"/>
                 <stop offset="100%" stop-color="rgb(255,100,20)" stop-opacity="0"/>
               </radialGradient>
-              <radialGradient id="burn2" cx="0.97" cy="0.22" r="0.22" fx="0.97" fy="0.22">
-                <stop offset="0%" stop-color="rgb(255,180,80)" stop-opacity="0.15"/>
+              <radialGradient id="burn2" cx="0.97" cy="0.22" r="0.25" fx="0.97" fy="0.22">
+                <stop offset="0%" stop-color="rgb(255,180,80)" stop-opacity="0.28"/>
                 <stop offset="100%" stop-color="rgb(255,180,80)" stop-opacity="0"/>
               </radialGradient>
-              <radialGradient id="burn3" cx="0.5" cy="0.98" r="0.25" fx="0.5" fy="0.98">
-                <stop offset="0%" stop-color="rgb(255,120,40)" stop-opacity="0.08"/>
+              <radialGradient id="burn3" cx="0.5" cy="0.98" r="0.28" fx="0.5" fy="0.98">
+                <stop offset="0%" stop-color="rgb(255,120,40)" stop-opacity="0.20"/>
                 <stop offset="100%" stop-color="rgb(255,120,40)" stop-opacity="0"/>
               </radialGradient>
             </defs>
@@ -547,10 +549,10 @@ export async function POST(request: Request) {
           .composite([{ input: burnSvg, blend: 'screen' }])
           .toBuffer()
 
-        // 5. Warm vintage color cast
+        // 5. Warm vintage color cast — stronger sepia tint
         const warmCastSvg = Buffer.from(
           `<svg width="${filmW}" height="${filmH}" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100%" height="100%" fill="rgb(160,120,60)" opacity="0.06"/>
+            <rect width="100%" height="100%" fill="rgb(160,120,60)" opacity="0.12"/>
           </svg>`
         )
         composited = await sharp(composited)
