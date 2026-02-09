@@ -10,10 +10,13 @@ export const metadata: Metadata = {
   description: 'Spark your local content. Generate SEO-optimized content for your local business in minutes, not hours.',
   icons: {
     icon: [
-      { url: '/favicon-512.png', type: 'image/png' },
+      { url: '/favicon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon-512.png', sizes: '512x512', type: 'image/png' },
     ],
-    shortcut: '/favicon-512.png',
-    apple: '/favicon-512.png',
+    shortcut: '/favicon-32.png',
+    apple: '/apple-touch-icon.png',
   },
   openGraph: {
     title: 'GeoSpark - AI Content for Local Businesses',
