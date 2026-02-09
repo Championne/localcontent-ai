@@ -184,6 +184,14 @@ export default function AiPromptsTab() {
         </div>
       )}
 
+      {/* Explanation */}
+      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-blue-900 mb-1">How AI prompts work</h3>
+        <p className="text-xs text-blue-700 leading-relaxed">
+          When GeoSpark generates an AI image, the final DALL-E prompt is built from two parts: a <strong>scene hint</strong> (what to show for this industry) and a <strong>style prefix</strong> (how it should look). Scene hints have 4 vivid variations per industry — one is randomly picked each time for natural diversity. Style prefixes are set in the Style Prompts tab. You can override any scene hint below to lock in a custom description.
+        </p>
+      </div>
+
       {/* Industry Scene Hints */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Industry Scene Hints</h3>
