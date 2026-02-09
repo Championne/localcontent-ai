@@ -117,28 +117,67 @@ export interface GenerateImageResult {
 // DALL-E 3 often adds text; we put no-text first and repeat it so the model follows it
 const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Screens and displays are off or show only abstract colors. The image must be completely free of written language.`
 
-/** Industry-normalized key to concrete scene subject hints so the image clearly shows that business (not generic interiors). */
+// Anti-collage block: prevent DALL-E from creating mood boards, collages, or color swatches
+const SINGLE_PHOTO_BLOCK = `This must be a single cohesive photograph—NOT a collage, NOT a mood board, NOT a montage, NOT split panels. No color swatches, no color palette strips, no inset photos. One continuous scene from a single camera angle.`
+
+/**
+ * Sanitize the user-facing topic to remove promotional text that DALL-E would
+ * attempt to render as visible text in the image. We extract only the visual
+ * SUBJECT (e.g. "margarita pizza") and discard prices, percentages, CTAs.
+ */
+function sanitizeTopicForPrompt(topic: string): string {
+  let cleaned = topic
+  // Remove percentages and prices (10%, $5, €10, 50% off, etc.)
+  cleaned = cleaned.replace(/\d+[\.,]?\d*\s*%/g, '')
+  cleaned = cleaned.replace(/[$€£¥]\s*\d+[\.,]?\d*/g, '')
+  cleaned = cleaned.replace(/\d+[\.,]?\d*\s*[$€£¥]/g, '')
+  // Remove common promotional phrases
+  const promoPatterns = [
+    /\bonly today\b/gi, /\btoday only\b/gi, /\blimited time\b/gi,
+    /\bact now\b/gi, /\bhurry\b/gi, /\bdon'?t miss\b/gi,
+    /\bbuy one get one\b/gi, /\bbogo\b/gi, /\bfree shipping\b/gi,
+    /\bsave up to\b/gi, /\bsave\b/gi, /\boff\b/gi,
+    /\bdiscount\b/gi, /\bspecial offer\b/gi, /\bdeal of\b/gi,
+    /\bcoupon\b/gi, /\bpromo code\b/gi, /\bflash sale\b/gi,
+    /\bclearance\b/gi, /\bwhile supplies last\b/gi,
+    /\border now\b/gi, /\bbook now\b/gi, /\bcall now\b/gi,
+    /\bget yours\b/gi, /\bshop now\b/gi,
+  ]
+  for (const pat of promoPatterns) {
+    cleaned = cleaned.replace(pat, '')
+  }
+  // Collapse whitespace and trim
+  cleaned = cleaned.replace(/\s+/g, ' ').replace(/^[\s,.\-!:]+|[\s,.\-!:]+$/g, '').trim()
+  // If after stripping we have almost nothing, fall back to a generic description
+  if (cleaned.length < 3) {
+    return 'the business and its services'
+  }
+  return cleaned
+}
+
+/** Industry-normalized key to concrete scene subject hints so the image clearly shows that business (not generic interiors).
+ *  IMPORTANT: Each hint must describe ONE decisive subject. Never use "or" alternatives — DALL-E renders all of them as a collage. */
 export const INDUSTRY_SCENE_HINTS: Record<string, string> = {
-  hvac: 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
-  'hvac / heating & cooling': 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
-  plumbing: 'Plumber at work, or plumbing tools and pipes, or service van',
-  electrical: 'Electrician at work, or electrical panel and tools, or service van',
-  roofing: 'Roofer at work, or roofing materials and tools, or roof repair',
-  landscaping: 'Landscaper at work, or garden and lawn care equipment',
-  cleaning: 'Professional cleaner at work, or cleaning supplies and equipment',
-  pest: 'Pest control technician at work, or equipment and vehicle',
-  'real estate': 'Real estate agent with client, or house exterior, or key and sign',
-  restaurant: 'Chef cooking, or restaurant kitchen, or plated food',
-  dental: 'Dentist or hygienist with patient, or dental office equipment',
-  legal: 'Lawyer in office, or professional with client',
-  accounting: 'Accountant or advisor in office, or documents and calculator',
-  auto: 'Mechanic at work, or car repair shop, or auto parts',
-  'auto repair': 'Mechanic at work, or car repair shop, or auto parts',
+  hvac: 'a technician servicing an air conditioning unit on-site',
+  'hvac / heating & cooling': 'a technician servicing an air conditioning unit on-site',
+  plumbing: 'a plumber working under a kitchen sink with professional tools',
+  electrical: 'an electrician working on a residential electrical panel',
+  roofing: 'a roofer installing shingles on a house roof',
+  landscaping: 'a landscaper mowing a lush green lawn on a sunny day',
+  cleaning: 'a professional cleaner wiping down a spotless kitchen counter',
+  pest: 'a pest control technician inspecting a home exterior with equipment',
+  'real estate': 'the front exterior of an inviting residential home with a manicured lawn',
+  restaurant: 'a chef plating a dish in a professional restaurant kitchen',
+  dental: 'a modern dental treatment room with a patient chair and equipment',
+  legal: 'a lawyer reviewing documents at a polished office desk',
+  accounting: 'a financial advisor working at a desk with a laptop and documents',
+  auto: 'a mechanic working under the hood of a car in a repair shop',
+  'auto repair': 'a mechanic working under the hood of a car in a repair shop',
 }
 
 export function getIndustrySceneHint(industry: string): string {
   const key = industry.trim().toLowerCase().replace(/\s*&\s*/g, ' and ')
-  return INDUSTRY_SCENE_HINTS[key] ?? INDUSTRY_SCENE_HINTS[key.replace(/\s+and\s+/g, ' & ')] ?? `${industry} professional at work or ${industry} equipment and service`
+  return INDUSTRY_SCENE_HINTS[key] ?? INDUSTRY_SCENE_HINTS[key.replace(/\s+and\s+/g, ' & ')] ?? `a ${industry} professional at work in their typical environment`
 }
 
 /** Derive a single mood phrase from brand primary hex for lighting tone (no exact hex in prompt). */
@@ -210,31 +249,24 @@ function buildImagePrompt(params: GenerateImageParams): string {
   if (imageSize === '1792x1024') formatDesc = 'Wide landscape format'
   else if (imageSize === '1024x1792') formatDesc = 'Tall portrait format'
 
+  // Sanitize topic: strip prices, percentages, CTAs so DALL-E doesn't render them as text
+  const visualTopic = sanitizeTopicForPrompt(topic)
+
   // Lead with industry-specific subject so the image clearly shows that business (not generic interiors/showrooms)
   const industrySubject = params.sceneHintOverride || getIndustrySceneHint(industry)
   const stylePrefix = params.stylePrefixOverride || styleConfig.promptPrefix
-  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${stylePrefix}. Theme or mood: ${topic}. Single main subject, clean uncluttered background, natural lighting. Colour palette: natural and muted, avoid oversaturated or intensely vivid colours. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
+  let scene = `Photograph for a ${industry} business. Subject must be clearly related: ${industrySubject}. ${stylePrefix}. Visual theme: ${visualTopic}. Single main subject, clean uncluttered background, natural lighting. Colour palette: natural and muted, avoid oversaturated or intensely vivid colours. ${formatDesc}. Convey the idea through visuals only—no text in the image.`
   const hexRe = /^#[0-9A-Fa-f]{6}$/
   const primaryHex = params.brandPrimaryColor && hexRe.test(params.brandPrimaryColor) ? params.brandPrimaryColor : null
-  const secondaryHex = params.brandSecondaryColor && hexRe.test(params.brandSecondaryColor) ? params.brandSecondaryColor : null
-  const accentHex = params.brandAccentColor && hexRe.test(params.brandAccentColor) ? params.brandAccentColor : null
   const hasBrandColor = !!primaryHex
   if (hasBrandColor) {
     scene += ` ${getMoodFromHex(primaryHex)}`
-    // Promotional style: use brand colours subtly so the image stays natural, not overly intense
+    // Promotional style: hint at warm/cool mood only—never name specific colours to avoid DALL-E rendering colour swatches
     if (style === 'promotional') {
-      const colorNames: string[] = [getColorNameFromHex(primaryHex)]
-      if (secondaryHex) colorNames.push(getColorNameFromHex(secondaryHex))
-      if (accentHex) colorNames.push(getColorNameFromHex(accentHex))
-      const colorPhrase = colorNames.length === 1
-        ? colorNames[0]
-        : colorNames.length === 2
-          ? `${colorNames[0]} and ${colorNames[1]}`
-          : `${colorNames[0]}, ${colorNames[1]}, and ${colorNames[2]}`
-      scene += ` Use subtle, muted ${colorPhrase} as gentle accents or hints in the scene—e.g. uniform or equipment detail, vehicle stripe, or soft background wash—without oversaturating. Keep the overall palette natural and restrained.`
+      scene += ` The scene should feel inviting and eye-catching while remaining photographically natural. Use lighting and environment to create visual appeal rather than bold graphic colours.`
     }
   }
-  return `${NO_TEXT_BLOCK} ${scene} ${NO_TEXT_BLOCK}`
+  return `${NO_TEXT_BLOCK} ${SINGLE_PHOTO_BLOCK} ${scene} ${SINGLE_PHOTO_BLOCK} ${NO_TEXT_BLOCK}`
 }
 
 // Generate an image using DALL-E 3
