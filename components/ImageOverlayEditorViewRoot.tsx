@@ -176,7 +176,7 @@ export default function ImageOverlayEditorViewRoot(props: {
               className="w-full mt-2 py-2 rounded-lg text-[11px] font-medium border-2 transition-colors"
               style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}
             >
-              Arrange all
+              Auto-position all
             </button>
           )}
         </div>

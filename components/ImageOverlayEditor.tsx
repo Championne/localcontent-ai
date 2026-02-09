@@ -88,7 +88,7 @@ interface ImageOverlayEditorProps {
 
 const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', accent: '#6b7280' }
 
-// Predefined positions (percent) for "Arrange all" — logo top-left, photo top-right, tagline bottom-left, social + website bottom-right at same height
+// Predefined positions (percent) for "Auto-position all" — logo top-left, photo top-right, tagline bottom-left, social + website bottom-right at same height
 const DEFAULT_LOGO = { x: 5, y: 5, scale: 16 }
 const DEFAULT_PHOTO = { x: 77, y: 5, scale: 18 }
 const DEFAULT_TAGLINE = { x: 3, y: 92, fontSize: 20 }
@@ -141,29 +141,69 @@ export default function ImageOverlayEditor({
 
   const handleArrangeAll = () => {
     const primaryHex = /^#[0-9A-Fa-f]{6}$/.test(colors.primary) ? colors.primary : '#0d9488'
-    const nextOverlays: OverlayItem[] = []
-    const nextBorderColors: Record<string, string> = {}
-    if (effectiveLogoUrl) {
-      nextOverlays.push({ id: 'logo-default', url: effectiveLogoUrl, x: DEFAULT_LOGO.x, y: DEFAULT_LOGO.y, scale: DEFAULT_LOGO.scale, type: 'logo' })
-      nextBorderColors['logo-default'] = primaryHex
-    }
-    if (effectivePhotoUrl) {
-      nextOverlays.push({ id: 'photo-default', url: effectivePhotoUrl, x: DEFAULT_PHOTO.x, y: DEFAULT_PHOTO.y, scale: DEFAULT_PHOTO.scale, type: 'photo' })
-      nextBorderColors['photo-default'] = primaryHex
-    }
-    const nextText: TextOverlayItem[] = []
-    if (tagline?.trim()) {
-      nextText.push({ id: 'text-tagline-default', text: tagline.trim(), x: DEFAULT_TAGLINE.x, y: DEFAULT_TAGLINE.y, fontSize: DEFAULT_TAGLINE.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
-    }
-    if (socialHandles?.trim()) {
-      nextText.push({ id: 'text-social-default', text: socialHandles.trim(), x: DEFAULT_SOCIAL.x, y: DEFAULT_SOCIAL.y, fontSize: DEFAULT_SOCIAL.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
-    }
-    if (website?.trim()) {
-      nextText.push({ id: 'text-website-default', text: website.trim(), x: DEFAULT_WEBSITE.x, y: DEFAULT_WEBSITE.y, fontSize: DEFAULT_WEBSITE.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
-    }
-    setOverlays(nextOverlays)
-    setOverlayBorderColors(nextBorderColors)
-    setTextOverlays(nextText)
+
+    // --- Image overlays: reposition existing ones, or add missing ones ---
+    setOverlays(prev => {
+      const result: OverlayItem[] = []
+      const existingLogo = prev.find(o => o.type === 'logo')
+      const existingPhoto = prev.find(o => o.type === 'photo')
+
+      if (effectiveLogoUrl) {
+        if (existingLogo) {
+          // Keep scale + id, only update position
+          result.push({ ...existingLogo, x: DEFAULT_LOGO.x, y: DEFAULT_LOGO.y, url: effectiveLogoUrl })
+        } else {
+          result.push({ id: 'logo-default', url: effectiveLogoUrl, x: DEFAULT_LOGO.x, y: DEFAULT_LOGO.y, scale: DEFAULT_LOGO.scale, type: 'logo' })
+        }
+      }
+      if (effectivePhotoUrl) {
+        if (existingPhoto) {
+          result.push({ ...existingPhoto, x: DEFAULT_PHOTO.x, y: DEFAULT_PHOTO.y, url: effectivePhotoUrl })
+        } else {
+          result.push({ id: 'photo-default', url: effectivePhotoUrl, x: DEFAULT_PHOTO.x, y: DEFAULT_PHOTO.y, scale: DEFAULT_PHOTO.scale, type: 'photo' })
+        }
+      }
+      return result
+    })
+
+    // Keep existing border colours — only set defaults for newly added overlays
+    setOverlayBorderColors(prev => {
+      const next = { ...prev }
+      if (effectiveLogoUrl && !next['logo-default']) next['logo-default'] = primaryHex
+      if (effectivePhotoUrl && !next['photo-default']) next['photo-default'] = primaryHex
+      return next
+    })
+
+    // --- Text overlays: reposition existing ones (keep font, size, colour), or add missing ---
+    setTextOverlays(prev => {
+      const existingTagline = prev.find(t => t.id === 'text-tagline-default')
+      const existingSocial = prev.find(t => t.id === 'text-social-default')
+      const existingWebsite = prev.find(t => t.id === 'text-website-default')
+      const result: TextOverlayItem[] = []
+
+      if (tagline?.trim()) {
+        if (existingTagline) {
+          result.push({ ...existingTagline, x: DEFAULT_TAGLINE.x, y: DEFAULT_TAGLINE.y, text: tagline.trim() })
+        } else {
+          result.push({ id: 'text-tagline-default', text: tagline.trim(), x: DEFAULT_TAGLINE.x, y: DEFAULT_TAGLINE.y, fontSize: DEFAULT_TAGLINE.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
+        }
+      }
+      if (socialHandles?.trim()) {
+        if (existingSocial) {
+          result.push({ ...existingSocial, x: DEFAULT_SOCIAL.x, y: DEFAULT_SOCIAL.y, text: socialHandles.trim() })
+        } else {
+          result.push({ id: 'text-social-default', text: socialHandles.trim(), x: DEFAULT_SOCIAL.x, y: DEFAULT_SOCIAL.y, fontSize: DEFAULT_SOCIAL.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
+        }
+      }
+      if (website?.trim()) {
+        if (existingWebsite) {
+          result.push({ ...existingWebsite, x: DEFAULT_WEBSITE.x, y: DEFAULT_WEBSITE.y, text: website.trim() })
+        } else {
+          result.push({ id: 'text-website-default', text: website.trim(), x: DEFAULT_WEBSITE.x, y: DEFAULT_WEBSITE.y, fontSize: DEFAULT_WEBSITE.fontSize, fontFamily: 'Inter', colorKey: 'primary' })
+        }
+      }
+      return result
+    })
   }
 
   const handleFileUpload = async (type: 'logo' | 'photo', file: File) => {

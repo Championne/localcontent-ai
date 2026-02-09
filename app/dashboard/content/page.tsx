@@ -585,7 +585,7 @@ export default function CreateContentPage() {
   }
 
   // Auto-branding disabled: user now customizes branding manually via the overlay editor.
-  // The editor opens blank (no pre-suggested layout) and users can use "Arrange all" to quickly place items.
+  // The editor opens blank (no pre-suggested layout) and users can use "Auto-position all" to quickly place items.
 
   // Load content when opening from library (?edit=id)
   useEffect(() => {
