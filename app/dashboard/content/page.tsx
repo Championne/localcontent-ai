@@ -278,8 +278,8 @@ export default function CreateContentPage() {
   const [gbpPostType, setGbpPostType] = useState<GbpPostType>('update')
   const [offerExpiration, setOfferExpiration] = useState('7')
   const [offerCustomDate, setOfferCustomDate] = useState('')
-  const [eventDate, setEventDate] = useState('')
-  const [eventTime, setEventTime] = useState('')
+  const [eventDate, setEventDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [eventTime, setEventTime] = useState('18:00')
 
   // Step 3: Choose your image (3 stock + 1 AI + 1 upload)
   type StockOption = { url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }
