@@ -830,20 +830,27 @@ export default function CreateContentPage() {
     setOverlayError(null)
     setApplyingLogo(true)
     try {
-      // Use the original (pre-branding) base image to avoid double-branding
+      // Use the original (pre-branding) base image to avoid double-branding.
+      // If suggestedBrandingBaseImageUrl is not set yet (e.g. auto-branding was skipped),
+      // save the current generatedImage.url as the base BEFORE processing.
       const baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
+      if (!suggestedBrandingBaseImageUrl) {
+        setSuggestedBrandingBaseImageUrl(generatedImage.url)
+      }
       const newUrl = await applyPayloadToImage(baseUrl, payload)
       if (newUrl) {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
+        setAppliedBrandingForImageUrl(newUrl)
+        setInitialOverlayState(payload)
         setShowOverlayEditor(false)
         setLogoSkipped(true)
         setPhotoSkipped(true)
       } else {
-        setOverlayError('Something went wrong. Please try again.')
+        setOverlayError('Something went wrong applying branding. Please try again.')
       }
     } catch (error) {
       console.error('Overlay apply error:', error)
-      setOverlayError('Something went wrong. Please try again.')
+      setOverlayError('Something went wrong applying branding. Please try again.')
     } finally {
       setApplyingLogo(false)
     }
