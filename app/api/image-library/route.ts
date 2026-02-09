@@ -18,7 +18,7 @@ async function ensureBucket() {
   } catch { /* ignore */ }
 }
 
-/** GET /api/image-library — list user's images */
+/** GET /api/image-library — list user's images (optionally scoped to a business) */
 export async function GET(request: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams
   const tag = searchParams.get('tag')
+  const businessId = searchParams.get('business_id')
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
   const offset = parseInt(searchParams.get('offset') || '0', 10)
 
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
+
+  if (businessId) {
+    query = query.eq('business_id', businessId)
+  }
 
   if (tag) {
     query = query.contains('tags', [tag])
@@ -68,6 +73,7 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const file = formData.get('file') as File | null
   const tags = (formData.get('tags') as string || '').split(',').map(t => t.trim()).filter(Boolean)
+  const businessId = formData.get('business_id') as string | null
 
   if (!file || !file.type.startsWith('image/')) {
     return NextResponse.json({ error: 'A valid image file is required' }, { status: 400 })
@@ -105,6 +111,7 @@ export async function POST(request: NextRequest) {
     .from('user_image_library')
     .insert({
       user_id: user.id,
+      business_id: businessId || null,
       storage_path: storagePath,
       public_url: publicUrl,
       filename,

@@ -10,6 +10,14 @@ interface LibraryImage {
   file_size: number
   mime_type: string
   created_at: string
+  business_id: string | null
+}
+
+interface Business {
+  id: string
+  name: string
+  logo_url: string | null
+  brand_primary_color?: string | null
 }
 
 const SUGGESTED_TAGS = ['product', 'team', 'storefront', 'event', 'food', 'service', 'seasonal', 'logo', 'banner']
@@ -31,10 +39,39 @@ export default function ImageLibraryPage() {
   const dragRef = useRef<HTMLDivElement>(null)
   const [dragOver, setDragOver] = useState(false)
 
+  // Business selector
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  const [businessesLoading, setBusinessesLoading] = useState(true)
+
+  // Fetch businesses on mount
+  useEffect(() => {
+    async function loadBusinesses() {
+      try {
+        const res = await fetch('/api/business')
+        if (res.ok) {
+          const data = await res.json()
+          const list: Business[] = data.businesses || []
+          setBusinesses(list)
+          if (list.length > 0) {
+            setSelectedBusinessId(list[0].id)
+          }
+        }
+      } catch { /* ignore */ }
+      finally { setBusinessesLoading(false) }
+    }
+    loadBusinesses()
+  }, [])
+
+  const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
+  const primaryColor = selectedBusiness?.brand_primary_color || '#0d9488'
+
   const fetchImages = useCallback(async () => {
+    if (businessesLoading) return // wait until businesses are loaded
     setLoading(true)
     try {
       const params = new URLSearchParams({ limit: '100' })
+      if (selectedBusinessId) params.set('business_id', selectedBusinessId)
       if (filterTag) params.set('tag', filterTag)
       const res = await fetch(`/api/image-library?${params}`)
       const data = await res.json()
@@ -49,7 +86,7 @@ export default function ImageLibraryPage() {
     } finally {
       setLoading(false)
     }
-  }, [filterTag])
+  }, [filterTag, selectedBusinessId, businessesLoading])
 
   useEffect(() => { fetchImages() }, [fetchImages])
 
@@ -62,6 +99,7 @@ export default function ImageLibraryPage() {
       if (!file.type.startsWith('image/')) continue
       const form = new FormData()
       form.append('file', file)
+      if (selectedBusinessId) form.append('business_id', selectedBusinessId)
       try {
         const res = await fetch('/api/image-library', { method: 'POST', body: form })
         if (res.ok) {
@@ -133,6 +171,12 @@ export default function ImageLibraryPage() {
 
   const allTags = Array.from(new Set(images.flatMap(img => img.tags)))
 
+  const handleBusinessChange = (id: string) => {
+    setSelectedBusinessId(id)
+    setSelectedIds(new Set())
+    setFilterTag(null)
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* Header */}
@@ -152,7 +196,8 @@ export default function ImageLibraryPage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 text-white rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+            style={{ backgroundColor: primaryColor }}
           >
             {uploading ? (
               <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -166,6 +211,37 @@ export default function ImageLibraryPage() {
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { if (e.target.files?.length) uploadFiles(e.target.files); e.target.value = '' }} />
       </div>
 
+      {/* Business Selector */}
+      {businesses.length > 0 && (
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+            Business:
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            {businesses.map(b => (
+              <button
+                key={b.id}
+                onClick={() => handleBusinessChange(b.id)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex items-center gap-2 ${
+                  selectedBusinessId === b.id
+                    ? 'text-white border-transparent shadow-sm'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+                style={selectedBusinessId === b.id ? { backgroundColor: b.brand_primary_color || '#0d9488' } : undefined}
+              >
+                {b.logo_url ? (
+                  <img src={b.logo_url} alt="" className="w-4 h-4 rounded-full object-cover" />
+                ) : (
+                  <span className="w-4 h-4 rounded-full bg-gray-300 flex items-center justify-center text-[8px] text-white font-bold">{b.name.charAt(0).toUpperCase()}</span>
+                )}
+                {b.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Alerts */}
       {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error} <button onClick={() => setError('')} className="ml-2 underline">dismiss</button></div>}
       {success && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{success}</div>}
@@ -173,9 +249,9 @@ export default function ImageLibraryPage() {
       {/* Filter tags */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          <button onClick={() => setFilterTag(null)} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${!filterTag ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-gray-600 border-gray-300 hover:border-teal-400'}`}>All</button>
+          <button onClick={() => setFilterTag(null)} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${!filterTag ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`} style={!filterTag ? { backgroundColor: primaryColor } : undefined}>All</button>
           {allTags.map(tag => (
-            <button key={tag} onClick={() => setFilterTag(filterTag === tag ? null : tag)} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filterTag === tag ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-gray-600 border-gray-300 hover:border-teal-400'}`}>{tag}</button>
+            <button key={tag} onClick={() => setFilterTag(filterTag === tag ? null : tag)} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${filterTag === tag ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`} style={filterTag === tag ? { backgroundColor: primaryColor } : undefined}>{tag}</button>
           ))}
         </div>
       )}
@@ -208,7 +284,7 @@ export default function ImageLibraryPage() {
             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             <p className="text-gray-500 mb-2">No images yet</p>
             <p className="text-gray-400 text-sm mb-4">Upload photos of your shop, team, products, or events</p>
-            <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700">Upload your first image</button>
+            <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 text-white rounded-lg text-sm font-medium hover:opacity-90" style={{ backgroundColor: primaryColor }}>Upload your first image</button>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
