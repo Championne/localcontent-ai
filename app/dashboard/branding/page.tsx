@@ -377,7 +377,8 @@ export default function BrandingPage() {
                 type="button"
                 onClick={handleAddBusiness}
                 disabled={saving === 'add-business'}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 text-sm"
+                className="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 disabled:opacity-50 text-sm"
+                style={{ backgroundColor: 'var(--brand-primary)' }}
               >
                 {saving === 'add-business' ? 'Adding...' : 'Add'}
               </button>
@@ -402,7 +403,8 @@ export default function BrandingPage() {
           <button
             type="button"
             onClick={() => setShowAddBusiness(true)}
-            className="mt-2 text-teal-600 hover:text-teal-700 font-medium text-sm"
+            className="mt-2 font-medium text-sm"
+            style={{ color: 'var(--brand-primary)' }}
           >
             Add your first business
           </button>
@@ -483,19 +485,19 @@ export default function BrandingPage() {
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <span className="text-xs font-medium text-gray-600">
                         {completeness} of {BRAND_FIELDS_TOTAL} set
-                        <span className="text-teal-600 font-semibold ml-1">({pct}%)</span>
+                        <span className="font-semibold ml-1" style={{ color: 'var(--brand-primary)' }}>({pct}%)</span>
                       </span>
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div
                           className={`flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden max-w-[120px] transition-all ${pct === 100 ? 'ring-2 ring-teal-300 ring-offset-1 rounded-full' : ''}`}
                         >
                           <div
-                            className="h-full bg-teal-500 rounded-full transition-all duration-300"
-                            style={{ width: `${pct}%`, boxShadow: pct === 100 ? '0 0 8px rgba(20, 184, 166, 0.5)' : undefined }}
+                            className="h-full rounded-full transition-all duration-300"
+                            style={{ width: `${pct}%`, backgroundColor: 'var(--brand-primary)', boxShadow: pct === 100 ? '0 0 8px var(--brand-primary-20)' : undefined }}
                           />
                         </div>
                         {pct === 100 && (
-                          <span className="text-xs font-semibold text-teal-600 whitespace-nowrap" title="All fields filled">
+                          <span className="text-xs font-semibold whitespace-nowrap" style={{ color: 'var(--brand-primary)' }} title="All fields filled">
                             Profile complete
                           </span>
                         )}
@@ -503,10 +505,10 @@ export default function BrandingPage() {
                     </div>
                     {/* Milestone message */}
                     {pct >= 45 && pct <= 55 && pct !== 100 && (
-                      <p className="text-xs text-teal-600 font-medium mb-2">Halfway there — keep going!</p>
+                      <p className="text-xs font-medium mb-2" style={{ color: 'var(--brand-primary)' }}>Halfway there — keep going!</p>
                     )}
                     {pct === 100 && (
-                      <p className="text-xs text-teal-600 font-medium mb-2">Ready for consistent, on-brand content.</p>
+                      <p className="text-xs font-medium mb-2" style={{ color: 'var(--brand-primary)' }}>Ready for consistent, on-brand content.</p>
                     )}
                     {/* Set badges */}
                     {getSetBadges(business).length > 0 && (
@@ -514,7 +516,8 @@ export default function BrandingPage() {
                         {getSetBadges(business).map((badge) => (
                           <span
                             key={badge.label}
-                            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-teal-50 text-teal-700"
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium"
+                            style={{ backgroundColor: 'var(--brand-primary-10)', color: 'var(--brand-primary)' }}
                           >
                             {badge.label}
                           </span>
@@ -548,8 +551,8 @@ export default function BrandingPage() {
                                   setTimeout(() => setCopiedHex(null), 1500)
                                 })
                               }}
-                              className={`flex-1 transition-all hover:opacity-90 relative ${copiedHex === hex ? 'ring-2 ring-teal-500 ring-offset-1' : ''}`}
-                              style={{ backgroundColor: hex }}
+                              className={`flex-1 transition-all hover:opacity-90 relative ${copiedHex === hex ? 'ring-2 ring-offset-1' : ''}`}
+                              style={copiedHex === hex ? { backgroundColor: hex, '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties : { backgroundColor: hex }}
                               title={`Copy ${hex}`}
                             >
                               {copiedHex === hex && (
@@ -585,7 +588,7 @@ export default function BrandingPage() {
                   {/* Identity */}
                   <div>
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center text-sm font-medium">1</span>
+                      <span className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium" style={{ backgroundColor: 'var(--brand-primary-10)', color: 'var(--brand-primary)' }}>1</span>
                       <h4 className="font-medium text-gray-900">Identity</h4>
                     </div>
                     <div className="space-y-3 pl-10">
@@ -644,7 +647,7 @@ export default function BrandingPage() {
                         <button type="button" onClick={() => handleRemoveFile(business.id, 'logo')} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs">×</button>
                       </div>
                     ) : (
-                      <div onClick={() => logoInputRefs.current[business.id]?.click()} className="w-16 h-16 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-teal-300">
+                      <div onClick={() => logoInputRefs.current[business.id]?.click()} className="w-16 h-16 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400">
                         <span className="text-xl text-gray-400">🖼️</span>
                       </div>
                     )}
@@ -660,7 +663,7 @@ export default function BrandingPage() {
                         <button type="button" onClick={() => handleRemoveFile(business.id, 'profile_photo')} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs">×</button>
                       </div>
                     ) : (
-                      <div onClick={() => photoInputRefs.current[business.id]?.click()} className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-teal-300">
+                      <div onClick={() => photoInputRefs.current[business.id]?.click()} className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400">
                         <span className="text-xl text-gray-400">👤</span>
                       </div>
                     )}
@@ -753,7 +756,8 @@ export default function BrandingPage() {
                     <button
                       type="submit"
                       disabled={saving === business.id}
-                      className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium text-sm hover:bg-teal-700 disabled:opacity-50 shadow-sm hover:shadow transition-all"
+                      className="px-5 py-2.5 text-white rounded-lg font-medium text-sm hover:opacity-90 disabled:opacity-50 shadow-sm hover:shadow transition-all"
+                      style={{ backgroundColor: 'var(--brand-primary)' }}
                     >
                       {saving === business.id ? 'Saving...' : 'Save & done'}
                     </button>

@@ -95,15 +95,15 @@ export default async function DashboardPage() {
       </div>
 
       {/* Primary CTA Card */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-500 rounded-2xl p-8 mb-8 text-white">
+      <div className="rounded-2xl p-8 mb-8 text-white" style={{ background: 'linear-gradient(to right, var(--brand-primary), var(--brand-primary))' }}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold mb-2">Create Your Next Piece of Content</h2>
-            <p className="text-teal-100">From hours to minutes - generate locally-optimized content with AI</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)' }}>From hours to minutes - generate locally-optimized content with AI</p>
           </div>
           <Link 
             href="/dashboard/content"
-            className="inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-medium transition-colors shadow-lg shadow-orange-500/25"
+            className="inline-flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-colors backdrop-blur-sm"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -117,8 +117,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--brand-primary-10)' }}>
+              <svg className="w-5 h-5" style={{ color: 'var(--brand-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
@@ -128,8 +128,8 @@ export default async function DashboardPage() {
         </div>
         <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--brand-primary-20)' }}>
+              <svg className="w-5 h-5" style={{ color: 'var(--brand-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -167,10 +167,10 @@ export default async function DashboardPage() {
         <div className="grid md:grid-cols-3 gap-4">
           <Link 
             href="/dashboard/content" 
-            className="group bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-teal-200 hover:shadow-md transition-all"
+            className="group bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all"
           >
-            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-teal-200 transition-colors">
-              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors" style={{ backgroundColor: 'var(--brand-primary-10)' }}>
+              <svg className="w-5 h-5" style={{ color: 'var(--brand-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </div>
@@ -179,10 +179,10 @@ export default async function DashboardPage() {
           </Link>
           <Link 
             href="/dashboard/content" 
-            className="group bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:border-teal-200 hover:shadow-md transition-all"
+            className="group bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all"
           >
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-3 group-hover:bg-orange-200 transition-colors">
-              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors" style={{ backgroundColor: 'var(--brand-primary-10)' }}>
+              <svg className="w-5 h-5" style={{ color: 'var(--brand-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
               </svg>
             </div>
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Recent Content</h2>
-          <Link href="/dashboard/library" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+          <Link href="/dashboard/library" className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>
             View all
           </Link>
         </div>
@@ -220,8 +220,8 @@ export default async function DashboardPage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, var(--brand-primary-10), var(--brand-primary-20))` }}>
+                    <svg className="w-5 h-5" style={{ color: 'var(--brand-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
@@ -250,7 +250,8 @@ export default async function DashboardPage() {
             {/* Footer link */}
             <Link
               href="/dashboard/library"
-              className="flex items-center justify-center gap-1.5 py-3 text-sm text-teal-600 hover:text-teal-700 font-medium hover:bg-teal-50/50 transition-colors"
+              className="flex items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors"
+              style={{ color: 'var(--brand-primary)' }}
             >
               View all in Spark Library
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,7 +272,8 @@ export default async function DashboardPage() {
             </p>
             <Link 
               href="/dashboard/content"
-              className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors"
+              className="inline-flex items-center gap-2 text-white px-5 py-2.5 rounded-lg font-medium transition-colors hover:opacity-90"
+              style={{ backgroundColor: 'var(--brand-primary)' }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

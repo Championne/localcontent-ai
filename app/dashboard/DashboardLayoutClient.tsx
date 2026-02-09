@@ -23,6 +23,13 @@ interface DashboardLayoutClientProps {
 /** Key used to persist the selected business ID across sessions */
 const BUSINESS_STORAGE_KEY = 'geospark_selected_business_id'
 
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 export default function DashboardLayoutClient({ children, userName, isSalesUser = false }: DashboardLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
@@ -93,6 +100,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
   }, [])
 
   const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
+  const brandPrimary = (selectedBusiness?.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(selectedBusiness.brand_primary_color)) ? selectedBusiness.brand_primary_color : '#0d9488'
 
   const handleSelectBusiness = (id: string) => {
     setSelectedBusinessId(id)
@@ -131,7 +139,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
     : []
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" style={{ '--brand-primary': brandPrimary, '--brand-primary-10': hexToRgba(brandPrimary, 0.08), '--brand-primary-20': hexToRgba(brandPrimary, 0.15) } as React.CSSProperties}>
       {/* Welcome Modal for first-time users */}
       {showWelcome && !checkingBusiness && (
         <WelcomeModal onComplete={handleWelcomeComplete} />
@@ -195,16 +203,23 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         {/* Business Selector */}
         {businesses.length > 0 && (
           <div className="px-3 pt-3 pb-1" ref={businessDropdownRef}>
+            {/* Prominent brand logo */}
+            {selectedBusiness?.logo_url && (
+              <div className="mb-2 flex items-center justify-center">
+                <img src={selectedBusiness.logo_url} alt={selectedBusiness.name || ''} className="max-h-12 max-w-[180px] w-auto object-contain rounded-lg" />
+              </div>
+            )}
             <button
               onClick={() => setBusinessDropdownOpen(!businessDropdownOpen)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 transition-all text-left group"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border bg-white hover:bg-gray-50 transition-all text-left group"
+              style={{ borderColor: hexToRgba(brandPrimary, 0.25) }}
             >
               {selectedBusiness?.logo_url ? (
-                <img src={selectedBusiness.logo_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-100" />
+                <img src={selectedBusiness.logo_url} alt="" className="w-7 h-7 rounded-md object-cover flex-shrink-0 ring-1 ring-gray-100" />
               ) : (
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
-                  style={{ backgroundColor: selectedBusiness?.brand_primary_color || '#0d9488' }}
+                  className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
+                  style={{ backgroundColor: brandPrimary }}
                 >
                   {selectedBusiness?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
@@ -228,25 +243,26 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                     key={b.id}
                     onClick={() => handleSelectBusiness(b.id)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors ${
-                      selectedBusinessId === b.id ? 'bg-teal-50' : 'hover:bg-gray-50'
+                      selectedBusinessId === b.id ? '' : 'hover:bg-gray-50'
                     }`}
+                    style={selectedBusinessId === b.id ? { backgroundColor: hexToRgba(brandPrimary, 0.08) } : {}}
                   >
                     {b.logo_url ? (
-                      <img src={b.logo_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                      <img src={b.logo_url} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
                     ) : (
                       <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
+                        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
                         style={{ backgroundColor: b.brand_primary_color || '#0d9488' }}
                       >
                         {b.name.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm truncate ${selectedBusinessId === b.id ? 'font-semibold text-teal-700' : 'text-gray-700'}`}>{b.name}</p>
+                      <p className="text-sm truncate" style={selectedBusinessId === b.id ? { fontWeight: 600, color: brandPrimary } : { color: '#374151' }}>{b.name}</p>
                       {b.industry && <p className="text-[10px] text-gray-400 truncate leading-tight">{b.industry}</p>}
                     </div>
                     {selectedBusinessId === b.id && (
-                      <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 flex-shrink-0" style={{ color: brandPrimary }} fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
@@ -255,7 +271,10 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                 <Link
                   href="/dashboard/settings"
                   onClick={() => { setBusinessDropdownOpen(false); setSidebarOpen(false) }}
-                  className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-500 hover:text-teal-600 hover:bg-gray-50 border-t border-gray-100 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-500 hover:bg-gray-50 border-t border-gray-100 transition-colors"
+                  style={{ '--tw-text-opacity': 1 } as React.CSSProperties}
+                  onMouseEnter={e => (e.currentTarget.style.color = brandPrimary)}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -282,10 +301,9 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 mx-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'text-gray-700 hover:bg-teal-50 hover:text-teal-700'
+                  isActive ? '' : 'text-gray-700 hover:bg-gray-100'
                 }`}
+                style={isActive ? { backgroundColor: hexToRgba(brandPrimary, 0.1), color: brandPrimary } : {}}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
@@ -307,10 +325,9 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center gap-3 mx-2 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-teal-50 text-teal-700'
-                        : 'text-gray-700 hover:bg-teal-50 hover:text-teal-700'
+                      isActive ? '' : 'text-gray-700 hover:bg-gray-100'
                     }`}
+                    style={isActive ? { backgroundColor: hexToRgba(brandPrimary, 0.1), color: brandPrimary } : {}}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
@@ -324,28 +341,29 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         </nav>
 
         {/* Usage Card */}
-        <div className="mx-3 mb-4 p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl">
+        <div className="mx-3 mb-4 p-4 rounded-xl" style={{ background: `linear-gradient(135deg, ${hexToRgba(brandPrimary, 0.08)}, ${hexToRgba(brandPrimary, 0.16)})` }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-teal-800 capitalize">
+            <span className="text-sm font-medium capitalize" style={{ color: brandPrimary }}>
               {usage?.subscription?.plan || 'Free'} Plan
             </span>
-            <span className="text-xs text-teal-600">
+            <span className="text-xs" style={{ color: hexToRgba(brandPrimary, 0.7) }}>
               {usage?.content?.unlimited 
                 ? 'Unlimited' 
                 : `${usage?.content?.used || 0}/${usage?.content?.limit || 5} posts`
               }
             </span>
           </div>
-          <div className="w-full bg-teal-200 rounded-full h-2 mb-3">
+          <div className="w-full rounded-full h-2 mb-3" style={{ backgroundColor: hexToRgba(brandPrimary, 0.2) }}>
             <div 
-              className="bg-teal-600 h-2 rounded-full transition-all" 
-              style={{ width: `${Math.min(usage?.content?.percentage || 0, 100)}%` }}
+              className="h-2 rounded-full transition-all" 
+              style={{ width: `${Math.min(usage?.content?.percentage || 0, 100)}%`, backgroundColor: brandPrimary }}
             />
           </div>
           {!usage?.content?.unlimited && (
             <Link 
               href="/pricing" 
-              className="block text-center text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors"
+              className="block text-center text-sm font-medium transition-colors"
+              style={{ color: brandPrimary }}
               onClick={() => setSidebarOpen(false)}
             >
               Upgrade for unlimited
@@ -356,8 +374,8 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         {/* User Section (Mobile) */}
         <div className="lg:hidden border-t border-gray-100 p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium text-teal-700">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(brandPrimary, 0.15) }}>
+              <span className="text-sm font-medium" style={{ color: brandPrimary }}>
                 {userName?.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -386,8 +404,8 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-teal-700">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: hexToRgba(brandPrimary, 0.15) }}>
+                <span className="text-sm font-medium" style={{ color: brandPrimary }}>
                   {userName?.charAt(0).toUpperCase()}
                 </span>
               </div>

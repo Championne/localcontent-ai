@@ -270,7 +270,8 @@ export default function ImageLibraryPage() {
       {/* Drag-and-drop zone + grid */}
       <div
         ref={dragRef}
-        className={`relative rounded-xl border-2 border-dashed transition-colors p-1 ${dragOver ? 'border-teal-400 bg-teal-50/50' : 'border-transparent'}`}
+        className={`relative rounded-xl border-2 border-dashed transition-colors p-1 ${dragOver ? '' : 'border-transparent'}`}
+        style={dragOver ? { borderColor: primaryColor, backgroundColor: `${primaryColor}08` } : {}}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files) }}
@@ -294,12 +295,13 @@ export default function ImageLibraryPage() {
                   type="button"
                   onClick={() => toggleSelect(img.id)}
                   className={`relative aspect-square w-full rounded-lg overflow-hidden border-2 transition-all ${
-                    selectedIds.has(img.id) ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'
+                    selectedIds.has(img.id) ? 'ring-2' : 'border-gray-200 hover:border-gray-300'
                   }`}
+                  style={selectedIds.has(img.id) ? { borderColor: primaryColor, '--tw-ring-color': `${primaryColor}40` } as React.CSSProperties : {}}
                 >
                   <img src={img.public_url} alt={img.filename} className="w-full h-full object-cover" />
                   {selectedIds.has(img.id) && (
-                    <span className="absolute top-1.5 right-1.5 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white">
+                    <span className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: primaryColor }}>
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </span>
                   )}
@@ -323,7 +325,8 @@ export default function ImageLibraryPage() {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setEditingTags(editingTags === img.id ? null : img.id); setTagInput(img.tags.join(', ')) }}
-                      className="ml-auto text-[10px] text-gray-400 hover:text-teal-600"
+                      className="ml-auto text-[10px] text-gray-400 hover:opacity-80"
+                      style={{ '--hover-color': primaryColor } as React.CSSProperties}
                     >
                       {img.tags.length > 0 ? 'edit' : '+ tag'}
                     </button>
@@ -338,7 +341,7 @@ export default function ImageLibraryPage() {
                         className="flex-1 min-w-0 text-[11px] px-2 py-1 border border-gray-300 rounded"
                         onKeyDown={e => { if (e.key === 'Enter') handleTagUpdate(img.id, tagInput.split(',').map(t => t.trim()).filter(Boolean)) }}
                       />
-                      <button onClick={() => handleTagUpdate(img.id, tagInput.split(',').map(t => t.trim()).filter(Boolean))} className="text-[10px] px-2 py-1 bg-teal-600 text-white rounded">Save</button>
+                      <button onClick={() => handleTagUpdate(img.id, tagInput.split(',').map(t => t.trim()).filter(Boolean))} className="text-[10px] px-2 py-1 text-white rounded" style={{ backgroundColor: primaryColor }}>Save</button>
                     </div>
                   )}
                 </div>
@@ -348,7 +351,7 @@ export default function ImageLibraryPage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-square w-full rounded-lg border-2 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/30 transition-colors flex flex-col items-center justify-center gap-1"
+              className="aspect-square w-full rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors flex flex-col items-center justify-center gap-1"
             >
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               <span className="text-xs text-gray-500">Add more</span>
@@ -358,10 +361,10 @@ export default function ImageLibraryPage() {
 
         {/* Drag overlay */}
         {dragOver && (
-          <div className="absolute inset-0 bg-teal-50/80 rounded-xl flex items-center justify-center z-10">
+          <div className="absolute inset-0 rounded-xl flex items-center justify-center z-10" style={{ backgroundColor: `${primaryColor}14` }}>
             <div className="text-center">
-              <svg className="w-12 h-12 text-teal-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-              <p className="text-teal-700 font-medium">Drop images here</p>
+              <svg className="w-12 h-12 mx-auto mb-2" style={{ color: primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+              <p className="font-medium" style={{ color: primaryColor }}>Drop images here</p>
             </div>
           </div>
         )}

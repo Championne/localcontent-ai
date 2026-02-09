@@ -102,9 +102,10 @@ export default function SettingsPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab.id
-                ? 'border-teal-500 text-teal-700'
+                ? ''
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
+            style={activeTab === tab.id ? { borderColor: 'var(--brand-primary)', color: 'var(--brand-primary)' } : {}}
           >
             {tab.label}
           </button>
@@ -153,14 +154,16 @@ export default function SettingsPage() {
                   type="text"
                   value={profile.full_name}
                   onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:outline-none"
+                  style={{ '--tw-ring-color': 'var(--brand-primary)' } as React.CSSProperties}
                   placeholder="Your name"
                 />
               </div>
               <button
                 onClick={handleSaveProfile}
                 disabled={saving === 'profile'}
-                className="px-5 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:bg-gray-300 transition-colors flex items-center gap-2"
+                className="px-5 py-2.5 text-white rounded-lg font-medium hover:opacity-90 disabled:bg-gray-300 transition-colors flex items-center gap-2"
+                style={{ backgroundColor: 'var(--brand-primary)' }}
               >
                 {saving === 'profile' ? (
                   <>
@@ -173,7 +176,7 @@ export default function SettingsPage() {
                 ) : 'Save Profile'}
               </button>
               <p className="text-sm text-gray-500 mt-2">
-                Businesses, logo, and Brand Identity &rarr; <Link href="/dashboard/branding" className="text-teal-600 hover:underline">Brand Identity</Link>
+                Businesses, logo, and Brand Identity &rarr; <Link href="/dashboard/branding" className="hover:underline" style={{ color: 'var(--brand-primary)' }}>Brand Identity</Link>
               </p>
             </div>
           </div>
