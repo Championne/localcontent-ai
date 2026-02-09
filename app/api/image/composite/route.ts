@@ -144,7 +144,7 @@ export async function POST(request: Request) {
     }
 
     // Optional: transparent brand colour overlay over whole image (skipped when frame supplies its own tint: gold/silver/copper/neon/filmstrip)
-    const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'filmstrip', 'vignette'].includes(frame.style as string)
+    const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'filmstrip', 'vignette', 'polaroid'].includes(frame.style as string)
     const tint = !frameOverridesTint && tintOverlay && typeof tintOverlay.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(tintOverlay.color)
       ? { color: tintOverlay.color, opacity: Math.max(0.1, Math.min(1, Number(tintOverlay.opacity) || 0.3)) }
       : null
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
     }
 
     // Optional: frame around whole image (brand colour or effect)
-    const frameStyles = ['thin', 'solid', 'thick', 'double', 'classic', 'wooden', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper'] as const
+    const frameStyles = ['thin', 'solid', 'thick', 'double', 'classic', 'wooden', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper', 'polaroid'] as const
     const frameOpt = frame && typeof frame.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(frame.color)
       ? { style: frameStyles.includes(frame.style as typeof frameStyles[number]) ? frame.style : 'solid', color: frame.color }
       : null
@@ -638,6 +638,93 @@ export async function POST(request: Request) {
         )
         composited = await sharp(composited)
           .composite([{ input: warmCastSvg, blend: 'multiply' }])
+          .toBuffer()
+      }
+      // Polaroid: authentic instant-photo look — sepia filter, vignette, grain, asymmetric white border, slight rotation shadow
+      else if (style === 'polaroid') {
+        // 1. Apply sepia/warm tone + slight contrast boost to the image
+        composited = await sharp(composited)
+          .modulate({ saturation: 0.88, brightness: 1.04 })
+          .tint({ r: 240, g: 228, b: 210 })
+          .toBuffer()
+        // Re-boost after tint to avoid too-washed look
+        composited = await sharp(composited)
+          .modulate({ saturation: 0.95 })
+          .toBuffer()
+
+        // 2. Warm vignette overlay
+        const vignetteSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="polVig" cx="0.5" cy="0.48" r="0.58">
+                <stop offset="50%" stop-color="black" stop-opacity="0"/>
+                <stop offset="80%" stop-color="black" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="black" stop-opacity="0.35"/>
+              </radialGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#polVig)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: vignetteSvg, blend: 'over' }])
+          .toBuffer()
+
+        // 3. Film grain via noise overlay
+        const grainSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
+            <filter id="polGrain"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/></filter>
+            <rect width="100%" height="100%" filter="url(#polGrain)" opacity="0.05"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: grainSvg, blend: 'over' }])
+          .toBuffer()
+
+        // 4. Polaroid border: 14px sides + top, 48px bottom (for caption area)
+        const polSide = 14
+        const polTop = 14
+        const polBottom = 48
+        composited = await sharp(composited)
+          .extend({ top: polTop, bottom: polBottom, left: polSide, right: polSide, background: { r: 254, g: 254, b: 254, alpha: 1 } })
+          .toBuffer()
+        const polMeta = await sharp(composited).metadata()
+        const polW = polMeta.width!
+        const polH = polMeta.height!
+
+        // 5. Subtle paper texture + inner shadow on the photo area
+        const polFrameSvg = Buffer.from(
+          `<svg width="${polW}" height="${polH}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="polPaper"><feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="3" result="noise"/><feColorMatrix type="saturate" values="0" in="noise"/></filter>
+            </defs>
+            <!-- Very subtle paper texture on the white border -->
+            <rect width="${polW}" height="${polH}" filter="url(#polPaper)" opacity="0.02"/>
+            <!-- Inner shadow: photo recessed into paper -->
+            <rect x="${polSide}" y="${polTop}" width="${polW - 2 * polSide}" height="${polH - polTop - polBottom}" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>
+            <rect x="${polSide + 1}" y="${polTop + 1}" width="${polW - 2 * polSide - 2}" height="2" fill="rgba(0,0,0,0.06)"/>
+            <rect x="${polSide + 1}" y="${polTop + 1}" width="2" height="${polH - polTop - polBottom - 2}" fill="rgba(0,0,0,0.05)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: polFrameSvg, left: 0, top: 0, blend: 'over' }])
+          .toBuffer()
+
+        // 6. Drop shadow to simulate the polaroid sitting on a surface
+        const shPad = 16
+        const shadowBg = await sharp({
+          create: { width: polW + 2 * shPad, height: polH + 2 * shPad, channels: 4 as const, background: { r: 245, g: 247, b: 250, alpha: 255 } },
+        }).png().toBuffer()
+        const dropShadowSvg = Buffer.from(
+          `<svg width="${polW + 2 * shPad}" height="${polH + 2 * shPad}" xmlns="http://www.w3.org/2000/svg">
+            <defs><filter id="polSh"><feGaussianBlur stdDeviation="5"/></filter></defs>
+            <rect x="${shPad + 2}" y="${shPad + 4}" width="${polW}" height="${polH}" rx="1" fill="black" opacity="0.20" filter="url(#polSh)"/>
+          </svg>`
+        )
+        composited = await sharp(shadowBg)
+          .composite([
+            { input: dropShadowSvg, left: 0, top: 0, blend: 'over' },
+            { input: composited, left: shPad, top: shPad, blend: 'over' },
+          ])
           .toBuffer()
       }
       // Classic painting frame: layered antique gold (outer dark band, main ornate band, inner smooth band, rabbet)

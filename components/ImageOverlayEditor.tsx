@@ -51,6 +51,7 @@ export type FrameStyle =
   | 'gold'
   | 'silver'
   | 'copper'
+  | 'polaroid'
 
 export type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'copper' | 'neutral'
 

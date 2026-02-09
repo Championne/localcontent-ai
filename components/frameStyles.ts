@@ -37,6 +37,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
       neon: 18,
       shadow: 40,
       vignette: 0,
+      polaroid: 0, // handled specially below
     }
     base.padding = padMap[fs] ?? 8
   }
@@ -108,6 +109,18 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
       'inset 0 -1px 0 rgba(0,0,0,0.2)',
     ].join(', ')
     base.background = 'linear-gradient(135deg, #804a00 0%, #edc9af 25%, #a0522d 50%, #d4a76a 75%, #5d3a1a 100%)'
+  } else if (fs === 'polaroid') {
+    // Authentic Polaroid: off-white paper, unequal padding (wider bottom for caption area), slight rotation, soft shadow
+    base.background = '#fefefe'
+    base.padding = '14px 14px 48px 14px'
+    base.boxShadow = [
+      '0 6px 16px rgba(0,0,0,0.18)',
+      '0 2px 6px rgba(0,0,0,0.12)',
+      '1px 1px 0 rgba(0,0,0,0.04)',
+    ].join(', ')
+    base.transform = 'rotate(-1.5deg)'
+    base.borderRadius = 2
+    base.aspectRatio = undefined // polaroid is taller than square
   } else if (fs === 'filmstrip') {
     // no outer bg – the left/right strip divs supply the dark areas
   } else if (fs === 'neon') {
@@ -148,6 +161,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
       silver: '2px solid rgba(189,195,199,0.5)',
       copper: '2px solid rgba(160,82,45,0.5)',
       filmstrip: 'none',
+      polaroid: '1px solid rgba(0,0,0,0.08)',
     }
     if (fs && fs in borderMap) {
       base.border = borderMap[fs]
@@ -161,6 +175,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
     gold: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(191,149,63,0.3)',
     silver: 'inset 2px 2px 6px rgba(0,0,0,0.35), inset -1px -1px 4px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(189,195,199,0.3)',
     copper: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(160,82,45,0.3)',
+    polaroid: 'inset 0 1px 3px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(0,0,0,0.04)',
   }
 
   if (fs === 'neon') {

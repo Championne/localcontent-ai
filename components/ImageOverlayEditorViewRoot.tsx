@@ -234,7 +234,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                     : {}
                 }
               >
-              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : undefined} />
+              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : p.frame?.style === 'polaroid' ? { filter: 'sepia(0.15) contrast(1.08) brightness(1.05) saturate(0.9)' } : undefined} />
               {p.frame?.style === 'vignette' && (
                 <div
                   className="absolute inset-0 pointer-events-none z-[2]"
@@ -243,6 +243,39 @@ export default function ImageOverlayEditorViewRoot(props: {
                   }}
                   aria-hidden
                 />
+              )}
+              {/* Polaroid overlays: warm vignette + film grain texture */}
+              {p.frame?.style === 'polaroid' && (
+                <>
+                  {/* Soft warm vignette — lighter than the standalone vignette effect */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[2]"
+                    style={{
+                      background: 'radial-gradient(ellipse 80% 80% at 50% 48%, transparent 0%, transparent 55%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0.35) 100%)',
+                    }}
+                    aria-hidden
+                  />
+                  {/* Warm tint overlay — slight amber cast */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[2]"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(255,248,230,0.10) 0%, rgba(255,235,200,0.08) 100%)',
+                    }}
+                    aria-hidden
+                  />
+                  {/* Film grain — SVG noise pattern */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[3]"
+                    style={{
+                      opacity: 0.06,
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'repeat',
+                      backgroundSize: '128px 128px',
+                      mixBlendMode: 'overlay',
+                    }}
+                    aria-hidden
+                  />
+                </>
               )}
               {(p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper') && (
                 <div
@@ -529,7 +562,7 @@ export default function ImageOverlayEditorViewRoot(props: {
             <p className="text-[11px] font-medium text-gray-600 mb-1.5">Frame</p>
             <select
               value={p.frame?.style ?? ''}
-              onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
+              onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette' || v === 'polaroid') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
               className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none w-full mb-2"
             >
               <option value="">None</option>
@@ -545,6 +578,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                 <option value="shadow">Floating shadow</option>
               </optgroup>
               <optgroup label="Mood">
+                <option value="polaroid">Polaroid</option>
                 <option value="vignette">Vignette</option>
                 <option value="neon">Neon glow</option>
                 <option value="filmstrip">Film strip</option>
@@ -658,11 +692,11 @@ export default function ImageOverlayEditorViewRoot(props: {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-medium text-gray-600 mr-1">Frame</p>
-            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none flex-1 min-w-[120px]">
+            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette' || v === 'polaroid') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none flex-1 min-w-[120px]">
               <option value="">None</option>
               <option value="thin">Thin</option><option value="solid">Solid</option><option value="thick">Thick</option>
               <option value="classic">Painting</option><option value="wooden">Wooden</option>
-              <option value="vignette">Vignette</option><option value="neon">Neon</option><option value="filmstrip">Film strip</option>
+              <option value="polaroid">Polaroid</option><option value="vignette">Vignette</option><option value="neon">Neon</option><option value="filmstrip">Film strip</option>
               <option value="gold">Gold</option><option value="silver">Silver</option><option value="copper">Copper</option>
             </select>
           </div>

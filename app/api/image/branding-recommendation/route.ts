@@ -14,6 +14,7 @@ type FrameStyle =
   | 'gold'
   | 'silver'
   | 'copper'
+  | 'polaroid'
 type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'copper' | 'neutral'
 
 /** Frame suggestions per template: style + colorKey for auto branding */
