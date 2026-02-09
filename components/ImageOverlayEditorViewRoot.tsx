@@ -12,6 +12,7 @@ export default function ImageOverlayEditorViewRoot(props: {
   p: ImageOverlayEditorViewProps
   c: ViewComputed
 }) {
+  const [customText, setCustomText] = React.useState('')
   const p = props.p
   const c = props.c
   const primary = c.primary
@@ -567,6 +568,43 @@ export default function ImageOverlayEditorViewRoot(props: {
               </div>
             )}
           </div>
+
+          {/* Add Text */}
+          <div className="mt-4 pt-3 border-t border-gray-200/60">
+            <p className="text-[11px] font-medium text-gray-600 mb-1.5">Add Text</p>
+            <div className="flex gap-1">
+              <input
+                type="text"
+                value={customText}
+                onChange={(e) => setCustomText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && customText.trim()) {
+                    p.setTextOverlays(prev => [...prev, { id: `text-custom-${Date.now()}`, text: customText.trim(), x: 50, y: 50, fontSize: 24, fontFamily: 'Inter', colorKey: 'primary' }])
+                    setCustomText('')
+                  }
+                }}
+                placeholder="Type text..."
+                className="flex-1 min-w-0 text-[11px] border border-gray-200 rounded-md px-2 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none placeholder-gray-400"
+              />
+              <button
+                type="button"
+                disabled={!customText.trim()}
+                onClick={() => {
+                  if (customText.trim()) {
+                    p.setTextOverlays(prev => [...prev, { id: `text-custom-${Date.now()}`, text: customText.trim(), x: 50, y: 50, fontSize: 24, fontFamily: 'Inter', colorKey: 'primary' }])
+                    setCustomText('')
+                  }
+                }}
+                className="px-2.5 py-1.5 text-[11px] font-medium rounded-md text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                style={{ backgroundColor: customText.trim() ? primary : '#9CA3AF' }}
+              >
+                Add
+              </button>
+            </div>
+            {p.textOverlays.length > 0 && (
+              <p className="text-[10px] text-gray-400 mt-1.5">{p.textOverlays.length} text item{p.textOverlays.length !== 1 ? 's' : ''} on image</p>
+            )}
+          </div>
         </div>
 
         {/* Mobile: Special Effects below image (visible only on small screens) */}
@@ -597,6 +635,37 @@ export default function ImageOverlayEditorViewRoot(props: {
               <option value="vignette">Vignette</option><option value="neon">Neon</option><option value="filmstrip">Film strip</option>
               <option value="gold">Gold</option><option value="silver">Silver</option><option value="copper">Copper</option>
             </select>
+          </div>
+          {/* Add Text (mobile) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[11px] font-medium text-gray-600 mr-1">Text</p>
+            <input
+              type="text"
+              value={customText}
+              onChange={(e) => setCustomText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && customText.trim()) {
+                  p.setTextOverlays(prev => [...prev, { id: `text-custom-${Date.now()}`, text: customText.trim(), x: 50, y: 50, fontSize: 24, fontFamily: 'Inter', colorKey: 'primary' }])
+                  setCustomText('')
+                }
+              }}
+              placeholder="Type text..."
+              className="flex-1 min-w-0 text-[11px] border border-gray-200 rounded-md px-2 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none placeholder-gray-400"
+            />
+            <button
+              type="button"
+              disabled={!customText.trim()}
+              onClick={() => {
+                if (customText.trim()) {
+                  p.setTextOverlays(prev => [...prev, { id: `text-custom-${Date.now()}`, text: customText.trim(), x: 50, y: 50, fontSize: 24, fontFamily: 'Inter', colorKey: 'primary' }])
+                  setCustomText('')
+                }
+              }}
+              className="px-2.5 py-1.5 text-[11px] font-medium rounded-md text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ backgroundColor: customText.trim() ? primary : '#9CA3AF' }}
+            >
+              Add
+            </button>
           </div>
         </div>
       </div>
