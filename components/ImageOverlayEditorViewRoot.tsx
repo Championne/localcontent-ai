@@ -235,15 +235,46 @@ export default function ImageOverlayEditorViewRoot(props: {
                 }
               >
               <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : p.frame?.style === 'polaroid' ? { filter: 'sepia(0.15) contrast(1.08) brightness(1.05) saturate(0.9)' } : undefined} />
-              {p.frame?.style === 'vignette' && (
-                <div
-                  className="absolute inset-0 pointer-events-none z-[2]"
-                  style={{
-                    background: 'radial-gradient(ellipse 72% 72% at 50% 50%, transparent 0%, transparent 50%, rgba(0,0,0,0.28) 72%, rgba(0,0,0,0.72) 100%)',
-                  }}
-                  aria-hidden
-                />
-              )}
+              {p.frame?.style === 'vignette' && (() => {
+                const intensity = p.vignetteIntensity ?? 0.65
+                return (
+                  <>
+                    {/* Layer 1: Smooth radial vignette — organic lens-falloff curve */}
+                    <div
+                      className="absolute inset-0 pointer-events-none z-[2]"
+                      style={{
+                        background: `radial-gradient(ellipse 68% 68% at 50% 48%, transparent 0%, transparent 35%, rgba(0,0,0,${0.06 * intensity / 0.65}) 50%, rgba(0,0,0,${0.18 * intensity / 0.65}) 65%, rgba(0,0,0,${0.38 * intensity / 0.65}) 80%, rgba(0,0,0,${intensity}) 100%)`,
+                      }}
+                      aria-hidden
+                    />
+                    {/* Layer 2: Secondary soft circle for depth + corner emphasis */}
+                    <div
+                      className="absolute inset-0 pointer-events-none z-[2]"
+                      style={{
+                        background: `radial-gradient(circle at 50% 50%, transparent 0%, transparent 55%, rgba(0,0,0,${0.10 * intensity / 0.65}) 75%, rgba(0,0,0,${0.22 * intensity / 0.65}) 100%)`,
+                      }}
+                      aria-hidden
+                    />
+                    {/* Layer 3: SVG feColorMatrix for smooth banding-free light falloff */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-[2]" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+                      <defs>
+                        <radialGradient id="vigSmooth" cx="50%" cy="48%" r="50%" fx="50%" fy="48%">
+                          <stop offset="0%" stopColor="black" stopOpacity="0" />
+                          <stop offset="40%" stopColor="black" stopOpacity="0" />
+                          <stop offset="65%" stopColor="black" stopOpacity={0.12 * intensity / 0.65} />
+                          <stop offset="80%" stopColor="black" stopOpacity={0.28 * intensity / 0.65} />
+                          <stop offset="95%" stopColor="black" stopOpacity={0.50 * intensity / 0.65} />
+                          <stop offset="100%" stopColor="black" stopOpacity={intensity * 0.85} />
+                        </radialGradient>
+                        <filter id="vigBlur">
+                          <feGaussianBlur stdDeviation="2" />
+                        </filter>
+                      </defs>
+                      <rect width="100" height="100" fill="url(#vigSmooth)" filter="url(#vigBlur)" />
+                    </svg>
+                  </>
+                )
+              })()}
               {/* Polaroid overlays: warm vignette + film grain texture */}
               {p.frame?.style === 'polaroid' && (
                 <>
@@ -589,6 +620,24 @@ export default function ImageOverlayEditorViewRoot(props: {
                 <option value="copper">Copper</option>
               </optgroup>
             </select>
+            {/* Vignette intensity slider — only visible when vignette frame is selected */}
+            {p.frame?.style === 'vignette' && (
+              <div className="mb-2">
+                <label className="flex items-center gap-2 text-[11px] text-gray-600">
+                  <span className="whitespace-nowrap">Softness</span>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.0"
+                    step="0.05"
+                    value={p.vignetteIntensity}
+                    onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setVignetteIntensity(v) }}
+                    className="w-full h-1 accent-gray-600"
+                  />
+                  <span className="tabular-nums w-10 text-right text-[10px]">{Math.round(p.vignetteIntensity * 100)}%</span>
+                </label>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 mb-2">
               {(['gold', 'silver', 'copper'] as const).map((metal) => {
                 const isSelected = p.frame?.style === metal
@@ -700,6 +749,13 @@ export default function ImageOverlayEditorViewRoot(props: {
               <option value="gold">Gold</option><option value="silver">Silver</option><option value="copper">Copper</option>
             </select>
           </div>
+          {p.frame?.style === 'vignette' && (
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-gray-600 whitespace-nowrap">Softness</span>
+              <input type="range" min="0.2" max="1.0" step="0.05" value={p.vignetteIntensity} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setVignetteIntensity(v) }} className="flex-1 h-1 accent-gray-600" />
+              <span className="text-[10px] text-gray-500 tabular-nums w-8 text-right">{Math.round(p.vignetteIntensity * 100)}%</span>
+            </div>
+          )}
           {/* Add Text (mobile) */}
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-medium text-gray-600 mr-1">Text</p>
@@ -737,7 +793,7 @@ export default function ImageOverlayEditorViewRoot(props: {
       <div className="px-4 py-3 border-t border-gray-200 flex justify-between items-center rounded-b-xl" style={{ backgroundColor: headerBg }}>
         <button onClick={p.onSkip} className="text-sm text-gray-600 hover:text-gray-800 font-medium">Skip</button>
         <button
-          onClick={() => p.onApply({ imageOverlays: p.overlays, overlayBorderColors: p.overlayBorderColors, tintOverlay: p.tintOverlay, textOverlays: p.textOverlays, frame: p.frame })}
+          onClick={() => p.onApply({ imageOverlays: p.overlays, overlayBorderColors: p.overlayBorderColors, tintOverlay: p.tintOverlay, textOverlays: p.textOverlays, frame: p.frame, vignetteIntensity: p.vignetteIntensity })}
           disabled={p.applying || (p.overlays.length === 0 && p.textOverlays.length === 0 && !p.frame && !p.tintOverlay)}
           className="px-5 py-2 text-sm disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2 hover:opacity-95"
           style={{ backgroundColor: (p.applying || (p.overlays.length === 0 && p.textOverlays.length === 0 && !p.frame && !p.tintOverlay)) ? undefined : primary }}

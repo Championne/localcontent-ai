@@ -821,7 +821,7 @@ export default function CreateContentPage() {
           const frameHex = frame.colorKey === 'silver' || frame.colorKey === 'gold' || frame.colorKey === 'copper' || frame.colorKey === 'neutral'
             ? (FRAME_PRESET_COLORS[frame.colorKey] ?? '#e5e7eb')
             : frame.colorKey === 'primary' ? colors.primary : frame.colorKey === 'secondary' ? colors.secondary : colors.accent
-          body.frame = { style: frame.style, color: frameHex }
+          body.frame = { style: frame.style, color: frameHex, ...(frame.style === 'vignette' && payload.vignetteIntensity != null && { vignetteIntensity: payload.vignetteIntensity }) }
         }
         const res = await fetch('/api/image/composite', {
           method: 'POST',

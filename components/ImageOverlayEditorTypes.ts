@@ -18,6 +18,8 @@ export interface ImageOverlayEditorViewProps {
   setTintOverlay: React.Dispatch<React.SetStateAction<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>>
   frame: { style: FrameStyle; colorKey: FrameColorKey } | null
   setFrame: React.Dispatch<React.SetStateAction<{ style: FrameStyle; colorKey: FrameColorKey } | null>>
+  vignetteIntensity: number
+  setVignetteIntensity: React.Dispatch<React.SetStateAction<number>>
   textOverlays: TextOverlayItem[]
   setTextOverlays: React.Dispatch<React.SetStateAction<TextOverlayItem[]>>
   draggingNew: 'logo' | 'photo' | 'tagline' | 'website' | 'social' | null

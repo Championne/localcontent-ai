@@ -68,6 +68,7 @@ export interface OverlayApplyPayload {
   tintOverlay: { colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null
   textOverlays: TextOverlayItem[]
   frame: { style: FrameStyle; colorKey: FrameColorKey } | null
+  vignetteIntensity?: number
 }
 
 interface ImageOverlayEditorProps {
@@ -116,6 +117,7 @@ export default function ImageOverlayEditor({
   const [overlayBorderColors, setOverlayBorderColors] = useState<Record<string, string>>(() => initialState?.overlayBorderColors ?? {})
   const [tintOverlay, setTintOverlay] = useState<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>(() => initialState?.tintOverlay ?? null)
   const [frame, setFrame] = useState<{ style: FrameStyle; colorKey: FrameColorKey } | null>(() => initialState?.frame ?? null)
+  const [vignetteIntensity, setVignetteIntensity] = useState(0.65)
   const [textOverlays, setTextOverlays] = useState<TextOverlayItem[]>(() => initialState?.textOverlays ?? [])
   const [draggingNew, setDraggingNew] = useState<'logo' | 'photo' | 'tagline' | 'website' | 'social' | null>(null)
   const [draggingExisting, setDraggingExisting] = useState<string | null>(null)
@@ -361,6 +363,8 @@ export default function ImageOverlayEditor({
     setTintOverlay,
     frame,
     setFrame,
+    vignetteIntensity,
+    setVignetteIntensity,
     textOverlays,
     setTextOverlays,
     draggingNew,

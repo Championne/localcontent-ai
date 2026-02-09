@@ -176,18 +176,71 @@ export async function POST(request: Request) {
       const style = frameOpt.style
       const pad = style === 'thin' ? 3 : style === 'thick' ? 16 : 8
 
-      // Vignette: cinematic edge darkening (elliptical, stronger at corners)
+      // Vignette: organic lens-falloff darkening — multi-layer with SVG feGaussianBlur for smooth, banding-free transitions
       if (style === 'vignette') {
         const vw = imgWidth
         const vh = imgHeight
-        const cx = vw / 2
-        const cy = vh / 2
-        const r = Math.max(vw, vh) * 0.72
-        const vignetteSvg = Buffer.from(
-          `<svg width="${vw}" height="${vh}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="vg" cx="${cx}" cy="${cy}" r="${r}" fx="${cx}" fy="${cy}"><stop offset="0%" stop-color="transparent"/><stop offset="50%" stop-color="black" stop-opacity="0"/><stop offset="72%" stop-color="black" stop-opacity="0.3"/><stop offset="100%" stop-color="black" stop-opacity="0.72"/></radialGradient></defs><rect x="0" y="0" width="${vw}" height="${vh}" fill="url(#vg)"/></svg>`
+        // Allow intensity override from client (0.2–1.0), default 0.65
+        const intensity = Math.max(0.2, Math.min(1.0, Number(frame?.vignetteIntensity) || 0.65))
+        const scale = intensity / 0.65 // normalize relative to default
+
+        // Layer 1: Primary elliptical vignette with smooth multi-stop falloff
+        const vig1 = Buffer.from(
+          `<svg width="${vw}" height="${vh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="vg1" cx="50%" cy="48%" r="52%" fx="50%" fy="48%">
+                <stop offset="0%" stop-color="black" stop-opacity="0"/>
+                <stop offset="35%" stop-color="black" stop-opacity="0"/>
+                <stop offset="50%" stop-color="black" stop-opacity="${(0.06 * scale).toFixed(3)}"/>
+                <stop offset="65%" stop-color="black" stop-opacity="${(0.18 * scale).toFixed(3)}"/>
+                <stop offset="80%" stop-color="black" stop-opacity="${(0.38 * scale).toFixed(3)}"/>
+                <stop offset="100%" stop-color="black" stop-opacity="${(intensity).toFixed(3)}"/>
+              </radialGradient>
+            </defs>
+            <rect width="${vw}" height="${vh}" fill="url(#vg1)"/>
+          </svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: vignetteSvg, left: 0, top: 0, blend: 'over' }])
+          .composite([{ input: vig1, left: 0, top: 0, blend: 'over' }])
+          .toBuffer()
+
+        // Layer 2: Secondary circular gradient for corner emphasis + depth
+        const vig2 = Buffer.from(
+          `<svg width="${vw}" height="${vh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="vg2" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="black" stop-opacity="0"/>
+                <stop offset="55%" stop-color="black" stop-opacity="0"/>
+                <stop offset="75%" stop-color="black" stop-opacity="${(0.10 * scale).toFixed(3)}"/>
+                <stop offset="100%" stop-color="black" stop-opacity="${(0.22 * scale).toFixed(3)}"/>
+              </radialGradient>
+            </defs>
+            <rect width="${vw}" height="${vh}" fill="url(#vg2)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: vig2, left: 0, top: 0, blend: 'over' }])
+          .toBuffer()
+
+        // Layer 3: Softened overlay via feGaussianBlur for organic, banding-free transition
+        const vig3 = Buffer.from(
+          `<svg width="${vw}" height="${vh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="vg3" cx="50%" cy="48%" r="50%">
+                <stop offset="0%" stop-color="black" stop-opacity="0"/>
+                <stop offset="40%" stop-color="black" stop-opacity="0"/>
+                <stop offset="65%" stop-color="black" stop-opacity="${(0.12 * scale).toFixed(3)}"/>
+                <stop offset="80%" stop-color="black" stop-opacity="${(0.28 * scale).toFixed(3)}"/>
+                <stop offset="95%" stop-color="black" stop-opacity="${(0.50 * scale).toFixed(3)}"/>
+                <stop offset="100%" stop-color="black" stop-opacity="${(intensity * 0.85).toFixed(3)}"/>
+              </radialGradient>
+              <filter id="vigBlur"><feGaussianBlur stdDeviation="${Math.round(Math.max(vw, vh) * 0.015)}"/></filter>
+            </defs>
+            <rect width="${vw}" height="${vh}" fill="url(#vg3)" filter="url(#vigBlur)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: vig3, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
       }
       // Floating shadow: card lift with strong visible shadow + subtle top-edge highlight
