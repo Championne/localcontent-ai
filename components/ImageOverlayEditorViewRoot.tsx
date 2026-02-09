@@ -34,7 +34,7 @@ export default function ImageOverlayEditorViewRoot(props: {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-gray-900 text-sm">Customize Your Image</h3>
-          <p className="text-xs text-gray-600 mt-0.5">Drag items onto the image · Effects on the right</p>
+          <p className="text-xs text-gray-600 mt-0.5">Drag items onto the image · Special effects on the right</p>
         </div>
       </div>
 
@@ -455,9 +455,9 @@ export default function ImageOverlayEditorViewRoot(props: {
 
         </div>
 
-        {/* Right panel: Effects (Tint + Frame) */}
+        {/* Right panel: Special Effects (Tint + Frame) */}
         <div className="w-44 sm:w-52 border-l border-gray-200/80 p-3 hidden md:block" style={{ backgroundColor: sidebarBg }}>
-          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Effects</p>
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Special Effects</p>
 
           {/* Tint */}
           <div className="mb-4">
@@ -565,9 +565,9 @@ export default function ImageOverlayEditorViewRoot(props: {
           </div>
         </div>
 
-        {/* Mobile: Effects below image (visible only on small screens) */}
+        {/* Mobile: Special Effects below image (visible only on small screens) */}
         <div className="md:hidden border-t border-gray-200/80 p-3 space-y-3" style={{ backgroundColor: sidebarBg }}>
-          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Effects</p>
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Special Effects</p>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-medium text-gray-600 mr-1">Tint</p>
             <button type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })} className="text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all" style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}>Light</button>
