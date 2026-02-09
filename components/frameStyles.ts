@@ -19,7 +19,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
 
   const base: CSSProperties = {
     aspectRatio: '1',
-    borderRadius: fs === 'rounded' ? 12 : 0,
+    borderRadius: (fs === 'rounded' || fs === 'neon') ? 12 : 0,
   }
 
   // Padding
@@ -91,7 +91,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
 
   const base: CSSProperties = {
     aspectRatio: '1',
-    borderRadius: fs === 'rounded' ? 12 : 0,
+    borderRadius: (fs === 'rounded' || fs === 'neon') ? 12 : 0,
   }
 
   if (fs === 'double') {

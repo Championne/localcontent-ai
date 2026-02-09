@@ -288,22 +288,22 @@ export async function POST(request: Request) {
           parseInt(neonColor.slice(5, 7), 16),
         ]
 
-        // 1. Subtle image darkening so the neon glow pops against the content
+        // 1. Image darkening so the neon glow pops against the content
         const darkenSvg = Buffer.from(
-          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="black" opacity="0.06"/></svg>`
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="black" opacity="0.08"/></svg>`
         )
         composited = await sharp(composited)
           .composite([{ input: darkenSvg, blend: 'over' }])
           .toBuffer()
 
-        // 2. Color spill — neon light bleeding onto the image edges (4 directional gradients)
+        // 2. Color spill — neon light bleeding onto the image edges (4 directional gradients, strong)
         const spillSvg = Buffer.from(
           `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="spL" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
-              <linearGradient id="spR" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
-              <linearGradient id="spT" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
-              <linearGradient id="spB" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spL" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.30"/><stop offset="20%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spR" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.30"/><stop offset="20%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spT" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.30"/><stop offset="20%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spB" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.30"/><stop offset="20%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
             </defs>
             <rect width="100%" height="100%" fill="url(#spL)"/>
             <rect width="100%" height="100%" fill="url(#spR)"/>
@@ -313,6 +313,23 @@ export async function POST(request: Request) {
         )
         composited = await sharp(composited)
           .composite([{ input: spillSvg, blend: 'screen' }])
+          .toBuffer()
+
+        // 2b. Inner glow — concentrated neon light on image edges via radial vignette-style overlay
+        const innerGlowSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="iGlow" cx="0.5" cy="0.5" r="0.55">
+                <stop offset="55%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/>
+                <stop offset="85%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.30"/>
+              </radialGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#iGlow)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: innerGlowSvg, blend: 'screen' }])
           .toBuffer()
 
         // 3. Extend with dark background (slightly warm-dark for atmosphere)
@@ -340,9 +357,9 @@ export async function POST(request: Request) {
           .composite([{ input: ambientSvg, blend: 'screen' }])
           .toBuffer()
 
-        // 5. Multi-layered neon glow border — 6 bloom layers + white-hot core
+        // 5. Multi-layered neon glow border — 6 bloom layers + white-hot core (rounded corners)
         const tubePos = 18
-        const rx = 6
+        const rx = 14
         const coreStroke = 2.5
         const neonGlowSvg = Buffer.from(
           `<svg width="${nfw}" height="${nfh}" xmlns="http://www.w3.org/2000/svg">

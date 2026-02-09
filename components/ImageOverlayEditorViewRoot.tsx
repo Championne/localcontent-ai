@@ -235,23 +235,27 @@ export default function ImageOverlayEditorViewRoot(props: {
               {p.frame?.style === 'neon' && (
                 <>
                   {/* Subtle image darkening so neon glow pops */}
-                  <div className="absolute inset-0 pointer-events-none z-[2]" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }} aria-hidden />
+                  <div className="absolute inset-0 pointer-events-none z-[2] rounded-[10px]" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }} aria-hidden />
+                  {/* Strong inner edge glow — neon light bleeding onto the image surface */}
+                  <div className="absolute inset-0 pointer-events-none z-[3] rounded-[10px]" style={{
+                    boxShadow: `inset 0 0 40px ${p.getFrameHex(p.frame.colorKey)}55, inset 0 0 80px ${p.getFrameHex(p.frame.colorKey)}30, inset 0 0 120px ${p.getFrameHex(p.frame.colorKey)}18`,
+                  }} aria-hidden />
                   {/* Color spill from neon border onto image edges */}
-                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{
+                  <div className="absolute inset-0 pointer-events-none z-[3] rounded-[10px]" style={{
                     background: [
-                      `linear-gradient(to right, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
-                      `linear-gradient(to left, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
-                      `linear-gradient(to bottom, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
-                      `linear-gradient(to top, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
+                      `linear-gradient(to right, ${p.getFrameHex(p.frame.colorKey)}40 0%, transparent 20%)`,
+                      `linear-gradient(to left, ${p.getFrameHex(p.frame.colorKey)}40 0%, transparent 20%)`,
+                      `linear-gradient(to bottom, ${p.getFrameHex(p.frame.colorKey)}40 0%, transparent 20%)`,
+                      `linear-gradient(to top, ${p.getFrameHex(p.frame.colorKey)}40 0%, transparent 20%)`,
                     ].join(', '),
                   }} aria-hidden />
-                  {/* Corner bloom reflections — light bouncing into corners */}
-                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{
+                  {/* Corner bloom reflections — light concentrating in corners */}
+                  <div className="absolute inset-0 pointer-events-none z-[3] rounded-[10px]" style={{
                     background: [
-                      `radial-gradient(circle at 0% 0%, ${p.getFrameHex(p.frame.colorKey)}18 0%, transparent 24%)`,
-                      `radial-gradient(circle at 100% 0%, ${p.getFrameHex(p.frame.colorKey)}14 0%, transparent 22%)`,
-                      `radial-gradient(circle at 0% 100%, ${p.getFrameHex(p.frame.colorKey)}14 0%, transparent 22%)`,
-                      `radial-gradient(circle at 100% 100%, ${p.getFrameHex(p.frame.colorKey)}18 0%, transparent 24%)`,
+                      `radial-gradient(circle at 0% 0%, ${p.getFrameHex(p.frame.colorKey)}38 0%, transparent 28%)`,
+                      `radial-gradient(circle at 100% 0%, ${p.getFrameHex(p.frame.colorKey)}30 0%, transparent 25%)`,
+                      `radial-gradient(circle at 0% 100%, ${p.getFrameHex(p.frame.colorKey)}30 0%, transparent 25%)`,
+                      `radial-gradient(circle at 100% 100%, ${p.getFrameHex(p.frame.colorKey)}38 0%, transparent 28%)`,
                     ].join(', '),
                   }} aria-hidden />
                 </>
