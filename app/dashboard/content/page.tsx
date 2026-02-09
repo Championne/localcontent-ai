@@ -774,10 +774,10 @@ export default function CreateContentPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.url) currentImageUrl = data.url
-        }
+        if (!res.ok) return null
+        const data = await res.json()
+        if (data.url) currentImageUrl = data.url
+        else return null
       }
       if (textOverlays.length > 0 && colors) {
         const img = await fetch(currentImageUrl).then(r => r.blob())
@@ -826,7 +826,9 @@ export default function CreateContentPage() {
     setOverlayError(null)
     setApplyingLogo(true)
     try {
-      const newUrl = await applyPayloadToImage(generatedImage.url, payload)
+      // Use the original (pre-branding) base image to avoid double-branding
+      const baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
+      const newUrl = await applyPayloadToImage(baseUrl, payload)
       if (newUrl) {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
         setShowOverlayEditor(false)
@@ -2262,8 +2264,8 @@ export default function CreateContentPage() {
                 </div>
               )}
               <ImageOverlayEditor
-                key={generatedImage.url}
-                imageUrl={generatedImage.url}
+                key={suggestedBrandingBaseImageUrl || generatedImage.url}
+                imageUrl={suggestedBrandingBaseImageUrl || generatedImage.url}
                 logoUrl={currentBusinessLogo}
                 photoUrl={currentBusinessPhoto}
                 brandColors={getBrandColors()}
@@ -2275,7 +2277,7 @@ export default function CreateContentPage() {
                 applying={applyingLogo}
                 onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
                 onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
-                initialState={appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null}
+                initialState={suggestedBrandingBaseImageUrl && initialOverlayState ? initialOverlayState : (appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null)}
               />
             </div>
           ) : generatedImage && showTextOverlay ? (
@@ -2969,8 +2971,8 @@ export default function CreateContentPage() {
                 </div>
               )}
               <ImageOverlayEditor
-                key={generatedImage.url}
-                imageUrl={generatedImage.url}
+                key={suggestedBrandingBaseImageUrl || generatedImage.url}
+                imageUrl={suggestedBrandingBaseImageUrl || generatedImage.url}
                 logoUrl={currentBusinessLogo}
                 photoUrl={currentBusinessPhoto}
                 brandColors={getBrandColors()}
@@ -2982,7 +2984,7 @@ export default function CreateContentPage() {
                 applying={applyingLogo}
                 onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
                 onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
-                initialState={appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null}
+                initialState={suggestedBrandingBaseImageUrl && initialOverlayState ? initialOverlayState : (appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null)}
               />
             </div>
           )}
