@@ -231,6 +231,31 @@ export default function ImageOverlayEditorViewRoot(props: {
                   aria-hidden
                 />
               )}
+              {/* Neon: atmospheric overlays — color spill, bloom, subtle darkening */}
+              {p.frame?.style === 'neon' && (
+                <>
+                  {/* Subtle image darkening so neon glow pops */}
+                  <div className="absolute inset-0 pointer-events-none z-[2]" style={{ backgroundColor: 'rgba(0,0,0,0.06)' }} aria-hidden />
+                  {/* Color spill from neon border onto image edges */}
+                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{
+                    background: [
+                      `linear-gradient(to right, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
+                      `linear-gradient(to left, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
+                      `linear-gradient(to bottom, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
+                      `linear-gradient(to top, ${p.getFrameHex(p.frame.colorKey)}1a 0%, transparent 16%)`,
+                    ].join(', '),
+                  }} aria-hidden />
+                  {/* Corner bloom reflections — light bouncing into corners */}
+                  <div className="absolute inset-0 pointer-events-none z-[3]" style={{
+                    background: [
+                      `radial-gradient(circle at 0% 0%, ${p.getFrameHex(p.frame.colorKey)}18 0%, transparent 24%)`,
+                      `radial-gradient(circle at 100% 0%, ${p.getFrameHex(p.frame.colorKey)}14 0%, transparent 22%)`,
+                      `radial-gradient(circle at 0% 100%, ${p.getFrameHex(p.frame.colorKey)}14 0%, transparent 22%)`,
+                      `radial-gradient(circle at 100% 100%, ${p.getFrameHex(p.frame.colorKey)}18 0%, transparent 24%)`,
+                    ].join(', '),
+                  }} aria-hidden />
+                </>
+              )}
               {p.frame?.style === 'filmstrip' && (
                 <>
                   {/* Left film strip: dark strip with rectangular sprocket holes */}

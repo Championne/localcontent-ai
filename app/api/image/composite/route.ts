@@ -279,51 +279,120 @@ export async function POST(request: Request) {
           .composite([{ input: metalSvg, left: 0, top: 0 }])
           .toBuffer()
       }
-      // Neon: neon sign effect – dark background, wide luminous glow halo, bright core (like reference)
+      // Neon: realistic neon sign effect — white-hot core, layered bloom, color spill, ambient reflections
       else if (style === 'neon') {
-        const neonTintOpacity = 0.12
-        const [ntR, ntG, ntB] = [
-          parseInt(frameOpt.color.slice(1, 3), 16),
-          parseInt(frameOpt.color.slice(3, 5), 16),
-          parseInt(frameOpt.color.slice(5, 7), 16),
+        const neonColor = frameOpt.color
+        const [ncR, ncG, ncB] = [
+          parseInt(neonColor.slice(1, 3), 16),
+          parseInt(neonColor.slice(3, 5), 16),
+          parseInt(neonColor.slice(5, 7), 16),
         ]
-        const neonTintSvg = Buffer.from(
-          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${ntR},${ntG},${ntB})" opacity="${neonTintOpacity}"/></svg>`
+
+        // 1. Subtle image darkening so the neon glow pops against the content
+        const darkenSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="black" opacity="0.06"/></svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: neonTintSvg, left: 0, top: 0, blend: 'over' }])
+          .composite([{ input: darkenSvg, blend: 'over' }])
           .toBuffer()
 
+        // 2. Color spill — neon light bleeding onto the image edges (4 directional gradients)
+        const spillSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="spL" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spR" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spT" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+              <linearGradient id="spB" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.14"/><stop offset="16%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></linearGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#spL)"/>
+            <rect width="100%" height="100%" fill="url(#spR)"/>
+            <rect width="100%" height="100%" fill="url(#spT)"/>
+            <rect width="100%" height="100%" fill="url(#spB)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: spillSvg, blend: 'screen' }])
+          .toBuffer()
+
+        // 3. Extend with dark background (slightly warm-dark for atmosphere)
         const neonPad = 56
         composited = await sharp(composited)
-          .extend({ top: neonPad, bottom: neonPad, left: neonPad, right: neonPad, background: { r: 2, g: 2, b: 6, alpha: 1 } })
+          .extend({ top: neonPad, bottom: neonPad, left: neonPad, right: neonPad, background: { r: 8, g: 8, b: 12, alpha: 1 } })
           .toBuffer()
-        const meta = await sharp(composited).metadata()
-        const fw = meta.width!
-        const fh = meta.height!
-        const inner = 12
-        const rx = 8
-        const strokeW = 3
-        const neonColor = frameOpt.color
-        const blurOuter = 24
-        const blurMid = 12
-        const blurInner = 5
-        const neonGlowSvg = Buffer.from(
-          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
+        const nMeta = await sharp(composited).metadata()
+        const nfw = nMeta.width!
+        const nfh = nMeta.height!
+
+        // 4. Ambient glow — large soft radial reflecting off the dark "wall" behind the sign
+        const ambientSvg = Buffer.from(
+          `<svg width="${nfw}" height="${nfh}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <filter id="neonBlurOut" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="${blurOuter}"/></filter>
-              <filter id="neonBlurMid" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="${blurMid}"/></filter>
-              <filter id="neonBlurIn" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="${blurInner}"/></filter>
+              <radialGradient id="ambG" cx="0.5" cy="0.5" r="0.55">
+                <stop offset="60%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.07"/>
+                <stop offset="100%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/>
+              </radialGradient>
             </defs>
-            <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" rx="${rx}" ry="${rx}" fill="none" stroke="${neonColor}" stroke-width="32" opacity="0.5" filter="url(#neonBlurOut)"/>
-            <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" rx="${rx}" ry="${rx}" fill="none" stroke="${neonColor}" stroke-width="20" opacity="0.65" filter="url(#neonBlurMid)"/>
-            <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" rx="${rx}" ry="${rx}" fill="none" stroke="${neonColor}" stroke-width="10" opacity="0.85" filter="url(#neonBlurIn)"/>
-            <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" rx="${rx}" ry="${rx}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="${strokeW + 1}"/>
-            <rect x="${inner}" y="${inner}" width="${fw - 2 * inner}" height="${fh - 2 * inner}" rx="${rx}" ry="${rx}" fill="none" stroke="${neonColor}" stroke-width="${strokeW}"/>
+            <rect width="100%" height="100%" fill="url(#ambG)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: ambientSvg, blend: 'screen' }])
+          .toBuffer()
+
+        // 5. Multi-layered neon glow border — 6 bloom layers + white-hot core
+        const tubePos = 18
+        const rx = 6
+        const coreStroke = 2.5
+        const neonGlowSvg = Buffer.from(
+          `<svg width="${nfw}" height="${nfh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="nb1" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="44"/></filter>
+              <filter id="nb2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="28"/></filter>
+              <filter id="nb3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="16"/></filter>
+              <filter id="nb4" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+              <filter id="nb5" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
+              <filter id="nb6" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.5"/></filter>
+            </defs>
+            <!-- Layer 1: widest bloom — very faint, huge radius -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="52" opacity="0.28" filter="url(#nb1)"/>
+            <!-- Layer 2: wide bloom -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="36" opacity="0.40" filter="url(#nb2)"/>
+            <!-- Layer 3: medium glow -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="22" opacity="0.55" filter="url(#nb3)"/>
+            <!-- Layer 4: inner glow -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="14" opacity="0.70" filter="url(#nb4)"/>
+            <!-- Layer 5: tight glow -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="7" opacity="0.85" filter="url(#nb5)"/>
+            <!-- Layer 6: sharp color edge -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="4" opacity="0.95" filter="url(#nb6)"/>
+            <!-- White-hot core: nearly white center simulating gas-filled tube intensity -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="rgba(255,255,255,0.88)" stroke-width="${coreStroke + 1}"/>
+            <!-- Color core on top of white -->
+            <rect x="${tubePos}" y="${tubePos}" width="${nfw - 2 * tubePos}" height="${nfh - 2 * tubePos}" rx="${rx}" fill="none" stroke="${neonColor}" stroke-width="${coreStroke}" opacity="0.92"/>
           </svg>`
         )
         composited = await sharp(composited)
           .composite([{ input: neonGlowSvg, left: 0, top: 0 }])
+          .toBuffer()
+
+        // 6. Corner bloom reflections — light bouncing off dark "wall" at corners
+        const cornerSvg = Buffer.from(
+          `<svg width="${nfw}" height="${nfh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="cTL" cx="0" cy="0" r="0.35"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.12"/><stop offset="100%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></radialGradient>
+              <radialGradient id="cTR" cx="1" cy="0" r="0.35"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.10"/><stop offset="100%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></radialGradient>
+              <radialGradient id="cBL" cx="0" cy="1" r="0.35"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.10"/><stop offset="100%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></radialGradient>
+              <radialGradient id="cBR" cx="1" cy="1" r="0.35"><stop offset="0%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0.12"/><stop offset="100%" stop-color="rgb(${ncR},${ncG},${ncB})" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#cTL)"/>
+            <rect width="100%" height="100%" fill="url(#cTR)"/>
+            <rect width="100%" height="100%" fill="url(#cBL)"/>
+            <rect width="100%" height="100%" fill="url(#cBR)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: cornerSvg, blend: 'screen' }])
           .toBuffer()
       }
       // Film strip: perforations (sprocket holes) along top and bottom only, solid black border, like reference

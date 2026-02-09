@@ -69,7 +69,9 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
   } else if (fs === 'filmstrip') {
     // no outer bg – the left/right strip divs supply the dark areas
   } else if (fs === 'neon') {
-    base.backgroundColor = '#0a0a0e'
+    const nHex = input.frameColorKey ? input.getFrameHex(input.frameColorKey) : '#00ff88'
+    // Dark background with subtle ambient glow from neon reflecting off surfaces
+    base.background = `radial-gradient(ellipse 85% 85% at 50% 50%, ${nHex}12 0%, ${nHex}06 50%, transparent 78%), #08080c`
   } else if (fs === 'shadow') {
     base.backgroundColor = '#f5f7fa'
   } else if (fs === 'vignette') {
@@ -120,7 +122,26 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
   }
 
   if (fs === 'neon') {
-    base.boxShadow = '0 0 40px ' + fHex + ', 0 0 20px ' + fHex + '99, 0 0 8px ' + fHex
+    // White-hot core border (simulates gas-filled tube intensity)
+    base.border = '2px solid rgba(255,255,255,0.88)'
+    // Layered glow: white core → saturated color → wide bloom → color spill → inner glow
+    base.boxShadow = [
+      // White-hot core glow (innermost, nearly white)
+      '0 0 2px #fff',
+      '0 0 4px rgba(255,255,255,0.75)',
+      // Saturated color bands (structural layer)
+      '0 0 8px ' + fHex,
+      '0 0 16px ' + fHex,
+      // Bloom (soft glow, atmosphere)
+      '0 0 32px ' + fHex + 'cc',
+      '0 0 60px ' + fHex + '80',
+      '0 0 100px ' + fHex + '50',
+      // Wide color spill (light hitting nearby surfaces)
+      '0 0 160px ' + fHex + '28',
+      // Inner glow (light spilling onto image content)
+      'inset 0 0 20px ' + fHex + '35',
+      'inset 0 0 6px ' + fHex + '55',
+    ].join(', ')
   } else if (fs && fs in shadowMap) {
     base.boxShadow = shadowMap[fs]
   }
