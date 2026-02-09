@@ -231,29 +231,27 @@ export default function ImageOverlayEditorViewRoot(props: {
               )}
               {p.frame?.style === 'filmstrip' && (
                 <>
-                  {/* Left film strip overlay: dark strip + oval perforations (35mm style), overlaid on picture */}
+                  {/* Left film strip: dark strip with bright white perforation holes */}
                   <div
                     className="absolute top-0 left-0 bottom-0 w-8 pointer-events-none z-[2]"
                     style={{
-                      backgroundColor: '#0a0a0a',
-                      backgroundImage: 'radial-gradient(ellipse 45% 55% at 50% 50%, #1c1c1c 0%, #0a0a0a 58%)',
-                      backgroundSize: '100% 16.666%',
+                      backgroundColor: '#1a1a1a',
+                      backgroundImage: 'radial-gradient(ellipse 40% 50% at 50% 50%, #ffffff 0%, #ffffff 70%, transparent 71%)',
+                      backgroundSize: '100% 14.28%',
                       backgroundRepeat: 'repeat-y',
-                      backgroundPosition: '0 0',
-                      boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.08)',
+                      backgroundPosition: '0 7.14%',
                     }}
                     aria-hidden
                   />
-                  {/* Right film strip overlay */}
+                  {/* Right film strip: dark strip with bright white perforation holes */}
                   <div
                     className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none z-[2]"
                     style={{
-                      backgroundColor: '#0a0a0a',
-                      backgroundImage: 'radial-gradient(ellipse 45% 55% at 50% 50%, #1c1c1c 0%, #0a0a0a 58%)',
-                      backgroundSize: '100% 16.666%',
+                      backgroundColor: '#1a1a1a',
+                      backgroundImage: 'radial-gradient(ellipse 40% 50% at 50% 50%, #ffffff 0%, #ffffff 70%, transparent 71%)',
+                      backgroundSize: '100% 14.28%',
                       backgroundRepeat: 'repeat-y',
-                      backgroundPosition: '0 0',
-                      boxShadow: 'inset 1px 0 0 rgba(255,255,255,0.08)',
+                      backgroundPosition: '0 7.14%',
                     }}
                     aria-hidden
                   />
