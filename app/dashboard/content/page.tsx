@@ -292,6 +292,7 @@ export default function CreateContentPage() {
   // Image generation options (Option C: stock default, AI optional)
   const [generateImageFlag] = useState(true) // Always generate images
   const [imageSource, setImageSource] = useState<'stock' | 'ai'>('stock') // 'stock' = free Unsplash, 'ai' = DALL-E
+  const [includeAiImage, setIncludeAiImage] = useState(false) // opt-in: also generate a DALL-E image alongside stock
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
   const [subVariation, setSubVariation] = useState<string | null>(null)
   const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
@@ -1097,6 +1098,7 @@ export default function CreateContentPage() {
           location: currentBusiness?.location ?? undefined,
           generateImageFlag: mode === 'text' ? false : true,
           imageSource: mode === 'image' ? effectiveImageSource : 'stock',
+          includeAiImage: mode === 'image' ? (effectiveImageSource === 'ai') : includeAiImage,
           imageStyle,
           subVariation: subVariation ?? undefined,
           postType: selectedTemplate,
@@ -2011,7 +2013,35 @@ export default function CreateContentPage() {
               )}
             </div>
 
-            <p className="text-sm text-gray-500 border-t border-gray-100 pt-5 mt-5">
+            {/* AI image generation opt-in */}
+            <div className="border-t border-gray-100 pt-5 mt-5">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative flex-shrink-0 mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={includeAiImage}
+                    onChange={(e) => setIncludeAiImage(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 rounded-full bg-gray-200 peer-checked:bg-teal-500 transition-colors" />
+                  <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-4" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-gray-900 group-hover:text-gray-700">Also generate AI image</span>
+                  <span className="block text-xs text-gray-500 mt-0.5">
+                    Uses 1 AI image credit per generation (DALL-E).
+                    {imagesRemaining !== null && (
+                      <span className="ml-1 font-medium" style={{ color: imagesRemaining > 0 ? '#059669' : '#dc2626' }}>
+                        {imagesRemaining} credit{imagesRemaining !== 1 ? 's' : ''} remaining
+                      </span>
+                    )}
+                    {' '}You can always generate AI images later in the next step.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            <p className="text-sm text-gray-500 pt-3">
               Next: choose your image (stock, AI, or upload), then add your branding.
             </p>
 
@@ -2056,14 +2086,14 @@ export default function CreateContentPage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      {selectedTemplate === 'social-pack' ? 'Generating 6 posts & images...' : 'Generating content & image...'}
+                      {selectedTemplate === 'social-pack' ? `Generating 6 posts${includeAiImage ? ' & AI image' : ''}...` : `Generating content${includeAiImage ? ' & AI image' : ''}...`}
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      Generate Content
+                      {includeAiImage ? 'Generate Content + AI Image' : 'Generate Content'}
                     </>
                   )}
                 </button>

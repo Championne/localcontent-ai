@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       postType: requestPostType,
       preferredStyles,
       avoidStyles,
+      includeAiImage = false, // explicit opt-in for DALL-E generation
     } = body
     
     // Determine what to generate based on mode
@@ -161,7 +162,7 @@ export async function POST(request: Request) {
         }
       }
 
-      // Image: stock = return options for picker; AI = single generated image. When stock is used, also generate one AI image so user has both as choices.
+      // Image: stock = return options for picker; AI = single generated image. AI only when explicitly opted-in via includeAiImage or imageSource==='ai'.
       let image = null
       let generatedImageId: string | null = null
       let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
@@ -173,7 +174,8 @@ export async function POST(request: Request) {
             const options = await getStockImageOptions({ topic, industry, contentType: template }, 5, stockImagePage)
             if (options.length) stockImageOptions = options
           }
-          const shouldGenerateAiImage = canUseAi && (stockImageOptions.length === 0 || useStock)
+          // Only generate AI image when user explicitly opted in, or when imageSource is 'ai', or when no stock images were found (fallback)
+          const shouldGenerateAiImage = canUseAi && (imageSource === 'ai' || includeAiImage || stockImageOptions.length === 0)
           if (shouldGenerateAiImage) {
             const imageResult = await generateImage({
               topic,
@@ -351,7 +353,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Image: stock = return options for picker; AI = single generated image. When stock is used, also generate one AI image so user has both as choices.
+    // Image: stock = return options for picker; AI = single generated image. AI only when explicitly opted-in via includeAiImage or imageSource==='ai'.
     let image = null
     let generatedImageId: string | null = null
     let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
@@ -363,8 +365,8 @@ export async function POST(request: Request) {
           const options = await getStockImageOptions({ topic, industry, contentType: template }, 5, stockImagePage)
           if (options.length) stockImageOptions = options
         }
-        // Generate AI image when: no stock options, OR when stock was used (so user has 3 stock + 1 AI + upload as choices)
-        const shouldGenerateAiImage = canUseAi && (stockImageOptions.length === 0 || useStock)
+        // Only generate AI image when user explicitly opted in, or when imageSource is 'ai', or when no stock images were found (fallback)
+        const shouldGenerateAiImage = canUseAi && (imageSource === 'ai' || includeAiImage || stockImageOptions.length === 0)
         if (shouldGenerateAiImage) {
           const imageResult = await generateImage({
             topic,
