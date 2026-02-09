@@ -34,7 +34,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
       silver: 16,
       copper: 16,
       filmstrip: 0,
-      neon: 32,
+      neon: 18,
       shadow: 40,
       vignette: 0,
     }

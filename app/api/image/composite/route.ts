@@ -334,7 +334,7 @@ export async function POST(request: Request) {
           .toBuffer()
 
         // 3. Extend with dark background (slightly warm-dark for atmosphere)
-        const neonPad = 56
+        const neonPad = 32
         composited = await sharp(composited)
           .extend({ top: neonPad, bottom: neonPad, left: neonPad, right: neonPad, background: { r: 8, g: 8, b: 12, alpha: 1 } })
           .toBuffer()
