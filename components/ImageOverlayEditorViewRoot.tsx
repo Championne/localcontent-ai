@@ -24,8 +24,38 @@ export default function ImageOverlayEditorViewRoot(props: {
   const rootBg = c.rootBg
   const frameWrapperStyle = c.frameWrapperStyle
   const containerStyle = c.containerStyle
+  const isMetalFrame = p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper'
   return (
     <div className="rounded-xl border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
+      {/* Metallic frame shine animation */}
+      {isMetalFrame && (
+        <style>{`
+          @keyframes metalShine {
+            0%   { left: -120%; }
+            100% { left: 120%; }
+          }
+          .metal-shine-wrapper { overflow: hidden; position: relative; }
+          .metal-shine-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -10%;
+            left: -120%;
+            width: 45%;
+            height: 120%;
+            background: linear-gradient(
+              105deg,
+              transparent 30%,
+              rgba(255,255,255,0.25) 45%,
+              rgba(255,255,255,0.45) 50%,
+              rgba(255,255,255,0.25) 55%,
+              transparent 70%
+            );
+            z-index: 5;
+            pointer-events: none;
+            animation: metalShine 4s ease-in-out infinite;
+          }
+        `}</style>
+      )}
       {/* Header: compact */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80 rounded-t-xl" style={{ backgroundColor: headerBg }}>
         <div className="flex-shrink-0">
@@ -184,7 +214,7 @@ export default function ImageOverlayEditorViewRoot(props: {
 
         <div className="flex-1 p-4 flex flex-col items-center justify-center min-w-0" style={{ backgroundColor: sidebarBg }}>
           <div
-            className="relative rounded-lg w-full max-w-[480px] aspect-square shadow-sm"
+            className={`relative rounded-lg w-full max-w-[480px] aspect-square shadow-sm${isMetalFrame ? ' metal-shine-wrapper' : ''}`}
             style={frameWrapperStyle}
           >
             <div
@@ -219,15 +249,15 @@ export default function ImageOverlayEditorViewRoot(props: {
                   className="absolute inset-0 pointer-events-none z-[2]"
                   style={{
                     background: p.frame.style === 'gold'
-                      ? 'linear-gradient(135deg, rgba(255,248,220,0.18) 0%, rgba(212,175,55,0.22) 50%, rgba(184,134,11,0.15) 100%)'
+                      ? 'linear-gradient(135deg, rgba(191,149,63,0.08) 0%, rgba(252,246,186,0.12) 40%, rgba(170,119,29,0.08) 100%)'
                       : p.frame.style === 'silver'
-                      ? 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(192,192,192,0.18) 50%, rgba(128,128,128,0.12) 100%)'
-                      : 'linear-gradient(135deg, rgba(253,245,235,0.18) 0%, rgba(184,115,51,0.22) 50%, rgba(139,69,19,0.15) 100%)',
+                      ? 'linear-gradient(135deg, rgba(189,195,199,0.06) 0%, rgba(230,233,240,0.10) 40%, rgba(149,165,166,0.06) 100%)'
+                      : 'linear-gradient(135deg, rgba(128,74,0,0.08) 0%, rgba(237,201,175,0.12) 40%, rgba(93,58,26,0.08) 100%)',
                     boxShadow: p.frame.style === 'gold'
-                      ? 'inset 0 0 60px rgba(212,175,55,0.15), inset 0 0 20px rgba(255,248,220,0.1)'
+                      ? 'inset 2px 2px 8px rgba(0,0,0,0.20), inset -1px -1px 4px rgba(0,0,0,0.08)'
                       : p.frame.style === 'silver'
-                      ? 'inset 0 0 60px rgba(192,192,192,0.12), inset 0 0 20px rgba(255,255,255,0.08)'
-                      : 'inset 0 0 60px rgba(184,115,51,0.15), inset 0 0 20px rgba(253,240,224,0.1)',
+                      ? 'inset 2px 2px 8px rgba(0,0,0,0.16), inset -1px -1px 4px rgba(0,0,0,0.06)'
+                      : 'inset 2px 2px 8px rgba(0,0,0,0.20), inset -1px -1px 4px rgba(0,0,0,0.08)',
                   }}
                   aria-hidden
                 />

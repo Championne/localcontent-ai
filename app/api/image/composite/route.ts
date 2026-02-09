@@ -226,61 +226,138 @@ export async function POST(request: Request) {
           ])
           .toBuffer()
       }
-      // Gold / Silver / Copper: polished metallic look – strong directional light, highlight sheen, per-edge shading
+      // Gold / Silver / Copper: realistic polished metallic frame with multi-stop gradients,
+      // per-side directional lighting, specular highlights, inner bevel, and wall shadow
       else if (style === 'gold' || style === 'silver' || style === 'copper') {
+        // Metallic palette: 5-stop gradients matching CSS border-image approach
         const metal = style === 'gold'
-          ? { tint: { r: 212, g: 175, b: 55 }, tintOpacity: 0.22, dark: '#3d3008', midDark: '#5c4a0a', mid: '#a67c0a', midLight: '#d4a817', light: '#f0d84a', highlight: '#fffce0', edge: '#fffef5' }
+          ? {
+              tint: { r: 191, g: 149, b: 63 }, tintOpacity: 0.15,
+              stops: ['#bf953f', '#fcf6ba', '#b38728', '#fbf5b7', '#aa771d'],
+              dark: '#aa771d', midDark: '#b38728', mid: '#bf953f', midLight: '#fcf6ba', light: '#fbf5b7',
+              highlight: '#fcf6ba', edge: '#fbf5b7',
+              // Per-side lighting: top/left lighter, bottom/right darker
+              sTop: ['#fcf6ba', '#fbf5b7', '#bf953f'],
+              sRight: ['#bf953f', '#b38728', '#aa771d'],
+              sBottom: ['#b38728', '#aa771d', '#8a6318'],
+              sLeft: ['#fbf5b7', '#bf953f', '#b38728'],
+            }
           : style === 'silver'
-          ? { tint: { r: 200, g: 200, b: 208 }, tintOpacity: 0.18, dark: '#1a1a1a', midDark: '#404040', mid: '#808080', midLight: '#c0c0c0', light: '#e8e8e8', highlight: '#ffffff', edge: '#fafafa' }
-          : { tint: { r: 184, g: 115, b: 51 }, tintOpacity: 0.22, dark: '#2d1804', midDark: '#5c2e0a', mid: '#8b4513', midLight: '#c48450', light: '#e8b878', highlight: '#fdf5eb', edge: '#fdf0e0' }
+          ? {
+              tint: { r: 189, g: 195, b: 199 }, tintOpacity: 0.12,
+              stops: ['#e6e9f0', '#bdc3c7', '#95a5a6', '#bdc3c7', '#eef1f5'],
+              dark: '#6b7b8d', midDark: '#95a5a6', mid: '#bdc3c7', midLight: '#e6e9f0', light: '#eef1f5',
+              highlight: '#f5f7fa', edge: '#eef1f5',
+              sTop: ['#eef1f5', '#e6e9f0', '#bdc3c7'],
+              sRight: ['#bdc3c7', '#95a5a6', '#6b7b8d'],
+              sBottom: ['#95a5a6', '#6b7b8d', '#556270'],
+              sLeft: ['#e6e9f0', '#bdc3c7', '#95a5a6'],
+            }
+          : {
+              tint: { r: 160, g: 82, b: 45 }, tintOpacity: 0.15,
+              stops: ['#804a00', '#edc9af', '#a0522d', '#d4a76a', '#5d3a1a'],
+              dark: '#5d3a1a', midDark: '#804a00', mid: '#a0522d', midLight: '#d4a76a', light: '#edc9af',
+              highlight: '#edc9af', edge: '#d4a76a',
+              sTop: ['#edc9af', '#d4a76a', '#a0522d'],
+              sRight: ['#a0522d', '#804a00', '#5d3a1a'],
+              sBottom: ['#804a00', '#5d3a1a', '#3d2510'],
+              sLeft: ['#d4a76a', '#a0522d', '#804a00'],
+            }
+
+        // Subtle metallic tint on the photo itself
         const tintSvg = Buffer.from(
           `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" opacity="${metal.tintOpacity}"/></svg>`
         )
         composited = await sharp(composited)
           .composite([{ input: tintSvg, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
-        const frameWidth = 26
+
+        const frameWidth = 28
         const [dr, dg, db] = [parseInt(metal.dark.slice(1, 3), 16), parseInt(metal.dark.slice(3, 5), 16), parseInt(metal.dark.slice(5, 7), 16)]
         composited = await sharp(composited)
           .extend({ top: frameWidth, bottom: frameWidth, left: frameWidth, right: frameWidth, background: { r: dr, g: dg, b: db, alpha: 1 } })
           .toBuffer()
-        const meta = await sharp(composited).metadata()
-        const fw = meta.width!
-        const fh = meta.height!
+        const meta2 = await sharp(composited).metadata()
+        const fw = meta2.width!
+        const fh = meta2.height!
         const inner = frameWidth
+
+        // Build per-side trapezoidal polygons for realistic 3D miter joints
+        const tl = `0,0`, tr = `${fw},0`, br = `${fw},${fh}`, bl = `0,${fh}`
+        const itl = `${inner},${inner}`, itr = `${fw - inner},${inner}`, ibr = `${fw - inner},${fh - inner}`, ibl = `${inner},${fh - inner}`
         const iw = fw - 2 * inner
         const ih = fh - 2 * inner
-        const donutPath = `M 0 0 h ${fw} v ${fh} h -${fw} Z M ${inner} ${inner} v ${ih} h ${iw} v -${ih} Z`
+
         const metalSvg = Buffer.from(
           `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="${metal.highlight}"/>
-                <stop offset="5%" stop-color="${metal.light}"/>
-                <stop offset="18%" stop-color="${metal.midLight}"/>
-                <stop offset="40%" stop-color="${metal.mid}"/>
-                <stop offset="65%" stop-color="${metal.midDark}"/>
-                <stop offset="88%" stop-color="${metal.dark}"/>
-                <stop offset="100%" stop-color="${metal.dark}"/>
-              </linearGradient>
-              <linearGradient id="metalShine" x1="0%" y1="0%" x2="45%" y2="45%">
-                <stop offset="0%" stop-color="white" stop-opacity="0.55"/>
-                <stop offset="25%" stop-color="white" stop-opacity="0.2"/>
+              <!-- Per-side directional gradients (light from top-left) -->
+              <linearGradient id="mTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="${metal.sTop[2]}"/><stop offset="40%" stop-color="${metal.sTop[1]}"/><stop offset="100%" stop-color="${metal.sTop[0]}"/></linearGradient>
+              <linearGradient id="mRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${metal.sRight[0]}"/><stop offset="50%" stop-color="${metal.sRight[1]}"/><stop offset="100%" stop-color="${metal.sRight[2]}"/></linearGradient>
+              <linearGradient id="mBottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${metal.sBottom[0]}"/><stop offset="50%" stop-color="${metal.sBottom[1]}"/><stop offset="100%" stop-color="${metal.sBottom[2]}"/></linearGradient>
+              <linearGradient id="mLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${metal.sLeft[2]}"/><stop offset="40%" stop-color="${metal.sLeft[1]}"/><stop offset="100%" stop-color="${metal.sLeft[0]}"/></linearGradient>
+              <!-- Specular highlight sweep (diagonal shine) -->
+              <linearGradient id="mShine" x1="0" y1="0" x2="0.6" y2="0.6">
+                <stop offset="0%" stop-color="white" stop-opacity="0.50"/>
+                <stop offset="15%" stop-color="white" stop-opacity="0.30"/>
+                <stop offset="35%" stop-color="white" stop-opacity="0.08"/>
+                <stop offset="55%" stop-color="white" stop-opacity="0"/>
+                <stop offset="75%" stop-color="white" stop-opacity="0.05"/>
                 <stop offset="100%" stop-color="white" stop-opacity="0"/>
               </linearGradient>
-              <linearGradient id="metalEdge" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="${metal.highlight}"/>
-                <stop offset="100%" stop-color="${metal.midLight}"/>
+              <!-- Second specular band (bottom-right edge catch) -->
+              <linearGradient id="mShine2" x1="1" y1="1" x2="0.5" y2="0.5">
+                <stop offset="0%" stop-color="white" stop-opacity="0.15"/>
+                <stop offset="20%" stop-color="white" stop-opacity="0.05"/>
+                <stop offset="100%" stop-color="white" stop-opacity="0"/>
               </linearGradient>
+              <!-- Clip path for frame donut -->
+              <clipPath id="frameClip"><path fill-rule="evenodd" d="M0,0 h${fw} v${fh} h-${fw}Z M${inner},${inner} v${ih} h${iw} v-${ih}Z"/></clipPath>
             </defs>
-            <path fill-rule="evenodd" fill="url(#metalGrad)" d="${donutPath}"/>
-            <path fill-rule="evenodd" fill="url(#metalShine)" d="${donutPath}"/>
-            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="url(#metalEdge)" stroke-width="2"/>
-            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${metal.edge}" stroke-width="1"/>
+            <!-- Miter-joint side panels -->
+            <polygon points="${tl} ${tr} ${itr} ${itl}" fill="url(#mTop)"/>
+            <polygon points="${tr} ${br} ${ibr} ${itr}" fill="url(#mRight)"/>
+            <polygon points="${br} ${bl} ${ibl} ${ibr}" fill="url(#mBottom)"/>
+            <polygon points="${bl} ${tl} ${itl} ${ibl}" fill="url(#mLeft)"/>
+            <!-- Specular highlights over frame -->
+            <g clip-path="url(#frameClip)">
+              <rect width="${fw}" height="${fh}" fill="url(#mShine)"/>
+              <rect width="${fw}" height="${fh}" fill="url(#mShine2)"/>
+            </g>
+            <!-- Corner miter lines (subtle darker diagonals) -->
+            <line x1="0" y1="0" x2="${inner}" y2="${inner}" stroke="${metal.dark}" stroke-width="1" opacity="0.4"/>
+            <line x1="${fw}" y1="0" x2="${fw - inner}" y2="${inner}" stroke="${metal.dark}" stroke-width="1" opacity="0.3"/>
+            <line x1="${fw}" y1="${fh}" x2="${fw - inner}" y2="${fh - inner}" stroke="${metal.dark}" stroke-width="1" opacity="0.5"/>
+            <line x1="0" y1="${fh}" x2="${inner}" y2="${fh - inner}" stroke="${metal.dark}" stroke-width="1" opacity="0.3"/>
+            <!-- Inner bevel: shadow cast by frame lip onto the photo -->
+            <rect x="${inner}" y="${inner}" width="${iw}" height="3" fill="black" opacity="0.25"/>
+            <rect x="${inner}" y="${inner}" width="3" height="${ih}" fill="black" opacity="0.20"/>
+            <rect x="${inner}" y="${fh - inner - 2}" width="${iw}" height="2" fill="white" opacity="0.08"/>
+            <rect x="${fw - inner - 2}" y="${inner}" width="2" height="${ih}" fill="white" opacity="0.06"/>
+            <!-- Thin inner edge line -->
+            <rect x="${inner}" y="${inner}" width="${iw}" height="${ih}" fill="none" stroke="${metal.edge}" stroke-width="1" opacity="0.5"/>
           </svg>`
         )
         composited = await sharp(composited)
           .composite([{ input: metalSvg, left: 0, top: 0 }])
+          .toBuffer()
+
+        // Wall shadow: composite a blurred shadow below the frame
+        const shadowPad = 12
+        const shadowCanvas = Buffer.from(
+          `<svg width="${fw + 2 * shadowPad}" height="${fh + 2 * shadowPad}" xmlns="http://www.w3.org/2000/svg">
+            <defs><filter id="mShadow"><feGaussianBlur stdDeviation="6"/></filter></defs>
+            <rect x="${shadowPad}" y="${shadowPad + 4}" width="${fw}" height="${fh}" rx="2" fill="black" opacity="0.35" filter="url(#mShadow)"/>
+          </svg>`
+        )
+        const shadowBg = await sharp({
+          create: { width: fw + 2 * shadowPad, height: fh + 2 * shadowPad, channels: 4 as const, background: { r: 245, g: 247, b: 250, alpha: 255 } },
+        }).png().toBuffer()
+        composited = await sharp(shadowBg)
+          .composite([
+            { input: shadowCanvas, left: 0, top: 0, blend: 'over' },
+            { input: composited, left: shadowPad, top: shadowPad, blend: 'over' },
+          ])
           .toBuffer()
       }
       // Neon: realistic neon sign effect — white-hot core, layered bloom, color spill, ambient reflections

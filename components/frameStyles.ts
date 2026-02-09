@@ -72,17 +72,42 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
       'inset 0 -1px 0 rgba(0,0,0,0.25)',
     ].join(', ')
   } else if (fs === 'gold') {
-    base.background =
-      'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 25%, transparent 45%), ' +
-      'linear-gradient(135deg, #fffce0 0%, #f0d84a 8%, #d4a817 25%, #a67c0a 45%, #5c4a0a 75%, #3d3008 100%)'
+    // Polished gold: multi-stop gradient with hard stops for metallic sheen
+    base.border = '16px solid transparent'
+    base.borderImage = 'linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771d) 1'
+    base.padding = 0
+    // Outer glow (wall shadow) + inner highlight
+    base.boxShadow = [
+      '0 6px 20px rgba(0,0,0,0.35)',
+      '0 2px 8px rgba(0,0,0,0.2)',
+      'inset 0 1px 0 rgba(255,252,224,0.6)',
+      'inset 0 -1px 0 rgba(0,0,0,0.2)',
+    ].join(', ')
+    base.background = 'linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771d 100%)'
   } else if (fs === 'silver') {
-    base.background =
-      'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.25) 25%, transparent 45%), ' +
-      'linear-gradient(135deg, #ffffff 0%, #e8e8e8 12%, #c0c0c0 35%, #808080 60%, #404040 85%, #1a1a1a 100%)'
+    // Polished silver: cool metallic gradient
+    base.border = '16px solid transparent'
+    base.borderImage = 'linear-gradient(135deg, #e6e9f0, #bdc3c7, #95a5a6, #bdc3c7, #eef1f5) 1'
+    base.padding = 0
+    base.boxShadow = [
+      '0 6px 20px rgba(0,0,0,0.30)',
+      '0 2px 8px rgba(0,0,0,0.18)',
+      'inset 0 1px 0 rgba(255,255,255,0.7)',
+      'inset 0 -1px 0 rgba(0,0,0,0.15)',
+    ].join(', ')
+    base.background = 'linear-gradient(135deg, #e6e9f0 0%, #bdc3c7 25%, #95a5a6 50%, #bdc3c7 75%, #eef1f5 100%)'
   } else if (fs === 'copper') {
-    base.background =
-      'linear-gradient(135deg, rgba(255,253,248,0.5) 0%, rgba(255,240,220,0.15) 25%, transparent 45%), ' +
-      'linear-gradient(135deg, #fdf5eb 0%, #e8b878 15%, #c48450 40%, #8b4513 68%, #5c2e0a 88%, #2d1804 100%)'
+    // Polished bronze: warm metallic gradient
+    base.border = '16px solid transparent'
+    base.borderImage = 'linear-gradient(135deg, #804a00, #edc9af, #a0522d, #d4a76a, #5d3a1a) 1'
+    base.padding = 0
+    base.boxShadow = [
+      '0 6px 20px rgba(0,0,0,0.35)',
+      '0 2px 8px rgba(0,0,0,0.22)',
+      'inset 0 1px 0 rgba(237,201,175,0.5)',
+      'inset 0 -1px 0 rgba(0,0,0,0.2)',
+    ].join(', ')
+    base.background = 'linear-gradient(135deg, #804a00 0%, #edc9af 25%, #a0522d 50%, #d4a76a 75%, #5d3a1a 100%)'
   } else if (fs === 'filmstrip') {
     // no outer bg – the left/right strip divs supply the dark areas
   } else if (fs === 'neon') {
@@ -119,9 +144,9 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
     const borderMap: Record<string, string | undefined> = {
       classic: undefined,
       wooden: undefined,
-      gold: '2px solid rgba(255,248,220,0.9)',
-      silver: '2px solid rgba(255,255,255,0.95)',
-      copper: '2px solid rgba(253,240,224,0.9)',
+      gold: '2px solid rgba(191,149,63,0.5)',
+      silver: '2px solid rgba(189,195,199,0.5)',
+      copper: '2px solid rgba(160,82,45,0.5)',
       filmstrip: 'none',
     }
     if (fs && fs in borderMap) {
@@ -133,9 +158,9 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
     classic: 'inset 0 0 0 2px rgba(255,255,255,0.5)',
     wooden: 'inset 2px 2px 5px rgba(0,0,0,0.50), inset -1px -1px 3px rgba(0,0,0,0.20), inset 0 0 0 1px rgba(0,0,0,0.15)',
     shadow: '0 24px 48px rgba(0,0,0,0.4), 0 12px 24px rgba(0,0,0,0.25)',
-    gold: 'inset 0 1px 0 rgba(255,252,224,0.9), inset 0 3px 8px -2px rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.25)',
-    silver: 'inset 0 1px 0 rgba(255,255,255,0.98), inset 0 3px 8px -2px rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.3)',
-    copper: 'inset 0 1px 0 rgba(253,245,235,0.95), inset 0 3px 8px -2px rgba(255,248,235,0.25), inset 0 -2px 0 rgba(0,0,0,0.25)',
+    gold: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(191,149,63,0.3)',
+    silver: 'inset 2px 2px 6px rgba(0,0,0,0.35), inset -1px -1px 4px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(189,195,199,0.3)',
+    copper: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(160,82,45,0.3)',
   }
 
   if (fs === 'neon') {
