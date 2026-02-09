@@ -2397,7 +2397,7 @@ export default function CreateContentPage() {
             <div className="mb-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <p className="text-sm font-medium text-gray-700">How was this?</p>
-                <div className="flex flex-wrap gap-6">
+                <div className="flex flex-wrap items-center gap-8">
                   {generatedTextId && (
                     <div className="min-w-[200px]">
                       <RatingStars
@@ -2409,6 +2409,9 @@ export default function CreateContentPage() {
                         showSkip
                       />
                     </div>
+                  )}
+                  {generatedTextId && (generatedImageId || generatedImage) && (
+                    <div className="hidden sm:block w-px h-8 bg-gray-300/60" />
                   )}
                   {(generatedImageId || generatedImage) && (
                     <div className="min-w-[200px]">
@@ -3107,11 +3110,14 @@ export default function CreateContentPage() {
             <div className="mb-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <p className="text-sm font-medium text-gray-700">How was this?</p>
-                <div className="flex flex-wrap gap-6">
+                <div className="flex flex-wrap items-center gap-8">
                   {generatedTextId && (
                     <div className="min-w-[200px]">
                       <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
                     </div>
+                  )}
+                  {generatedTextId && (generatedImageId || generatedImage) && (
+                    <div className="hidden sm:block w-px h-8 bg-gray-300/60" />
                   )}
                   {(generatedImageId || generatedImage) && (
                     <div className="min-w-[200px]">
