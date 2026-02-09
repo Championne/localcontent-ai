@@ -1170,6 +1170,7 @@ export default function CreateContentPage() {
           setStockImageOptions(deduped)
           const firstStock = deduped[0]
           setSelectedStockImage(firstStock)
+          // Default to first stock image — may be overridden below if AI image is preferred
           setGeneratedImage({
             url: firstStock.url,
             style: imageStyle,
@@ -1193,7 +1194,13 @@ export default function CreateContentPage() {
             size: (data.image as { size?: string }).size || '1024x1024',
             generated_image_id: data.generated_image_id ?? null,
           } : null)
-          if (!data.stockImageOptions?.length) {
+          // If AI image generation was opted in, show AI image first (even if stock options exist)
+          if (isAi && includeAiImage) {
+            setSelectedStockImage(null)
+            setGeneratedImage(data.image)
+            setAppliedBrandingForImageUrl(null)
+            if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
+          } else if (!data.stockImageOptions?.length) {
             setGeneratedImage(data.image)
             setAppliedBrandingForImageUrl(null)
             if (data.generated_image_id) { setGeneratedImageId(data.generated_image_id); setImageRating(null) }
