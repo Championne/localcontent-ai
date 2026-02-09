@@ -758,7 +758,7 @@ export default function CreateContentPage() {
       // Tint and frame: send in one composite request when no logo/photo (more reliable than two round-trips)
       if ((tintOverlay || frame) && colors) {
         const body: Record<string, unknown> = { imageUrl: currentImageUrl }
-        const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'polaroid', 'filmstrip', 'vignette'].includes(frame.style)
+        const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'filmstrip', 'vignette'].includes(frame.style)
         if (tintOverlay && !frameOverridesTint) {
           const tintHex = tintOverlay.colorKey === 'primary' ? colors.primary : tintOverlay.colorKey === 'secondary' ? colors.secondary : colors.accent
           body.tintOverlay = { color: tintHex, opacity: tintOverlay.opacity }

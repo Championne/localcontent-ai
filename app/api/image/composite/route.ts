@@ -121,8 +121,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Optional: transparent brand colour overlay over whole image (skipped when frame supplies its own tint: gold/silver/copper/neon/polaroid/filmstrip)
-    const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'polaroid', 'filmstrip', 'vignette'].includes(frame.style as string)
+    // Optional: transparent brand colour overlay over whole image (skipped when frame supplies its own tint: gold/silver/copper/neon/filmstrip)
+    const frameOverridesTint = frame && ['gold', 'silver', 'copper', 'neon', 'filmstrip', 'vignette'].includes(frame.style as string)
     const tint = !frameOverridesTint && tintOverlay && typeof tintOverlay.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(tintOverlay.color)
       ? { color: tintOverlay.color, opacity: Math.max(0.1, Math.min(1, Number(tintOverlay.opacity) || 0.3)) }
       : null
@@ -141,7 +141,7 @@ export async function POST(request: Request) {
     }
 
     // Optional: frame around whole image (brand colour or effect)
-    const frameStyles = ['thin', 'solid', 'thick', 'double', 'rounded', 'classic', 'wooden', 'polaroid', 'dashed', 'dotted', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper'] as const
+    const frameStyles = ['thin', 'solid', 'thick', 'double', 'rounded', 'classic', 'wooden', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper'] as const
     const frameOpt = frame && typeof frame.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(frame.color)
       ? { style: frameStyles.includes(frame.style as typeof frameStyles[number]) ? frame.style : 'solid', color: frame.color }
       : null
@@ -166,76 +166,6 @@ export async function POST(request: Request) {
         )
         composited = await sharp(composited)
           .composite([{ input: vignetteSvg, left: 0, top: 0, blend: 'over' }])
-          .toBuffer()
-      }
-      // Polaroid: classic white frame (thin top/sides, wide bottom lip), nostalgic image effect, drop shadow
-      else if (style === 'polaroid') {
-        // Proportions like real Polaroid: thin top/sides, clearly wider bottom lip
-        const topPad = Math.max(20, Math.round(imgHeight * 0.024))
-        const sidePad = Math.max(20, Math.round(imgWidth * 0.024))
-        const bottomLip = Math.max(56, Math.round(imgHeight * 0.078))
-        const leftPad = sidePad
-        const rightPad = sidePad
-        const polaroidW = imgWidth + leftPad + rightPad
-        const polaroidH = imgHeight + topPad + bottomLip
-        const polaroidWhite = { r: 253, g: 251, b: 246 }
-        const shadowMargin = 24
-        const shadowOffset = 12
-        const shadowBlur = 22
-        const totalW = polaroidW + 2 * shadowMargin + shadowBlur + shadowOffset
-        const totalH = polaroidH + 2 * shadowMargin + shadowBlur + shadowOffset
-        const bg = await sharp({
-          create: { width: totalW, height: totalH, channels: 3, background: { r: 238, g: 240, b: 242 } },
-        })
-          .jpeg()
-          .toBuffer()
-        const shadowSvg = Buffer.from(
-          `<svg width="${polaroidW + shadowBlur * 2}" height="${polaroidH + shadowBlur * 2}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="ps"><feGaussianBlur in="SourceGraphic" stdDeviation="${shadowBlur}"/></filter></defs><rect x="${shadowBlur}" y="${shadowBlur}" width="${polaroidW}" height="${polaroidH}" rx="2" ry="2" fill="black" opacity="0.26" filter="url(#ps)"/></svg>`
-        )
-        // Nostalgic Polaroid effect on the image: slight desaturation, soft contrast, warm tint, subtle vignette
-        const polaroidPhoto = await sharp(composited)
-          .modulate({ saturation: 0.86, brightness: 1.02 })
-          .linear(0.94, 14)
-          .toBuffer()
-        const warmTintSvg = Buffer.from(
-          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(255,248,235)" opacity="0.06"/></svg>`
-        )
-        const polaroidPhotoWithTint = await sharp(polaroidPhoto)
-          .composite([{ input: warmTintSvg, left: 0, top: 0, blend: 'over' }])
-          .toBuffer()
-        const vignetteSvg = Buffer.from(
-          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="polv" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="black" stop-opacity="0"/><stop offset="85%" stop-color="black" stop-opacity="0"/><stop offset="100%" stop-color="black" stop-opacity="0.18"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#polv)"/></svg>`
-        )
-        const polaroidPhotoFinal = await sharp(polaroidPhotoWithTint)
-          .composite([{ input: vignetteSvg, left: 0, top: 0, blend: 'over' }])
-          .toBuffer()
-        const polaroidBg = await sharp({
-          create: { width: polaroidW, height: polaroidH, channels: 3, background: polaroidWhite },
-        })
-          .jpeg()
-          .toBuffer()
-        const withPhoto = await sharp(polaroidBg)
-          .composite([{ input: polaroidPhotoFinal, left: leftPad, top: topPad }])
-          .toBuffer()
-        const innerStroke = 1.5
-        const innerRectSvg = Buffer.from(
-          `<svg width="${polaroidW}" height="${polaroidH}" xmlns="http://www.w3.org/2000/svg"><rect x="${leftPad}" y="${topPad}" width="${imgWidth}" height="${imgHeight}" fill="none" stroke="#c9c4b8" stroke-width="${innerStroke}"/></svg>`
-        )
-        const withInner = await sharp(withPhoto)
-          .composite([{ input: innerRectSvg, left: 0, top: 0 }])
-          .toBuffer()
-        const outerStroke = 2
-        const outerRectSvg = Buffer.from(
-          `<svg width="${polaroidW}" height="${polaroidH}" xmlns="http://www.w3.org/2000/svg"><rect x="${outerStroke / 2}" y="${outerStroke / 2}" width="${polaroidW - outerStroke}" height="${polaroidH - outerStroke}" rx="2" ry="2" fill="none" stroke="#e6e2d8" stroke-width="${outerStroke}"/></svg>`
-        )
-        const polaroidFinal = await sharp(withInner)
-          .composite([{ input: outerRectSvg, left: 0, top: 0 }])
-          .toBuffer()
-        composited = await sharp(bg)
-          .composite([
-            { input: shadowSvg, left: shadowMargin + shadowOffset - shadowBlur, top: shadowMargin + shadowOffset - shadowBlur },
-            { input: polaroidFinal, left: shadowMargin, top: shadowMargin },
-          ])
           .toBuffer()
       }
       // Floating shadow: card lift with strong visible shadow + subtle top-edge highlight

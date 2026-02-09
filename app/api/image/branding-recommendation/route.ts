@@ -8,9 +8,6 @@ type FrameStyle =
   | 'rounded'
   | 'classic'
   | 'wooden'
-  | 'polaroid'
-  | 'dashed'
-  | 'dotted'
   | 'filmstrip'
   | 'vignette'
   | 'neon'
@@ -23,11 +20,11 @@ type FrameColorKey = 'primary' | 'secondary' | 'accent' | 'silver' | 'gold' | 'c
 /** Frame suggestions per template: style + colorKey for auto branding */
 const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: FrameColorKey }>> = {
   'social-pack': [
-    { style: 'polaroid', colorKey: 'neutral' },
     { style: 'solid', colorKey: 'neutral' },
     { style: 'neon', colorKey: 'primary' },
     { style: 'rounded', colorKey: 'primary' },
     { style: 'shadow', colorKey: 'neutral' },
+    { style: 'thin', colorKey: 'primary' },
   ],
   'blog-post': [
     { style: 'classic', colorKey: 'gold' },
@@ -40,13 +37,13 @@ const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: Fra
     { style: 'solid', colorKey: 'primary' },
     { style: 'shadow', colorKey: 'neutral' },
     { style: 'classic', colorKey: 'neutral' },
-    { style: 'dashed', colorKey: 'primary' },
+    { style: 'thin', colorKey: 'primary' },
   ],
   email: [
     { style: 'solid', colorKey: 'neutral' },
     { style: 'thin', colorKey: 'primary' },
     { style: 'rounded', colorKey: 'secondary' },
-    { style: 'dotted', colorKey: 'accent' },
+    { style: 'rounded', colorKey: 'accent' },
   ],
 }
 
@@ -55,7 +52,6 @@ const DEFAULT_FRAMES: Array<{ style: FrameStyle; colorKey: FrameColorKey }> = [
   { style: 'classic', colorKey: 'gold' },
   { style: 'gold', colorKey: 'gold' },
   { style: 'silver', colorKey: 'silver' },
-  { style: 'polaroid', colorKey: 'neutral' },
   { style: 'vignette', colorKey: 'neutral' },
   { style: 'shadow', colorKey: 'neutral' },
 ]
