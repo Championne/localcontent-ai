@@ -61,8 +61,9 @@ export async function POST(request: Request) {
     const userOverrides: { primary?: string[]; secondary?: string[]; generic?: string[] } = {}
     if (overrides?.length) {
       for (const o of overrides) {
-        if (o.tier === 'primary' || o.tier === 'secondary' || o.tier === 'generic') {
-          userOverrides[o.tier] = o.terms
+        const tier = o.tier as string
+        if (tier === 'primary' || tier === 'secondary' || tier === 'generic') {
+          userOverrides[tier] = o.terms
         }
       }
     }
