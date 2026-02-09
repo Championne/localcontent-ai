@@ -89,7 +89,7 @@ interface ImageOverlayEditorProps {
 
 const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', accent: '#6b7280' }
 
-// Predefined positions (percent) for "Arrange all" — logo top-left, photo top-right, tagline bottom center, social + website right bottom (website below social)
+// Predefined positions (percent) for "Arrange all" — logo top-left, photo top-right, tagline bottom-left, social + website right bottom (website below social)
 const DEFAULT_LOGO = { x: 5, y: 5, scale: 16 }
 const DEFAULT_PHOTO = { x: 77, y: 5, scale: 18 }
 const DEFAULT_TAGLINE = { x: 5, y: 90, fontSize: 22 }
