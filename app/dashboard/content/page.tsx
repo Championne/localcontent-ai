@@ -359,6 +359,7 @@ export default function CreateContentPage() {
   const [compareImages, setCompareImages] = useState<Array<{ url: string; style: string; loading: boolean }>>([])
   const [showCompare, setShowCompare] = useState(false)
   const [comparingStyles, setComparingStyles] = useState(false)
+  const [compareProgress, setCompareProgress] = useState(0) // 0–3: how many images have finished
 
   // Image Library: recent user images for Step 3 picker
   const [libraryImages, setLibraryImages] = useState<Array<{ id: string; public_url: string; filename: string }>>([])
@@ -1524,6 +1525,7 @@ export default function CreateContentPage() {
     if (comparingStyles) return
     setComparingStyles(true)
     setShowCompare(true)
+    setCompareProgress(0)
     // Pick 3 different styles to compare (current + 2 random others)
     const allStyles = Object.keys(IMAGE_STYLES) as ImageStyleKey[]
     const stylesToCompare: ImageStyleKey[] = [imageStyle]
@@ -1533,38 +1535,46 @@ export default function CreateContentPage() {
       stylesToCompare.push(otherStyles.splice(idx, 1)[0])
     }
     setCompareImages(stylesToCompare.map(s => ({ url: '', style: s, loading: true })))
-    // Generate in parallel
-    const results = await Promise.allSettled(
-      stylesToCompare.map(async (s) => {
-        const res = await fetch('/api/content/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            topic,
-            industry,
-            businessName,
-            style: s,
-            contentType: selectedTemplate,
-            brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
-            brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
-            brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
-          }),
-        })
-        const data = await res.json()
-        return { url: data.url || '', style: s }
+    // Generate in parallel, update progress & images as each completes
+    let completed = 0
+    await Promise.allSettled(
+      stylesToCompare.map(async (s, idx) => {
+        try {
+          const res = await fetch('/api/content/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              topic,
+              industry,
+              businessName,
+              style: s,
+              contentType: selectedTemplate,
+              brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+              brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+              brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+            }),
+          })
+          const data = await res.json()
+          const url = data.url || ''
+          completed++
+          setCompareProgress(completed)
+          setCompareImages(prev => prev.map((img, i) => i === idx ? { url, style: s, loading: false } : img))
+        } catch {
+          completed++
+          setCompareProgress(completed)
+          setCompareImages(prev => prev.map((img, i) => i === idx ? { url: '', style: s, loading: false } : img))
+        }
       })
     )
-    const finalImages = results.map((r, i) => {
-      if (r.status === 'fulfilled' && r.value.url) {
-        return { url: r.value.url, style: r.value.style, loading: false }
-      }
-      return { url: '', style: stylesToCompare[i], loading: false }
-    })
-    setCompareImages(finalImages)
     setComparingStyles(false)
-    if (finalImages.some(img => img.url)) {
-      setImagesRemaining(prev => prev !== null ? Math.max(0, prev - finalImages.filter(img => img.url).length) : null)
-    }
+    // Update remaining credits
+    setCompareImages(prev => {
+      const successCount = prev.filter(img => img.url).length
+      if (successCount > 0) {
+        setImagesRemaining(r => r !== null ? Math.max(0, r - successCount) : null)
+      }
+      return prev
+    })
   }
 
   const handlePickCompareImage = (img: { url: string; style: string }) => {
@@ -2392,6 +2402,25 @@ export default function CreateContentPage() {
               </button>
               <span className="text-[10px] text-amber-600">Uses 3 AI image credits</span>
             </div>
+            {/* Progress bar while comparing styles */}
+            {comparingStyles && (
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-medium text-gray-600">Generating {compareImages.length} styles...</span>
+                  <span className="text-[11px] font-semibold text-teal-600">{compareProgress}/{compareImages.length}</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700 ease-out"
+                    style={{
+                      width: `${compareImages.length > 0 ? (compareProgress / compareImages.length) * 100 : 0}%`,
+                      background: 'linear-gradient(90deg, #14b8a6, #0d9488)',
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">AI is creating images in different styles. This may take up to 30 seconds.</p>
+              </div>
+            )}
             {showCompare && compareImages.length > 0 && (
               <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
