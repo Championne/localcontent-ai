@@ -115,7 +115,7 @@ export interface GenerateImageResult {
 }
 
 // DALL-E 3 often adds text; we put no-text first and repeat it so the model follows it
-const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Screens and displays are off or show only abstract colors. The image must be completely free of written language.`
+const NO_TEXT_BLOCK = `CRITICAL: This image must contain absolutely no text. No words, no letters, no numbers, no signs, no labels, no logos, no writing on walls or objects. All surfaces are blank and unmarked. Any boards or signs in the scene are empty. Clothing is plain solid colors with no text or graphics. Product packaging is blank or solid color only. Do NOT include TV screens, monitors, or digital displays in the scene—if unavoidable, they must be switched off (solid black screen). The image must be completely free of written language.`
 
 // Anti-collage block: prevent DALL-E from creating mood boards, collages, or color swatches
 const SINGLE_PHOTO_BLOCK = `This must be a single cohesive photograph—NOT a collage, NOT a mood board, NOT a montage, NOT split panels. No color swatches, no color palette strips, no inset photos. One continuous scene from a single camera angle.`
