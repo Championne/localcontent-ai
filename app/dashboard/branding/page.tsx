@@ -187,6 +187,8 @@ export default function BrandingPage() {
         setBusinesses((prev) => prev.map((b) => (b.id === business.id ? data.business : b)))
         setEditingBusiness(null)
         showMessage('success', 'Saved')
+        // Notify the dashboard layout to refresh brand colors immediately
+        window.dispatchEvent(new CustomEvent('geospark:business-updated', { detail: { business: data.business } }))
       } else {
         const msg = data.details || data.error || 'Failed to save'
         showMessage('error', msg)

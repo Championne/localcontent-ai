@@ -99,6 +99,20 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
     fetchUsage()
   }, [])
 
+  // Listen for brand updates from child pages (e.g. Brand Identity page saves new colors)
+  useEffect(() => {
+    const handleBusinessUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.business) {
+        setBusinesses((prev) =>
+          prev.map((b) => (b.id === detail.business.id ? { ...b, ...detail.business } : b))
+        )
+      }
+    }
+    window.addEventListener('geospark:business-updated', handleBusinessUpdated)
+    return () => window.removeEventListener('geospark:business-updated', handleBusinessUpdated)
+  }, [])
+
   const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
   const brandPrimary = (selectedBusiness?.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(selectedBusiness.brand_primary_color)) ? selectedBusiness.brand_primary_color : '#0d9488'
 
