@@ -40,12 +40,12 @@ export default function ImageOverlayEditorViewRoot(props: {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-gray-900 text-sm">Customize Your Image</h3>
-          <p className="text-xs text-gray-600 mt-0.5">Drag items onto the image · Add tint or frame below</p>
+          <p className="text-xs text-gray-600 mt-0.5">Drag items onto the image · Effects on the right</p>
         </div>
       </div>
 
-      <div className="flex">
-        <div className="w-28 sm:w-32 border-r border-gray-200/80 p-2.5 flex flex-col gap-2 overflow-y-auto max-h-[380px]" style={{ backgroundColor: sidebarBg }}>
+      <div className="flex flex-col md:flex-row">
+        <div className="w-full md:w-28 lg:w-32 border-r border-gray-200/80 p-2.5 flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible md:overflow-y-auto md:max-h-[480px] flex-shrink-0" style={{ backgroundColor: sidebarBg }}>
           <div className="text-center">
             {p.effectiveLogoUrl ? (
               <div
@@ -187,9 +187,9 @@ export default function ImageOverlayEditorViewRoot(props: {
           )}
         </div>
 
-        <div className="flex-1 p-4 flex flex-col items-center min-w-0 max-w-[360px]">
+        <div className="flex-1 p-4 flex flex-col items-center justify-center min-w-0">
           <div
-            className="relative bg-gray-100 rounded-lg overflow-hidden w-full"
+            className="relative bg-gray-100 rounded-lg overflow-hidden w-full max-w-[480px] aspect-square"
             style={frameWrapperStyle}
           >
             <div
@@ -364,73 +364,78 @@ export default function ImageOverlayEditorViewRoot(props: {
             </div>
           </div>
 
-          {/* Tint + Frame: single compact panel */}
-          <div className="mt-3 rounded-lg border border-gray-200/80 bg-white/60 p-3 space-y-3">
-            <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Effects</p>
-            <div>
-              <p className="text-[11px] font-medium text-gray-600 mb-1.5">Tint</p>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })}
-                  className="text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all"
-                  style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}
-                  title="Light brand tint"
-                >
-                  Light
-                </button>
-                <div className="flex items-center gap-1">
-                  {(['primary', 'secondary', 'accent'] as const).map((key) => (
-                    <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
-                  ))}
-                </div>
-                {p.tintOverlay && (
-                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
-                    <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-20 h-1 accent-gray-600" />
-                    <span className="tabular-nums w-6">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
-                  </label>
-                )}
+        </div>
+
+        {/* Right panel: Effects (Tint + Frame) */}
+        <div className="w-44 sm:w-52 border-l border-gray-200/80 p-3 overflow-y-auto max-h-[480px] hidden md:block" style={{ backgroundColor: sidebarBg }}>
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Effects</p>
+
+          {/* Tint */}
+          <div className="mb-4">
+            <p className="text-[11px] font-medium text-gray-600 mb-1.5">Tint</p>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })}
+                className="text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all w-full text-left"
+                style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}
+                title="Light brand tint"
+              >
+                Light
+              </button>
+              <div className="flex items-center gap-1.5">
+                {(['primary', 'secondary', 'accent'] as const).map((key) => (
+                  <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
+                ))}
               </div>
+              {p.tintOverlay && (
+                <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                  <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-full h-1 accent-gray-600" />
+                  <span className="tabular-nums w-8 text-right">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
+                </label>
+              )}
               {p.frame && ['gold', 'silver', 'copper', 'neon', 'polaroid', 'filmstrip', 'vignette'].includes(p.frame.style) && (
-                <p className="text-[10px] text-gray-500 italic mt-1">Tint from frame</p>
+                <p className="text-[10px] text-gray-500 italic">Tint from frame</p>
               )}
             </div>
-            <div>
-              <p className="text-[11px] font-medium text-gray-600 mb-1.5">Frame</p>
-              <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={p.frame?.style ?? ''}
-                onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'polaroid' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
-                className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none w-full max-w-[180px]"
-              >
-                <option value="">None</option>
-                <optgroup label="Borders">
-                  <option value="thin">Thin line</option>
-                  <option value="solid">Solid border</option>
-                  <option value="thick">Thick border</option>
-                  <option value="double">Double line</option>
-                  <option value="rounded">Rounded corners</option>
-                  <option value="dashed">Dashed</option>
-                  <option value="dotted">Dotted</option>
-                </optgroup>
-                <optgroup label="Frames">
-                  <option value="classic">Painting frame</option>
-                  <option value="wooden">Wooden frame</option>
-                  <option value="polaroid">Polaroid</option>
-                  <option value="shadow">Floating shadow</option>
-                </optgroup>
-                <optgroup label="Mood">
-                  <option value="vignette">Vignette</option>
-                  <option value="neon">Neon glow</option>
-                  <option value="filmstrip">Film strip</option>
-                </optgroup>
-                <optgroup label="Metallic">
-                  <option value="gold">Gold</option>
-                  <option value="silver">Silver</option>
-                  <option value="copper">Copper</option>
-                </optgroup>
-              </select>
-              <span className="text-[10px] text-gray-400 hidden sm:inline">or:</span>
+          </div>
+
+          {/* Frame */}
+          <div>
+            <p className="text-[11px] font-medium text-gray-600 mb-1.5">Frame</p>
+            <select
+              value={p.frame?.style ?? ''}
+              onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'polaroid' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
+              className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none w-full mb-2"
+            >
+              <option value="">None</option>
+              <optgroup label="Borders">
+                <option value="thin">Thin line</option>
+                <option value="solid">Solid border</option>
+                <option value="thick">Thick border</option>
+                <option value="double">Double line</option>
+                <option value="rounded">Rounded corners</option>
+                <option value="dashed">Dashed</option>
+                <option value="dotted">Dotted</option>
+              </optgroup>
+              <optgroup label="Frames">
+                <option value="classic">Painting frame</option>
+                <option value="wooden">Wooden frame</option>
+                <option value="polaroid">Polaroid</option>
+                <option value="shadow">Floating shadow</option>
+              </optgroup>
+              <optgroup label="Mood">
+                <option value="vignette">Vignette</option>
+                <option value="neon">Neon glow</option>
+                <option value="filmstrip">Film strip</option>
+              </optgroup>
+              <optgroup label="Metallic">
+                <option value="gold">Gold</option>
+                <option value="silver">Silver</option>
+                <option value="copper">Copper</option>
+              </optgroup>
+            </select>
+            <div className="flex items-center gap-1.5 mb-2">
               {(['gold', 'silver', 'copper'] as const).map((metal) => {
                 const isSelected = p.frame?.style === metal
                 const grad = metal === 'gold'
@@ -463,8 +468,8 @@ export default function ImageOverlayEditorViewRoot(props: {
               })}
             </div>
             {p.frame && !['gold', 'silver', 'copper'].includes(p.frame.style) && (
-              <div className="mt-2 pt-2 border-t border-gray-200/60">
-                <p className="text-[10px] text-gray-500 mb-1">Frame colour</p>
+              <div className="pt-2 border-t border-gray-200/60">
+                <p className="text-[10px] text-gray-500 mb-1.5">Frame colour</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(['primary', 'secondary', 'accent', 'silver', 'gold', 'copper', 'neutral'] as const).map((key) => (
                     <button key={key} type="button" onClick={() => p.setFrame(prev => prev ? { ...prev, colorKey: key } : null)} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.frame?.colorKey === key ? 'border-gray-800 ring-2 ring-offset-0.5 ring-gray-500' : 'border-gray-200'}`} style={{ backgroundColor: p.getFrameHex(key) }} title={key} />
@@ -472,7 +477,34 @@ export default function ImageOverlayEditorViewRoot(props: {
                 </div>
               </div>
             )}
-            </div>
+          </div>
+        </div>
+
+        {/* Mobile: Effects below image (visible only on small screens) */}
+        <div className="md:hidden border-t border-gray-200/80 p-3 space-y-3" style={{ backgroundColor: sidebarBg }}>
+          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Effects</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[11px] font-medium text-gray-600 mr-1">Tint</p>
+            <button type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })} className="text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all" style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}>Light</button>
+            {(['primary', 'secondary', 'accent'] as const).map((key) => (
+              <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
+            ))}
+            {p.tintOverlay && (
+              <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-20 h-1 accent-gray-600" />
+                <span className="tabular-nums w-6">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
+              </label>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[11px] font-medium text-gray-600 mr-1">Frame</p>
+            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'polaroid' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none flex-1 min-w-[120px]">
+              <option value="">None</option>
+              <option value="thin">Thin</option><option value="solid">Solid</option><option value="thick">Thick</option><option value="rounded">Rounded</option>
+              <option value="classic">Painting</option><option value="wooden">Wooden</option><option value="polaroid">Polaroid</option>
+              <option value="vignette">Vignette</option><option value="neon">Neon</option><option value="filmstrip">Film strip</option>
+              <option value="gold">Gold</option><option value="silver">Silver</option><option value="copper">Copper</option>
+            </select>
           </div>
         </div>
       </div>
