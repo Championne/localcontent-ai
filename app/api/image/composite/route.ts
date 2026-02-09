@@ -633,66 +633,144 @@ export async function POST(request: Request) {
           .composite([{ input: paintingSvg, left: 0, top: 0 }])
           .toBuffer()
       }
-      // Wooden frame: molded profile (outer edge, concave groove, convex bead, inner bevel, rabbet), dark wood tones
+      // Wooden frame: realistic grain texture, miter joints, inner bevel, wall shadow
       else if (style === 'wooden') {
-        const outerBand = 5
-        const grooveBand = 4
-        const beadBand = 6
-        const innerBand = 8
-        const rabbet = 1
-        const frameWidth = outerBand + grooveBand + beadBand + innerBand + rabbet
+        const frameWidth = 28
+        const margin = 14 // extra space around frame for wall shadow
+        // Wood palette: Dark Oak, Warm Walnut, Light Pine
         const wood = {
-          dark: '#3d2817',
-          midDark: '#5c3d2e',
+          darkOak: '#3d2b1f',
+          walnut: '#63412e',
+          pine: '#d2b48c',
           mid: '#7d5a3a',
           midLight: '#a67c52',
-          light: '#c49a6c',
-          highlight: '#d4a574',
+          highlight: '#c9a06c',
           rabbet: '#2a1a0f',
         }
-        composited = await sharp(composited)
-          .extend({ top: frameWidth, bottom: frameWidth, left: frameWidth, right: frameWidth, background: { r: 42, g: 26, b: 15, alpha: 1 } })
+
+        // 1. Add wall-shadow background behind the frame
+        const borderPad = 2
+        const imgWithBorder = await sharp(composited)
+          .extend({ top: borderPad, bottom: borderPad, left: borderPad, right: borderPad, background: { r: 42, g: 27, b: 15, alpha: 1 } })
           .toBuffer()
+        const bMeta = await sharp(imgWithBorder).metadata()
+        const iw = bMeta.width!
+        const ih = bMeta.height!
+        const fullW = iw + 2 * frameWidth + 2 * margin
+        const fullH = ih + 2 * frameWidth + 2 * margin
+
+        // Wall shadow SVG (soft diffuse shadow beneath the frame)
+        const shadowSvg = Buffer.from(
+          `<svg width="${iw + 80}" height="${ih + 80}" xmlns="http://www.w3.org/2000/svg">
+            <defs><filter id="ws"><feGaussianBlur in="SourceGraphic" stdDeviation="28"/></filter></defs>
+            <rect x="40" y="40" width="${iw}" height="${ih}" rx="2" ry="2" fill="black" opacity="0.65" filter="url(#ws)"/>
+          </svg>`
+        )
+
+        // Off-white wall background
+        const bg = await sharp({
+          create: { width: fullW, height: fullH, channels: 3, background: { r: 245, g: 243, b: 238 } },
+        }).jpeg().toBuffer()
+
+        // Composite: wall bg + shadow + image
+        composited = await sharp(bg)
+          .composite([
+            { input: shadowSvg, left: margin + frameWidth - 8, top: margin + frameWidth + 10 },
+            { input: imgWithBorder, left: margin + frameWidth, top: margin + frameWidth },
+          ])
+          .toBuffer()
+
         const meta = await sharp(composited).metadata()
         const fw = meta.width!
         const fh = meta.height!
+        const ox = margin // frame outer x
+        const oy = margin // frame outer y
+        const outerW = iw + 2 * frameWidth + 2 * borderPad
+        const outerH = ih + 2 * frameWidth + 2 * borderPad
+        const ix = ox + frameWidth // inner opening x
+        const iy = oy + frameWidth // inner opening y
+        const innerW = iw + 2 * borderPad
+        const innerH = ih + 2 * borderPad
+
+        // Build SVG grain lines (procedural thin stripes)
+        const grainLines: string[] = []
+        const grainSpacing = 5
+        for (let g = 0; g < outerW + outerH; g += grainSpacing) {
+          const opacity = 0.04 + Math.random() * 0.06
+          const sw = 0.8 + Math.random() * 0.8
+          grainLines.push(
+            `<line x1="${ox + g}" y1="${oy}" x2="${ox}" y2="${oy + g}" stroke="rgba(0,0,0,${opacity.toFixed(2)})" stroke-width="${sw.toFixed(1)}"/>`
+          )
+        }
+
         const woodenSvg = Buffer.from(
           `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="woodOuter" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${wood.highlight}"/><stop offset="50%" stop-color="${wood.mid}"/><stop offset="100%" stop-color="${wood.midDark}"/></linearGradient>
-              <linearGradient id="woodGroove" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="${wood.midDark}"/><stop offset="100%" stop-color="${wood.dark}"/></linearGradient>
-              <linearGradient id="woodBead" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${wood.light}"/><stop offset="60%" stop-color="${wood.mid}"/><stop offset="100%" stop-color="${wood.midDark}"/></linearGradient>
-              <linearGradient id="woodInner" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${wood.midLight}"/><stop offset="100%" stop-color="${wood.mid}"/></linearGradient>
-              <linearGradient id="woodTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="${wood.midDark}"/><stop offset="100%" stop-color="${wood.highlight}"/></linearGradient>
-              <linearGradient id="woodRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${wood.light}"/><stop offset="100%" stop-color="${wood.dark}"/></linearGradient>
-              <linearGradient id="woodBottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${wood.midLight}"/><stop offset="100%" stop-color="${wood.dark}"/></linearGradient>
-              <linearGradient id="woodLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${wood.highlight}"/><stop offset="100%" stop-color="${wood.midDark}"/></linearGradient>
+              <!-- Per-side gradients: top/left lighter (light source), bottom/right darker -->
+              <linearGradient id="wTop" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="${wood.mid}"/>
+                <stop offset="40%" stop-color="${wood.midLight}"/>
+                <stop offset="100%" stop-color="${wood.highlight}"/>
+              </linearGradient>
+              <linearGradient id="wLeft" x1="1" y1="0" x2="0" y2="0">
+                <stop offset="0%" stop-color="${wood.mid}"/>
+                <stop offset="40%" stop-color="${wood.midLight}"/>
+                <stop offset="100%" stop-color="${wood.pine}"/>
+              </linearGradient>
+              <linearGradient id="wBottom" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${wood.walnut}"/>
+                <stop offset="60%" stop-color="${wood.darkOak}"/>
+                <stop offset="100%" stop-color="${wood.rabbet}"/>
+              </linearGradient>
+              <linearGradient id="wRight" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="${wood.walnut}"/>
+                <stop offset="60%" stop-color="${wood.darkOak}"/>
+                <stop offset="100%" stop-color="${wood.rabbet}"/>
+              </linearGradient>
+              <!-- Clip to the frame ring only (outer minus inner) -->
+              <clipPath id="frameClip">
+                <path fill-rule="evenodd" d="M ${ox} ${oy} h ${outerW} v ${outerH} h -${outerW} Z M ${ix} ${iy} v ${innerH} h ${innerW} v -${innerH} Z"/>
+              </clipPath>
             </defs>
-            <!-- Outer rounded edge (lighter) -->
-            <rect x="0" y="0" width="${fw}" height="${outerBand}" fill="url(#woodTop)"/>
-            <rect x="${fw - outerBand}" y="0" width="${outerBand}" height="${fh}" fill="url(#woodRight)"/>
-            <rect x="0" y="${fh - outerBand}" width="${fw}" height="${outerBand}" fill="url(#woodBottom)"/>
-            <rect x="0" y="0" width="${outerBand}" height="${fh}" fill="url(#woodLeft)"/>
-            <!-- Concave groove (darker) -->
-            <rect x="${outerBand}" y="${outerBand}" width="${fw - 2 * outerBand}" height="${grooveBand}" fill="url(#woodGroove)"/>
-            <rect x="${fw - outerBand - grooveBand}" y="${outerBand}" width="${grooveBand}" height="${fh - 2 * outerBand}" fill="url(#woodGroove)"/>
-            <rect x="${outerBand}" y="${fh - outerBand - grooveBand}" width="${fw - 2 * outerBand}" height="${grooveBand}" fill="url(#woodGroove)"/>
-            <rect x="${outerBand}" y="${outerBand}" width="${grooveBand}" height="${fh - 2 * outerBand}" fill="url(#woodGroove)"/>
-            <!-- Convex bead -->
-            <rect x="${outerBand + grooveBand}" y="${outerBand + grooveBand}" width="${fw - 2 * (outerBand + grooveBand)}" height="${beadBand}" fill="url(#woodBead)"/>
-            <rect x="${fw - outerBand - grooveBand - beadBand}" y="${outerBand + grooveBand}" width="${beadBand}" height="${fh - 2 * (outerBand + grooveBand)}" fill="url(#woodBead)"/>
-            <rect x="${outerBand + grooveBand}" y="${fh - outerBand - grooveBand - beadBand}" width="${fw - 2 * (outerBand + grooveBand)}" height="${beadBand}" fill="url(#woodBead)"/>
-            <rect x="${outerBand + grooveBand}" y="${outerBand + grooveBand}" width="${beadBand}" height="${fh - 2 * (outerBand + grooveBand)}" fill="url(#woodBead)"/>
-            <!-- Inner bevel -->
-            <rect x="${outerBand + grooveBand + beadBand}" y="${outerBand + grooveBand + beadBand}" width="${fw - 2 * (outerBand + grooveBand + beadBand)}" height="${innerBand}" fill="url(#woodInner)"/>
-            <rect x="${fw - outerBand - grooveBand - beadBand - innerBand}" y="${outerBand + grooveBand + beadBand}" width="${innerBand}" height="${fh - 2 * (outerBand + grooveBand + beadBand)}" fill="url(#woodInner)"/>
-            <rect x="${outerBand + grooveBand + beadBand}" y="${fh - outerBand - grooveBand - beadBand - innerBand}" width="${fw - 2 * (outerBand + grooveBand + beadBand)}" height="${innerBand}" fill="url(#woodInner)"/>
-            <rect x="${outerBand + grooveBand + beadBand}" y="${outerBand + grooveBand + beadBand}" width="${innerBand}" height="${fh - 2 * (outerBand + grooveBand + beadBand)}" fill="url(#woodInner)"/>
-            <!-- Rabbet -->
-            <rect x="${frameWidth - rabbet}" y="${frameWidth - rabbet}" width="${fw - 2 * (frameWidth - rabbet)}" height="${rabbet}" fill="${wood.rabbet}"/>
-            <rect x="${fw - frameWidth}" y="${frameWidth - rabbet}" width="${rabbet}" height="${fh - 2 * (frameWidth - rabbet)}" fill="${wood.rabbet}"/>
-            <rect x="${frameWidth - rabbet}" y="${fh - frameWidth}" width="${fw - 2 * (frameWidth - rabbet)}" height="${rabbet}" fill="${wood.rabbet}"/>
-            <rect x="${frameWidth - rabbet}" y="${frameWidth - rabbet}" width="${rabbet}" height="${fh - 2 * (frameWidth - rabbet)}" fill="${wood.rabbet}"/>
+
+            <!-- TOP side (trapezoid: miter at 45 deg corners) -->
+            <polygon points="${ox},${oy} ${ox + outerW},${oy} ${ix + innerW},${iy} ${ix},${iy}" fill="url(#wTop)"/>
+            <!-- LEFT side -->
+            <polygon points="${ox},${oy} ${ix},${iy} ${ix},${iy + innerH} ${ox},${oy + outerH}" fill="url(#wLeft)"/>
+            <!-- BOTTOM side -->
+            <polygon points="${ox},${oy + outerH} ${ix},${iy + innerH} ${ix + innerW},${iy + innerH} ${ox + outerW},${oy + outerH}" fill="url(#wBottom)"/>
+            <!-- RIGHT side -->
+            <polygon points="${ox + outerW},${oy} ${ox + outerW},${oy + outerH} ${ix + innerW},${iy + innerH} ${ix + innerW},${iy}" fill="url(#wRight)"/>
+
+            <!-- Grain texture lines (clipped to frame area) -->
+            <g clip-path="url(#frameClip)" opacity="0.9">
+              ${grainLines.join('\n              ')}
+            </g>
+
+            <!-- Miter joint corner lines (45-degree diagonal seams) -->
+            <line x1="${ox}" y1="${oy}" x2="${ix}" y2="${iy}" stroke="${wood.darkOak}" stroke-width="1.5" opacity="0.5"/>
+            <line x1="${ox + outerW}" y1="${oy}" x2="${ix + innerW}" y2="${iy}" stroke="${wood.darkOak}" stroke-width="1.5" opacity="0.5"/>
+            <line x1="${ox}" y1="${oy + outerH}" x2="${ix}" y2="${iy + innerH}" stroke="${wood.darkOak}" stroke-width="1.5" opacity="0.5"/>
+            <line x1="${ox + outerW}" y1="${oy + outerH}" x2="${ix + innerW}" y2="${iy + innerH}" stroke="${wood.darkOak}" stroke-width="1.5" opacity="0.5"/>
+
+            <!-- Outer edge highlight (top-left catch light) -->
+            <line x1="${ox}" y1="${oy}" x2="${ox + outerW}" y2="${oy}" stroke="rgba(255,235,215,0.3)" stroke-width="1"/>
+            <line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + outerH}" stroke="rgba(255,235,215,0.2)" stroke-width="1"/>
+            <!-- Outer edge shadow (bottom-right) -->
+            <line x1="${ox}" y1="${oy + outerH}" x2="${ox + outerW}" y2="${oy + outerH}" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+            <line x1="${ox + outerW}" y1="${oy}" x2="${ox + outerW}" y2="${oy + outerH}" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+
+            <!-- Inner bevel: shadow cast by the wood lip onto the photo -->
+            <rect x="${ix}" y="${iy}" width="${innerW}" height="3" fill="rgba(0,0,0,0.35)"/>
+            <rect x="${ix}" y="${iy}" width="3" height="${innerH}" fill="rgba(0,0,0,0.25)"/>
+            <rect x="${ix}" y="${iy + innerH - 1}" width="${innerW}" height="1" fill="rgba(255,235,215,0.15)"/>
+            <rect x="${ix + innerW - 1}" y="${iy}" width="1" height="${innerH}" fill="rgba(255,235,215,0.10)"/>
+
+            <!-- Rabbet (tiny dark inset lip) -->
+            <rect x="${ix - 1}" y="${iy - 1}" width="${innerW + 2}" height="1" fill="${wood.rabbet}"/>
+            <rect x="${ix - 1}" y="${iy - 1}" width="1" height="${innerH + 2}" fill="${wood.rabbet}"/>
+            <rect x="${ix - 1}" y="${iy + innerH}" width="${innerW + 2}" height="1" fill="${wood.rabbet}"/>
+            <rect x="${ix + innerW}" y="${iy - 1}" width="1" height="${innerH + 2}" fill="${wood.rabbet}"/>
           </svg>`
         )
         composited = await sharp(composited)

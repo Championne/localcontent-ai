@@ -2654,44 +2654,6 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: between customize-your-image and example blocks */}
-          {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <p className="text-sm font-medium text-gray-700">How was this?</p>
-                <div className="flex flex-wrap items-center gap-8">
-                  {generatedTextId && (
-                    <div className="min-w-[200px]">
-                      <RatingStars
-                        type="text"
-                        label="Rate this text"
-                        value={textRating}
-                        onChange={handleRateText}
-                        onSkip={() => {}}
-                        showSkip
-                      />
-                    </div>
-                  )}
-                  {generatedTextId && (generatedImageId || generatedImage) && (
-                    <div className="hidden sm:block w-px h-8 bg-gray-300/60" />
-                  )}
-                  {(generatedImageId || generatedImage) && (
-                    <div className="min-w-[200px]">
-                      <RatingStars
-                        type="image"
-                        label="Rate this image"
-                        value={imageRating}
-                        onChange={handleRateImage}
-                        onSkip={() => {}}
-                        showSkip
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="grid md:grid-cols-2 gap-4 mb-6 max-w-4xl mx-auto">
             {(Object.keys(socialPack) as Array<keyof SocialPackResult>).map((platform) => {
               const info = platformInfo[platform]
@@ -2998,6 +2960,24 @@ export default function CreateContentPage() {
               )
             })}
           </div>
+
+          {/* Rating: at the very bottom */}
+          {(generatedTextId || generatedImageId || generatedImage) && (
+            <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                {generatedTextId ? (
+                  <div>
+                    <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
+                  </div>
+                ) : <div />}
+                {(generatedImageId || generatedImage) ? (
+                  <div>
+                    <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
+                  </div>
+                ) : <div />}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -3338,30 +3318,6 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* In-flow rating: between customize-your-image and content/example blocks */}
-          {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <p className="text-sm font-medium text-gray-700">How was this?</p>
-                <div className="flex flex-wrap items-center gap-8">
-                  {generatedTextId && (
-                    <div className="min-w-[200px]">
-                      <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
-                    </div>
-                  )}
-                  {generatedTextId && (generatedImageId || generatedImage) && (
-                    <div className="hidden sm:block w-px h-8 bg-gray-300/60" />
-                  )}
-                  {(generatedImageId || generatedImage) && (
-                    <div className="min-w-[200px]">
-                      <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Content Card with Preview/Edit Tabs */}
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
             {/* Tab Header */}
@@ -3448,6 +3404,24 @@ export default function CreateContentPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span><strong>Tip:</strong> Click "Copy" to copy formatted text that pastes perfectly into WordPress, Wix, or any blog editor.</span>
+            </div>
+          )}
+
+          {/* Rating: at the very bottom */}
+          {(generatedTextId || generatedImageId || generatedImage) && (
+            <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                {generatedTextId ? (
+                  <div>
+                    <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
+                  </div>
+                ) : <div />}
+                {(generatedImageId || generatedImage) ? (
+                  <div>
+                    <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
+                  </div>
+                ) : <div />}
+              </div>
             </div>
           )}
         </div>

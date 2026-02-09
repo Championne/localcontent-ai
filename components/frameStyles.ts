@@ -49,11 +49,28 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
     base.boxShadow =
       'inset 0 0 0 1px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,254,248,0.4)'
   } else if (fs === 'wooden') {
-    base.background =
-      'linear-gradient(135deg, #d4a574 0%, #a67c52 30%, #7d5a3a 60%, #5c3d2e 85%, #3d2817 100%), ' +
-      'linear-gradient(315deg, rgba(0,0,0,0.12) 0%, transparent 45%)'
-    base.boxShadow =
-      'inset 0 1px 0 rgba(255,235,215,0.25), inset 0 -1px 0 rgba(0,0,0,0.2)'
+    // Realistic wooden frame: grain texture + miter joint borders + wall shadow
+    base.background = [
+      // Procedural grain lines (thin horizontal repeating stripes)
+      'repeating-linear-gradient(180deg, transparent, transparent 3px, rgba(0,0,0,0.07) 3px, rgba(0,0,0,0.07) 4px, transparent 4px, transparent 7px)',
+      // Secondary knot/variation grain at slight angle
+      'repeating-linear-gradient(174deg, transparent, transparent 11px, rgba(210,180,140,0.12) 11px, rgba(210,180,140,0.12) 13px, transparent 13px, transparent 23px)',
+      // Light source highlight (top-left lighter, bottom-right darker)
+      'linear-gradient(135deg, rgba(255,235,215,0.22) 0%, transparent 40%, rgba(0,0,0,0.18) 100%)',
+      // Base wood colour gradient
+      'linear-gradient(160deg, #d2b48c 0%, #a67c52 18%, #7d5a3a 40%, #63412e 68%, #3d2b1f 100%)',
+    ].join(', ')
+    // Miter-joint simulation: top/left lighter (light hits), bottom/right darker (shadow)
+    base.borderStyle = 'solid'
+    base.borderWidth = '3px'
+    base.borderColor = '#7d5239 #543726 #402a1d #63412e'
+    // Wall shadow + inner highlight/shadow
+    base.boxShadow = [
+      '0 10px 30px rgba(0,0,0,0.45)',
+      '0 4px 12px rgba(0,0,0,0.25)',
+      'inset 0 1px 0 rgba(255,235,215,0.30)',
+      'inset 0 -1px 0 rgba(0,0,0,0.25)',
+    ].join(', ')
   } else if (fs === 'gold') {
     base.background =
       'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 25%, transparent 45%), ' +
@@ -114,7 +131,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
 
   const shadowMap: Record<string, string> = {
     classic: 'inset 0 0 0 2px rgba(255,255,255,0.5)',
-    wooden: 'inset 0 0 0 1px rgba(0,0,0,0.15)',
+    wooden: 'inset 2px 2px 5px rgba(0,0,0,0.50), inset -1px -1px 3px rgba(0,0,0,0.20), inset 0 0 0 1px rgba(0,0,0,0.15)',
     shadow: '0 24px 48px rgba(0,0,0,0.4), 0 12px 24px rgba(0,0,0,0.25)',
     gold: 'inset 0 1px 0 rgba(255,252,224,0.9), inset 0 3px 8px -2px rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.25)',
     silver: 'inset 0 1px 0 rgba(255,255,255,0.98), inset 0 3px 8px -2px rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.3)',
