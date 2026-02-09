@@ -44,7 +44,7 @@ export default function ImageLibraryPage() {
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
   const [businessesLoading, setBusinessesLoading] = useState(true)
 
-  // Fetch businesses on mount
+  // Fetch businesses on mount, sync with sidebar selection
   useEffect(() => {
     async function loadBusinesses() {
       try {
@@ -53,9 +53,10 @@ export default function ImageLibraryPage() {
           const data = await res.json()
           const list: Business[] = data.businesses || []
           setBusinesses(list)
-          if (list.length > 0) {
-            setSelectedBusinessId(list[0].id)
-          }
+          // Sync with sidebar: read from localStorage
+          const stored = localStorage.getItem('geospark_selected_business_id')
+          const match = list.find(b => b.id === stored)
+          setSelectedBusinessId(match ? match.id : list[0]?.id || null)
         }
       } catch { /* ignore */ }
       finally { setBusinessesLoading(false) }
@@ -63,6 +64,19 @@ export default function ImageLibraryPage() {
     loadBusinesses()
   }, [])
 
+  // Listen for sidebar business changes and update immediately
+  useEffect(() => {
+    const onBusinessChanged = (e: Event) => {
+      const businessId = (e as CustomEvent).detail?.businessId
+      if (businessId && businessId !== selectedBusinessId) {
+        handleBusinessChange(businessId)
+      }
+    }
+    window.addEventListener('geospark:business-changed', onBusinessChanged)
+    return () => window.removeEventListener('geospark:business-changed', onBusinessChanged)
+  }, [selectedBusinessId])
+
+  // Use CSS variable from layout for consistent branding; falls back for image-specific highlights
   const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
   const primaryColor = selectedBusiness?.brand_primary_color || '#0d9488'
 

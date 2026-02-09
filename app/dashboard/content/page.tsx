@@ -319,7 +319,7 @@ export default function CreateContentPage() {
   const [editingContentId, setEditingContentId] = useState<string | null>(null)
   const [loadingEdit, setLoadingEdit] = useState(false)
 
-  // Fetch user's businesses on mount
+  // Fetch user's businesses on mount, sync with sidebar selection
   useEffect(() => {
     async function fetchBusinesses() {
       try {
@@ -328,12 +328,14 @@ export default function CreateContentPage() {
           const data = await response.json()
           if (data.businesses && data.businesses.length > 0) {
             setBusinesses(data.businesses)
-            // Auto-select first business
-            const firstBusiness = data.businesses[0] as Business
-            setSelectedBusinessId(firstBusiness.id)
-            setBusinessName(firstBusiness.name || '')
-            setIndustry(firstBusiness.industry || '')
-            if (firstBusiness.default_tone) setTone(firstBusiness.default_tone)
+            // Sync with sidebar: read from localStorage
+            const stored = localStorage.getItem('geospark_selected_business_id')
+            const match = data.businesses.find((b: Business) => b.id === stored)
+            const target = match || data.businesses[0]
+            setSelectedBusinessId(target.id)
+            setBusinessName(target.name || '')
+            setIndustry(target.industry || '')
+            if (target.default_tone) setTone(target.default_tone)
           }
         }
       } catch (err) {
@@ -342,6 +344,18 @@ export default function CreateContentPage() {
     }
     fetchBusinesses()
   }, [])
+
+  // Listen for sidebar business changes and update immediately
+  useEffect(() => {
+    const onBusinessChanged = (e: Event) => {
+      const businessId = (e as CustomEvent).detail?.businessId
+      if (businessId && businessId !== selectedBusinessId) {
+        handleBusinessChange(businessId)
+      }
+    }
+    window.addEventListener('geospark:business-changed', onBusinessChanged)
+    return () => window.removeEventListener('geospark:business-changed', onBusinessChanged)
+  }, [businesses, selectedBusinessId])
 
   // Close AI regenerate style dropdown when clicking outside
   useEffect(() => {

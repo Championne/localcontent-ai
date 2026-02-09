@@ -299,8 +299,6 @@ export default function BrandingPage() {
     )
   }
 
-  const pagePrimary = businesses[0]?.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(businesses[0].brand_primary_color) ? businesses[0].brand_primary_color : '#0d9488'
-
   return (
     <div className="transition-colors duration-300">
       <div className="max-w-3xl mx-auto pt-4 sm:pt-6">
@@ -318,7 +316,7 @@ export default function BrandingPage() {
         )}
 
         <div className="mb-8">
-          <p className="font-medium text-sm mb-1 transition-colors" style={{ color: pagePrimary }}>Brand identity</p>
+          <p className="font-medium text-sm mb-1 transition-colors" style={{ color: 'var(--brand-primary)' }}>Brand identity</p>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Your brand, one place</h1>
           <p className="text-gray-500 text-sm">Make every post unmistakably yours. Set your logo, colours and voice here.</p>
         </div>
@@ -329,7 +327,7 @@ export default function BrandingPage() {
             type="button"
             onClick={() => setShowAddBusiness(true)}
             className="px-5 py-2.5 text-sm font-semibold text-white rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2"
-            style={{ backgroundColor: pagePrimary }}
+            style={{ backgroundColor: 'var(--brand-primary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
