@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 const BUCKET = 'generated-images'
 
@@ -12,8 +13,31 @@ export function isTemporaryImageUrl(url: string | null | undefined): boolean {
   return true
 }
 
+/** Ensure the storage bucket exists. Creates it (public, 50MB limit) if missing. */
+async function ensureBucket(client: SupabaseClient): Promise<boolean> {
+  try {
+    const { error } = await client.storage.getBucket(BUCKET)
+    if (!error) return true
+    // Bucket doesn't exist — create it
+    const { error: createErr } = await client.storage.createBucket(BUCKET, {
+      public: true,
+      fileSizeLimit: 50 * 1024 * 1024, // 50 MB
+    })
+    if (createErr) {
+      console.error('Failed to create storage bucket:', createErr.message)
+      return false
+    }
+    console.log(`Created storage bucket: ${BUCKET}`)
+    return true
+  } catch (e) {
+    console.error('ensureBucket error:', e)
+    return false
+  }
+}
+
 /**
  * Fetches an image from a URL and uploads it to Supabase Storage so the URL is permanent.
+ * Uses the service-role admin client when available (bypasses RLS for storage).
  * Returns the public URL, or null on failure (caller can keep the original URL).
  */
 export async function persistContentImage(
@@ -21,15 +45,28 @@ export async function persistContentImage(
   userId: string,
   imageUrl: string
 ): Promise<string | null> {
+  // Prefer the admin client for storage operations (bypasses RLS, can create bucket)
+  const storageClient = getSupabaseAdmin() || supabase
+
   try {
+    // Ensure the bucket exists before attempting upload
+    const bucketReady = await ensureBucket(storageClient)
+    if (!bucketReady) {
+      console.error('Storage bucket not available, cannot persist image')
+      return null
+    }
+
     const res = await fetch(imageUrl, { next: { revalidate: 0 } })
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error(`Failed to download image (${res.status}): ${imageUrl.slice(0, 120)}`)
+      return null
+    }
     const contentType = res.headers.get('content-type') || 'image/png'
     const buffer = Buffer.from(await res.arrayBuffer())
     const ext = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png'
     const filename = `${userId}/content_${Date.now()}.${ext}`
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await storageClient.storage
       .from(BUCKET)
       .upload(filename, buffer, {
         contentType: contentType.startsWith('image/') ? contentType : 'image/png',
@@ -38,11 +75,11 @@ export async function persistContentImage(
       })
 
     if (uploadError) {
-      console.error('Content image persist upload error:', uploadError)
+      console.error('Content image persist upload error:', uploadError.message)
       return null
     }
 
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filename)
+    const { data: urlData } = storageClient.storage.from(BUCKET).getPublicUrl(filename)
     return urlData.publicUrl
   } catch (e) {
     console.error('Content image persist error:', e)
