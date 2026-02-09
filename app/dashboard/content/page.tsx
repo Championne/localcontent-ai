@@ -363,6 +363,9 @@ export default function CreateContentPage() {
   // Image Library: recent user images for Step 3 picker
   const [libraryImages, setLibraryImages] = useState<Array<{ id: string; public_url: string; filename: string }>>([])
   const [libraryLoading, setLibraryLoading] = useState(false)
+  const [showBrandImagesModal, setShowBrandImagesModal] = useState(false)
+  const [allLibraryImages, setAllLibraryImages] = useState<Array<{ id: string; public_url: string; filename: string }>>([])
+  const [allLibraryLoading, setAllLibraryLoading] = useState(false)
 
   // Quality ratings: link to generated_images / generated_texts when saving
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
@@ -444,7 +447,7 @@ export default function CreateContentPage() {
       .finally(() => setStep3StockLoading(false))
   }, [step, topic, industry, selectedTemplate, stockImageOptions.length])
 
-  // Step 3: fetch recent library images
+  // Step 3: fetch recent library images (used for quick-preview count badge)
   useEffect(() => {
     if (step !== 3) return
     if (libraryImages.length > 0) return
@@ -455,6 +458,19 @@ export default function CreateContentPage() {
       .catch(() => {})
       .finally(() => setLibraryLoading(false))
   }, [step, libraryImages.length])
+
+  // Load full Brand Images when modal opens
+  const openBrandImagesModal = () => {
+    setShowBrandImagesModal(true)
+    if (allLibraryImages.length === 0) {
+      setAllLibraryLoading(true)
+      fetch('/api/image-library?limit=100')
+        .then(res => res.json())
+        .then(data => { if (data.images) setAllLibraryImages(data.images) })
+        .catch(() => {})
+        .finally(() => setAllLibraryLoading(false))
+    }
+  }
 
   // Run auto-branding: fetch recommendation and apply to given image URL
   const runAutoBranding = async (imageUrlToApply: string) => {
@@ -2248,73 +2264,69 @@ export default function CreateContentPage() {
                 Generate all (images)
               </button>
             </div>
-            {/* Row 1: Suggested — 3 stock + 1 AI */}
+            {/* Suggested images — compact grid */}
             <div className="mb-3">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Suggested</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">Suggested</p>
+              <div className="grid grid-cols-4 sm:grid-cols-4 gap-2">
                 {step3StockLoading ? (
                   [...Array(3)].map((_, i) => (
-                    <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />
+                    <div key={i} className="aspect-[4/3] rounded-lg bg-gray-200 animate-pulse" />
                   ))
                 ) : (
                   stockImageOptions.slice(0, 3).map((opt, i) => (
-                    <div key={i} className="flex flex-col">
-                      <button type="button" onClick={() => handlePickStockImage(opt)} className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all ${generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
-                        {regeneratingStockIndex === i && <div className="absolute inset-0 flex items-center justify-center bg-gray-900/40 z-10"><svg className="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>}
-                        <img src={opt.url} alt="" className="w-full h-full object-cover" />
-                        {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
-                      </button>
-                      <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                        <span className="text-[10px] font-medium text-gray-600">Stock</span>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }} disabled={regeneratingStockIndex === i} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 disabled:opacity-50">New</button>
-                      </div>
-                    </div>
+                    <button key={i} type="button" onClick={() => handlePickStockImage(opt)} className={`relative aspect-[4/3] w-full rounded-lg overflow-hidden border-2 transition-all group ${generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
+                      {regeneratingStockIndex === i && <div className="absolute inset-0 flex items-center justify-center bg-gray-900/40 z-10"><svg className="animate-spin w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>}
+                      <img src={opt.url} alt="" className="w-full h-full object-cover" />
+                      {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && <span className="absolute top-1 right-1 w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
+                      <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1 flex items-center justify-between">
+                        <span className="text-[9px] font-medium text-white/90">Stock</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }} disabled={regeneratingStockIndex === i} className="text-[9px] font-medium text-white/80 hover:text-white disabled:opacity-50">New</button>
+                      </span>
+                    </button>
                   ))
                 )}
-                {/* AI image */}
-                <div className="flex flex-col">
-                  <button type="button" onClick={() => { if (step3AIImage) { setAppliedBrandingForImageUrl(null); setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' }); setGeneratedImageId(step3AIImage.generated_image_id || null); setSelectedStockImage(null) } else { handleGenerateStep3AiImage() } }} disabled={generatingAiImage || imagesRemaining === 0} className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all flex flex-col items-center justify-center bg-white ${generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}>
-                    {generatingAiImage ? (
-                      <svg className="animate-spin w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    ) : step3AIImage ? (
-                      <>
-                        <img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
-                        {generatedImage?.source === 'ai' && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white z-10"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                        <span className="text-xs text-gray-600">AI</span>
-                        {imagesRemaining === 0 && <span className="text-[10px] text-red-600 mt-0.5">Limit reached</span>}
-                      </>
-                    )}
-                  </button>
-                  <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                    <span className="text-[10px] font-medium text-gray-600">AI</span>
-                    {step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? (
-                      <div ref={aiRegenerateMenuRef} className="relative">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); setAiRegenerateMenuOpen(!aiRegenerateMenuOpen) }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 flex items-center gap-0.5">New <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></button>
-                        {aiRegenerateMenuOpen && (
-                          <div className="absolute right-0 top-full mt-0.5 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 max-h-64 overflow-y-auto">
-                            <button type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage() }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50 font-medium">Same style</button>
-                            <div className="border-t border-gray-100 my-0.5" />
-                            {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
-                              <button key={key} type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage(key) }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">
-                                <span className="mr-1">{config.icon}</span> {config.name}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : !step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? (
-                      <button type="button" onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }} className="text-[10px] font-medium text-teal-600 hover:underline">Generate</button>
-                    ) : null}
-                  </div>
-                </div>
+                {/* AI image — compact */}
+                <button type="button" onClick={() => { if (step3AIImage) { setAppliedBrandingForImageUrl(null); setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' }); setGeneratedImageId(step3AIImage.generated_image_id || null); setSelectedStockImage(null) } else { handleGenerateStep3AiImage() } }} disabled={generatingAiImage || imagesRemaining === 0} className={`relative aspect-[4/3] w-full rounded-lg overflow-hidden border-2 transition-all flex flex-col items-center justify-center bg-white group ${generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}>
+                  {generatingAiImage ? (
+                    <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  ) : step3AIImage ? (
+                    <>
+                      <img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
+                      {generatedImage?.source === 'ai' && <span className="absolute top-1 right-1 w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center text-white z-10"><svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6 text-gray-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <span className="text-[10px] text-gray-500">AI</span>
+                      {imagesRemaining === 0 && <span className="text-[9px] text-red-500">Limit</span>}
+                    </>
+                  )}
+                  {step3AIImage && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1 flex items-center justify-between">
+                      <span className="text-[9px] font-medium text-white/90">AI</span>
+                      {!generatingAiImage && imagesRemaining !== 0 && (
+                        <div ref={aiRegenerateMenuRef} className="relative">
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setAiRegenerateMenuOpen(!aiRegenerateMenuOpen) }} className="text-[9px] font-medium text-white/80 hover:text-white flex items-center gap-0.5">New <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></button>
+                          {aiRegenerateMenuOpen && (
+                            <div className="absolute right-0 bottom-full mb-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 max-h-64 overflow-y-auto">
+                              <button type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage() }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50 font-medium">Same style</button>
+                              <div className="border-t border-gray-100 my-0.5" />
+                              {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
+                                <button key={key} type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage(key) }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">
+                                  <span className="mr-1">{config.icon}</span> {config.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Compare Styles */}
+            {/* Compare Styles — inline */}
             <div className="mb-3 flex items-center gap-2">
               <button
                 type="button"
@@ -2333,95 +2345,98 @@ export default function CreateContentPage() {
                   <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Style Comparison</p>
                   <button type="button" onClick={() => setShowCompare(false)} className="text-[10px] text-gray-400 hover:text-gray-600">Close</button>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {compareImages.map((img, i) => (
-                    <div key={i} className="flex flex-col">
-                      <button
-                        type="button"
-                        onClick={() => handlePickCompareImage(img)}
-                        disabled={!img.url || img.loading}
-                        className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 transition-all ${img.url && generatedImage?.url === img.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${!img.url && !img.loading ? 'bg-red-50' : 'bg-white'}`}
-                      >
-                        {img.loading ? (
-                          <div className="flex items-center justify-center h-full">
-                            <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                          </div>
-                        ) : img.url ? (
-                          <img src={img.url} alt={img.style} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-xs text-red-400">Failed</div>
-                        )}
-                      </button>
-                      <div className="px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-white text-center">
-                        <span className="text-[10px] font-medium text-gray-700">
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handlePickCompareImage(img)}
+                      disabled={!img.url || img.loading}
+                      className={`relative aspect-[4/3] w-full rounded-lg overflow-hidden border-2 transition-all ${img.url && generatedImage?.url === img.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${!img.url && !img.loading ? 'bg-red-50' : 'bg-white'}`}
+                    >
+                      {img.loading ? (
+                        <div className="flex items-center justify-center h-full">
+                          <svg className="animate-spin w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        </div>
+                      ) : img.url ? (
+                        <img src={img.url} alt={img.style} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-xs text-red-400">Failed</div>
+                      )}
+                      <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1 text-center">
+                        <span className="text-[9px] font-medium text-white">
                           {(IMAGE_STYLES[img.style as ImageStyleKey]?.icon || '')} {IMAGE_STYLES[img.style as ImageStyleKey]?.name || img.style}
                         </span>
-                      </div>
-                    </div>
+                      </span>
+                    </button>
                   ))}
                 </div>
-                <p className="text-[10px] text-gray-400 mt-2 text-center">Click an image to select it</p>
+                <p className="text-[10px] text-gray-400 mt-1.5 text-center">Click an image to select it</p>
               </div>
             )}
 
-            {/* Row 2: My Library */}
-            {(libraryImages.length > 0 || libraryLoading) && (
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">My Library</p>
-                  <a href="/dashboard/image-library" className="text-[11px] font-medium text-teal-600 hover:underline">Browse all</a>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {libraryLoading ? (
-                    [...Array(4)].map((_, i) => <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />)
-                  ) : (
-                    libraryImages.slice(0, 4).map(img => (
-                      <button key={img.id} type="button" onClick={() => handlePickLibraryImage(img.public_url)} className={`relative aspect-square w-full rounded-lg overflow-hidden border-2 transition-all ${generatedImage?.url === img.public_url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
-                        <img src={img.public_url} alt={img.filename} className="w-full h-full object-cover" />
-                        {generatedImage?.url === img.public_url && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Row 3: Upload + Take Photo */}
-            <div className="mb-2">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Your own</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {/* Upload */}
-                <div className="flex flex-col">
-                  <button type="button" onClick={() => step3UploadInputRef.current?.click()} className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 border-dashed transition-all flex flex-col items-center justify-center bg-white ${generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'}`}>
-                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    {generatedImage?.source === 'upload' ? (
-                      <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />
-                    ) : (
-                      <>
-                        <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                        <span className="text-xs text-gray-600">Upload</span>
-                      </>
-                    )}
-                  </button>
-                  <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                    <span className="text-[10px] font-medium text-gray-600">{generatedImage?.source === 'upload' ? 'Your image' : 'Upload'}</span>
-                    {generatedImage?.source === 'upload' && <button type="button" onClick={(e) => { e.stopPropagation(); step3UploadInputRef.current?.click() }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600">Replace</button>}
-                  </div>
-                </div>
-                {/* Take Photo */}
-                <div className="flex flex-col">
-                  <button type="button" onClick={() => step3CameraInputRef.current?.click()} className="relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/30 transition-all flex flex-col items-center justify-center bg-white">
-                    <input ref={step3CameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span className="text-xs text-gray-600">Take photo</span>
-                  </button>
-                  <div className="px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                    <span className="text-[10px] font-medium text-gray-600">Camera</span>
-                  </div>
-                </div>
-              </div>
+            {/* Action buttons: Upload, Camera, Brand Images */}
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
+              <input ref={step3CameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
+              <button type="button" onClick={() => step3UploadInputRef.current?.click()} className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                Upload image
+              </button>
+              <button type="button" onClick={() => step3CameraInputRef.current?.click()} className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Take photo
+              </button>
+              <button type="button" onClick={() => openBrandImagesModal()} className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Brand Images
+                {libraryImages.length > 0 && <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-gray-100 text-[9px] font-semibold text-gray-500">{libraryImages.length}+</span>}
+              </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">Stock from Unsplash · AI uses your quota · Uploads auto-save to your library.</p>
+            <p className="text-[10px] text-gray-400">Stock from Unsplash · AI uses your quota · Uploads auto-save to your library.</p>
+
+            {/* Brand Images Modal */}
+            {showBrandImagesModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowBrandImagesModal(false)}>
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Brand Images</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Select an image from your library</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a href="/dashboard/image-library" className="text-xs font-medium text-teal-600 hover:underline">Manage library</a>
+                      <button type="button" onClick={() => setShowBrandImagesModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-5">
+                    {allLibraryLoading ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {[...Array(8)].map((_, i) => <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />)}
+                      </div>
+                    ) : allLibraryImages.length === 0 ? (
+                      <div className="text-center py-12">
+                        <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        <p className="text-sm text-gray-500 mb-1">No images yet</p>
+                        <p className="text-xs text-gray-400">Upload images via the Brand Images page or the Upload button.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                        {allLibraryImages.map(img => (
+                          <button key={img.id} type="button" onClick={() => { handlePickLibraryImage(img.public_url); setShowBrandImagesModal(false) }} className={`relative aspect-square w-full rounded-lg overflow-hidden border-2 transition-all hover:shadow-md ${generatedImage?.url === img.public_url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
+                            <img src={img.public_url} alt={img.filename} className="w-full h-full object-cover" loading="lazy" />
+                            {generatedImage?.url === img.public_url && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Progress Bar for Regeneration */}
@@ -3050,85 +3065,56 @@ export default function CreateContentPage() {
             <p className="text-xs text-gray-500 mt-2">Ready to save to your library when you're done.</p>
           </div>
           
-          {/* Step 3: Choose your image — row-based layout */}
+          {/* Step 3: Choose your image — compact layout */}
           <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.28) }}>
             <h3 className="text-sm font-semibold text-gray-900 mb-1">Pick the look that fits your message</h3>
-            <p className="text-xs text-gray-500 mb-4">Then add your logo, colours and text below.</p>
+            <p className="text-xs text-gray-500 mb-3">Then add your logo, colours and text below.</p>
 
-            {/* Row 1: Suggested — 3 stock + 1 AI */}
+            {/* Suggested images — compact grid */}
             <div className="mb-3">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Suggested</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {step3StockLoading ? [...Array(3)].map((_, i) => <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />) : stockImageOptions.slice(0, 3).map((opt, i) => (
-                  <div key={i} className="flex flex-col">
-                    <button type="button" onClick={() => handlePickStockImage(opt)} className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all ${generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
-                      {regeneratingStockIndex === i && <div className="absolute inset-0 flex items-center justify-center bg-gray-900/40 z-10"><svg className="animate-spin w-8 h-8 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>}
-                      <img src={opt.url} alt="" className="w-full h-full object-cover" />
-                      {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
-                    </button>
-                    <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                      <span className="text-[10px] font-medium text-gray-600">Stock</span>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }} disabled={regeneratingStockIndex === i} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 disabled:opacity-50">New</button>
-                    </div>
-                  </div>
+              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1.5">Suggested</p>
+              <div className="grid grid-cols-4 gap-2">
+                {step3StockLoading ? [...Array(3)].map((_, i) => <div key={i} className="aspect-[4/3] rounded-lg bg-gray-200 animate-pulse" />) : stockImageOptions.slice(0, 3).map((opt, i) => (
+                  <button key={i} type="button" onClick={() => handlePickStockImage(opt)} className={`relative aspect-[4/3] w-full rounded-lg overflow-hidden border-2 transition-all group ${generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
+                    {regeneratingStockIndex === i && <div className="absolute inset-0 flex items-center justify-center bg-gray-900/40 z-10"><svg className="animate-spin w-6 h-6 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg></div>}
+                    <img src={opt.url} alt="" className="w-full h-full object-cover" />
+                    {generatedImage?.source === 'stock' && selectedStockImage?.url === opt.url && <span className="absolute top-1 right-1 w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
+                    <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1 flex items-center justify-between">
+                      <span className="text-[9px] font-medium text-white/90">Stock</span>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); handleRegenerateStockSlot(i) }} disabled={regeneratingStockIndex === i} className="text-[9px] font-medium text-white/80 hover:text-white disabled:opacity-50">New</button>
+                    </span>
+                  </button>
                 ))}
-                <div className="flex flex-col">
-                  <button type="button" onClick={() => { if (step3AIImage) { setAppliedBrandingForImageUrl(null); setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' }); setGeneratedImageId(step3AIImage.generated_image_id || null); setSelectedStockImage(null) } else { handleGenerateStep3AiImage() } }} disabled={generatingAiImage || imagesRemaining === 0} className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 transition-all flex flex-col items-center justify-center bg-white ${generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}>
-                    {generatingAiImage ? <svg className="animate-spin w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : step3AIImage ? <><img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />{generatedImage?.source === 'ai' && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white z-10"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}</> : <><svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span className="text-xs text-gray-600">AI</span>{imagesRemaining === 0 && <span className="text-[10px] text-red-600 mt-0.5">Limit reached</span>}</>}
-                  </button>
-                  <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                    <span className="text-[10px] font-medium text-gray-600">AI</span>
-                    {step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? <button type="button" onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }} className="text-[10px] font-medium text-teal-600 hover:underline">New</button> : !step3AIImage && !generatingAiImage && imagesRemaining !== 0 ? <button type="button" onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }} className="text-[10px] font-medium text-teal-600 hover:underline">Generate</button> : null}
-                  </div>
-                </div>
+                {/* AI image — compact */}
+                <button type="button" onClick={() => { if (step3AIImage) { setAppliedBrandingForImageUrl(null); setGeneratedImage({ url: step3AIImage.url, style: step3AIImage.style, generatedAt: new Date().toISOString(), source: 'ai' }); setGeneratedImageId(step3AIImage.generated_image_id || null); setSelectedStockImage(null) } else { handleGenerateStep3AiImage() } }} disabled={generatingAiImage || imagesRemaining === 0} className={`relative aspect-[4/3] w-full rounded-lg overflow-hidden border-2 transition-all flex flex-col items-center justify-center bg-white group ${generatedImage?.source === 'ai' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${(generatingAiImage || imagesRemaining === 0) ? 'opacity-70' : ''}`}>
+                  {generatingAiImage ? <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : step3AIImage ? <><img src={step3AIImage.url} alt="" className="w-full h-full object-cover absolute inset-0" />{generatedImage?.source === 'ai' && <span className="absolute top-1 right-1 w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center text-white z-10"><svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}</> : <><svg className="w-6 h-6 text-gray-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span className="text-[10px] text-gray-500">AI</span>{imagesRemaining === 0 && <span className="text-[9px] text-red-500">Limit</span>}</>}
+                  {step3AIImage && (
+                    <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-1.5 py-1 flex items-center justify-between">
+                      <span className="text-[9px] font-medium text-white/90">AI</span>
+                      {!generatingAiImage && imagesRemaining !== 0 && <button type="button" onClick={(e) => { e.stopPropagation(); handleGenerateStep3AiImage() }} className="text-[9px] font-medium text-white/80 hover:text-white">New</button>}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* Row 2: My Library */}
-            {(libraryImages.length > 0 || libraryLoading) && (
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">My Library</p>
-                  <a href="/dashboard/image-library" className="text-[11px] font-medium text-teal-600 hover:underline">Browse all</a>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {libraryLoading ? [...Array(4)].map((_, i) => <div key={i} className="aspect-square rounded-lg bg-gray-200 animate-pulse" />) : libraryImages.slice(0, 4).map(img => (
-                    <button key={img.id} type="button" onClick={() => handlePickLibraryImage(img.public_url)} className={`relative aspect-square w-full rounded-lg overflow-hidden border-2 transition-all ${generatedImage?.url === img.public_url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'}`}>
-                      <img src={img.public_url} alt={img.filename} className="w-full h-full object-cover" />
-                      {generatedImage?.url === img.public_url && <span className="absolute top-1 right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-white"><svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Row 3: Upload + Take Photo */}
-            <div className="mb-2">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Your own</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="flex flex-col">
-                  <button type="button" onClick={() => step3UploadInputRef.current?.click()} className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 border-dashed transition-all flex flex-col items-center justify-center bg-white ${generatedImage?.source === 'upload' ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-300 hover:border-teal-400 hover:bg-teal-50/30'}`}>
-                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    {generatedImage?.source === 'upload' ? <img src={generatedImage.url} alt="" className="w-full h-full object-cover absolute inset-0" /> : <><svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg><span className="text-xs text-gray-600">Upload</span></>}
-                  </button>
-                  <div className="flex items-center justify-between px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                    <span className="text-[10px] font-medium text-gray-600">{generatedImage?.source === 'upload' ? 'Your image' : 'Upload'}</span>
-                    {generatedImage?.source === 'upload' && <button type="button" onClick={(e) => { e.stopPropagation(); step3UploadInputRef.current?.click() }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600">Replace</button>}
-                  </div>
-                </div>
-                <div className="flex flex-col">
-                  <button type="button" onClick={() => step3CameraInputRef.current?.click()} className="relative aspect-square w-full rounded-t-lg overflow-hidden border-2 border-b-0 border-dashed border-gray-300 hover:border-teal-400 hover:bg-teal-50/30 transition-all flex flex-col items-center justify-center bg-white">
-                    <input ref={step3CameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span className="text-xs text-gray-600">Take photo</span>
-                  </button>
-                  <div className="px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-gray-50">
-                    <span className="text-[10px] font-medium text-gray-600">Camera</span>
-                  </div>
-                </div>
-              </div>
+            {/* Action buttons: Upload, Camera, Brand Images */}
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <button type="button" onClick={() => step3UploadInputRef.current?.click()} className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                Upload image
+              </button>
+              <button type="button" onClick={() => step3CameraInputRef.current?.click()} className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Take photo
+              </button>
+              <button type="button" onClick={() => openBrandImagesModal()} className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                Brand Images
+                {libraryImages.length > 0 && <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-gray-100 text-[9px] font-semibold text-gray-500">{libraryImages.length}+</span>}
+              </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">Stock from Unsplash · AI uses your quota · Uploads auto-save to your library.</p>
+            <p className="text-[10px] text-gray-400">Stock from Unsplash · AI uses your quota · Uploads auto-save to your library.</p>
           </div>
           
           {/* Progress Bar for Regeneration */}
