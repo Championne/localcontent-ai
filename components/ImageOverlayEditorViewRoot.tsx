@@ -183,16 +183,16 @@ export default function ImageOverlayEditorViewRoot(props: {
 
         <div className="flex-1 p-4 flex flex-col items-center justify-center min-w-0" style={{ backgroundColor: sidebarBg }}>
           <div
-            className="relative rounded-lg overflow-hidden w-full max-w-[480px] aspect-square shadow-sm"
+            className="relative rounded-lg w-full max-w-[480px] aspect-square shadow-sm"
             style={frameWrapperStyle}
           >
             <div
               ref={p.containerRef as React.RefObject<HTMLDivElement>}
-              className="relative w-full h-full overflow-hidden"
+              className="relative w-full h-full"
               style={containerStyle}
             >
               <div
-                className="relative w-full h-full overflow-hidden"
+                className="relative w-full h-full overflow-hidden rounded-lg"
                 style={
                   p.frame?.style === 'double'
                     ? {
@@ -259,7 +259,10 @@ export default function ImageOverlayEditorViewRoot(props: {
 
               {p.overlays.map(overlay => {
                 const borderHex = p.overlayBorderColors[overlay.id] || p.getHex('primary')
-                const showPanelLeft = overlay.x > 55
+                const isNearBottom = overlay.y > 55
+                const isNearTop = overlay.y < 20
+                const showAbove = isNearBottom && !isNearTop
+                const showPanelLeft = !showAbove && overlay.x > 55
                 const isPhoto = overlay.type === 'photo'
                 return (
                   <div
@@ -286,7 +289,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                       />
                     </span>
                     <div
-                      className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                      className={`absolute opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showAbove ? 'bottom-full mb-2 left-0' : showPanelLeft ? 'right-full mr-2 top-1/2 -translate-y-1/2' : 'left-full ml-2 top-1/2 -translate-y-1/2'}`}
                       style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
@@ -311,13 +314,17 @@ export default function ImageOverlayEditorViewRoot(props: {
                 )
               })}
               {p.textOverlays.map((t) => {
-                const showPanelLeft = t.x > 60
                 const isRightAnchored = t.x > 50
+                const isNearBottom = t.y > 60
+                const isNearTop = t.y < 25
+                // Show panel above when near bottom, below when near top, otherwise to the side
+                const showAbove = isNearBottom && !isNearTop
+                const showPanelLeft = !showAbove && t.x > 60
                 return (
                 <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: `translate(${isRightAnchored ? '-100%' : '0'}, -50%)`, whiteSpace: 'nowrap' }}>
                   <span className="font-bold px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter', WebkitTextStroke: '0.5px rgba(0,0,0,0.5)', textShadow: '0 1px 3px rgba(0,0,0,0.6), 0 0px 8px rgba(0,0,0,0.3)' }}>{t.text}</span>
                   <div
-                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                    className={`absolute opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showAbove ? 'bottom-full mb-2 left-0' : showPanelLeft ? 'right-full mr-2 top-1/2 -translate-y-1/2' : 'left-full ml-2 top-1/2 -translate-y-1/2'}`}
                     style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
