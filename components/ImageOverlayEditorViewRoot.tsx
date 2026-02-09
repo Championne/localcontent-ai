@@ -308,6 +308,17 @@ export default function ImageOverlayEditorViewRoot(props: {
                   />
                 </>
               )}
+              {/* Classic painting frame: glass reflection effect */}
+              {p.frame?.style === 'classic' && (
+                <div
+                  className="absolute inset-0 pointer-events-none z-[2]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.02) 70%, rgba(255,255,255,0) 100%)',
+                    mixBlendMode: 'screen',
+                  }}
+                  aria-hidden
+                />
+              )}
               {(p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper') && (
                 <div
                   className="absolute inset-0 pointer-events-none z-[2]"

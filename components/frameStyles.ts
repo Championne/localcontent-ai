@@ -44,11 +44,19 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
 
   // Background
   if (fs === 'classic') {
-    base.background =
-      'linear-gradient(135deg, #f5e6a8 0%, #e8c547 25%, #b8860b 55%, #7d6510 85%, #5c4a1a 100%), ' +
-      'linear-gradient(315deg, rgba(0,0,0,0.15) 0%, transparent 40%)'
-    base.boxShadow =
-      'inset 0 0 0 1px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,254,248,0.4)'
+    // Gallery painting frame: dark ornate outer frame with gold tones
+    base.border = '18px solid #3d2b1f'
+    base.borderImage = 'linear-gradient(135deg, #f5e6a8 0%, #c9a227 15%, #8b6914 35%, #5c4a1a 55%, #7d6510 70%, #b8860b 85%, #e8c547 100%) 1'
+    base.padding = '12px' // White mat area between frame and image
+    base.background = '#faf8f2' // Off-white mat colour
+    base.boxShadow = [
+      // Shadow on the mat (inner)
+      'inset 0 0 12px rgba(0,0,0,0.15)',
+      'inset 0 0 3px rgba(0,0,0,0.08)',
+      // Wall shadow (outer depth)
+      '0 10px 30px rgba(0,0,0,0.45)',
+      '0 4px 12px rgba(0,0,0,0.25)',
+    ].join(', ')
   } else if (fs === 'wooden') {
     // Realistic wooden frame: grain texture + miter joint borders + wall shadow
     base.background = [
@@ -169,7 +177,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
   }
 
   const shadowMap: Record<string, string> = {
-    classic: 'inset 0 0 0 2px rgba(255,255,255,0.5)',
+    classic: 'inset 2px 2px 6px rgba(0,0,0,0.25), inset -1px -1px 3px rgba(0,0,0,0.10), inset 0 0 0 1px rgba(92,74,26,0.20)',
     wooden: 'inset 2px 2px 5px rgba(0,0,0,0.50), inset -1px -1px 3px rgba(0,0,0,0.20), inset 0 0 0 1px rgba(0,0,0,0.15)',
     shadow: '0 24px 48px rgba(0,0,0,0.4), 0 12px 24px rgba(0,0,0,0.25)',
     gold: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(191,149,63,0.3)',

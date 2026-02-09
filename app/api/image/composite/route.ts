@@ -780,74 +780,130 @@ export async function POST(request: Request) {
           ])
           .toBuffer()
       }
-      // Classic painting frame: layered antique gold (outer dark band, main ornate band, inner smooth band, rabbet)
+      // Classic painting frame: ornate gold with white mat, glass overlay, wall shadow
       else if (style === 'classic') {
-        const outerBand = 4
-        const mainBand = 18
-        const transitionBand = 2
-        const innerBand = 8
-        const innerDeco = 2
-        const rabbet = 1
-        const frameWidth = outerBand + mainBand + transitionBand + innerBand + innerDeco + rabbet
-        const antiqueGold = {
-          dark: '#5c4a1a',
-          midDark: '#7d6510',
-          mid: '#a67c32',
-          midLight: '#c9a227',
-          light: '#e8c547',
-          highlight: '#f5e6a8',
-          rabbet: '#3d3208',
+        const g = {
+          dark: '#5c4a1a', midDark: '#7d6510', mid: '#a67c32', midLight: '#c9a227',
+          light: '#e8c547', highlight: '#f5e6a8', rabbet: '#3d3208',
+          // Per-side lighting
+          sTop: ['#f5e6a8', '#e8c547', '#a67c32'],
+          sRight: ['#c9a227', '#8b6914', '#5c4a1a'],
+          sBottom: ['#7d6510', '#5c4a1a', '#3d2b1f'],
+          sLeft: ['#e8c547', '#a67c32', '#7d6510'],
         }
+        const ornateW = 20 // ornate frame band width
+        const matW = 12    // white mat width
+        const totalFrame = ornateW + matW
+
+        // 1. Add white mat around the photo
         composited = await sharp(composited)
-          .extend({ top: frameWidth, bottom: frameWidth, left: frameWidth, right: frameWidth, background: { r: 61, g: 50, b: 26, alpha: 1 } })
+          .extend({ top: matW, bottom: matW, left: matW, right: matW, background: { r: 250, g: 248, b: 242, alpha: 1 } })
           .toBuffer()
-        const meta = await sharp(composited).metadata()
-        const fw = meta.width!
-        const fh = meta.height!
-        const paintingSvg = Buffer.from(
-          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="goldMain" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${antiqueGold.highlight}"/><stop offset="35%" stop-color="${antiqueGold.light}"/><stop offset="70%" stop-color="${antiqueGold.mid}"/><stop offset="100%" stop-color="${antiqueGold.midDark}"/></linearGradient>
-              <linearGradient id="goldInner" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${antiqueGold.light}"/><stop offset="100%" stop-color="${antiqueGold.mid}"/></linearGradient>
-              <linearGradient id="goldTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="${antiqueGold.midDark}"/><stop offset="100%" stop-color="${antiqueGold.highlight}"/></linearGradient>
-              <linearGradient id="goldRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${antiqueGold.light}"/><stop offset="100%" stop-color="${antiqueGold.dark}"/></linearGradient>
-              <linearGradient id="goldBottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${antiqueGold.midLight}"/><stop offset="100%" stop-color="${antiqueGold.dark}"/></linearGradient>
-              <linearGradient id="goldLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${antiqueGold.highlight}"/><stop offset="100%" stop-color="${antiqueGold.midDark}"/></linearGradient>
-            </defs>
-            <!-- Outer dark band -->
-            <rect x="0" y="0" width="${fw}" height="${frameWidth}" fill="${antiqueGold.dark}"/>
-            <rect x="${fw - frameWidth}" y="0" width="${frameWidth}" height="${fh}" fill="${antiqueGold.dark}"/>
-            <rect x="0" y="${fh - frameWidth}" width="${fw}" height="${frameWidth}" fill="${antiqueGold.dark}"/>
-            <rect x="0" y="0" width="${frameWidth}" height="${fh}" fill="${antiqueGold.dark}"/>
-            <!-- Main ornate band (gradient per side for 3D) -->
-            <rect x="${outerBand}" y="${outerBand}" width="${fw - 2 * outerBand}" height="${mainBand}" fill="url(#goldTop)"/>
-            <rect x="${fw - outerBand - mainBand}" y="${outerBand}" width="${mainBand}" height="${fh - 2 * outerBand}" fill="url(#goldRight)"/>
-            <rect x="${outerBand}" y="${fh - outerBand - mainBand}" width="${fw - 2 * outerBand}" height="${mainBand}" fill="url(#goldBottom)"/>
-            <rect x="${outerBand}" y="${outerBand}" width="${mainBand}" height="${fh - 2 * outerBand}" fill="url(#goldLeft)"/>
-            <!-- Transition band (recessed) -->
-            <rect x="${outerBand + mainBand}" y="${outerBand + mainBand}" width="${fw - 2 * (outerBand + mainBand)}" height="${transitionBand}" fill="${antiqueGold.midDark}"/>
-            <rect x="${fw - outerBand - mainBand - transitionBand}" y="${outerBand + mainBand}" width="${transitionBand}" height="${fh - 2 * (outerBand + mainBand)}" fill="${antiqueGold.midDark}"/>
-            <rect x="${outerBand + mainBand}" y="${fh - outerBand - mainBand - transitionBand}" width="${fw - 2 * (outerBand + mainBand)}" height="${transitionBand}" fill="${antiqueGold.midDark}"/>
-            <rect x="${outerBand + mainBand}" y="${outerBand + mainBand}" width="${transitionBand}" height="${fh - 2 * (outerBand + mainBand)}" fill="${antiqueGold.midDark}"/>
-            <!-- Inner smooth band -->
-            <rect x="${outerBand + mainBand + transitionBand}" y="${outerBand + mainBand + transitionBand}" width="${fw - 2 * (outerBand + mainBand + transitionBand)}" height="${innerBand}" fill="url(#goldInner)"/>
-            <rect x="${fw - outerBand - mainBand - transitionBand - innerBand}" y="${outerBand + mainBand + transitionBand}" width="${innerBand}" height="${fh - 2 * (outerBand + mainBand + transitionBand)}" fill="url(#goldInner)"/>
-            <rect x="${outerBand + mainBand + transitionBand}" y="${fh - outerBand - mainBand - transitionBand - innerBand}" width="${fw - 2 * (outerBand + mainBand + transitionBand)}" height="${innerBand}" fill="url(#goldInner)"/>
-            <rect x="${outerBand + mainBand + transitionBand}" y="${outerBand + mainBand + transitionBand}" width="${innerBand}" height="${fh - 2 * (outerBand + mainBand + transitionBand)}" fill="url(#goldInner)"/>
-            <!-- Inner decorative edge (thin light line) -->
-            <rect x="${frameWidth - innerDeco - rabbet}" y="${frameWidth - innerDeco - rabbet}" width="${fw - 2 * (frameWidth - innerDeco - rabbet)}" height="${innerDeco}" fill="${antiqueGold.highlight}"/>
-            <rect x="${fw - frameWidth + rabbet}" y="${frameWidth - innerDeco - rabbet}" width="${innerDeco}" height="${fh - 2 * (frameWidth - innerDeco - rabbet)}" fill="${antiqueGold.highlight}"/>
-            <rect x="${frameWidth - innerDeco - rabbet}" y="${fh - frameWidth + rabbet}" width="${fw - 2 * (frameWidth - innerDeco - rabbet)}" height="${innerDeco}" fill="${antiqueGold.highlight}"/>
-            <rect x="${frameWidth - innerDeco - rabbet}" y="${frameWidth - innerDeco - rabbet}" width="${innerDeco}" height="${fh - 2 * (frameWidth - innerDeco - rabbet)}" fill="${antiqueGold.highlight}"/>
-            <!-- Rabbet (inner lip) -->
-            <rect x="${frameWidth - rabbet}" y="${frameWidth - rabbet}" width="${fw - 2 * (frameWidth - rabbet)}" height="${rabbet}" fill="${antiqueGold.rabbet}"/>
-            <rect x="${fw - frameWidth}" y="${frameWidth - rabbet}" width="${rabbet}" height="${fh - 2 * (frameWidth - rabbet)}" fill="${antiqueGold.rabbet}"/>
-            <rect x="${frameWidth - rabbet}" y="${fh - frameWidth}" width="${fw - 2 * (frameWidth - rabbet)}" height="${rabbet}" fill="${antiqueGold.rabbet}"/>
-            <rect x="${frameWidth - rabbet}" y="${frameWidth - rabbet}" width="${rabbet}" height="${fh - 2 * (frameWidth - rabbet)}" fill="${antiqueGold.rabbet}"/>
+
+        // 2. Mat inner shadow (photo recessed into mat)
+        const matMeta = await sharp(composited).metadata()
+        const matW2 = matMeta.width!
+        const matH2 = matMeta.height!
+        const matShadowSvg = Buffer.from(
+          `<svg width="${matW2}" height="${matH2}" xmlns="http://www.w3.org/2000/svg">
+            <rect x="${matW}" y="${matW}" width="${matW2 - 2 * matW}" height="3" fill="black" opacity="0.12"/>
+            <rect x="${matW}" y="${matW}" width="3" height="${matH2 - 2 * matW}" fill="black" opacity="0.10"/>
+            <rect x="${matW}" y="${matH2 - matW - 1}" width="${matW2 - 2 * matW}" height="1" fill="white" opacity="0.05"/>
+            <rect x="${matW2 - matW - 1}" y="${matW}" width="1" height="${matH2 - 2 * matW}" fill="white" opacity="0.04"/>
           </svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: paintingSvg, left: 0, top: 0 }])
+          .composite([{ input: matShadowSvg, left: 0, top: 0, blend: 'over' }])
+          .toBuffer()
+
+        // 3. Glass reflection overlay on the photo (before adding the ornate frame)
+        const glassSvg = Buffer.from(
+          `<svg width="${matW2}" height="${matH2}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="glassShine" x1="0" y1="0" x2="0.7" y2="0.7">
+                <stop offset="0%" stop-color="white" stop-opacity="0.12"/>
+                <stop offset="35%" stop-color="white" stop-opacity="0.04"/>
+                <stop offset="50%" stop-color="white" stop-opacity="0"/>
+                <stop offset="70%" stop-color="white" stop-opacity="0.02"/>
+                <stop offset="100%" stop-color="white" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <rect width="${matW2}" height="${matH2}" fill="url(#glassShine)"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: glassSvg, left: 0, top: 0, blend: 'screen' }])
+          .toBuffer()
+
+        // 4. Add ornate frame border
+        composited = await sharp(composited)
+          .extend({ top: ornateW, bottom: ornateW, left: ornateW, right: ornateW, background: { r: 92, g: 74, b: 26, alpha: 1 } })
+          .toBuffer()
+        const fMeta = await sharp(composited).metadata()
+        const fw = fMeta.width!
+        const fh = fMeta.height!
+
+        // Trapezoidal miter-joint panels with per-side directional gradients
+        const tl = '0,0', tr = `${fw},0`, br = `${fw},${fh}`, bl = `0,${fh}`
+        const itl = `${ornateW},${ornateW}`, itr = `${fw - ornateW},${ornateW}`
+        const ibr = `${fw - ornateW},${fh - ornateW}`, ibl = `${ornateW},${fh - ornateW}`
+        const iiw = fw - 2 * ornateW, iih = fh - 2 * ornateW
+
+        const frameSvg = Buffer.from(
+          `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="cTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="${g.sTop[2]}"/><stop offset="40%" stop-color="${g.sTop[1]}"/><stop offset="100%" stop-color="${g.sTop[0]}"/></linearGradient>
+              <linearGradient id="cRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${g.sRight[0]}"/><stop offset="50%" stop-color="${g.sRight[1]}"/><stop offset="100%" stop-color="${g.sRight[2]}"/></linearGradient>
+              <linearGradient id="cBottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${g.sBottom[0]}"/><stop offset="50%" stop-color="${g.sBottom[1]}"/><stop offset="100%" stop-color="${g.sBottom[2]}"/></linearGradient>
+              <linearGradient id="cLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${g.sLeft[2]}"/><stop offset="40%" stop-color="${g.sLeft[1]}"/><stop offset="100%" stop-color="${g.sLeft[0]}"/></linearGradient>
+              <linearGradient id="cShine" x1="0" y1="0" x2="0.6" y2="0.6">
+                <stop offset="0%" stop-color="white" stop-opacity="0.40"/>
+                <stop offset="20%" stop-color="white" stop-opacity="0.15"/>
+                <stop offset="40%" stop-color="white" stop-opacity="0"/>
+                <stop offset="100%" stop-color="white" stop-opacity="0"/>
+              </linearGradient>
+              <clipPath id="cFrameClip"><path fill-rule="evenodd" d="M0,0 h${fw} v${fh} h-${fw}Z M${ornateW},${ornateW} v${iih} h${iiw} v-${iih}Z"/></clipPath>
+            </defs>
+            <!-- Miter-joint side panels -->
+            <polygon points="${tl} ${tr} ${itr} ${itl}" fill="url(#cTop)"/>
+            <polygon points="${tr} ${br} ${ibr} ${itr}" fill="url(#cRight)"/>
+            <polygon points="${br} ${bl} ${ibl} ${ibr}" fill="url(#cBottom)"/>
+            <polygon points="${bl} ${tl} ${itl} ${ibl}" fill="url(#cLeft)"/>
+            <!-- Specular highlight sweep -->
+            <g clip-path="url(#cFrameClip)">
+              <rect width="${fw}" height="${fh}" fill="url(#cShine)"/>
+            </g>
+            <!-- Outer dark edge -->
+            <rect x="0" y="0" width="${fw}" height="${fh}" fill="none" stroke="${g.dark}" stroke-width="2"/>
+            <!-- Inner ornate edge (thin gold highlight where frame meets mat) -->
+            <rect x="${ornateW - 1}" y="${ornateW - 1}" width="${iiw + 2}" height="${iih + 2}" fill="none" stroke="${g.highlight}" stroke-width="1" opacity="0.6"/>
+            <!-- Corner miter diagonals -->
+            <line x1="0" y1="0" x2="${ornateW}" y2="${ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.5"/>
+            <line x1="${fw}" y1="0" x2="${fw - ornateW}" y2="${ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.4"/>
+            <line x1="${fw}" y1="${fh}" x2="${fw - ornateW}" y2="${fh - ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.6"/>
+            <line x1="0" y1="${fh}" x2="${ornateW}" y2="${fh - ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.4"/>
+          </svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: frameSvg, left: 0, top: 0 }])
+          .toBuffer()
+
+        // 5. Wall shadow: frame floating off the surface
+        const shPad = 14
+        const shadowBg = await sharp({
+          create: { width: fw + 2 * shPad, height: fh + 2 * shPad, channels: 4 as const, background: { r: 245, g: 247, b: 250, alpha: 255 } },
+        }).png().toBuffer()
+        const dropShadowSvg = Buffer.from(
+          `<svg width="${fw + 2 * shPad}" height="${fh + 2 * shPad}" xmlns="http://www.w3.org/2000/svg">
+            <defs><filter id="cSh"><feGaussianBlur stdDeviation="7"/></filter></defs>
+            <rect x="${shPad + 2}" y="${shPad + 5}" width="${fw}" height="${fh}" rx="1" fill="black" opacity="0.30" filter="url(#cSh)"/>
+          </svg>`
+        )
+        composited = await sharp(shadowBg)
+          .composite([
+            { input: dropShadowSvg, left: 0, top: 0, blend: 'over' },
+            { input: composited, left: shPad, top: shPad, blend: 'over' },
+          ])
           .toBuffer()
       }
       // Wooden frame: realistic grain texture, miter joints, inner bevel, wall shadow
