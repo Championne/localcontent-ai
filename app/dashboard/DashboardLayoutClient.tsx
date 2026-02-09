@@ -182,6 +182,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
       {/* Sidebar */}
       <aside className={`
         fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50
+        flex flex-col
         transform transition-transform duration-200 ease-in-out
         lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -288,7 +289,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         )}
         
         {/* Navigation */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 min-h-0 py-4 overflow-y-auto">
           <div className="px-3 mb-2">
             <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Menu</span>
           </div>
