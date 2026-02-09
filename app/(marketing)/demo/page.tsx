@@ -38,6 +38,7 @@ type DemoContentType = 'social-pack' | 'blog-post' | 'gmb-post' | 'email'
 export default function ExamplesPage() {
   const [selectedIndustry, setSelectedIndustry] = useState('random')
   const [lastGenerated, setLastGenerated] = useState<{ contentType: DemoContentType; data: GeneratedDemo } | null>(null)
+  const [resultLoading, setResultLoading] = useState<DemoContentType | null>(null)
 
   // Dynamic showcase examples — generated via AI on page load
   const [showcaseExamples, setShowcaseExamples] = useState<ShowcaseData[]>(
@@ -108,7 +109,9 @@ export default function ExamplesPage() {
             title="📱 Social Media Pack"
             description="6 platform-optimized posts (Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor) generated in one click"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
-            onGenerated={(data) => setLastGenerated({ contentType: 'social-pack', data })}
+            onGenerating={(ct) => { setResultLoading(ct as DemoContentType); setLastGenerated(null) }}
+            onGenerated={(data) => { setResultLoading(null); setLastGenerated({ contentType: 'social-pack', data }) }}
+            onError={() => setResultLoading(null)}
           />
 
           {/* Blog Post Demo */}
@@ -117,7 +120,9 @@ export default function ExamplesPage() {
             title="📝 Blog Post"
             description="SEO-optimized, 600-800 word articles that help you rank for local searches"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
-            onGenerated={(data) => setLastGenerated({ contentType: 'blog-post', data })}
+            onGenerating={(ct) => { setResultLoading(ct as DemoContentType); setLastGenerated(null) }}
+            onGenerated={(data) => { setResultLoading(null); setLastGenerated({ contentType: 'blog-post', data }) }}
+            onError={() => setResultLoading(null)}
           />
 
           {/* Google Business Post Demo */}
@@ -126,7 +131,9 @@ export default function ExamplesPage() {
             title="📍 Google Business Post"
             description="Engaging updates for your Google Business Profile that drive local traffic"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
-            onGenerated={(data) => setLastGenerated({ contentType: 'gmb-post', data })}
+            onGenerating={(ct) => { setResultLoading(ct as DemoContentType); setLastGenerated(null) }}
+            onGenerated={(data) => { setResultLoading(null); setLastGenerated({ contentType: 'gmb-post', data }) }}
+            onError={() => setResultLoading(null)}
           />
 
           {/* Email Newsletter Demo */}
@@ -135,9 +142,25 @@ export default function ExamplesPage() {
             title="📧 Email Newsletter"
             description="Professional newsletters with compelling subject lines and clear CTAs"
             industry={selectedIndustry !== 'random' ? selectedIndustry : undefined}
-            onGenerated={(data) => setLastGenerated({ contentType: 'email', data })}
+            onGenerating={(ct) => { setResultLoading(ct as DemoContentType); setLastGenerated(null) }}
+            onGenerated={(data) => { setResultLoading(null); setLastGenerated({ contentType: 'email', data }) }}
+            onError={() => setResultLoading(null)}
           />
         </div>
+
+        {/* Loading state while regenerating */}
+        {resultLoading && !lastGenerated && (
+          <div className="max-w-6xl mx-auto mt-8 w-full">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-12 text-center">
+              <svg className="animate-spin h-8 w-8 text-teal-500 mx-auto mb-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <p className="text-gray-600 font-medium">Generating {resultLoading === 'social-pack' ? 'Social Media Pack' : resultLoading === 'blog-post' ? 'Blog Post' : resultLoading === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'}...</p>
+              <p className="text-gray-400 text-sm mt-1">This may take a few seconds</p>
+            </div>
+          </div>
+        )}
 
         {/* Full-width generated result below all cards */}
         {lastGenerated && (

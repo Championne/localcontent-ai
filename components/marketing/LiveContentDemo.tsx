@@ -783,10 +783,14 @@ interface SingleDemoProps {
   showIndustryBadge?: boolean // Show industry badge in header
   /** When set, generated result is not rendered here; parent should render it in a full-width area */
   onGenerated?: (data: GeneratedDemo) => void
+  /** Called when (re)generation starts so parent can show loading state */
+  onGenerating?: (contentType: string) => void
+  /** Called when generation fails so parent can clear loading state */
+  onError?: () => void
 }
 
 // Single Content Type Demo
-export function SingleContentDemo({ contentType, title, description, compact = false, industry, autoGenerate = false, showIndustryBadge = false, onGenerated }: SingleDemoProps) {
+export function SingleContentDemo({ contentType, title, description, compact = false, industry, autoGenerate = false, showIndustryBadge = false, onGenerated, onGenerating, onError }: SingleDemoProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [demo, setDemo] = useState<GeneratedDemo | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -812,6 +816,8 @@ export function SingleContentDemo({ contentType, title, description, compact = f
   const generateDemoInternal = async (hasEmail = false, silent = false) => {
     setIsGenerating(true)
     setError(null)
+    // Notify parent that (re)generation started so it can clear stale results
+    if (!silent && onGenerating) onGenerating(contentType)
     
     try {
       const response = await fetch('/api/demo/generate', {
@@ -832,7 +838,7 @@ export function SingleContentDemo({ contentType, title, description, compact = f
           }, 100)
         }
       } else {
-        // Handle limit errors - but silently for auto-generate
+        // Handle limit errors
         if (!silent) {
           const errorData = data as DemoError
           if (errorData.requiresEmail) {
@@ -846,11 +852,17 @@ export function SingleContentDemo({ contentType, title, description, compact = f
         if (data.demoCount !== undefined) {
           setUsage(prev => prev ? { ...prev, demoCount: data.demoCount! } : null)
         }
+        // Re-show old result if generation failed (so user doesn't see empty space)
+        if (demo && onGenerated) onGenerated(demo)
+        else if (onError) onError()
       }
     } catch (err) {
       if (!silent) {
         setError('Failed to generate. Please try again.')
       }
+      // Re-show old result on error
+      if (demo && onGenerated) onGenerated(demo)
+      else if (onError) onError()
     } finally {
       setIsGenerating(false)
     }
@@ -1014,17 +1026,21 @@ export function SingleContentDemo({ contentType, title, description, compact = f
                 businessName={demo.businessName}
               />
             ) : contentType === 'gmb-post' ? (
-              <GMBPostDisplay 
-                content={demo.content as string} 
-                imageUrl={demo.imageUrl} 
-                businessName={demo.businessName}
-              />
+              <div className="max-w-md mx-auto">
+                <GMBPostDisplay 
+                  content={demo.content as string} 
+                  imageUrl={demo.imageUrl} 
+                  businessName={demo.businessName}
+                />
+              </div>
             ) : contentType === 'email' ? (
-              <EmailDisplay 
-                content={demo.content as string} 
-                imageUrl={demo.imageUrl} 
-                businessName={demo.businessName}
-              />
+              <div className="max-w-lg mx-auto">
+                <EmailDisplay 
+                  content={demo.content as string} 
+                  imageUrl={demo.imageUrl} 
+                  businessName={demo.businessName}
+                />
+              </div>
             ) : null}
           </div>
         )}
@@ -1078,23 +1094,29 @@ export function DemoResultView({
           </div>
         </div>
       ) : contentType === 'blog-post' ? (
-        <BlogPostDisplay
-          content={demo.content as string}
-          imageUrl={demo.imageUrl}
-          businessName={demo.businessName}
-        />
+        <div className="max-w-3xl mx-auto">
+          <BlogPostDisplay
+            content={demo.content as string}
+            imageUrl={demo.imageUrl}
+            businessName={demo.businessName}
+          />
+        </div>
       ) : contentType === 'gmb-post' ? (
-        <GMBPostDisplay
-          content={demo.content as string}
-          imageUrl={demo.imageUrl}
-          businessName={demo.businessName}
-        />
+        <div className="max-w-md mx-auto">
+          <GMBPostDisplay
+            content={demo.content as string}
+            imageUrl={demo.imageUrl}
+            businessName={demo.businessName}
+          />
+        </div>
       ) : contentType === 'email' ? (
-        <EmailDisplay
-          content={demo.content as string}
-          imageUrl={demo.imageUrl}
-          businessName={demo.businessName}
-        />
+        <div className="max-w-lg mx-auto">
+          <EmailDisplay
+            content={demo.content as string}
+            imageUrl={demo.imageUrl}
+            businessName={demo.businessName}
+          />
+        </div>
       ) : null}
     </div>
   )
