@@ -156,6 +156,23 @@ function CharacterCount({ count, platform }: { count: number; platform: string }
   )
 }
 
+// Preprocess AI-generated markdown so ReactMarkdown renders it correctly.
+// Fixes missing blank lines before headers, converts • bullets to markdown lists, etc.
+function preprocessMarkdown(raw: string): string {
+  let s = raw
+  // Normalise Windows line-endings
+  s = s.replace(/\r\n/g, '\n')
+  // Ensure a blank line before every markdown header (# … ######)
+  s = s.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+  // Also catch headers that follow text on the SAME line (no newline at all)
+  s = s.replace(/([^\n])(\s?#{1,6}\s)/g, '$1\n\n$2')
+  // Convert Unicode bullet (•) lines into markdown list items
+  s = s.replace(/(^|\n)\s*•\s*/g, '$1- ')
+  // Collapse 3+ consecutive blank lines into 2
+  s = s.replace(/\n{3,}/g, '\n\n')
+  return s.trim()
+}
+
 // Word count for blog posts
 function WordCount({ count }: { count: number }) {
   let status: 'optimal' | 'okay' | 'warning' = 'okay'
@@ -3184,14 +3201,14 @@ export default function CreateContentPage() {
                 
                 {/* Enhanced Typography Content */}
                 <div className={selectedTemplate === 'blog-post' ? "px-8 py-6" : "p-6"}>
-                  <article className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-3xl prose-h1:mb-6 prose-h1:leading-tight prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-xl prose-h3:mt-6 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-5 prose-strong:text-gray-900 prose-ul:my-4 prose-ul:space-y-2 prose-li:text-gray-600 prose-li:marker:text-teal-500 prose-a:text-teal-600">
-                    <ReactMarkdown>{generatedContent}</ReactMarkdown>
+                  <article className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-3xl prose-h1:mb-6 prose-h1:leading-tight prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-xl prose-h3:mt-6 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-5 prose-strong:text-gray-900 prose-ul:my-4 prose-ul:space-y-2 prose-li:text-gray-600" style={{ '--tw-prose-bullets': 'var(--brand-primary)', '--tw-prose-links': 'var(--brand-primary)' } as React.CSSProperties}>
+                    <ReactMarkdown>{preprocessMarkdown(generatedContent)}</ReactMarkdown>
                   </article>
                   
                   {/* Author Footer for Blog */}
                   {selectedTemplate === 'blog-post' && (
                     <div className="mt-8 pt-6 border-t border-gray-100 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-semibold">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-semibold" style={{ backgroundColor: hexToRgba(primary, 0.15), color: primary }}>
                         {businessName.charAt(0).toUpperCase()}
                       </div>
                       <div>
