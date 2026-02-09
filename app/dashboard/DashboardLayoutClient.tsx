@@ -1,10 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import WelcomeModal from '@/components/WelcomeModal'
+
+interface Business {
+  id: string
+  name: string
+  industry: string | null
+  logo_url: string | null
+  brand_primary_color?: string | null
+}
 
 interface DashboardLayoutClientProps {
   children: React.ReactNode
@@ -12,16 +20,35 @@ interface DashboardLayoutClientProps {
   isSalesUser?: boolean
 }
 
+/** Key used to persist the selected business ID across sessions */
+const BUSINESS_STORAGE_KEY = 'geospark_selected_business_id'
+
 export default function DashboardLayoutClient({ children, userName, isSalesUser = false }: DashboardLayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [checkingBusiness, setCheckingBusiness] = useState(true)
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  const [businessDropdownOpen, setBusinessDropdownOpen] = useState(false)
+  const businessDropdownRef = useRef<HTMLDivElement>(null)
   const [usage, setUsage] = useState<{
     content: { used: number; limit: number; unlimited: boolean; percentage: number }
     subscription: { plan: string }
   } | null>(null)
   const pathname = usePathname()
   const router = useRouter()
+
+  // Close business dropdown when clicking outside
+  useEffect(() => {
+    if (!businessDropdownOpen) return
+    const close = (e: MouseEvent) => {
+      if (businessDropdownRef.current && !businessDropdownRef.current.contains(e.target as Node)) {
+        setBusinessDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [businessDropdownOpen])
 
   // Check if user has any businesses and fetch usage on mount
   useEffect(() => {
@@ -30,9 +57,16 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         const response = await fetch('/api/business')
         if (response.ok) {
           const data = await response.json()
+          const list: Business[] = data.businesses || []
+          setBusinesses(list)
           // Show welcome modal if no businesses
-          if (!data.businesses || data.businesses.length === 0) {
+          if (list.length === 0) {
             setShowWelcome(true)
+          } else {
+            // Restore last selected business from localStorage, or default to first
+            const stored = localStorage.getItem(BUSINESS_STORAGE_KEY)
+            const match = list.find(b => b.id === stored)
+            setSelectedBusinessId(match ? match.id : list[0].id)
           }
         }
       } catch (err) {
@@ -57,6 +91,16 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
     checkBusiness()
     fetchUsage()
   }, [])
+
+  const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
+
+  const handleSelectBusiness = (id: string) => {
+    setSelectedBusinessId(id)
+    setBusinessDropdownOpen(false)
+    localStorage.setItem(BUSINESS_STORAGE_KEY, id)
+    // Dispatch a custom event so pages can react to the change
+    window.dispatchEvent(new CustomEvent('geospark:business-changed', { detail: { businessId: id } }))
+  }
 
   const handleWelcomeComplete = () => {
     setShowWelcome(false)
@@ -147,6 +191,81 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
             />
           </Link>
         </div>
+
+        {/* Business Selector */}
+        {businesses.length > 0 && (
+          <div className="px-3 pt-3 pb-1" ref={businessDropdownRef}>
+            <button
+              onClick={() => setBusinessDropdownOpen(!businessDropdownOpen)}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 transition-all text-left group"
+            >
+              {selectedBusiness?.logo_url ? (
+                <img src={selectedBusiness.logo_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 ring-1 ring-gray-100" />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
+                  style={{ backgroundColor: selectedBusiness?.brand_primary_color || '#0d9488' }}
+                >
+                  {selectedBusiness?.name?.charAt(0).toUpperCase() || '?'}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{selectedBusiness?.name || 'Select business'}</p>
+                {selectedBusiness?.industry && (
+                  <p className="text-[10px] text-gray-400 truncate leading-tight">{selectedBusiness.industry}</p>
+                )}
+              </div>
+              <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${businessDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown */}
+            {businessDropdownOpen && (
+              <div className="mt-1 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-50 relative">
+                {businesses.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => handleSelectBusiness(b.id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors ${
+                      selectedBusinessId === b.id ? 'bg-teal-50' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {b.logo_url ? (
+                      <img src={b.logo_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
+                        style={{ backgroundColor: b.brand_primary_color || '#0d9488' }}
+                      >
+                        {b.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm truncate ${selectedBusinessId === b.id ? 'font-semibold text-teal-700' : 'text-gray-700'}`}>{b.name}</p>
+                      {b.industry && <p className="text-[10px] text-gray-400 truncate leading-tight">{b.industry}</p>}
+                    </div>
+                    {selectedBusinessId === b.id && (
+                      <svg className="w-4 h-4 text-teal-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => { setBusinessDropdownOpen(false); setSidebarOpen(false) }}
+                  className="flex items-center gap-2 px-3 py-2.5 text-sm text-gray-500 hover:text-teal-600 hover:bg-gray-50 border-t border-gray-100 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add business
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Navigation */}
         <nav className="flex-1 py-4 overflow-y-auto">
