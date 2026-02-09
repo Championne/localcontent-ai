@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 
@@ -107,22 +108,33 @@ export async function POST(request: Request) {
         .composite([{ input: resizedLogo, left: boundedLeft, top: boundedTop }])
         .toBuffer()
 
-      // Optional: ring around circular overlays (profile photos) in brand colour
-      // Skip ring for non-circular logos — the logo's own shape defines its border
+      // Border ring around overlays in brand colour
       const ringHex = (typeof overlayBorderColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(overlayBorderColor))
         ? overlayBorderColor
         : (typeof brandPrimaryColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(brandPrimaryColor) ? brandPrimaryColor : null)
-      if (ringHex && isCircular) {
+      if (ringHex) {
         const ringPx = Math.max(2, Math.min(8, Math.round(logoWidth / 32)))
-        const cx = boundedLeft + (logoMeta.width || logoWidth) / 2
-        const cy = boundedTop + logoHeight / 2
-        const r = (logoMeta.width || logoWidth) / 2 + ringPx / 2
-        const ringSvg = Buffer.from(
-          `<svg width="${imgWidth}" height="${imgHeight}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringHex}" stroke-width="${ringPx}"/></svg>`
-        )
-        composited = await sharp(composited)
-          .composite([{ input: ringSvg, left: 0, top: 0 }])
-          .toBuffer()
+        const lw = logoMeta.width || logoWidth
+        if (isCircular) {
+          const cx = boundedLeft + lw / 2
+          const cy = boundedTop + logoHeight / 2
+          const r = lw / 2 + ringPx / 2
+          const ringSvg = Buffer.from(
+            `<svg width="${imgWidth}" height="${imgHeight}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringHex}" stroke-width="${ringPx}"/></svg>`
+          )
+          composited = await sharp(composited)
+            .composite([{ input: ringSvg, left: 0, top: 0 }])
+            .toBuffer()
+        } else {
+          // Rounded-rect border for logos
+          const br = Math.max(3, Math.round(Math.min(lw, logoHeight) * 0.06))
+          const ringSvg = Buffer.from(
+            `<svg width="${imgWidth}" height="${imgHeight}"><rect x="${boundedLeft - ringPx / 2}" y="${boundedTop - ringPx / 2}" width="${lw + ringPx}" height="${logoHeight + ringPx}" rx="${br}" ry="${br}" fill="none" stroke="${ringHex}" stroke-width="${ringPx}"/></svg>`
+          )
+          composited = await sharp(composited)
+            .composite([{ input: ringSvg, left: 0, top: 0 }])
+            .toBuffer()
+        }
       }
     }
 
@@ -1200,9 +1212,12 @@ export async function POST(request: Request) {
     const finalBuffer = await sharp(composited).jpeg({ quality: 90 }).toBuffer()
 
     // Upload to Supabase Storage (generated-images bucket)
+    // Prefer admin client (bypasses RLS) for storage; fall back to user client
+    const storageClient = getSupabaseAdmin() || supabase
     const filename = `${user.id}/branded_${Date.now()}.jpg`
     
-    const { error: uploadError } = await supabase.storage
+    let uploadOk = false
+    const { error: uploadError } = await storageClient.storage
       .from('generated-images')
       .upload(filename, finalBuffer, {
         contentType: 'image/jpeg',
@@ -1211,15 +1226,37 @@ export async function POST(request: Request) {
       })
 
     if (uploadError) {
-      console.error('Composite upload error:', uploadError.message, uploadError)
-      const message = uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')
-        ? 'Storage bucket is not set up. Please create a bucket named "generated-images" in Supabase Storage and allow authenticated uploads.'
-        : uploadError.message || 'Failed to save image'
-      return NextResponse.json({ error: message }, { status: 500 })
+      console.error('Composite upload error (primary):', uploadError.message, uploadError)
+      // Retry with the other client if admin was used and failed
+      if (storageClient !== supabase) {
+        const { error: retryErr } = await supabase.storage
+          .from('generated-images')
+          .upload(filename, finalBuffer, {
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+            upsert: true,
+          })
+        if (retryErr) {
+          console.error('Composite upload error (retry):', retryErr.message, retryErr)
+          const message = retryErr.message?.includes('Bucket not found') || retryErr.message?.includes('not found')
+            ? 'Storage bucket is not set up. Please create a bucket named "generated-images" in Supabase Storage and allow authenticated uploads.'
+            : retryErr.message || 'Failed to save image'
+          return NextResponse.json({ error: message }, { status: 500 })
+        }
+        uploadOk = true
+      } else {
+        const message = uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')
+          ? 'Storage bucket is not set up. Please create a bucket named "generated-images" in Supabase Storage and allow authenticated uploads.'
+          : uploadError.message || 'Failed to save image'
+        return NextResponse.json({ error: message }, { status: 500 })
+      }
+    } else {
+      uploadOk = true
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    // Get public URL (use whichever client succeeded)
+    const urlClient = uploadOk ? storageClient : supabase
+    const { data: urlData } = urlClient.storage
       .from('generated-images')
       .getPublicUrl(filename)
 

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 const BUCKET = 'generated-images'
@@ -55,7 +56,10 @@ export async function POST(request: Request) {
     const contentType = file.type.startsWith('image/') ? file.type : ext === 'png' ? 'image/png' : 'image/jpeg'
     const filename = `${user.id}/overlay_${Date.now()}.${ext}`
 
-    const { error: uploadError } = await supabase.storage
+    // Prefer admin client (bypasses RLS) for storage; fall back to user client
+    const storageClient = getSupabaseAdmin() || supabase
+
+    const { error: uploadError } = await storageClient.storage
       .from(BUCKET)
       .upload(filename, buffer, {
         contentType,
@@ -64,12 +68,28 @@ export async function POST(request: Request) {
       })
 
     if (uploadError) {
-      console.error('Upload overlay error:', uploadError.message ?? uploadError, uploadError)
-      const message = getUploadErrorMessage(uploadError)
-      return NextResponse.json({ error: message }, { status: 500 })
+      console.error('Upload overlay error (primary):', uploadError.message ?? uploadError, uploadError)
+      // Retry with user client if admin client was used and failed
+      if (storageClient !== supabase) {
+        const { error: retryErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(filename, buffer, {
+            contentType,
+            cacheControl: '3600',
+            upsert: true,
+          })
+        if (retryErr) {
+          console.error('Upload overlay error (retry):', retryErr.message ?? retryErr, retryErr)
+          const message = getUploadErrorMessage(retryErr)
+          return NextResponse.json({ error: message }, { status: 500 })
+        }
+      } else {
+        const message = getUploadErrorMessage(uploadError)
+        return NextResponse.json({ error: message }, { status: 500 })
+      }
     }
 
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filename)
+    const { data: urlData } = storageClient.storage.from(BUCKET).getPublicUrl(filename)
     return NextResponse.json({ url: urlData.publicUrl, success: true })
   } catch (error) {
     console.error('Upload overlay error:', error)

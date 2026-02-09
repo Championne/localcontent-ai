@@ -495,12 +495,17 @@ export default function ImageOverlayEditorViewRoot(props: {
                   >
                     <span
                       className={`block ${isPhoto ? 'w-full h-full rounded-full' : 'inline-block'}`}
-                      style={{ boxShadow: isPhoto ? `0 0 0 3px ${borderHex}` : 'none', borderRadius: isPhoto ? '9999px' : '0', ...(isPhoto ? {} : { display: 'block' }) }}
+                      style={{
+                        boxShadow: `0 0 0 3px ${borderHex}, 0 2px 8px rgba(0,0,0,0.15)`,
+                        borderRadius: isPhoto ? '9999px' : '6px',
+                        ...(isPhoto ? {} : { display: 'block', overflow: 'hidden' }),
+                      }}
                     >
                       <img
                         src={overlay.url}
                         alt=""
-                        className={`${isPhoto ? 'w-full h-full object-cover rounded-full' : 'w-full h-auto'} shadow-lg`}
+                        className={`${isPhoto ? 'w-full h-full object-cover rounded-full' : 'w-full h-auto'}`}
+                        style={isPhoto ? {} : { borderRadius: '6px', display: 'block' }}
                         draggable={false}
                       />
                     </span>
