@@ -413,7 +413,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                 const showPanelLeft = !showAbove && t.x > 60
                 return (
                 <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: `translate(${isRightAnchored ? '-100%' : '0'}, -50%)`, whiteSpace: 'nowrap' }}>
-                  <span className="font-bold px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter', WebkitTextStroke: '0.5px rgba(0,0,0,0.5)', textShadow: '0 1px 3px rgba(0,0,0,0.6), 0 0px 8px rgba(0,0,0,0.3)' }}>{t.text}</span>
+                  <span className="font-bold px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(48, Math.max(8, t.fontSize)), fontFamily: t.fontFamily || 'Inter', WebkitTextStroke: '0.5px rgba(0,0,0,0.5)', textShadow: '0 1px 3px rgba(0,0,0,0.6), 0 0px 8px rgba(0,0,0,0.3)' }}>{t.text}</span>
                   <div
                     className={`absolute opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showAbove ? 'bottom-full mb-2 left-0' : showPanelLeft ? 'right-full mr-2 top-1/2 -translate-y-1/2' : 'left-full ml-2 top-1/2 -translate-y-1/2'}`}
                     style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
@@ -431,11 +431,12 @@ export default function ImageOverlayEditorViewRoot(props: {
                       </div>
                       <span className="text-[10px] font-medium text-gray-600">Size</span>
                       <div className="flex items-center gap-2">
-                        <input type="range" min="10" max="32" value={Math.min(32, Math.max(10, t.fontSize))} onChange={(e) => { const v = parseInt(e.target.value, 10); if (!Number.isNaN(v)) p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontSize: v } : x)) }} onClick={(e) => e.stopPropagation()} className="flex-1 h-2 rounded-full accent-gray-600" style={{ accentColor: primary }} />
-                        <span className="text-[10px] tabular-nums text-gray-500 w-6">{t.fontSize}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontSize: Math.max(8, x.fontSize - 1) } : x)) }} className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm transition-colors" style={{ color: primary }}>−</button>
+                        <span className="text-[10px] tabular-nums text-gray-500 w-5 text-center">{t.fontSize}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontSize: Math.min(48, x.fontSize + 1) } : x)) }} className="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold text-sm transition-colors" style={{ color: primary }}>+</button>
                       </div>
                       <span className="text-[10px] font-medium text-gray-600">Font</span>
-                      <select value={t.fontFamily || 'Inter'} onChange={(e) => { const v = e.target.value as TextOverlayFont; p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontFamily: v } : x)) }} onClick={(e) => e.stopPropagation()} className="text-[11px] border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-offset-0 outline-none" style={{ borderColor: hexWithAlpha(primary, 0.2) }}>
+                      <select value={t.fontFamily || 'Inter'} onChange={(e) => { e.stopPropagation(); const v = e.target.value as TextOverlayFont; p.setTextOverlays(prev => prev.map(x => x.id === t.id ? { ...x, fontFamily: v } : x)) }} onClick={(e) => e.stopPropagation()} className="text-[10px] border border-gray-200 rounded-md px-1.5 py-1 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-offset-0 outline-none w-full max-w-[110px]" style={{ borderColor: hexWithAlpha(primary, 0.2) }}>
                         {TEXT_FONT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
                     </div>
