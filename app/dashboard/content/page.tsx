@@ -2394,38 +2394,40 @@ export default function CreateContentPage() {
 
           {/* In-flow rating: between customize-your-image and example blocks */}
           {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
-              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
-              <div className="flex flex-wrap gap-6">
-                {generatedTextId && (
-                  <div className="min-w-[200px]">
-                    <RatingStars
-                      type="text"
-                      label="Rate this text"
-                      value={textRating}
-                      onChange={handleRateText}
-                      onSkip={() => {}}
-                      showSkip
-                    />
-                  </div>
-                )}
-                {(generatedImageId || generatedImage) && (
-                  <div className="min-w-[200px]">
-                    <RatingStars
-                      type="image"
-                      label="Rate this image"
-                      value={imageRating}
-                      onChange={handleRateImage}
-                      onSkip={() => {}}
-                      showSkip
-                    />
-                  </div>
-                )}
+            <div className="mb-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <p className="text-sm font-medium text-gray-700">How was this?</p>
+                <div className="flex flex-wrap gap-6">
+                  {generatedTextId && (
+                    <div className="min-w-[200px]">
+                      <RatingStars
+                        type="text"
+                        label="Rate this text"
+                        value={textRating}
+                        onChange={handleRateText}
+                        onSkip={() => {}}
+                        showSkip
+                      />
+                    </div>
+                  )}
+                  {(generatedImageId || generatedImage) && (
+                    <div className="min-w-[200px]">
+                      <RatingStars
+                        type="image"
+                        label="Rate this image"
+                        value={imageRating}
+                        onChange={handleRateImage}
+                        onSkip={() => {}}
+                        showSkip
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-4 mb-6 max-w-4xl">
+          <div className="grid md:grid-cols-2 gap-4 mb-6 max-w-4xl mx-auto">
             {(Object.keys(socialPack) as Array<keyof SocialPackResult>).map((platform) => {
               const info = platformInfo[platform]
               const post = socialPack[platform]
@@ -3102,19 +3104,21 @@ export default function CreateContentPage() {
 
           {/* In-flow rating: between customize-your-image and content/example blocks */}
           {(generatedTextId || generatedImageId || generatedImage) && (
-            <div className="mb-6 p-4 rounded-lg border" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
-              <p className="text-sm font-medium text-gray-700 mb-3">How was this?</p>
-              <div className="flex flex-wrap gap-6">
-                {generatedTextId && (
-                  <div className="min-w-[200px]">
-                    <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
-                  </div>
-                )}
-                {(generatedImageId || generatedImage) && (
-                  <div className="min-w-[200px]">
-                    <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
-                  </div>
-                )}
+            <div className="mb-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <p className="text-sm font-medium text-gray-700">How was this?</p>
+                <div className="flex flex-wrap gap-6">
+                  {generatedTextId && (
+                    <div className="min-w-[200px]">
+                      <RatingStars type="text" label="Rate this text" value={textRating} onChange={handleRateText} onSkip={() => {}} showSkip />
+                    </div>
+                  )}
+                  {(generatedImageId || generatedImage) && (
+                    <div className="min-w-[200px]">
+                      <RatingStars type="image" label="Rate this image" value={imageRating} onChange={handleRateImage} onSkip={() => {}} showSkip />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
