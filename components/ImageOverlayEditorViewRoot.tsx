@@ -27,6 +27,25 @@ export default function ImageOverlayEditorViewRoot(props: {
   const isMetalFrame = p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper'
   return (
     <div className="rounded-xl border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
+      {/* Floating shadow: elliptical contact shadow CSS */}
+      {p.frame?.style === 'shadow' && (
+        <style>{`
+          .float-shadow-container { position: relative; }
+          .float-shadow-container::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            left: 12%;
+            width: 76%;
+            height: 18px;
+            background: rgba(0,0,0,0.18);
+            border-radius: 50%;
+            filter: blur(12px);
+            z-index: 0;
+            pointer-events: none;
+          }
+        `}</style>
+      )}
       {/* Metallic frame shine animation */}
       {isMetalFrame && (
         <style>{`
@@ -214,7 +233,7 @@ export default function ImageOverlayEditorViewRoot(props: {
 
         <div className="flex-1 p-4 flex flex-col items-center justify-center min-w-0" style={{ backgroundColor: sidebarBg }}>
           <div
-            className={`relative rounded-lg w-full max-w-[480px] aspect-square shadow-sm${isMetalFrame ? ' metal-shine-wrapper' : ''}`}
+            className={`relative rounded-lg w-full max-w-[480px] aspect-square shadow-sm${isMetalFrame ? ' metal-shine-wrapper' : ''}${p.frame?.style === 'shadow' ? ' float-shadow-container' : ''}`}
             style={frameWrapperStyle}
           >
             <div

@@ -243,39 +243,71 @@ export async function POST(request: Request) {
           .composite([{ input: vig3, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
       }
-      // Floating shadow: card lift with strong visible shadow + subtle top-edge highlight
+      // Floating shadow: layered smooth shadows + elliptical contact shadow + top-edge highlight
       else if (style === 'shadow') {
         const borderPad = 5
-        const margin = 48
-        const shadowOffset = 22
-        const shadowBlur = 38
-        const shadowOpacity = 0.78
+        const margin = 52
         const imgWithBorder = await sharp(composited)
           .extend({ top: borderPad, bottom: borderPad, left: borderPad, right: borderPad, background: { r: fr, g: fg, b: fb, alpha: 1 } })
           .toBuffer()
-        const meta = await sharp(imgWithBorder).metadata()
-        const iw = meta.width!
-        const ih = meta.height!
+        const meta2 = await sharp(imgWithBorder).metadata()
+        const iw = meta2.width!
+        const ih = meta2.height!
         const fullW = iw + 2 * margin
         const fullH = ih + 2 * margin
-        const shadowSvg = Buffer.from(
-          `<svg width="${iw + shadowBlur * 2}" height="${ih + shadowBlur * 2}" xmlns="http://www.w3.org/2000/svg"><defs><filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="${shadowBlur}"/></filter></defs><rect x="${shadowBlur}" y="${shadowBlur}" width="${iw}" height="${ih}" rx="2" ry="2" fill="black" opacity="${shadowOpacity}" filter="url(#blur)"/></svg>`
-        )
+
+        // Top-edge highlight (light reflection on raised surface)
         const highlightSvg = Buffer.from(
-          `<svg width="${iw}" height="${ih}" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="${iw}" height="1" fill="white" opacity="0.25"/><rect x="0" y="0" width="1" height="${ih}" fill="white" opacity="0.15"/></svg>`
+          `<svg width="${iw}" height="${ih}" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="${iw}" height="1" fill="white" opacity="0.30"/>
+            <rect x="0" y="0" width="1" height="${ih}" fill="white" opacity="0.18"/>
+            <rect x="0" y="${ih - 1}" width="${iw}" height="1" fill="black" opacity="0.04"/>
+            <rect x="${iw - 1}" y="0" width="1" height="${ih}" fill="black" opacity="0.03"/>
+          </svg>`
         )
-        const bg = await sharp({
-          create: { width: fullW, height: fullH, channels: 3, background: { r: 242, g: 244, b: 248 } },
-        })
-          .jpeg()
-          .toBuffer()
         const withHighlight = await sharp(imgWithBorder)
           .composite([{ input: highlightSvg, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
+
+        // Background canvas
+        const bg = await sharp({
+          create: { width: fullW, height: fullH, channels: 4 as const, background: { r: 245, g: 247, b: 250, alpha: 255 } },
+        }).png().toBuffer()
+
+        // Layered shadows: 5 stacked layers with increasing blur for ultra-smooth transition
+        const imgX = margin
+        const imgY = margin
+        const shadowLayers = [
+          { offset: 2,  blur: 3,  opacity: 0.06 },
+          { offset: 5,  blur: 8,  opacity: 0.08 },
+          { offset: 10, blur: 18, opacity: 0.10 },
+          { offset: 18, blur: 32, opacity: 0.12 },
+          { offset: 28, blur: 52, opacity: 0.14 },
+        ]
+
+        // Build one combined shadow SVG with multiple rects
+        const maxBlur = 52
+        const shW = iw + maxBlur * 2 + 60
+        const shH = ih + maxBlur * 2 + 80
+        const shCX = maxBlur + 30  // center offset within shadow canvas
+        const shCY = maxBlur + 30
+        const shadowSvg = Buffer.from(
+          `<svg width="${shW}" height="${shH}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              ${shadowLayers.map((l, i) => `<filter id="shB${i}"><feGaussianBlur stdDeviation="${l.blur}"/></filter>`).join('\n')}
+              <filter id="contactBlur"><feGaussianBlur stdDeviation="14"/></filter>
+            </defs>
+            ${shadowLayers.map((l, i) => `<rect x="${shCX}" y="${shCY + l.offset}" width="${iw}" height="${ih}" rx="3" fill="black" opacity="${l.opacity}" filter="url(#shB${i})"/>`).join('\n')}
+            <!-- Elliptical contact shadow: simulates object hovering above surface -->
+            <ellipse cx="${shCX + iw / 2}" cy="${shCY + ih + 8}" rx="${iw * 0.38}" ry="10" fill="black" opacity="0.16" filter="url(#contactBlur)"/>
+          </svg>`
+        )
+
+        // Composite everything: shadow canvas, then the image on top
         composited = await sharp(bg)
           .composite([
-            { input: shadowSvg, left: margin + shadowOffset, top: margin + shadowOffset },
-            { input: withHighlight, left: margin, top: margin },
+            { input: shadowSvg, left: imgX - shCX, top: imgY - shCY, blend: 'over' },
+            { input: withHighlight, left: imgX, top: imgY, blend: 'over' },
           ])
           .toBuffer()
       }

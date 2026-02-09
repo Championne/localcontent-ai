@@ -136,7 +136,9 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
     // Dark background with subtle ambient glow from neon reflecting off surfaces
     base.background = `radial-gradient(ellipse 85% 85% at 50% 50%, ${nHex}12 0%, ${nHex}06 50%, transparent 78%), #08080c`
   } else if (fs === 'shadow') {
+    // Floating shadow: light background, generous padding for shadow space
     base.backgroundColor = '#f5f7fa'
+    base.borderRadius = 4
   } else if (fs === 'vignette') {
     // no bg
   } else if (input.frameColorKey) {
@@ -179,7 +181,17 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
   const shadowMap: Record<string, string> = {
     classic: 'inset 2px 2px 6px rgba(0,0,0,0.25), inset -1px -1px 3px rgba(0,0,0,0.10), inset 0 0 0 1px rgba(92,74,26,0.20)',
     wooden: 'inset 2px 2px 5px rgba(0,0,0,0.50), inset -1px -1px 3px rgba(0,0,0,0.20), inset 0 0 0 1px rgba(0,0,0,0.15)',
-    shadow: '0 24px 48px rgba(0,0,0,0.4), 0 12px 24px rgba(0,0,0,0.25)',
+    shadow: [
+      // Layered smooth shadows: stacked for a natural, non-muddy transition
+      '0 2px 4px rgba(0,0,0,0.06)',
+      '0 4px 8px rgba(0,0,0,0.08)',
+      '0 8px 16px rgba(0,0,0,0.10)',
+      '0 16px 32px rgba(0,0,0,0.12)',
+      '0 32px 64px rgba(0,0,0,0.14)',
+      // Top-edge highlight (simulates light reflection on raised surface)
+      'inset 0 1px 0 rgba(255,255,255,0.25)',
+      'inset 1px 0 0 rgba(255,255,255,0.12)',
+    ].join(', '),
     gold: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(191,149,63,0.3)',
     silver: 'inset 2px 2px 6px rgba(0,0,0,0.35), inset -1px -1px 4px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(189,195,199,0.3)',
     copper: 'inset 2px 2px 6px rgba(0,0,0,0.4), inset -1px -1px 4px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(160,82,45,0.3)',
