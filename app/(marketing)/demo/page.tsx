@@ -1,8 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SingleContentDemo, DemoResultView, type GeneratedDemo } from '@/components/marketing/LiveContentDemo'
+
+// Pre-defined showcase examples — generated dynamically via AI on page load
+const SHOWCASE_EXAMPLES = [
+  { contentType: 'blog-post' as const, industry: 'Restaurant', label: 'Blog Post', color: 'blue', icon: '📝' },
+  { contentType: 'gmb-post' as const, industry: 'Fitness', label: 'Google Business Post', color: 'green', icon: '📍' },
+  { contentType: 'email' as const, industry: 'Real Estate', label: 'Email Newsletter', color: 'orange', icon: '📧' },
+]
+
+interface ShowcaseData {
+  loading: boolean
+  data: GeneratedDemo | null
+  error: boolean
+}
 
 // Industry options
 const INDUSTRY_OPTIONS = [
@@ -25,6 +38,33 @@ type DemoContentType = 'social-pack' | 'blog-post' | 'gmb-post' | 'email'
 export default function ExamplesPage() {
   const [selectedIndustry, setSelectedIndustry] = useState('random')
   const [lastGenerated, setLastGenerated] = useState<{ contentType: DemoContentType; data: GeneratedDemo } | null>(null)
+
+  // Dynamic showcase examples — generated via AI on page load
+  const [showcaseExamples, setShowcaseExamples] = useState<ShowcaseData[]>(
+    SHOWCASE_EXAMPLES.map(() => ({ loading: true, data: null, error: false }))
+  )
+
+  const generateShowcase = useCallback(async (index: number) => {
+    const example = SHOWCASE_EXAMPLES[index]
+    setShowcaseExamples(prev => prev.map((s, i) => i === index ? { ...s, loading: true, error: false } : s))
+    try {
+      const res = await fetch('/api/demo/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentType: example.contentType, industry: example.industry }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      const json = await res.json()
+      setShowcaseExamples(prev => prev.map((s, i) => i === index ? { loading: false, data: json, error: false } : s))
+    } catch {
+      setShowcaseExamples(prev => prev.map((s, i) => i === index ? { loading: false, data: null, error: true } : s))
+    }
+  }, [])
+
+  // Generate all 3 showcases on mount
+  useEffect(() => {
+    SHOWCASE_EXAMPLES.forEach((_, i) => generateShowcase(i))
+  }, [generateShowcase])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -111,182 +151,196 @@ export default function ExamplesPage() {
         )}
       </section>
 
-      {/* Static Examples Section */}
+      {/* AI-Generated Examples Section — generated dynamically on page load */}
       <section className="container mx-auto px-4 py-16 border-t border-gray-200">
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">Example Output</span>
+          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">AI-Generated Examples</span>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
             See What GeoSpark Creates
           </h2>
           <p className="text-xl text-gray-600">
-            Real examples across different industries. This is what your content could look like.
+            These examples are generated live by our AI — text, images, everything. Refresh to see new ones.
           </p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {/* Blog Post Example - Restaurant */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Hero Image */}
-            <div className="relative h-40 bg-gradient-to-br from-blue-100 to-blue-50">
-              <img 
-                src="/examples/restaurant-farm-to-table.png" 
-                alt="Fresh vegetables on wooden table" 
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-              <span className="absolute top-3 left-3 bg-blue-600/70 text-white px-2 py-1 rounded text-xs font-semibold">Blog Post • Restaurant</span>
-            </div>
-            
-            {/* Content */}
-            <div className="p-5 max-h-72 overflow-y-auto">
-              <h4 className="font-bold text-gray-900 text-lg mb-3">Savor the Season: Discover Harvest Kitchen&apos;s New Farm-to-Table Spring Menu</h4>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                As the flowers bloom and the weather warms up, nothing excites food lovers quite like the arrival of spring! At Harvest Kitchen in Austin, TX, we&apos;re thrilled to announce our new farm-to-table spring menu...
-              </p>
-              <h5 className="text-sm font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-100">Fresh Ingredients, Bold Flavors</h5>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                This spring, we&apos;ve partnered with local farmers to bring you the freshest produce and meats:
-              </p>
-              <ul className="text-sm text-gray-600 mb-3 ml-4 list-disc space-y-1">
-                <li>Seasonal Vegetables: asparagus, radishes, and spring peas</li>
-                <li>Locally-Sourced Proteins: grass-fed beef, sustainable seafood</li>
-                <li>House-Made Sauces and Dressings</li>
-              </ul>
-              <p className="text-sm text-gray-500 italic">
-                Book your table today and let the flavors of spring inspire your dining experience!
-              </p>
-            </div>
-            
-            {/* Author Footer */}
-            <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">H</div>
-              <div>
-                <p className="font-medium text-gray-900 text-sm">Harvest Kitchen</p>
-                <p className="text-xs text-gray-500">Feb 2, 2026</p>
-              </div>
-            </div>
-            
-            {/* Stats */}
-            <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
-              <span>~500 words</span>
-              <span>•</span>
-              <span>SEO optimized</span>
-              <span>•</span>
-              <span className="text-green-600 font-medium">Ready to publish</span>
-            </div>
-          </div>
+          {SHOWCASE_EXAMPLES.map((example, idx) => {
+            const showcase = showcaseExamples[idx]
+            const colorMap: Record<string, { bg: string; badge: string; accent: string; light: string }> = {
+              blue: { bg: 'from-blue-100 to-blue-50', badge: 'bg-blue-600/70', accent: 'bg-blue-600', light: 'bg-blue-100 text-blue-600' },
+              green: { bg: 'from-green-100 to-green-50', badge: 'bg-green-600/70', accent: 'bg-green-600', light: 'bg-green-100 text-green-600' },
+              orange: { bg: 'from-orange-100 to-orange-50', badge: 'bg-orange-600/70', accent: 'bg-orange-500', light: 'bg-orange-100 text-orange-600' },
+            }
+            const colors = colorMap[example.color] || colorMap.blue
 
-          {/* Google Business Post Example - Fitness */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* GMB Header */}
-            <div className="bg-white border-b border-gray-100 p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold">I</div>
-              <div className="flex-1">
-                <div className="font-semibold text-gray-900 text-sm">Iron Peak Gym</div>
-                <div className="text-xs text-gray-500 flex items-center gap-1">
-                  <span className="text-green-600">✓ Verified</span>
-                  <span>•</span>
-                  <span>Just now</span>
+            // Loading skeleton
+            if (showcase.loading) {
+              return (
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
+                  <div className={`h-40 bg-gradient-to-br ${colors.bg}`} />
+                  <div className="p-5 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-full" />
+                    <div className="h-3 bg-gray-200 rounded w-5/6" />
+                    <div className="h-3 bg-gray-200 rounded w-4/6" />
+                    <div className="h-3 bg-gray-200 rounded w-full" />
+                    <div className="h-3 bg-gray-200 rounded w-3/4" />
+                  </div>
+                  <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-3 bg-gray-200 rounded w-24" />
+                      <div className="h-2 bg-gray-200 rounded w-16" />
+                    </div>
+                  </div>
+                  <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
+                    <div className="h-3 bg-gray-200 rounded w-16" />
+                    <span className="text-xs text-gray-400">Generating with AI...</span>
+                  </div>
                 </div>
-              </div>
-              <span className="bg-green-600/70 text-white px-2 py-1 rounded text-xs font-semibold">Fitness</span>
-            </div>
-            
-            {/* Image */}
-            <img 
-              src="/examples/fitness-gym.png" 
-              alt="Modern gym with exercise equipment" 
-              className="w-full aspect-video object-cover"
-            />
-            
-            {/* Content */}
-            <div className="p-4">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                🎉 Kickstart your fitness journey with a FREE personal training session at Iron Peak Gym! 💪 Limited spots available. Don&apos;t miss out! Claim yours now by calling us or visiting our website!
-              </p>
-              
-              {/* CTA Button */}
-              <button className="mt-4 w-full py-2.5 bg-blue-600 text-white rounded-lg font-medium text-sm">
-                Learn More
-              </button>
-            </div>
-            
-            {/* Engagement */}
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                  Like
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                  Share
-                </span>
-              </div>
-              <span className="text-green-600 font-medium">Ready to post</span>
-            </div>
-          </div>
+              )
+            }
 
-          {/* Email Newsletter Example - Real Estate */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Email Header */}
-            <div className="bg-gray-50 border-b border-gray-200 p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold">W</div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-900 text-sm">Westside Realty</div>
-                  <div className="text-xs text-gray-500 truncate">to: subscriber@email.com</div>
+            // Error state
+            if (showcase.error || !showcase.data) {
+              return (
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col items-center justify-center py-16 px-6 text-center">
+                  <p className="text-gray-500 text-sm mb-3">Could not generate this example</p>
+                  <button
+                    onClick={() => generateShowcase(idx)}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
                 </div>
-                <span className="bg-orange-600/70 text-white px-2 py-1 rounded text-xs font-semibold">Real Estate</span>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
-                <span className="text-xs text-gray-500">Subject: </span>
-                <span className="text-sm font-medium text-gray-900">What&apos;s Happening in Seattle&apos;s Housing Market This February?</span>
-              </div>
-            </div>
-            
-            {/* Image */}
-            <img 
-              src="/examples/real-estate-home.png" 
-              alt="Modern home exterior" 
-              className="w-full aspect-video object-cover"
-            />
-            
-            {/* Email Body */}
-            <div className="p-5 max-h-60 overflow-y-auto">
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">Hi there,</p>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                As we step into February, we&apos;re excited to share some intriguing insights about the Seattle housing market.
-              </p>
-              <ul className="text-sm text-gray-600 mb-3 ml-4 list-disc space-y-1">
-                <li><strong>Inventory Levels:</strong> More homes for sale</li>
-                <li><strong>Home Prices:</strong> Stabilizing after growth</li>
-                <li><strong>Interest Rates:</strong> Still competitive</li>
-              </ul>
-              <p className="text-sm text-gray-600 leading-relaxed">Ready to explore your options?</p>
-              
-              {/* CTA Button */}
-              <div className="mt-4 text-center">
-                <button className="px-5 py-2 bg-orange-500 text-white rounded-lg font-medium text-sm">
-                  Learn More
-                </button>
-              </div>
-              
-              {/* Footer */}
-              <div className="mt-4 pt-3 border-t border-gray-100 text-center text-xs text-gray-400">
-                <p>Sent with ❤️ from Westside Realty</p>
-              </div>
-            </div>
-            
-            {/* Stats */}
-            <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
-              <span>~250 words</span>
-              <span>•</span>
-              <span>Mobile optimized</span>
-              <span>•</span>
-              <span className="text-green-600 font-medium">Ready to send</span>
-            </div>
-          </div>
+              )
+            }
+
+            const { data } = showcase
+            const contentStr = typeof data.content === 'string' ? data.content : ''
+            const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+            // Blog Post card
+            if (example.contentType === 'blog-post') {
+              // Parse markdown title from content
+              const titleMatch = contentStr.match(/^#\s+(.+)/m)
+              const title = titleMatch ? titleMatch[1] : data.topic || 'Blog Post'
+              const bodyText = contentStr.replace(/^#.*\n*/m, '').replace(/\*.*?\*/g, '').trim()
+              return (
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="relative h-40 bg-gradient-to-br from-blue-100 to-blue-50">
+                    {data.imageUrl && <img src={data.imageUrl} alt="AI Generated" className="w-full h-full object-cover" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    <span className={`absolute top-3 left-3 ${colors.badge} text-white px-2 py-1 rounded text-xs font-semibold`}>{example.icon} {example.label} • {data.industry}</span>
+                    <div className="absolute top-3 right-3 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      AI Generated
+                    </div>
+                  </div>
+                  <div className="p-5 max-h-72 overflow-y-auto">
+                    <h4 className="font-bold text-gray-900 text-lg mb-3">{title}</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{bodyText.slice(0, 400)}{bodyText.length > 400 ? '...' : ''}</p>
+                  </div>
+                  <div className="px-5 py-3 border-t border-gray-100 flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full ${colors.light} flex items-center justify-center font-semibold text-sm`}>{(data.businessName || 'B')[0]}</div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{data.businessName}</p>
+                      <p className="text-xs text-gray-500">{today}</p>
+                    </div>
+                  </div>
+                  <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+                    <span>AI text + image</span>
+                    <span>•</span>
+                    <span>SEO optimized</span>
+                    <span>•</span>
+                    <span className="text-green-600 font-medium">Ready to publish</span>
+                  </div>
+                </div>
+              )
+            }
+
+            // Google Business Post card
+            if (example.contentType === 'gmb-post') {
+              return (
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="bg-white border-b border-gray-100 p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold">{(data.businessName || 'B')[0]}</div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900 text-sm">{data.businessName}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1">
+                        <span className="text-green-600">✓ Verified</span>
+                        <span>•</span>
+                        <span>Just now</span>
+                      </div>
+                    </div>
+                    <span className={`${colors.badge} text-white px-2 py-1 rounded text-xs font-semibold`}>{data.industry}</span>
+                  </div>
+                  <div className="relative">
+                    {data.imageUrl && <img src={data.imageUrl} alt="AI Generated" className="w-full aspect-video object-cover" />}
+                    <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      AI Generated
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{contentStr.slice(0, 300)}{contentStr.length > 300 ? '...' : ''}</p>
+                    <button className={`mt-4 w-full py-2.5 ${colors.accent} text-white rounded-lg font-medium text-sm`}>Learn More</button>
+                  </div>
+                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                    <span>AI text + image</span>
+                    <span className="text-green-600 font-medium">Ready to post</span>
+                  </div>
+                </div>
+              )
+            }
+
+            // Email Newsletter card
+            if (example.contentType === 'email') {
+              const subjectMatch = contentStr.match(/Subject:\s*(.+)/i)
+              const subject = subjectMatch ? subjectMatch[1].trim() : data.topic || 'Newsletter'
+              const emailBody = contentStr.replace(/Subject:.*\n*/i, '').trim()
+              return (
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-50 border-b border-gray-200 p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-full ${colors.light} flex items-center justify-center font-semibold`}>{(data.businessName || 'B')[0]}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-gray-900 text-sm">{data.businessName}</div>
+                        <div className="text-xs text-gray-500 truncate">to: subscriber@email.com</div>
+                      </div>
+                      <span className={`${colors.badge} text-white px-2 py-1 rounded text-xs font-semibold`}>{data.industry}</span>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-lg px-3 py-2">
+                      <span className="text-xs text-gray-500">Subject: </span>
+                      <span className="text-sm font-medium text-gray-900">{subject}</span>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    {data.imageUrl && <img src={data.imageUrl} alt="AI Generated" className="w-full aspect-video object-cover" />}
+                    <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      AI Generated
+                    </div>
+                  </div>
+                  <div className="p-5 max-h-60 overflow-y-auto">
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{emailBody.slice(0, 350)}{emailBody.length > 350 ? '...' : ''}</p>
+                    <div className="mt-4 text-center">
+                      <button className={`px-5 py-2 ${colors.accent} text-white rounded-lg font-medium text-sm`}>Learn More</button>
+                    </div>
+                  </div>
+                  <div className="px-5 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+                    <span>AI text + image</span>
+                    <span>•</span>
+                    <span>Mobile optimized</span>
+                    <span>•</span>
+                    <span className="text-green-600 font-medium">Ready to send</span>
+                  </div>
+                </div>
+              )
+            }
+
+            return null
+          })}
         </div>
       </section>
 

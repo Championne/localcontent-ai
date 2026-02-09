@@ -210,20 +210,9 @@ export async function POST(request: Request) {
                     contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'
     }
 
-    // Image: prefer free stock photo (simplified workflow), fallback to AI
+    // Image: always use AI-generated images to showcase our capability
     let imageUrl: string | undefined
-    const templateForStock = contentType === 'social-pack' ? 'social-pack' : (contentType as 'blog-post' | 'gmb-post' | 'email')
-    if (isStockImageConfigured()) {
-      try {
-        const options = await getStockImageOptions({ topic, industry, contentType: templateForStock }, 1)
-        if (options.length > 0) {
-          imageUrl = options[0].url
-        }
-      } catch (e) {
-        console.error('Demo stock image failed:', e)
-      }
-    }
-    if (!imageUrl && isImageGenerationConfigured()) {
+    if (isImageGenerationConfigured()) {
       try {
         const style = detectBestStyle(topic)
         const imageResult = await generateImage({
@@ -235,7 +224,19 @@ export async function POST(request: Request) {
         })
         imageUrl = imageResult.url
       } catch (imgError) {
-        console.error('Demo image generation failed:', imgError)
+        console.error('Demo AI image generation failed:', imgError)
+        // Fallback to stock only if AI fails
+        if (isStockImageConfigured()) {
+          try {
+            const templateForStock = contentType === 'social-pack' ? 'social-pack' : (contentType as 'blog-post' | 'gmb-post' | 'email')
+            const options = await getStockImageOptions({ topic, industry, contentType: templateForStock }, 1)
+            if (options.length > 0) {
+              imageUrl = options[0].url
+            }
+          } catch (e) {
+            console.error('Demo stock image fallback also failed:', e)
+          }
+        }
       }
     }
 
