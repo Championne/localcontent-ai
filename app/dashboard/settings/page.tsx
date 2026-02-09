@@ -66,11 +66,17 @@ export default function SettingsPage() {
     }
   }
 
-  const tabs: { id: SettingsTab; label: string }[] = [
-    { id: 'profile', label: 'Profile & Plan' },
-    { id: 'image-queries', label: 'Image Queries' },
-    { id: 'ai-prompts', label: 'AI Prompts' },
-  ]
+  const isImageStudioRoute = initialTab === 'image-queries' || initialTab === 'ai-prompts'
+  const tabs: { id: SettingsTab; label: string }[] = isImageStudioRoute
+    ? [
+        { id: 'image-queries', label: 'Image Queries' },
+        { id: 'ai-prompts', label: 'AI Prompts' },
+      ]
+    : [
+        { id: 'profile', label: 'Profile & Plan' },
+        { id: 'image-queries', label: 'Image Queries' },
+        { id: 'ai-prompts', label: 'AI Prompts' },
+      ]
 
   if (loading) {
     return (
@@ -86,7 +92,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">{isImageStudioRoute ? 'Image Studio' : 'Settings'}</h1>
 
       {/* Tab navigation */}
       <div className="flex gap-1 border-b border-gray-200 mb-6">
