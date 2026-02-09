@@ -92,7 +92,7 @@ const DEFAULT_BRAND: BrandColors = { primary: '#0d9488', secondary: '#6b7280', a
 // Predefined positions (percent) for "Arrange all" — logo top-left, photo top-right, tagline bottom center, social + website right bottom (website below social)
 const DEFAULT_LOGO = { x: 5, y: 5, scale: 16 }
 const DEFAULT_PHOTO = { x: 77, y: 5, scale: 18 }
-const DEFAULT_TAGLINE = { x: 50, y: 86, fontSize: 22 }
+const DEFAULT_TAGLINE = { x: 5, y: 90, fontSize: 22 }
 const DEFAULT_SOCIAL = { x: 85, y: 88, fontSize: 14 }
 const DEFAULT_WEBSITE = { x: 85, y: 94, fontSize: 14 }
 
