@@ -415,8 +415,6 @@ export default function ImageOverlayEditorViewRoot(props: {
                 <option value="thick">Thick border</option>
                 <option value="double">Double line</option>
                 <option value="rounded">Rounded corners</option>
-                <option value="dashed">Dashed</option>
-                <option value="dotted">Dotted</option>
               </optgroup>
               <optgroup label="Frames">
                 <option value="classic">Painting frame</option>

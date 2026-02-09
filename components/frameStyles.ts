@@ -105,8 +105,6 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
       gold: '2px solid rgba(255,248,220,0.9)',
       silver: '2px solid rgba(255,255,255,0.95)',
       copper: '2px solid rgba(253,240,224,0.9)',
-      dashed: '3px dashed ' + fHex,
-      dotted: '3px dotted ' + fHex,
       polaroid: 'none',
       filmstrip: '1px solid #2a2a2a',
     }
