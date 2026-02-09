@@ -187,8 +187,8 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         {/* Logo */}
-        <div className="p-6 border-b border-gray-100">
-          <Link href="/dashboard" className="flex items-center justify-center" onClick={() => setSidebarOpen(false)}>
+        <div className="p-6 pb-4 border-b border-gray-100">
+          <Link href="/dashboard" className="flex flex-col items-center" onClick={() => setSidebarOpen(false)}>
             <Image 
               src="/logo-geospark.png" 
               alt="GeoSpark" 
@@ -197,6 +197,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
               className="w-full max-w-[220px] h-auto"
               priority
             />
+            <span className="text-[11px] font-medium tracking-[0.25em] uppercase text-gray-400 mt-1">Click · Spark · Post</span>
           </Link>
         </div>
 
