@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 const BUCKET = 'generated-images'
@@ -54,19 +55,36 @@ export async function POST(request: Request) {
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg'
     const filename = `${user.id}/base_${Date.now()}.${ext}`
 
-    const { error: uploadError } = await supabase.storage
+    // Prefer admin client (bypasses RLS) for storage; fall back to user client
+    const storageClient = getSupabaseAdmin() || supabase
+
+    const { error: uploadError } = await storageClient.storage
       .from(BUCKET)
-      .upload(filename, buffer, { contentType, cacheControl: '3600', upsert: true })
+      .upload(filename, buffer, { contentType, cacheControl: '31536000', upsert: true })
 
     if (uploadError) {
       console.error('Persist: upload error', uploadError.message ?? uploadError)
-      return NextResponse.json(
-        { error: uploadError.message || 'Failed to upload image to storage' },
-        { status: 500 },
-      )
+      // Retry with the other client if admin failed or was used
+      if (storageClient !== supabase) {
+        const { error: retryErr } = await supabase.storage
+          .from(BUCKET)
+          .upload(filename, buffer, { contentType, cacheControl: '31536000', upsert: true })
+        if (retryErr) {
+          console.error('Persist: retry upload error', retryErr.message ?? retryErr)
+          return NextResponse.json(
+            { error: retryErr.message || 'Failed to upload image to storage' },
+            { status: 500 },
+          )
+        }
+      } else {
+        return NextResponse.json(
+          { error: uploadError.message || 'Failed to upload image to storage' },
+          { status: 500 },
+        )
+      }
     }
 
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filename)
+    const { data: urlData } = storageClient.storage.from(BUCKET).getPublicUrl(filename)
     return NextResponse.json({ url: urlData.publicUrl })
   } catch (error) {
     console.error('Persist: unexpected error', error)

@@ -1423,7 +1423,7 @@ export default function CreateContentPage() {
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingContentId ? { title: payload.title, content: payload.content, status: payload.status, metadata: payload.metadata } : payload),
+        body: JSON.stringify(editingContentId ? { title: payload.title, content: payload.content, status: payload.status, metadata: payload.metadata, image_url: payload.image_url, image_style: payload.image_style } : payload),
       })
 
       const data = await response.json()

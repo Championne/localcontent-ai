@@ -32,6 +32,7 @@ export default function ContentLibraryPage() {
   const [error, setError] = useState('')
   const [filter, setFilter] = useState({ type: '', status: '', search: '' })
   const [failedThumbnails, setFailedThumbnails] = useState<Record<string, boolean>>({})
+  const [retryCount, setRetryCount] = useState<Record<string, number>>({})
 
   useEffect(() => {
     fetchContent()
@@ -103,7 +104,13 @@ export default function ContentLibraryPage() {
   }
 
   const getThumbnailUrl = (item: ContentItem): string | null => {
-    return item.metadata?.image_url ?? item.image_url ?? null
+    const url = item.metadata?.image_url ?? item.image_url ?? null
+    if (!url) return null
+    // Add cache-bust for Supabase storage URLs to avoid stale CDN responses
+    if (url.includes('supabase') && !url.includes('_t=')) {
+      return `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    }
+    return url
   }
 
   if (loading) {
@@ -197,7 +204,22 @@ export default function ContentLibraryPage() {
                     alt={item.title || 'Content'}
                     className='w-full h-full object-cover'
                     referrerPolicy='no-referrer'
-                    onError={() => setFailedThumbnails((prev) => ({ ...prev, [item.id]: true }))}
+                    onError={(e) => {
+                      const attempts = retryCount[item.id] || 0
+                      if (attempts < 1) {
+                        // Retry once with a cache-busted URL
+                        setRetryCount((prev) => ({ ...prev, [item.id]: attempts + 1 }))
+                        const img = e.currentTarget
+                        const baseUrl = item.metadata?.image_url ?? item.image_url ?? ''
+                        if (baseUrl) {
+                          setTimeout(() => {
+                            img.src = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}_retry=${Date.now()}`
+                          }, 500)
+                        }
+                      } else {
+                        setFailedThumbnails((prev) => ({ ...prev, [item.id]: true }))
+                      }
+                    }}
                   />
                 </div>
               ) : (

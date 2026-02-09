@@ -27,20 +27,36 @@ export async function GET(
       return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
-    // Resolve generated_image_id so the client can show image rating when editing
+    // Resolve generated_image_id and best image URL
     const { data: genImg } = await supabase
       .from('generated_images')
-      .select('id')
+      .select('id, image_url')
       .eq('content_id', params.id)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
+    // Determine the best image URL: prefer permanent Supabase URLs
+    const meta = (data.metadata || {}) as Record<string, unknown>
+    let imageUrl = (meta.image_url as string) || (data as { image_url?: string }).image_url || null
+
+    // If the current URL is temporary/expired, try to use the generated_images permanent URL
+    const isPermanent = (url: string | null) => url && (url.includes('supabase.co/storage') || url.includes('supabase.com/storage'))
+    if (imageUrl && !isPermanent(imageUrl) && genImg?.image_url && isPermanent(genImg.image_url)) {
+      // Update metadata in the DB so future loads use the permanent URL
+      const updatedMeta = { ...meta, image_url: genImg.image_url }
+      await supabase.from('content').update({ metadata: updatedMeta, updated_at: new Date().toISOString() }).eq('id', params.id)
+      imageUrl = genImg.image_url
+    } else if (!imageUrl && genImg?.image_url) {
+      imageUrl = genImg.image_url
+    }
+
     const content = {
       ...data,
       generated_image_id: genImg?.id ?? null,
-      image_url: (data.metadata as { image_url?: string })?.image_url ?? (data as { image_url?: string }).image_url ?? null,
+      image_url: imageUrl,
+      metadata: { ...meta, ...(imageUrl ? { image_url: imageUrl } : {}) },
     }
     return NextResponse.json({ content })
 
@@ -66,13 +82,26 @@ export async function PATCH(
   try {
     const body = await request.json()
     let { title, content, status, scheduled_for, metadata } = body
+    const { image_url: bodyImageUrl, image_style: bodyImageStyle } = body
 
-    // Persist temporary image URL (e.g. DALL-E) so library thumbnails don't expire
-    if (metadata?.image_url && isTemporaryImageUrl(metadata.image_url)) {
-      const persisted = await persistContentImage(supabase, user.id, metadata.image_url)
-      if (persisted) {
-        metadata = { ...metadata, image_url: persisted }
-      }
+    // Resolve best image URL: prefer the top-level image_url (latest from client)
+    // then fall back to metadata.image_url
+    let bestImageUrl: string | null = bodyImageUrl || metadata?.image_url || null
+
+    // Persist temporary image URLs (e.g. DALL-E, Unsplash) so library thumbnails don't expire
+    if (bestImageUrl && isTemporaryImageUrl(bestImageUrl)) {
+      const persisted = await persistContentImage(supabase, user.id, bestImageUrl)
+      if (persisted) bestImageUrl = persisted
+    }
+
+    // Always ensure metadata has the best image URL and style
+    if (bestImageUrl && metadata) {
+      metadata = { ...metadata, image_url: bestImageUrl }
+    } else if (bestImageUrl && !metadata) {
+      metadata = { image_url: bestImageUrl }
+    }
+    if (bodyImageStyle && metadata) {
+      metadata = { ...metadata, image_style: bodyImageStyle }
     }
 
     // Verify ownership

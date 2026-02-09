@@ -56,14 +56,21 @@ export async function persistContentImage(
       return null
     }
 
-    const res = await fetch(imageUrl, { next: { revalidate: 0 } })
+    const res = await fetch(imageUrl, {
+      headers: { 'User-Agent': 'GeoSpark-ContentImage/1.0 (https://geospark.ai)' },
+      cache: 'no-store',
+    })
     if (!res.ok) {
-      console.error(`Failed to download image (${res.status}): ${imageUrl.slice(0, 120)}`)
+      console.error(`persistContentImage: download failed (${res.status}) for ${imageUrl.slice(0, 120)}`)
       return null
     }
     const contentType = res.headers.get('content-type') || 'image/png'
     const buffer = Buffer.from(await res.arrayBuffer())
-    const ext = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png'
+    if (buffer.length === 0) {
+      console.error('persistContentImage: downloaded image is empty')
+      return null
+    }
+    const ext = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : contentType.includes('webp') ? 'webp' : 'png'
     const filename = `${userId}/content_${Date.now()}.${ext}`
 
     const { error: uploadError } = await storageClient.storage

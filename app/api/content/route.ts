@@ -43,54 +43,68 @@ export async function GET(request: NextRequest) {
 
     const list = contentList || []
 
-    // Collect IDs of content items that are missing an image OR have a non-permanent (possibly expired) URL
+    // --- Resolve image URLs: ensure every content item has a permanent, loadable image ---
+    // Step 1: Identify items missing an image or having a non-permanent URL
+    const allIds = list.map((c: { id: string }) => c.id)
     const idsNeedingImage = list.filter((c: { metadata?: { image_url?: string }; image_url?: string }) => {
       const meta = c.metadata as { image_url?: string } | undefined
       const url = meta?.image_url || (c as { image_url?: string }).image_url
-      // No URL at all, or URL is not a permanent Supabase storage URL
       return !url || !isPermanentUrl(url)
     }).map((c: { id: string }) => c.id)
 
-    let result = list
-    if (idsNeedingImage.length > 0) {
-      // Look up generated_images for persisted (Supabase) image URLs linked to these content items
+    // Step 2: Look up ALL generated_images for this user's content (not just missing ones)
+    // so we can always prefer a permanent URL over a possibly-expired one
+    let imageByContentId = new Map<string, string>()
+    if (allIds.length > 0) {
       const { data: images } = await supabase
         .from('generated_images')
         .select('content_id, image_url')
         .eq('user_id', user.id)
-        .in('content_id', idsNeedingImage)
+        .in('content_id', allIds)
         .not('image_url', 'is', null)
         .order('created_at', { ascending: false })
 
-      // Build map: prefer permanent URLs from generated_images
-      const imageByContentId = new Map<string, string>()
+      // Build map: strongly prefer permanent (Supabase) URLs
       for (const row of images || []) {
         if (row.content_id && !imageByContentId.has(row.content_id) && isPermanentUrl(row.image_url)) {
           imageByContentId.set(row.content_id, row.image_url)
         }
       }
-      // Fallback: if no permanent URL found, use any URL from generated_images
+      // Fallback pass: if no permanent URL found yet, use any URL from generated_images
       for (const row of images || []) {
         if (row.content_id && !imageByContentId.has(row.content_id) && row.image_url) {
           imageByContentId.set(row.content_id, row.image_url)
         }
       }
-
-      result = list.map((c: { id: string; metadata?: Record<string, unknown>; image_url?: string }) => {
-        const betterUrl = imageByContentId.get(c.id)
-        if (betterUrl) {
-          const currentMeta = (c.metadata || {}) as { image_url?: string }
-          const currentUrl = currentMeta.image_url || c.image_url
-          // Replace if: no current URL, current URL isn't permanent, or the better one IS permanent
-          if (!currentUrl || !isPermanentUrl(currentUrl) || isPermanentUrl(betterUrl)) {
-            return { ...c, metadata: { ...(c.metadata || {}), image_url: betterUrl } }
-          }
-        }
-        return c
-      })
     }
 
-    // Ensure every item has top-level image_url for Spark Library / clients that read item.image_url
+    // Step 3: Merge best image URLs into the content list
+    const result = list.map((c: { id: string; metadata?: Record<string, unknown>; image_url?: string }) => {
+      const meta = (c.metadata || {}) as { image_url?: string }
+      const currentUrl = meta.image_url || c.image_url || null
+      const genImgUrl = imageByContentId.get(c.id)
+
+      // Determine the best URL: permanent current > permanent generated > any current > any generated
+      let bestUrl = currentUrl
+      if (!bestUrl || !isPermanentUrl(bestUrl)) {
+        if (genImgUrl && isPermanentUrl(genImgUrl)) {
+          bestUrl = genImgUrl
+        } else if (!bestUrl && genImgUrl) {
+          bestUrl = genImgUrl
+        }
+      }
+
+      // If we found a better URL, update metadata (and persist to DB in background)
+      if (bestUrl && bestUrl !== currentUrl) {
+        const updatedMeta = { ...(c.metadata || {}), image_url: bestUrl }
+        // Fire-and-forget: update the metadata in the DB so next load is instant
+        supabase.from('content').update({ metadata: updatedMeta, updated_at: new Date().toISOString() }).eq('id', c.id).then(() => {})
+        return { ...c, metadata: updatedMeta }
+      }
+      return c
+    })
+
+    // Step 4: Ensure every item has top-level image_url for Spark Library / clients
     const withTopLevelImage = (result as { metadata?: { image_url?: string }; image_url?: string }[]).map((c) => ({
       ...c,
       image_url: (c.metadata as { image_url?: string } | undefined)?.image_url ?? c.image_url ?? null,
