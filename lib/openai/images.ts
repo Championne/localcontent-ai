@@ -37,7 +37,7 @@ export const CONTENT_IMAGE_SIZES: Record<string, { size: '1024x1024' | '1792x102
   'blog-post': { size: '1792x1024', label: 'Landscape (1792x1024)' },
   'social-pack': { size: '1024x1024', label: 'Square (1024x1024)' },
   'social-post': { size: '1024x1024', label: 'Square (1024x1024)' },
-  'gmb-post': { size: '1024x1024', label: 'Square (1024x1024)' },
+  'gmb-post': { size: '1792x1024', label: 'Landscape 4:3 (1792x1024)' },
   'email': { size: '1792x1024', label: 'Landscape (1792x1024)' },
   'review-response': { size: '1024x1024', label: 'Square (1024x1024)' },
 }

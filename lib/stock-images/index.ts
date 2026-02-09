@@ -16,7 +16,8 @@ export function isStockImageConfigured(): boolean {
 }
 
 function getOrientation(contentType?: string): Orientation {
-  if (contentType === 'social-pack' || contentType === 'social-post' || contentType === 'gmb-post') return 'squarish'
+  if (contentType === 'social-pack' || contentType === 'social-post') return 'squarish'
+  if (contentType === 'gmb-post') return 'landscape' // Google recommends 4:3 (720x540) for GBP posts
   if (contentType === 'email' || contentType === 'blog-post') return 'landscape'
   return 'landscape'
 }

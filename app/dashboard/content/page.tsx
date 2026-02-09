@@ -85,7 +85,7 @@ const GBP_POST_TYPES = {
   event: {
     name: 'Event',
     emoji: '📅',
-    description: 'Workshops, open days, or limited-time happenings. Include date and time.',
+    description: 'Workshops, open days, or limited-time happenings. Supports up to 10 images (720×540, 4:3, JPG/PNG, 10 KB–5 MB).',
     cta: 'Book',
   },
   update: {
@@ -981,7 +981,7 @@ export default function CreateContentPage() {
     { 
       id: 'gmb-post', 
       name: 'Google Business Post', 
-      description: 'Updates, offers, or events for your GMB profile',
+      description: 'Updates, offers, or events for your GBP profile (4:3 image)',
       benefit: 'Stay visible to local searchers',
       color: 'blue',
       time: '~20 sec'
@@ -1817,6 +1817,9 @@ export default function CreateContentPage() {
                 {/* Info tip */}
                 <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800 -mt-2 mb-4">
                   💡 GBP posts are optimized for searchers ready to act: short, direct, benefit-first.
+                  {gbpPostType === 'event' && (
+                    <span className="block mt-1 text-xs text-blue-600">📸 Event posts support image uploads — Google recommends 720×540px (4:3 aspect ratio), JPG or PNG, 10 KB – 5 MB. You can add up to 10 images per event.</span>
+                  )}
                 </div>
                 
                 <div className="mb-4">
