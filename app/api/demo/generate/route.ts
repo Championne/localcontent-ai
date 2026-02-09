@@ -212,9 +212,15 @@ export async function POST(request: Request) {
 
     // Image: always use AI-generated images to showcase our capability
     let imageUrl: string | undefined
-    if (isImageGenerationConfigured()) {
+    let imageSource: string | undefined
+    const imageConfigured = isImageGenerationConfigured()
+    const stockConfigured = isStockImageConfigured()
+    console.log(`[Demo] Image config: AI=${imageConfigured}, Stock=${stockConfigured}`)
+
+    if (imageConfigured) {
       try {
         const style = detectBestStyle(topic)
+        console.log(`[Demo] Generating AI image: style=${style}, topic="${topic}", industry="${industry}"`)
         const imageResult = await generateImage({
           topic,
           businessName,
@@ -223,23 +229,51 @@ export async function POST(request: Request) {
           contentType,
         })
         imageUrl = imageResult.url
-      } catch (imgError) {
-        console.error('Demo AI image generation failed:', imgError)
+        imageSource = 'ai'
+        console.log(`[Demo] AI image generated successfully: ${imageUrl?.substring(0, 80)}...`)
+      } catch (imgError: unknown) {
+        const errMsg = imgError instanceof Error ? imgError.message : String(imgError)
+        console.error('Demo AI image generation failed:', errMsg)
         // Fallback to stock only if AI fails
-        if (isStockImageConfigured()) {
+        if (stockConfigured) {
           try {
             const templateForStock = contentType === 'social-pack' ? 'social-pack' : (contentType as 'blog-post' | 'gmb-post' | 'email')
+            console.log(`[Demo] Falling back to stock image for "${topic}" / "${industry}"`)
             const options = await getStockImageOptions({ topic, industry, contentType: templateForStock }, 1)
             if (options.length > 0) {
               imageUrl = options[0].url
+              imageSource = 'stock'
+              console.log(`[Demo] Stock image fallback succeeded: ${imageUrl?.substring(0, 80)}...`)
+            } else {
+              console.warn('[Demo] Stock image search returned 0 results')
             }
-          } catch (e) {
-            console.error('Demo stock image fallback also failed:', e)
+          } catch (e: unknown) {
+            const stockErr = e instanceof Error ? e.message : String(e)
+            console.error('Demo stock image fallback also failed:', stockErr)
           }
+        } else {
+          console.warn('[Demo] Stock images not configured, no fallback available')
         }
       }
+    } else if (stockConfigured) {
+      // AI not configured, try stock directly
+      try {
+        const templateForStock = contentType === 'social-pack' ? 'social-pack' : (contentType as 'blog-post' | 'gmb-post' | 'email')
+        console.log(`[Demo] AI not configured, using stock images for "${topic}" / "${industry}"`)
+        const options = await getStockImageOptions({ topic, industry, contentType: templateForStock }, 1)
+        if (options.length > 0) {
+          imageUrl = options[0].url
+          imageSource = 'stock'
+        }
+      } catch (e: unknown) {
+        const stockErr = e instanceof Error ? e.message : String(e)
+        console.error('Demo stock image failed:', stockErr)
+      }
+    } else {
+      console.warn('[Demo] Neither AI nor stock image configured — no image will be generated')
     }
 
+    console.log(`[Demo] Generation complete: content=${typeof content === 'object' ? 'social-pack' : 'text'}, image=${imageUrl ? imageSource : 'none'}`)
     const response = NextResponse.json({
       success: true,
       demo: true,
@@ -251,6 +285,7 @@ export async function POST(request: Request) {
       displayType,
       content,
       imageUrl,
+      imageSource,
       generatedAt: new Date().toISOString(),
       usage: usageInfo
     })
