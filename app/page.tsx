@@ -8,7 +8,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex flex-col items-start">
             <Image 
               src="/logo-geospark.png" 
               alt="GeoSpark" 
@@ -17,6 +17,7 @@ export default function HomePage() {
               className="h-16 w-auto"
               priority
             />
+            <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-gray-400 ml-1 -mt-1">Click. Spark. Post.</span>
           </Link>
           
           {/* Desktop Nav */}
