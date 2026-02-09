@@ -26,6 +26,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
   if (fs !== 'polaroid') {
     const padMap: Record<string, number> = {
       thin: 3,
+      double: 3,
       classic: 20,
       wooden: 20,
       thick: 16,
@@ -94,9 +95,8 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
   }
 
   if (fs === 'double') {
-    base.padding = '8px'
+    base.padding = '4px'
     base.background = '#ffffff'
-    base.border = '2px solid ' + fHex
     base.boxSizing = 'border-box'
   } else {
     const borderMap: Record<string, string | undefined> = {
