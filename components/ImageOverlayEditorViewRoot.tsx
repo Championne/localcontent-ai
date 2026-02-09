@@ -262,7 +262,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                   className="absolute inset-0 pointer-events-none z-[1]"
                   style={{
                     backgroundColor: p.getHex(p.tintOverlay.colorKey),
-                    opacity: typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25,
+                    opacity: typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.15,
                   }}
                 />
               )}
@@ -284,7 +284,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                     </span>
                     <div
                       className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 shadow-xl border bg-white/95 backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
-                      style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
+                      style={{ borderColor: hexWithAlpha(primary, 0.15), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
                         <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{isPhoto ? 'Edit photo' : 'Edit logo'}</span>
@@ -314,7 +314,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                   <span className="font-bold drop-shadow-lg px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter' }}>{t.text}</span>
                   <div
                     className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 shadow-xl border bg-white/95 backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
-                    style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
+                    style={{ borderColor: hexWithAlpha(primary, 0.15), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Edit text</span>
@@ -372,13 +372,13 @@ export default function ImageOverlayEditorViewRoot(props: {
               </button>
               <div className="flex items-center gap-1.5">
                 {(['primary', 'secondary', 'accent'] as const).map((key) => (
-                  <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
+                  <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.15 })} className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
                 ))}
               </div>
               {p.tintOverlay && (
                 <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
-                  <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-full h-1 accent-gray-600" />
-                  <span className="tabular-nums w-8 text-right">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
+                  <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.15} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-full h-1 accent-gray-600" />
+                  <span className="tabular-nums w-8 text-right">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.15) * 100)}%</span>
                 </label>
               )}
               {p.frame && ['gold', 'silver', 'copper', 'neon', 'filmstrip', 'vignette'].includes(p.frame.style) && (
@@ -430,7 +430,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                 const metallicShine = metal === 'gold'
                   ? 'linear-gradient(135deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.2) 25%, transparent 45%)'
                   : metal === 'silver'
-                  ? 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.25) 25%, transparent 45%)'
+                  ? 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.15) 25%, transparent 45%)'
                   : 'linear-gradient(135deg, rgba(255,253,248,0.5) 0%, rgba(255,240,220,0.15) 25%, transparent 45%)'
                 const selectedGlow = metal === 'gold' ? '0 0 14px rgba(184,134,11,0.45)' : metal === 'silver' ? '0 0 14px rgba(192,192,192,0.5)' : '0 0 14px rgba(184,115,51,0.45)'
                 return (
@@ -443,7 +443,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                       background: isSelected ? `${metallicShine}, ${grad}` : grad,
                       boxShadow: isSelected
                         ? `inset 0 1px 0 rgba(255,255,255,0.65), inset 0 2px 4px -1px rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.15), ${selectedGlow}, 0 2px 8px rgba(0,0,0,0.2)`
-                        : 'inset 0 1px 0 rgba(255,255,255,0.25)',
+                        : 'inset 0 1px 0 rgba(255,255,255,0.15)',
                       borderColor: isSelected ? (metal === 'gold' ? '#8b6914' : metal === 'silver' ? '#505050' : '#5c2e0a') : undefined,
                     }}
                     title={metal.charAt(0).toUpperCase() + metal.slice(1)}
@@ -471,12 +471,12 @@ export default function ImageOverlayEditorViewRoot(props: {
             <p className="text-[11px] font-medium text-gray-600 mr-1">Tint</p>
             <button type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })} className="text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all" style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}>Light</button>
             {(['primary', 'secondary', 'accent'] as const).map((key) => (
-              <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.25 })} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
+              <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.15 })} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
             ))}
             {p.tintOverlay && (
               <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
-                <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-20 h-1 accent-gray-600" />
-                <span className="tabular-nums w-6">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
+                <input type="range" min="0.1" max="0.8" step="0.05" value={typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.15} onChange={(e) => { const v = parseFloat(e.target.value); if (!Number.isNaN(v)) p.setTintOverlay(prev => prev ? { ...prev, opacity: v } : null) }} className="w-20 h-1 accent-gray-600" />
+                <span className="tabular-nums w-6">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.15) * 100)}%</span>
               </label>
             )}
           </div>
