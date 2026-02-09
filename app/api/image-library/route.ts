@@ -45,7 +45,23 @@ export async function GET(request: NextRequest) {
     query = query.contains('tags', [tag])
   }
 
-  const { data, count, error } = await query
+  let { data, count, error } = await query
+
+  // Graceful fallback: if the business_id column doesn't exist yet, retry without it
+  if (error && businessId && error.message?.includes('business_id')) {
+    const retryQuery = supabase
+      .from('user_image_library')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    if (tag) retryQuery.contains('tags', [tag])
+    const retry = await retryQuery
+    data = retry.data
+    count = retry.count
+    error = retry.error
+  }
+
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
@@ -106,21 +122,32 @@ export async function POST(request: NextRequest) {
   const { data: urlData } = storageClient.storage.from(BUCKET).getPublicUrl(storagePath)
   const publicUrl = urlData.publicUrl
 
-  // Insert metadata row
-  const { data: row, error: insertError } = await supabase
+  // Insert metadata row (try with business_id first, fall back without if column doesn't exist)
+  const insertPayload: Record<string, unknown> = {
+    user_id: user.id,
+    storage_path: storagePath,
+    public_url: publicUrl,
+    filename,
+    tags,
+    file_size: file.size,
+    mime_type: file.type,
+  }
+  if (businessId) insertPayload.business_id = businessId
+
+  let { data: row, error: insertError } = await supabase
     .from('user_image_library')
-    .insert({
-      user_id: user.id,
-      business_id: businessId || null,
-      storage_path: storagePath,
-      public_url: publicUrl,
-      filename,
-      tags,
-      file_size: file.size,
-      mime_type: file.type,
-    })
+    .insert(insertPayload)
     .select()
     .single()
+
+  // Graceful fallback: if business_id column doesn't exist, retry without it
+  if (insertError && insertError.message?.includes('business_id')) {
+    const { business_id: _removed, ...payloadWithout } = insertPayload
+    void _removed
+    const retry = await supabase.from('user_image_library').insert(payloadWithout).select().single()
+    row = retry.data
+    insertError = retry.error
+  }
 
   if (insertError) {
     console.error('Image library insert error:', insertError)
