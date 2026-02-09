@@ -283,8 +283,8 @@ export default function ImageOverlayEditorViewRoot(props: {
                       <img src={overlay.url} alt="" className={`w-full h-full object-${isPhoto ? 'cover' : 'contain'} ${isPhoto ? 'rounded-full' : 'rounded-lg'} shadow-lg`} draggable={false} />
                     </span>
                     <div
-                      className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 shadow-xl border bg-white/95 backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
-                      style={{ borderColor: hexWithAlpha(primary, 0.15), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
+                      className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                      style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
                         <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{isPhoto ? 'Edit photo' : 'Edit logo'}</span>
@@ -313,8 +313,8 @@ export default function ImageOverlayEditorViewRoot(props: {
                 <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(-50%, -50%)' }}>
                   <span className="font-bold drop-shadow-lg px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter' }}>{t.text}</span>
                   <div
-                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 shadow-xl border bg-white/95 backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
-                    style={{ borderColor: hexWithAlpha(primary, 0.15), boxShadow: `0 10px 40px rgba(0,0,0,0.12), 0 0 0 1px ${hexWithAlpha(primary, 0.08)}` }}
+                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                    style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Edit text</span>
