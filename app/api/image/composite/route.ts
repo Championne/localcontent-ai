@@ -104,11 +104,12 @@ export async function POST(request: Request) {
         .composite([{ input: resizedLogo, left: boundedLeft, top: boundedTop }])
         .toBuffer()
 
-      // Optional: ring around overlay (profile/logo) in brand colour
+      // Optional: ring around circular overlays (profile photos) in brand colour
+      // Skip ring for non-circular logos — the logo's own shape defines its border
       const ringHex = (typeof overlayBorderColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(overlayBorderColor))
         ? overlayBorderColor
         : (typeof brandPrimaryColor === 'string' && /^#[0-9A-Fa-f]{6}$/.test(brandPrimaryColor) ? brandPrimaryColor : null)
-      if (ringHex) {
+      if (ringHex && isCircular) {
         const ringPx = Math.max(2, Math.min(8, Math.round(logoWidth / 32)))
         const cx = boundedLeft + (logoMeta.width || logoWidth) / 2
         const cy = boundedTop + logoHeight / 2

@@ -235,7 +235,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
             {/* Prominent brand logo */}
             {selectedBusiness?.logo_url && (
               <div className="mb-2 flex items-center justify-center">
-                <img src={selectedBusiness.logo_url} alt={selectedBusiness.name || ''} className="max-h-12 max-w-[180px] w-auto object-contain rounded-lg" />
+                <img src={selectedBusiness.logo_url} alt={selectedBusiness.name || ''} className="max-h-12 max-w-[180px] w-auto object-contain" />
               </div>
             )}
             <button
@@ -244,7 +244,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
               style={{ borderColor: hexToRgba(brandPrimary, 0.25) }}
             >
               {selectedBusiness?.logo_url ? (
-                <img src={selectedBusiness.logo_url} alt="" className="w-7 h-7 rounded-md object-cover flex-shrink-0 ring-1 ring-gray-100" />
+                <img src={selectedBusiness.logo_url} alt="" className="w-7 h-7 object-contain flex-shrink-0" />
               ) : (
                 <div
                   className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
@@ -277,7 +277,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                     style={selectedBusinessId === b.id ? { backgroundColor: hexToRgba(brandPrimary, 0.08) } : {}}
                   >
                     {b.logo_url ? (
-                      <img src={b.logo_url} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
+                      <img src={b.logo_url} alt="" className="w-6 h-6 object-contain flex-shrink-0" />
                     ) : (
                       <div
                         className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold"
