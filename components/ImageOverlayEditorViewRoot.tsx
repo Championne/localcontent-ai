@@ -267,10 +267,23 @@ export default function ImageOverlayEditorViewRoot(props: {
                     onMouseDown={(e) => p.handleOverlayDragStart(overlay.id, e)}
                     onTouchStart={(e) => p.handleOverlayDragStart(overlay.id, e)}
                     className="absolute cursor-move group z-10"
-                    style={{ left: `${overlay.x}%`, top: `${overlay.y}%`, width: `${overlay.scale}%`, height: `${overlay.scale}%` }}
+                    style={{
+                      left: `${overlay.x}%`,
+                      top: `${overlay.y}%`,
+                      width: `${overlay.scale}%`,
+                      ...(isPhoto ? { height: `${overlay.scale}%` } : {}),
+                    }}
                   >
-                    <span className={`block w-full h-full ${isPhoto ? 'rounded-full' : 'rounded-lg'}`} style={{ boxShadow: `0 0 0 2px ${borderHex}` }}>
-                      <img src={overlay.url} alt="" className={`w-full h-full object-${isPhoto ? 'cover' : 'contain'} ${isPhoto ? 'rounded-full' : 'rounded-lg'} shadow-lg`} draggable={false} />
+                    <span
+                      className={`block ${isPhoto ? 'w-full h-full rounded-full' : 'inline-block rounded-lg'}`}
+                      style={{ boxShadow: `0 0 0 3px ${borderHex}`, borderRadius: isPhoto ? '9999px' : '0.5rem', ...(isPhoto ? {} : { display: 'block' }) }}
+                    >
+                      <img
+                        src={overlay.url}
+                        alt=""
+                        className={`${isPhoto ? 'w-full h-full object-cover rounded-full' : 'w-full h-auto rounded-lg'} shadow-lg`}
+                        draggable={false}
+                      />
                     </span>
                     <div
                       className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
@@ -299,8 +312,9 @@ export default function ImageOverlayEditorViewRoot(props: {
               })}
               {p.textOverlays.map((t) => {
                 const showPanelLeft = t.x > 60
+                const isRightAnchored = t.x > 50
                 return (
-                <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(0, -50%)' }}>
+                <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: `translate(${isRightAnchored ? '-100%' : '0'}, -50%)`, whiteSpace: 'nowrap' }}>
                   <span className="font-bold px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter', WebkitTextStroke: '0.5px rgba(0,0,0,0.5)', textShadow: '0 1px 3px rgba(0,0,0,0.6), 0 0px 8px rgba(0,0,0,0.3)' }}>{t.text}</span>
                   <div
                     className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}

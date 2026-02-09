@@ -797,7 +797,8 @@ export default function CreateContentPage() {
           const fontSize = Math.round(Math.min(72, Math.max(14, (t.fontSize ?? 24) * scale)))
           const fontFamily = (t as { fontFamily?: string }).fontFamily || 'Inter'
           ctx.font = `bold ${fontSize}px "${fontFamily}", system-ui, sans-serif`
-          ctx.textAlign = 'left'
+          const isRightAnchored = t.x > 50
+          ctx.textAlign = isRightAnchored ? 'right' : 'left'
           ctx.textBaseline = 'middle'
           ctx.fillStyle = hex
           ctx.strokeStyle = 'rgba(0,0,0,0.5)'
