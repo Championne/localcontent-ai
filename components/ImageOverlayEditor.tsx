@@ -252,14 +252,18 @@ export default function ImageOverlayEditor({
         const url = draggingNew === 'logo' ? effectiveLogoUrl : effectivePhotoUrl
         if (url && onImage) {
           const scale = draggingNew === 'photo' ? 20 : 15
-          const existing = overlays.find(o => o.type === draggingNew)
-          if (existing) {
-            setOverlays(prev => prev.map(o => o.type === draggingNew ? { ...o, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)) } : o))
-          } else {
-            const id = `${draggingNew}-${Date.now()}`
-            setOverlays(prev => [...prev, { id, url, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)), scale, type: draggingNew }])
-            setOverlayBorderColors(prev => ({ ...prev, [id]: getHex('primary') }))
-          }
+          const dropType = draggingNew
+          const newId = `${dropType}-${Date.now()}`
+          // Use functional update to always check against latest state
+          // (avoids stale closure causing duplicate overlays)
+          setOverlays(prev => {
+            const existing = prev.find(o => o.type === dropType)
+            if (existing) {
+              return prev.map(o => o.type === dropType ? { ...o, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)) } : o)
+            }
+            return [...prev, { id: newId, url, x: Math.max(0, Math.min(100 - scale, x - scale / 2)), y: Math.max(0, Math.min(100 - scale, y - scale / 2)), scale, type: dropType }]
+          })
+          setOverlayBorderColors(prev => ({ ...prev, [newId]: getHex('primary') }))
         }
       }
     }

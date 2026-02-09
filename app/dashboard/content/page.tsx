@@ -438,7 +438,9 @@ export default function CreateContentPage() {
       if (newUrl) {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
         setInitialOverlayState(payload)
-        setAppliedBrandingForImageUrl(imageUrlToApply)
+        // Store the BRANDED url so the auto-branding useEffect guard matches
+        // generatedImage.url and does not re-trigger (preventing double-branding)
+        setAppliedBrandingForImageUrl(newUrl)
         setLogoSkipped(true)
         setPhotoSkipped(true)
       } else {
@@ -461,7 +463,8 @@ export default function CreateContentPage() {
     const baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
     const payload = initialOverlayState
     if (!payload) {
-      await runAutoBranding(generatedImage.url)
+      // Use the original base URL (not the branded one) to avoid double-branding
+      await runAutoBranding(suggestedBrandingBaseImageUrl || generatedImage.url)
       return
     }
     setBrandingRecommendationLoading(true)
@@ -552,7 +555,9 @@ export default function CreateContentPage() {
         if (newUrl) {
           setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
           setInitialOverlayState(payload)
-          setAppliedBrandingForImageUrl(imageUrlToApply)
+          // Store the BRANDED url so this useEffect guard matches
+          // generatedImage.url and does not re-trigger (preventing double-branding)
+          setAppliedBrandingForImageUrl(newUrl)
           setLogoSkipped(true)
           setPhotoSkipped(true)
         } else {
