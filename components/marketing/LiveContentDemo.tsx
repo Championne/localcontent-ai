@@ -2,7 +2,22 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import ReactMarkdown from 'react-markdown'
 import { GenerationProgress } from '@/components/ui/GenerationProgress'
+
+// Preprocess AI-generated markdown so ReactMarkdown renders it correctly.
+// Fixes missing blank lines before headers, converts • bullets to markdown lists, etc.
+function preprocessMarkdown(raw: string): string {
+  let s = raw
+  s = s.replace(/\r\n/g, '\n')
+  s = s.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+  s = s.replace(/([^\n])(\s?#{1,6}\s)/g, '$1\n\n$2')
+  s = s.replace(/(^|\n)\s*•\s*/g, '$1- ')
+  // Convert "- Item" lines that lack a preceding blank line into proper list items
+  s = s.replace(/([^\n])\n(- )/g, '$1\n\n$2')
+  s = s.replace(/\n{3,}/g, '\n\n')
+  return s.trim()
+}
 
 // Reusable Demo Image component with loading/error handling
 function DemoImage({ 
@@ -558,43 +573,66 @@ function SocialPackDisplay({ pack, imageUrl, businessName = 'Local Business', in
   )
 }
 
-// Blog Post Display Component - Matches dashboard styling
+// Blog Post Display Component - Matches dashboard styling with proper markdown rendering
 function BlogPostDisplay({ content, imageUrl, businessName }: { content: string; imageUrl?: string; businessName: string }) {
+  const processed = preprocessMarkdown(content)
+  // Extract first heading as the title (if present)
+  const titleMatch = processed.match(/^#\s+(.+)/m)
+  const title = titleMatch ? titleMatch[1] : undefined
+  // Remove the title line from the body so it isn't rendered twice
+  const body = title ? processed.replace(/^#\s+.+\n*/m, '') : processed
+  // Estimate word count
+  const wordCount = content.split(/\s+/).filter(Boolean).length
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Hero Image */}
       {imageUrl && (
-        <div className="relative h-48 bg-gradient-to-br from-blue-100 to-blue-50">
+        <div className="relative h-56 bg-gradient-to-br from-blue-100 to-blue-50">
           <DemoImage 
             src={imageUrl} 
             className="w-full h-full object-cover"
             containerClassName="w-full h-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+          {title && (
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight drop-shadow-lg">{title}</h1>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Author Bar */}
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+          {businessName.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-gray-900 text-sm">{businessName}</p>
+          <p className="text-xs text-gray-500">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · {wordCount} words · {Math.ceil(wordCount / 200)} min read</p>
+        </div>
+      </div>
+
+      {/* If no hero image, show title inline */}
+      {!imageUrl && title && (
+        <div className="px-6 pt-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-2">{title}</h1>
         </div>
       )}
       
-      {/* Content */}
-      <div className="p-6">
-        <div className="prose prose-sm max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h1:text-2xl prose-h1:mb-4 prose-h2:text-xl prose-h2:mt-6 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-4 prose-strong:text-gray-900 prose-ul:my-3 prose-li:text-gray-600">
-          <TypeWriter text={content} speed={3} />
-        </div>
-        
-        {/* Author Footer */}
-        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-            {businessName.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <p className="font-medium text-gray-900 text-sm">{businessName}</p>
-            <p className="text-xs text-gray-500">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          </div>
-        </div>
+      {/* Markdown Content */}
+      <div className="px-6 py-6">
+        <article className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-5 prose-strong:text-gray-900 prose-ul:my-4 prose-ul:space-y-2 prose-li:text-gray-600 prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-teal-500 prose-blockquote:text-gray-500">
+          <ReactMarkdown>{body}</ReactMarkdown>
+        </article>
       </div>
       
       {/* Footer Stats */}
-      <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-3 text-xs text-gray-500">
-        <span>~600 words</span>
+      <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-500">
+        <span>{wordCount} words</span>
+        <span>•</span>
+        <span>{Math.ceil(wordCount / 200)} min read</span>
         <span>•</span>
         <span>SEO optimized</span>
         <span>•</span>
@@ -704,8 +742,8 @@ function EmailDisplay({ content, imageUrl, businessName }: { content: string; im
       
       {/* Email Body */}
       <div className="p-6">
-        <div className="prose prose-sm max-w-none prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-3 prose-strong:text-gray-900 prose-ul:my-3 prose-li:text-gray-600">
-          <TypeWriter text={bodyContent} speed={5} />
+        <div className="prose prose-sm max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h2:text-lg prose-h2:mt-5 prose-h2:mb-2 prose-h3:text-base prose-h3:mt-4 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-3 prose-strong:text-gray-900 prose-ul:my-3 prose-li:text-gray-600">
+          <ReactMarkdown>{preprocessMarkdown(bodyContent)}</ReactMarkdown>
         </div>
         
         {/* CTA Button */}
