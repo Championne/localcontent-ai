@@ -2,6 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { isTemporaryImageUrl, persistContentImage } from '@/lib/content-image'
 
+/** Returns true if a URL points to permanent Supabase storage */
+function isPermanentUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false
+  return url.includes('supabase.co/storage') || url.includes('supabase.com/storage')
+}
+
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
@@ -37,32 +43,49 @@ export async function GET(request: NextRequest) {
 
     const list = contentList || []
 
-    // For content missing metadata.image_url, get thumbnail from linked generated_images so Spark Library shows images
-    const idsWithoutImage = list.filter((c: { metadata?: { image_url?: string }; image_url?: string }) => {
+    // Collect IDs of content items that are missing an image OR have a non-permanent (possibly expired) URL
+    const idsNeedingImage = list.filter((c: { metadata?: { image_url?: string }; image_url?: string }) => {
       const meta = c.metadata as { image_url?: string } | undefined
-      return !meta?.image_url && !(c as { image_url?: string }).image_url
+      const url = meta?.image_url || (c as { image_url?: string }).image_url
+      // No URL at all, or URL is not a permanent Supabase storage URL
+      return !url || !isPermanentUrl(url)
     }).map((c: { id: string }) => c.id)
 
     let result = list
-    if (idsWithoutImage.length > 0) {
+    if (idsNeedingImage.length > 0) {
+      // Look up generated_images for persisted (Supabase) image URLs linked to these content items
       const { data: images } = await supabase
         .from('generated_images')
         .select('content_id, image_url')
         .eq('user_id', user.id)
-        .in('content_id', idsWithoutImage)
+        .in('content_id', idsNeedingImage)
         .not('image_url', 'is', null)
         .order('created_at', { ascending: false })
 
+      // Build map: prefer permanent URLs from generated_images
       const imageByContentId = new Map<string, string>()
       for (const row of images || []) {
-        if (row.content_id && !imageByContentId.has(row.content_id)) {
+        if (row.content_id && !imageByContentId.has(row.content_id) && isPermanentUrl(row.image_url)) {
+          imageByContentId.set(row.content_id, row.image_url)
+        }
+      }
+      // Fallback: if no permanent URL found, use any URL from generated_images
+      for (const row of images || []) {
+        if (row.content_id && !imageByContentId.has(row.content_id) && row.image_url) {
           imageByContentId.set(row.content_id, row.image_url)
         }
       }
 
-      result = list.map((c: { id: string; metadata?: Record<string, unknown> }) => {
-        const url = imageByContentId.get(c.id)
-        if (url) return { ...c, metadata: { ...(c.metadata || {}), image_url: url } }
+      result = list.map((c: { id: string; metadata?: Record<string, unknown>; image_url?: string }) => {
+        const betterUrl = imageByContentId.get(c.id)
+        if (betterUrl) {
+          const currentMeta = (c.metadata || {}) as { image_url?: string }
+          const currentUrl = currentMeta.image_url || c.image_url
+          // Replace if: no current URL, current URL isn't permanent, or the better one IS permanent
+          if (!currentUrl || !isPermanentUrl(currentUrl) || isPermanentUrl(betterUrl)) {
+            return { ...c, metadata: { ...(c.metadata || {}), image_url: betterUrl } }
+          }
+        }
         return c
       })
     }
