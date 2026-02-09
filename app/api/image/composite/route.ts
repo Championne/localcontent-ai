@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 
+// Allow up to 60 s for heavy composite operations (neon, filmstrip, etc.)
+export const maxDuration = 60
+
 // POST /api/image/composite - Add logo to image
 export async function POST(request: Request) {
   const supabase = createClient()

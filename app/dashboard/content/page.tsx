@@ -536,8 +536,10 @@ export default function CreateContentPage() {
         textOverlays,
         frame: rec.frame ? { style: rec.frame.style, colorKey: rec.frame.colorKey } : null,
       }
-      setSuggestedBrandingBaseImageUrl(imageUrlToApply)
-      const newUrl = await applyPayloadToImage(imageUrlToApply, payload)
+      // Persist the base image to Supabase so the URL never expires (DALL-E URLs expire after ~1h)
+      const persistedBase = await persistImageUrl(imageUrlToApply)
+      setSuggestedBrandingBaseImageUrl(persistedBase)
+      const newUrl = await applyPayloadToImage(persistedBase, payload)
       if (newUrl) {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
         setInitialOverlayState(payload)
@@ -549,12 +551,11 @@ export default function CreateContentPage() {
       } else {
         // Apply failed (e.g. CORS on text); still save suggestion so overlay editor and Revert can use it
         setInitialOverlayState(payload)
-        setSuggestedBrandingBaseImageUrl(imageUrlToApply)
-        setAppliedBrandingForImageUrl(imageUrlToApply)
+        setAppliedBrandingForImageUrl(persistedBase)
         setShowOverlayEditor(true)
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Auto-branding error:', err)
     } finally {
       setBrandingRecommendationLoading(false)
     }
@@ -577,8 +578,9 @@ export default function CreateContentPage() {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
         setAppliedBrandingForImageUrl(newUrl)
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Revert branding error:', err)
+      setOverlayError(err instanceof Error ? err.message : 'Failed to revert branding')
     } finally {
       setBrandingRecommendationLoading(false)
     }
@@ -754,7 +756,30 @@ export default function CreateContentPage() {
     return `rgba(${r},${g},${b},${alpha})`
   }
 
-  // Apply overlay payload to an image URL; returns the new image URL or null on failure
+  // ---------------------------------------------------------------------------
+  // Persist an external image URL to Supabase so it never expires.
+  // Returns the persistent Supabase URL, or falls back to the original on error.
+  // ---------------------------------------------------------------------------
+  const persistImageUrl = async (url: string): Promise<string> => {
+    try {
+      const res = await fetch('/api/image/persist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: url }),
+      })
+      if (!res.ok) {
+        console.warn('persistImageUrl: API returned', res.status)
+        return url
+      }
+      const data = await res.json()
+      return data.url || url
+    } catch (err) {
+      console.warn('persistImageUrl: fetch failed', err)
+      return url
+    }
+  }
+
+  // Apply overlay payload to an image URL; returns the new image URL or throws with a descriptive message
   const applyPayloadToImage = async (baseImageUrl: string, payload: OverlayApplyPayload): Promise<string | null> => {
     const { imageOverlays, overlayBorderColors, tintOverlay, textOverlays, frame } = payload
     if (imageOverlays.length === 0 && textOverlays.length === 0 && !frame && !tintOverlay) return baseImageUrl
@@ -774,9 +799,13 @@ export default function CreateContentPage() {
             overlayBorderColor: borderHex || undefined,
           }),
         })
-        if (!res.ok) return null
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}))
+          console.error('Composite overlay failed:', res.status, errBody)
+          throw new Error(errBody.error || `Composite failed (HTTP ${res.status})`)
+        }
         const data = await res.json()
-        if (!data.url) return null
+        if (!data.url) throw new Error('Composite returned no URL')
         currentImageUrl = data.url
       }
       // Tint and frame: send in one composite request when no logo/photo (more reliable than two round-trips)
@@ -798,10 +827,14 @@ export default function CreateContentPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-        if (!res.ok) return null
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}))
+          console.error('Composite tint/frame failed:', res.status, errBody)
+          throw new Error(errBody.error || `Frame/tint composite failed (HTTP ${res.status})`)
+        }
         const data = await res.json()
-        if (data.url) currentImageUrl = data.url
-        else return null
+        if (!data.url) throw new Error('Composite returned no URL for tint/frame')
+        currentImageUrl = data.url
       }
       if (textOverlays.length > 0 && colors) {
         const img = await fetch(currentImageUrl).then(r => r.blob())
@@ -810,7 +843,7 @@ export default function CreateContentPage() {
         canvas.width = bitmap.width
         canvas.height = bitmap.height
         const ctx = canvas.getContext('2d')
-        if (!ctx) return null
+        if (!ctx) throw new Error('Could not create canvas context')
         ctx.drawImage(bitmap, 0, 0)
         const scale = bitmap.width / 1024
         for (const t of textOverlays) {
@@ -830,17 +863,23 @@ export default function CreateContentPage() {
           ctx.fillText(t.text, px, py)
         }
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
-        if (!blob) return null
+        if (!blob) throw new Error('Canvas toBlob returned null')
         const form = new FormData()
         form.append('file', blob, 'content-image.png')
         const uploadRes = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
-        if (!uploadRes.ok) return null
+        if (!uploadRes.ok) {
+          const errBody = await uploadRes.json().catch(() => ({}))
+          console.error('Upload overlay failed:', uploadRes.status, errBody)
+          throw new Error(errBody.error || `Upload overlay failed (HTTP ${uploadRes.status})`)
+        }
         const uploadData = await uploadRes.json()
         if (uploadData.url) currentImageUrl = uploadData.url
       }
       return `${currentImageUrl}${currentImageUrl.includes('?') ? '&' : '?'}_=${Date.now()}`
-    } catch {
-      return null
+    } catch (err) {
+      // Re-throw with useful message so callers can surface it
+      if (err instanceof Error) throw err
+      throw new Error('Unknown error applying branding')
     }
   }
 
@@ -852,11 +891,12 @@ export default function CreateContentPage() {
     setApplyingLogo(true)
     try {
       // Use the original (pre-branding) base image to avoid double-branding.
-      // If suggestedBrandingBaseImageUrl is not set yet (e.g. auto-branding was skipped),
-      // save the current generatedImage.url as the base BEFORE processing.
-      const baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
+      // Persist external URLs (e.g. DALL-E, Unsplash) to Supabase so they never expire.
+      let baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
       if (!suggestedBrandingBaseImageUrl) {
-        setSuggestedBrandingBaseImageUrl(generatedImage.url)
+        // First apply – persist the base image so future re-applies don't break
+        baseUrl = await persistImageUrl(baseUrl)
+        setSuggestedBrandingBaseImageUrl(baseUrl)
       }
       const newUrl = await applyPayloadToImage(baseUrl, payload)
       if (newUrl) {
@@ -871,7 +911,8 @@ export default function CreateContentPage() {
       }
     } catch (error) {
       console.error('Overlay apply error:', error)
-      setOverlayError('Something went wrong applying branding. Please try again.')
+      const msg = error instanceof Error ? error.message : 'Unknown error'
+      setOverlayError(`Branding failed: ${msg}`)
     } finally {
       setApplyingLogo(false)
     }
