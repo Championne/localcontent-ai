@@ -18,12 +18,12 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
   }
 
   const base: CSSProperties = {
-    aspectRatio: fs === 'polaroid' ? '3/4' : '1',
+    aspectRatio: '1',
     borderRadius: fs === 'rounded' ? 12 : 0,
   }
 
   // Padding
-  if (fs !== 'polaroid') {
+  {
     const padMap: Record<string, number> = {
       thin: 3,
       double: 3,
@@ -66,8 +66,6 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
     base.background =
       'linear-gradient(135deg, rgba(255,253,248,0.5) 0%, rgba(255,240,220,0.15) 25%, transparent 45%), ' +
       'linear-gradient(135deg, #fdf5eb 0%, #e8b878 15%, #c48450 40%, #8b4513 68%, #5c2e0a 88%, #2d1804 100%)'
-  } else if (fs === 'polaroid') {
-    base.backgroundColor = 'transparent'
   } else if (fs === 'filmstrip') {
     base.backgroundColor = '#121212'
   } else if (fs === 'neon') {
@@ -90,7 +88,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
     : '#e5e7eb'
 
   const base: CSSProperties = {
-    aspectRatio: fs === 'polaroid' ? '3/4' : '1',
+    aspectRatio: '1',
     borderRadius: fs === 'rounded' ? 12 : 0,
   }
 
@@ -105,7 +103,6 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
       gold: '2px solid rgba(255,248,220,0.9)',
       silver: '2px solid rgba(255,255,255,0.95)',
       copper: '2px solid rgba(253,240,224,0.9)',
-      polaroid: 'none',
       filmstrip: '1px solid #2a2a2a',
     }
     if (fs && fs in borderMap) {
@@ -120,7 +117,6 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
     gold: 'inset 0 1px 0 rgba(255,252,224,0.9), inset 0 3px 8px -2px rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.25)',
     silver: 'inset 0 1px 0 rgba(255,255,255,0.98), inset 0 3px 8px -2px rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.3)',
     copper: 'inset 0 1px 0 rgba(253,245,235,0.95), inset 0 3px 8px -2px rgba(255,248,235,0.25), inset 0 -2px 0 rgba(0,0,0,0.25)',
-    polaroid: 'none',
   }
 
   if (fs === 'neon') {

@@ -209,18 +209,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                     : {}
                 }
               >
-              {p.frame?.style === 'polaroid' ? (
-                <>
-                  {/* Photo layer: sized to fit within the polaroid window (inset matches frame transparent area) */}
-                  <div className="absolute inset-0 z-0" style={{ top: '8%', left: '6%', right: '6%', bottom: '26%' }}>
-                    <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={{ filter: 'saturate(0.88) contrast(0.97)' }} />
-                  </div>
-                  {/* Polaroid frame overlay: white frame with transparent center and drop shadow */}
-                  <img src="/images/polaroid-frame.png" alt="" className="absolute inset-0 w-full h-full z-[2] object-contain pointer-events-none" aria-hidden />
-                </>
-              ) : (
-                <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : undefined} />
-              )}
+              <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : undefined} />
               {p.frame?.style === 'vignette' && (
                 <div
                   className="absolute inset-0 pointer-events-none z-[2]"
@@ -394,7 +383,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                   <span className="tabular-nums w-8 text-right">{Math.round((typeof p.tintOverlay.opacity === 'number' ? p.tintOverlay.opacity : 0.25) * 100)}%</span>
                 </label>
               )}
-              {p.frame && ['gold', 'silver', 'copper', 'neon', 'polaroid', 'filmstrip', 'vignette'].includes(p.frame.style) && (
+              {p.frame && ['gold', 'silver', 'copper', 'neon', 'filmstrip', 'vignette'].includes(p.frame.style) && (
                 <p className="text-[10px] text-gray-500 italic">Tint from frame</p>
               )}
             </div>
@@ -405,7 +394,7 @@ export default function ImageOverlayEditorViewRoot(props: {
             <p className="text-[11px] font-medium text-gray-600 mb-1.5">Frame</p>
             <select
               value={p.frame?.style ?? ''}
-              onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'polaroid' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
+              onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }}
               className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none w-full mb-2"
             >
               <option value="">None</option>
@@ -419,7 +408,6 @@ export default function ImageOverlayEditorViewRoot(props: {
               <optgroup label="Frames">
                 <option value="classic">Painting frame</option>
                 <option value="wooden">Wooden frame</option>
-                <option value="polaroid">Polaroid</option>
                 <option value="shadow">Floating shadow</option>
               </optgroup>
               <optgroup label="Mood">
@@ -496,10 +484,10 @@ export default function ImageOverlayEditorViewRoot(props: {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-medium text-gray-600 mr-1">Frame</p>
-            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'polaroid' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none flex-1 min-w-[120px]">
+            <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none flex-1 min-w-[120px]">
               <option value="">None</option>
               <option value="thin">Thin</option><option value="solid">Solid</option><option value="thick">Thick</option><option value="rounded">Rounded</option>
-              <option value="classic">Painting</option><option value="wooden">Wooden</option><option value="polaroid">Polaroid</option>
+              <option value="classic">Painting</option><option value="wooden">Wooden</option>
               <option value="vignette">Vignette</option><option value="neon">Neon</option><option value="filmstrip">Film strip</option>
               <option value="gold">Gold</option><option value="silver">Silver</option><option value="copper">Copper</option>
             </select>
