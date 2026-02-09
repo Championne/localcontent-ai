@@ -225,10 +225,10 @@ export async function POST(request: Request) {
       // Gold / Silver / Copper: polished metallic look – strong directional light, highlight sheen, per-edge shading
       else if (style === 'gold' || style === 'silver' || style === 'copper') {
         const metal = style === 'gold'
-          ? { tint: { r: 212, g: 175, b: 55 }, tintOpacity: 0.14, dark: '#3d3008', midDark: '#5c4a0a', mid: '#a67c0a', midLight: '#d4a817', light: '#f0d84a', highlight: '#fffce0', edge: '#fffef5' }
+          ? { tint: { r: 212, g: 175, b: 55 }, tintOpacity: 0.22, dark: '#3d3008', midDark: '#5c4a0a', mid: '#a67c0a', midLight: '#d4a817', light: '#f0d84a', highlight: '#fffce0', edge: '#fffef5' }
           : style === 'silver'
-          ? { tint: { r: 200, g: 200, b: 208 }, tintOpacity: 0.12, dark: '#1a1a1a', midDark: '#404040', mid: '#808080', midLight: '#c0c0c0', light: '#e8e8e8', highlight: '#ffffff', edge: '#fafafa' }
-          : { tint: { r: 184, g: 115, b: 51 }, tintOpacity: 0.14, dark: '#2d1804', midDark: '#5c2e0a', mid: '#8b4513', midLight: '#c48450', light: '#e8b878', highlight: '#fdf5eb', edge: '#fdf0e0' }
+          ? { tint: { r: 200, g: 200, b: 208 }, tintOpacity: 0.18, dark: '#1a1a1a', midDark: '#404040', mid: '#808080', midLight: '#c0c0c0', light: '#e8e8e8', highlight: '#ffffff', edge: '#fafafa' }
+          : { tint: { r: 184, g: 115, b: 51 }, tintOpacity: 0.22, dark: '#2d1804', midDark: '#5c2e0a', mid: '#8b4513', midLight: '#c48450', light: '#e8b878', highlight: '#fdf5eb', edge: '#fdf0e0' }
         const tintSvg = Buffer.from(
           `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" opacity="${metal.tintOpacity}"/></svg>`
         )

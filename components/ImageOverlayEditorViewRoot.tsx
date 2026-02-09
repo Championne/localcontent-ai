@@ -223,38 +223,34 @@ export default function ImageOverlayEditorViewRoot(props: {
                 <div
                   className="absolute inset-0 pointer-events-none z-[2]"
                   style={{
-                    backgroundColor: p.frame.style === 'gold' ? 'rgba(212,175,55,0.12)' : p.frame.style === 'silver' ? 'rgba(192,192,192,0.1)' : 'rgba(184,115,51,0.12)',
-                    boxShadow: p.frame.style === 'gold' ? 'inset 0 0 40px rgba(255,248,220,0.08)' : p.frame.style === 'silver' ? 'inset 0 0 40px rgba(255,255,255,0.06)' : 'inset 0 0 40px rgba(253,240,224,0.06)',
+                    background: p.frame.style === 'gold'
+                      ? 'linear-gradient(135deg, rgba(255,248,220,0.18) 0%, rgba(212,175,55,0.22) 50%, rgba(184,134,11,0.15) 100%)'
+                      : p.frame.style === 'silver'
+                      ? 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(192,192,192,0.18) 50%, rgba(128,128,128,0.12) 100%)'
+                      : 'linear-gradient(135deg, rgba(253,245,235,0.18) 0%, rgba(184,115,51,0.22) 50%, rgba(139,69,19,0.15) 100%)',
+                    boxShadow: p.frame.style === 'gold'
+                      ? 'inset 0 0 60px rgba(212,175,55,0.15), inset 0 0 20px rgba(255,248,220,0.1)'
+                      : p.frame.style === 'silver'
+                      ? 'inset 0 0 60px rgba(192,192,192,0.12), inset 0 0 20px rgba(255,255,255,0.08)'
+                      : 'inset 0 0 60px rgba(184,115,51,0.15), inset 0 0 20px rgba(253,240,224,0.1)',
                   }}
                   aria-hidden
                 />
               )}
               {p.frame?.style === 'filmstrip' && (
                 <>
-                  {/* Left film strip: dark strip with bright white perforation holes */}
-                  <div
-                    className="absolute top-0 left-0 bottom-0 w-8 pointer-events-none z-[2]"
-                    style={{
-                      backgroundColor: '#1a1a1a',
-                      backgroundImage: 'radial-gradient(ellipse 40% 50% at 50% 50%, #ffffff 0%, #ffffff 70%, transparent 71%)',
-                      backgroundSize: '100% 14.28%',
-                      backgroundRepeat: 'repeat-y',
-                      backgroundPosition: '0 7.14%',
-                    }}
-                    aria-hidden
-                  />
-                  {/* Right film strip: dark strip with bright white perforation holes */}
-                  <div
-                    className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none z-[2]"
-                    style={{
-                      backgroundColor: '#1a1a1a',
-                      backgroundImage: 'radial-gradient(ellipse 40% 50% at 50% 50%, #ffffff 0%, #ffffff 70%, transparent 71%)',
-                      backgroundSize: '100% 14.28%',
-                      backgroundRepeat: 'repeat-y',
-                      backgroundPosition: '0 7.14%',
-                    }}
-                    aria-hidden
-                  />
+                  {/* Left film strip: dark strip with rectangular sprocket holes */}
+                  <div className="absolute top-0 left-0 bottom-0 w-8 pointer-events-none z-[2] flex flex-col items-center justify-around py-2" style={{ backgroundColor: '#1a1a1a' }} aria-hidden>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={`l${i}`} style={{ width: '10px', height: '16px', backgroundColor: '#ffffff', borderRadius: '1px', flexShrink: 0 }} />
+                    ))}
+                  </div>
+                  {/* Right film strip: dark strip with rectangular sprocket holes */}
+                  <div className="absolute top-0 right-0 bottom-0 w-8 pointer-events-none z-[2] flex flex-col items-center justify-around py-2" style={{ backgroundColor: '#1a1a1a' }} aria-hidden>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={`r${i}`} style={{ width: '10px', height: '16px', backgroundColor: '#ffffff', borderRadius: '1px', flexShrink: 0 }} />
+                    ))}
+                  </div>
                 </>
               )}
               {p.tintOverlay && (
@@ -283,7 +279,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                       <img src={overlay.url} alt="" className={`w-full h-full object-${isPhoto ? 'cover' : 'contain'} ${isPhoto ? 'rounded-full' : 'rounded-lg'} shadow-lg`} draggable={false} />
                     </span>
                     <div
-                      className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                      className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
                       style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
@@ -311,9 +307,9 @@ export default function ImageOverlayEditorViewRoot(props: {
                 const showPanelLeft = t.x > 60
                 return (
                 <div key={t.id} onMouseDown={(e) => p.handleOverlayDragStart(t.id, e)} onTouchStart={(e) => p.handleOverlayDragStart(t.id, e)} className="absolute cursor-move group z-10" style={{ left: `${t.x}%`, top: `${t.y}%`, transform: 'translate(0, -50%)' }}>
-                  <span className="font-bold drop-shadow-lg px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter' }}>{t.text}</span>
+                  <span className="font-bold px-1" style={{ color: p.getHex(t.colorKey), fontSize: Math.min(32, Math.max(10, t.fontSize)), fontFamily: t.fontFamily || 'Inter', WebkitTextStroke: '0.5px rgba(0,0,0,0.5)', textShadow: '0 1px 3px rgba(0,0,0,0.6), 0 0px 8px rgba(0,0,0,0.3)' }}>{t.text}</span>
                   <div
-                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-20 flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
+                    className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150 z-[60] flex flex-col gap-2.5 w-44 rounded-xl p-3 border bg-white backdrop-blur-sm ${showPanelLeft ? 'right-full mr-2' : 'left-full ml-2'}`}
                     style={{ borderColor: hexWithAlpha(primary, 0.25), boxShadow: `0 8px 30px rgba(0,0,0,0.18), 0 0 0 1px ${hexWithAlpha(primary, 0.12)}` }}
                   >
                     <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
