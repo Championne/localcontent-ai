@@ -474,6 +474,9 @@ export default function ImageOverlayEditorViewRoot(props: {
                 Light
               </button>
               <div className="flex items-center gap-1.5">
+                <button type="button" onClick={() => p.setTintOverlay(null)} className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-105 relative ${!p.tintOverlay ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ background: 'linear-gradient(135deg, #fff 40%, #e5e7eb 60%)' }} title="No tint">
+                  <span className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs font-bold leading-none">✕</span>
+                </button>
                 {(['primary', 'secondary', 'accent'] as const).map((key) => (
                   <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.15 })} className={`w-7 h-7 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
                 ))}
@@ -572,6 +575,9 @@ export default function ImageOverlayEditorViewRoot(props: {
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[11px] font-medium text-gray-600 mr-1">Tint</p>
             <button type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === 'primary' && prev?.opacity === 0.15 ? null : { colorKey: 'primary', opacity: 0.15 })} className="text-[11px] px-2.5 py-1 rounded-md border font-medium transition-all" style={{ borderColor: buttonBorder, backgroundColor: buttonBg, color: primary }}>Light</button>
+            <button type="button" onClick={() => p.setTintOverlay(null)} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 relative ${!p.tintOverlay ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ background: 'linear-gradient(135deg, #fff 40%, #e5e7eb 60%)' }} title="No tint">
+              <span className="absolute inset-0 flex items-center justify-center text-gray-400 text-[9px] font-bold leading-none">✕</span>
+            </button>
             {(['primary', 'secondary', 'accent'] as const).map((key) => (
               <button key={key} type="button" onClick={() => p.setTintOverlay(prev => prev?.colorKey === key ? null : { colorKey: key, opacity: prev?.opacity ?? 0.15 })} className={`w-6 h-6 rounded-full border-2 transition-all hover:scale-105 ${p.tintOverlay?.colorKey === key ? 'border-gray-800 ring-1 ring-offset-1 ring-gray-400' : 'border-gray-200'}`} style={{ backgroundColor: p.getHex(key) }} title={key} />
             ))}
