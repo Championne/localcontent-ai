@@ -9,25 +9,36 @@ interface AiPromptOverride {
   prompt_text: string
 }
 
-// Hardcoded defaults (mirrored from lib/openai/images.ts) so the UI can show defaults without a server roundtrip
+// Hardcoded defaults (mirrored from lib/openai/images.ts — first variation shown).
+// The backend randomly picks from 4 variations per industry on each generation.
 const DEFAULT_SCENE_HINTS: Record<string, string> = {
-  hvac: 'a technician servicing an air conditioning unit on-site',
-  plumbing: 'a plumber working under a kitchen sink with professional tools',
-  electrical: 'an electrician working on a residential electrical panel',
-  roofing: 'a roofer installing shingles on a house roof',
-  landscaping: 'a landscaper mowing a lush green lawn on a sunny day',
-  cleaning: 'a professional cleaner wiping down a spotless kitchen counter',
-  pest: 'a pest control technician inspecting a home exterior with equipment',
-  'real estate': 'the front exterior of an inviting residential home with a manicured lawn',
-  restaurant: 'a chef plating a dish in a professional restaurant kitchen',
-  dental: 'a dentist gently examining a patient smile in a modern clinic',
-  legal: 'a lawyer reviewing documents at a polished office desk',
-  accounting: 'a financial advisor working at a desk with a laptop and documents',
-  auto: 'a mechanic working under the hood of a car in a repair shop',
-  salon: 'a hairstylist working on a client hair in a modern salon',
-  fitness: 'a personal trainer guiding a client through an exercise in a bright gym',
-  retail: 'a shopkeeper arranging products on shelves in a welcoming storefront',
-  contractor: 'a general contractor reviewing plans at a residential construction site',
+  hvac: 'skilled HVAC technician installing an energy-efficient air conditioner in a cozy family home during summer, with professional tools and safety gear',
+  plumbing: 'experienced plumber repairing a leaky faucet under a kitchen sink in a busy family home, using high-quality tools and wearing protective gloves',
+  electrical: 'certified electrician safely upgrading a home electrical panel in a modern kitchen, with multimeter and insulated tools',
+  roofing: 'professional roofer laying durable shingles on a suburban house roof under clear skies, using harness and safety equipment',
+  landscaping: 'dedicated landscaper shaping hedges and planting vibrant flowers in a welcoming backyard garden, with wheelbarrow and pruning shears',
+  cleaning: 'efficient cleaning specialist deep-cleaning a kitchen countertop in a spotless home, using eco-friendly sprays and microfiber cloths',
+  pest: 'trained pest control expert applying safe targeted treatments in a home attic, wearing protective suit and using humane methods',
+  'real estate': 'enthusiastic real estate agent touring a charming family home with potential buyers, pointing out bright living room features',
+  restaurant: 'talented chef expertly grilling fresh ingredients in a lively restaurant kitchen, steam rising and aromas implied',
+  dental: 'gentle dentist performing a check-up on a relaxed patient in a bright modern clinic with state-of-the-art chairs and calming decor',
+  legal: 'knowledgeable attorney discussing case details with a client in a confidential office setting, open law books on shelves',
+  accounting: 'expert accountant analysing financial spreadsheets on a dual-monitor setup in a tidy organised office, with charts and a coffee mug',
+  auto: 'skilled mechanic performing a precise engine tune-up under a lifted vehicle in a well-lit auto shop, with diagnostic tools on a cart',
+  salon: 'talented hairstylist crafting a modern cut on a smiling client in a chic salon with large mirrors and warm lighting',
+  fitness: 'personal trainer guiding a motivated client through a kettlebell workout in a bright modern gym, encouraging form',
+  retail: 'welcoming shopkeeper arranging artisan products on wooden shelves in a cozy boutique storefront with warm lighting',
+  contractor: 'general contractor reviewing blueprints at a residential construction site with framing visible, hard hat and vest on',
+  photography: 'photographer capturing a portrait session in a studio with professional lighting, softboxes and backdrop visible',
+  insurance: 'friendly insurance agent explaining coverage options to a family across a desk, brochures and laptop open',
+  veterinary: 'caring veterinarian gently examining a golden retriever on a clinic table, stethoscope around neck, reassuring the pet',
+  moving: 'professional movers carefully loading wrapped furniture into a branded moving truck on a residential street',
+  tutoring: 'patient tutor helping a student work through a maths problem at a well-lit desk, books and notebooks spread out',
+  bakery: 'baker pulling a tray of golden fresh-baked bread from a commercial oven, flour dusted apron and warm glow',
+  childcare: 'friendly childcare provider reading a colourful storybook to a small group of engaged toddlers on a play mat',
+  therapy: 'therapist in a calm comfortable office having a supportive conversation with a client, soft lighting and plants',
+  'it services': 'IT specialist setting up a network server rack in a clean data room, cables neatly organised and labelled',
+  'event planning': 'event planner arranging elegant floral centrepieces on round tables in a beautifully decorated wedding venue',
 }
 
 const DEFAULT_STYLE_PREFIXES: Record<string, { name: string; description: string; prefix: string }> = {
@@ -176,7 +187,7 @@ export default function AiPromptsTab() {
       {/* Industry Scene Hints */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <h3 className="text-base font-semibold text-gray-900 mb-4">Industry Scene Hints</h3>
-        <p className="text-xs text-gray-500 mb-4">These describe what the AI image should show for each industry. Override to get more relevant images.</p>
+        <p className="text-xs text-gray-500 mb-4">These describe what the AI image should show for each industry. The system randomly picks from 4 vivid variations per industry on each generation. Override below to use a fixed hint instead.</p>
         <div className="space-y-3">
           {Object.entries(DEFAULT_SCENE_HINTS).map(([key, defaultHint]) => {
             const override = getOverrideValue('scene_hint', key)

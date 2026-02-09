@@ -129,43 +129,286 @@ export const CONTENT_LIMITS: Record<string, number> = {
 // ---------------------------------------------------------------------------
 // Industry scene hints (expanded)
 // ---------------------------------------------------------------------------
-export const INDUSTRY_SCENE_HINTS: Record<string, string> = {
-  hvac: 'a technician servicing an air conditioning unit on-site',
-  'hvac / heating & cooling': 'a technician servicing an air conditioning unit on-site',
-  plumber: 'a plumber working under a kitchen sink with professional tools',
-  plumbing: 'a plumber working under a kitchen sink with professional tools',
-  electrician: 'an electrician working on a residential electrical panel',
-  electrical: 'an electrician working on a residential electrical panel',
-  roofing: 'a roofer installing shingles on a house roof',
-  landscaping: 'a landscaper mowing a lush green lawn on a sunny day',
-  'landscaping / lawn care': 'a landscaper trimming hedges in a beautifully maintained garden',
-  cleaning: 'a professional cleaner wiping down a spotless kitchen counter',
-  'cleaning service': 'a professional cleaner wiping down a spotless kitchen counter',
-  pest: 'a pest control technician inspecting a home exterior with equipment',
-  'real estate': 'the front exterior of an inviting residential home with a manicured lawn',
-  restaurant: 'a chef plating a dish in a professional restaurant kitchen',
-  'restaurant / food service': 'a chef plating a beautifully garnished dish in a warm restaurant kitchen',
-  dental: 'a dentist gently examining a patient\'s smile in a modern clinic',
-  dentist: 'a dentist gently examining a patient\'s smile in a modern clinic',
-  'dentist / dental practice': 'a dentist gently examining a patient\'s smile in a modern clinic',
-  legal: 'a lawyer reviewing documents at a polished office desk',
-  accounting: 'a financial advisor working at a desk with a laptop and documents',
-  auto: 'a mechanic working under the hood of a car in a repair shop',
-  'auto repair': 'a mechanic working under the hood of a car in a repair shop',
-  'auto repair / mechanic': 'a mechanic working under the hood of a car in a well-lit repair shop',
-  salon: 'a hairstylist working on a client\'s hair in a modern salon',
-  'salon / spa / beauty': 'a stylist carefully working on a client in a chic modern salon',
-  fitness: 'a personal trainer guiding a client through an exercise in a bright gym',
-  'fitness / gym': 'a personal trainer guiding a client through an exercise in a bright gym',
-  retail: 'a shopkeeper arranging products on shelves in a welcoming storefront',
-  'retail / shop': 'a shopkeeper arranging products on shelves in a welcoming storefront',
-  contractor: 'a general contractor reviewing plans at a residential construction site',
-  'general contractor': 'a general contractor reviewing plans at a residential construction site',
+// ---------------------------------------------------------------------------
+// Industry scene hints — arrays of vivid, specific variations.
+// One is randomly picked per generation for diversity. Each hint is a
+// self-contained scene description that layers well with any style prefix.
+// ---------------------------------------------------------------------------
+export const INDUSTRY_SCENE_HINTS: Record<string, string[]> = {
+  // ── HVAC ────────────────────────────────────────────────────────────────
+  hvac: [
+    'skilled HVAC technician installing an energy-efficient air conditioner in a cozy family home during summer, with professional tools and safety gear',
+    'modern heating system being serviced in a residential basement, emphasizing comfort and reliability, warm natural lighting',
+    'branded service van parked outside a suburban house, loaded with eco-friendly HVAC equipment and organized tools',
+    'satisfied homeowner enjoying fresh cool air from a newly repaired vent in a bright living room, relaxed and comfortable',
+  ],
+  'hvac / heating & cooling': null as unknown as string[], // alias — resolved below
+
+  // ── PLUMBING ────────────────────────────────────────────────────────────
+  plumber: [
+    'experienced plumber repairing a leaky faucet under a kitchen sink in a busy family home, using high-quality tools and wearing protective gloves',
+    'plumber installing gleaming new pipes in a bathroom renovation, focused on clean efficient work with copper fittings visible',
+    'plumbing service van arriving at a home with neatly organized plumbing supplies and toolboxes',
+    'happy homeowner shaking hands with a friendly plumber after fixing a burst pipe, relief and gratitude on their face',
+  ],
+  plumbing: null as unknown as string[], // alias
+
+  // ── ELECTRICAL ──────────────────────────────────────────────────────────
+  electrician: [
+    'certified electrician safely upgrading a home electrical panel in a modern kitchen, with multimeter and insulated tools',
+    'electrician installing smart LED lighting in a cozy living room, highlighting energy savings and modern technology',
+    'electrical service van equipped with cables and safety gear parked outside a small office building',
+    'smiling client watching as electrician tests newly wired outlets for safety, professional and reassuring atmosphere',
+  ],
+  electrical: null as unknown as string[], // alias
+
+  // ── ROOFING ─────────────────────────────────────────────────────────────
+  roofing: [
+    'professional roofer laying durable shingles on a suburban house roof under clear skies, using harness and safety equipment',
+    'roofing team inspecting and repairing storm-damaged tiles on a family home, with materials stacked neatly on scaffold',
+    'roofers applying eco-friendly sealant to extend roof life on a sunny day, teamwork and precision visible',
+    'proud homeowner viewing a beautifully completed new roof from the front yard, house looking refreshed and well-maintained',
+  ],
+
+  // ── LANDSCAPING ─────────────────────────────────────────────────────────
+  landscaping: [
+    'dedicated landscaper shaping hedges and planting vibrant flowers in a welcoming backyard garden, with wheelbarrow and pruning shears',
+    'landscaper mowing a lush green lawn in a suburban neighbourhood on a sunny morning, emphasizing sustainable practices',
+    'designer laying out a low-maintenance outdoor space with native drought-resistant plants and decorative stone paths',
+    'family enjoying a freshly landscaped patio with outdoor seating, string lights, and potted plants in the evening',
+  ],
+  'landscaping / lawn care': null as unknown as string[], // alias
+
+  // ── CLEANING ────────────────────────────────────────────────────────────
+  cleaning: [
+    'efficient cleaning specialist deep-cleaning a kitchen countertop in a spotless home, using eco-friendly sprays and microfiber cloths',
+    'professional cleaning team vacuuming and organizing a bright office space for productivity, wearing branded uniforms',
+    'window washer polishing glass for a crystal-clear view in a commercial storefront, sunlight streaming through',
+    'satisfied client relaxing in a freshly cleaned living room, breathing easy with sparkling surfaces all around',
+  ],
+  'cleaning service': null as unknown as string[], // alias
+
+  // ── PEST CONTROL ────────────────────────────────────────────────────────
+  pest: [
+    'trained pest control expert applying safe targeted treatments in a home attic, wearing protective suit and using humane methods',
+    'pest technician inspecting a garden perimeter with monitoring tools and eco-friendly solutions, thorough and methodical',
+    'pest control service vehicle stocked with non-toxic solutions parked outside a restaurant, professional branding visible',
+    'relieved business owner smiling after effective pest removal, gesturing toward a clean pest-free environment',
+  ],
+  'pest control': null as unknown as string[], // alias
+
+  // ── REAL ESTATE ─────────────────────────────────────────────────────────
+  'real estate': [
+    'enthusiastic real estate agent touring a charming family home with potential buyers, pointing out bright living room features',
+    'exterior of a well-maintained suburban house with welcoming porch, manicured landscaping, and warm sunlight',
+    'agent handing over keys to excited new homeowners at closing, genuine smiles and celebration',
+    'stylish open-house interior with fresh flowers, natural light pouring through large windows, and modern staging',
+  ],
+
+  // ── RESTAURANT / FOOD SERVICE ───────────────────────────────────────────
+  restaurant: [
+    'talented chef expertly grilling fresh ingredients in a lively restaurant kitchen, steam rising and aromas implied',
+    'beautifully plated dish of seasonal cuisine on a rustic wooden table, vibrant colours and garnish, ready for service',
+    'bustling cozy dining area with diverse happy patrons enjoying meals together, warm ambient lighting',
+    'sous chef carefully preparing appetizers with fresh local produce for a community tasting event',
+  ],
+  'restaurant / food service': null as unknown as string[], // alias
+
+  // ── DENTAL ──────────────────────────────────────────────────────────────
+  dental: [
+    'gentle dentist performing a check-up on a relaxed patient in a bright modern clinic with state-of-the-art chairs and calming decor',
+    'dental hygienist demonstrating proper brushing techniques with a friendly approachable manner, educational setting',
+    'welcoming dental office reception area with comfortable seating, plants, and a reassuring atmosphere',
+    'smiling patient leaving the clinic with brighter teeth after a cosmetic treatment, confident and happy',
+  ],
+  dentist: null as unknown as string[], // alias
+  'dentist / dental practice': null as unknown as string[], // alias
+
+  // ── LEGAL ───────────────────────────────────────────────────────────────
+  legal: [
+    'knowledgeable attorney discussing case details with a client in a confidential office setting, open law books on shelves',
+    'lawyer reviewing contracts at a polished desk with laptop, notes, and a coffee cup, focused and professional',
+    'courtroom preparation scene with briefcase, legal documents spread out, and determined expression',
+    'client receiving reassuring advice in a supportive consultation, attorney listening attentively',
+  ],
+
+  // ── ACCOUNTING / FINANCE ────────────────────────────────────────────────
+  accounting: [
+    'expert accountant analysing financial spreadsheets on a dual-monitor setup in a tidy organised office, with charts and a coffee mug',
+    'financial advisor consulting with a small business owner on tax strategies across a desk, both engaged and focused',
+    'accountant balancing books with calculator, reports fanned out, and coloured tabs for organisation',
+    'entrepreneur smiling after receiving sound financial planning advice, handshake over a completed report',
+  ],
+
+  // ── AUTO REPAIR ─────────────────────────────────────────────────────────
+  auto: [
+    'skilled mechanic performing a precise engine tune-up under a lifted vehicle in a well-lit auto shop, with diagnostic tools on a cart',
+    'technician replacing tires in a busy garage with organised racks of wheels and a tyre balancing machine',
+    'happy customer picking up their repaired car with keys in hand, waving at the friendly mechanic in the service bay',
+    'display of quality auto parts and organised tools in a professional service bay, emphasizing reliability and expertise',
+  ],
+  'auto repair': null as unknown as string[], // alias
+  'auto repair / mechanic': null as unknown as string[], // alias
+
+  // ── SALON / SPA / BEAUTY ────────────────────────────────────────────────
+  salon: [
+    'talented hairstylist crafting a modern cut on a smiling client in a chic salon with large mirrors and warm lighting',
+    'spa therapist performing a relaxing facial treatment in a serene room with candles, soft towels, and calming plants',
+    'nail artist applying intricate nail art at a stylish manicure station, colours and brushes neatly arranged',
+    'client admiring their fresh new hairstyle in the mirror with a delighted expression, stylist standing proudly behind',
+  ],
+  'salon / spa / beauty': null as unknown as string[], // alias
+
+  // ── FITNESS / GYM ───────────────────────────────────────────────────────
+  fitness: [
+    'personal trainer guiding a motivated client through a kettlebell workout in a bright modern gym, encouraging form',
+    'small group fitness class doing yoga stretches in a sunlit studio, mats arranged in rows, calm and focused energy',
+    'athlete using a rowing machine in a well-equipped training facility, determination and endurance on display',
+    'trainer and client high-fiving after completing a workout milestone, sweat and smiles, community feeling',
+  ],
+  'fitness / gym': null as unknown as string[], // alias
+
+  // ── RETAIL / SHOP ───────────────────────────────────────────────────────
+  retail: [
+    'welcoming shopkeeper arranging artisan products on wooden shelves in a cozy boutique storefront with warm lighting',
+    'customer browsing unique handmade items in a curated local shop, chatting with the friendly store owner',
+    'beautifully merchandised window display attracting passers-by on a charming main street, seasonal decorations',
+    'small business owner gift-wrapping a purchase for a delighted customer at the checkout counter',
+  ],
+  'retail / shop': null as unknown as string[], // alias
+
+  // ── CONTRACTOR / CONSTRUCTION ───────────────────────────────────────────
+  contractor: [
+    'general contractor reviewing blueprints at a residential construction site with framing visible, hard hat and vest on',
+    'construction team collaborating on a home renovation, measuring and cutting materials with precision tools',
+    'contractor walking a homeowner through a completed kitchen remodel, pointing out craftsmanship details',
+    'well-organised construction site with stacked lumber, equipment, and a clean work area showing professionalism',
+  ],
+  'general contractor': null as unknown as string[], // alias
+
+  // ── PHOTOGRAPHY ─────────────────────────────────────────────────────────
+  photography: [
+    'photographer capturing a portrait session in a studio with professional lighting, softboxes and backdrop visible',
+    'event photographer shooting a joyful outdoor wedding ceremony, camera in hand, golden hour light',
+    'product photographer arranging items on a clean white table for a commercial shoot, reflectors and tripod nearby',
+    'photographer reviewing stunning images on a laptop with the happy client, both excited about the results',
+  ],
+
+  // ── INSURANCE ───────────────────────────────────────────────────────────
+  insurance: [
+    'friendly insurance agent explaining coverage options to a family across a desk, brochures and laptop open',
+    'agent visiting a client\'s home for a property assessment, clipboard in hand, professional and approachable',
+    'insurance advisor congratulating a client on securing their first home insurance, handshake in a bright office',
+    'couple reviewing an insurance policy together on a tablet with an advisor, feeling reassured and protected',
+  ],
+
+  // ── VETERINARY / PET CARE ───────────────────────────────────────────────
+  veterinary: [
+    'caring veterinarian gently examining a golden retriever on a clinic table, stethoscope around neck, reassuring the pet',
+    'vet tech holding a content cat while the veterinarian administers a routine check-up, calm clinic environment',
+    'happy pet owner picking up their healthy dog after a vet visit, tail wagging, receptionist smiling in background',
+    'veterinary clinic waiting area with pets and owners, educational posters on walls, warm and welcoming atmosphere',
+  ],
+  'pet care': null as unknown as string[], // alias
+
+  // ── MOVING / RELOCATION ─────────────────────────────────────────────────
+  moving: [
+    'professional movers carefully loading wrapped furniture into a branded moving truck on a residential street',
+    'moving team assembling furniture in a new apartment, boxes neatly stacked, client supervising with excitement',
+    'family standing in front of their new home with the moving crew, thumbs up and smiles all around',
+    'organised packing station with labelled boxes, bubble wrap, and moving blankets, ready for an efficient move',
+  ],
+
+  // ── TUTORING / EDUCATION ────────────────────────────────────────────────
+  tutoring: [
+    'patient tutor helping a student work through a maths problem at a well-lit desk, books and notebooks spread out',
+    'group of students collaborating on a project in a bright classroom, tutor guiding discussion at the whiteboard',
+    'online tutor teaching via video call on a laptop, friendly and engaged expression, colourful notes in background',
+    'student celebrating an academic achievement with their proud tutor, high-five moment in a library setting',
+  ],
+  education: null as unknown as string[], // alias
+
+  // ── BAKERY / CAFÉ ───────────────────────────────────────────────────────
+  bakery: [
+    'baker pulling a tray of golden fresh-baked bread from a commercial oven, flour dusted apron and warm glow',
+    'display case filled with colourful pastries, macarons, and cakes in a cozy artisan bakery, inviting and appetizing',
+    'barista crafting latte art in a stylish local café, steam wand in action, cozy seating in background',
+    'customer enjoying a fresh croissant and coffee at a charming café window seat, morning light streaming in',
+  ],
+  cafe: null as unknown as string[], // alias
+  'bakery / cafe': null as unknown as string[], // alias
+
+  // ── CHILDCARE / DAYCARE ─────────────────────────────────────────────────
+  childcare: [
+    'friendly childcare provider reading a colourful storybook to a small group of engaged toddlers on a play mat',
+    'children happily painting at an art table in a bright daycare room, supervised by a caring educator',
+    'outdoor playground at a daycare centre with kids climbing and sliding, safe equipment and green grass',
+    'parent dropping off a smiling child at daycare, warm handoff to a welcoming caregiver at the entrance',
+  ],
+  daycare: null as unknown as string[], // alias
+
+  // ── THERAPY / COUNSELING ────────────────────────────────────────────────
+  therapy: [
+    'therapist in a calm comfortable office having a supportive conversation with a client, soft lighting and plants',
+    'counselor\'s office with two chairs facing each other, tissue box on table, warm neutral tones creating a safe space',
+    'mental health professional taking notes during a session, attentive and empathetic expression, bookshelf behind',
+    'serene wellness room with a comfortable couch, soft throw blanket, and a diffuser emitting calming scent',
+  ],
+  counseling: null as unknown as string[], // alias
+
+  // ── IT / TECH SERVICES ──────────────────────────────────────────────────
+  'it services': [
+    'IT specialist setting up a network server rack in a clean data room, cables neatly organised and labelled',
+    'tech support professional helping a small business owner troubleshoot a laptop at their desk, patient and friendly',
+    'cybersecurity expert monitoring multiple screens for threats, focused and alert in a modern office environment',
+    'IT consultant explaining cloud migration strategy to a business team around a conference table with diagrams',
+  ],
+  technology: null as unknown as string[], // alias
+
+  // ── WEDDING / EVENT PLANNING ────────────────────────────────────────────
+  'event planning': [
+    'event planner arranging elegant floral centrepieces on round tables in a beautifully decorated wedding venue',
+    'wedding coordinator reviewing a detailed timeline with the bride and groom, all smiling with excitement',
+    'corporate event setup with branded signage, chairs in rows, and a stage with microphone, professional atmosphere',
+    'completed outdoor garden party with string lights, white linens, and an arch of flowers, ready for guests',
+  ],
+  wedding: null as unknown as string[], // alias
 }
 
+// Resolve null aliases to point to their parent key
+;(function resolveAliases() {
+  const entries = Object.entries(INDUSTRY_SCENE_HINTS)
+  // Build a map of canonical keys (those with actual arrays)
+  const canonical = new Map<string, string[]>()
+  for (const [k, v] of entries) {
+    if (Array.isArray(v) && v.length > 0) canonical.set(k, v)
+  }
+  // Alias resolution: find the canonical key whose name is a substring or starts similarly
+  for (const [aliasKey, v] of entries) {
+    if (v === null || (Array.isArray(v) && v.length === 0)) {
+      // Try to find canonical parent by matching prefix
+      const base = aliasKey.split('/')[0].trim().replace(/\s+/g, ' ')
+      for (const [ck, cv] of canonical) {
+        if (ck === base || base.startsWith(ck) || ck.startsWith(base)) {
+          (INDUSTRY_SCENE_HINTS as Record<string, string[]>)[aliasKey] = cv
+          break
+        }
+      }
+    }
+  }
+})()
+
 export function getIndustrySceneHint(industry: string): string {
-  const key = industry.trim().toLowerCase().replace(/\s*&\s*/g, ' and ')
-  return INDUSTRY_SCENE_HINTS[key] ?? INDUSTRY_SCENE_HINTS[key.replace(/\s+and\s+/g, ' & ')] ?? `a ${industry} professional at work in their typical environment`
+  const key = industry.trim().toLowerCase().replace(/\s*&\s*/g, ' & ')
+  const hints = INDUSTRY_SCENE_HINTS[key]
+    ?? INDUSTRY_SCENE_HINTS[key.replace(/\s*&\s*/g, ' and ')]
+    ?? INDUSTRY_SCENE_HINTS[key.replace(/\s+and\s+/g, ' & ')]
+    // Fallback: try just the first word (e.g. "hvac" from "HVAC services")
+    ?? INDUSTRY_SCENE_HINTS[key.split(/[\s/]/)[0]]
+  if (hints && hints.length > 0) {
+    return hints[Math.floor(Math.random() * hints.length)]
+  }
+  return `a ${industry} professional at work in their typical environment, approachable and skilled`
 }
 
 // ---------------------------------------------------------------------------
