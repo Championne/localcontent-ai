@@ -33,7 +33,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
       gold: 16,
       silver: 16,
       copper: 16,
-      filmstrip: 32,
+      filmstrip: 0,
       neon: 32,
       shadow: 40,
       vignette: 0,
@@ -67,7 +67,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
       'linear-gradient(135deg, rgba(255,253,248,0.5) 0%, rgba(255,240,220,0.15) 25%, transparent 45%), ' +
       'linear-gradient(135deg, #fdf5eb 0%, #e8b878 15%, #c48450 40%, #8b4513 68%, #5c2e0a 88%, #2d1804 100%)'
   } else if (fs === 'filmstrip') {
-    base.backgroundColor = '#121212'
+    // no outer bg – the left/right strip divs supply the dark areas
   } else if (fs === 'neon') {
     base.backgroundColor = '#0a0a0e'
   } else if (fs === 'shadow') {

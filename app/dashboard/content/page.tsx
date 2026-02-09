@@ -2616,8 +2616,8 @@ export default function CreateContentPage() {
                               <span className="text-gray-500 text-sm">@{businessName.toLowerCase().replace(/\s+/g, '')} · 1m</span>
                               <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
                               {generatedImage && (
-                                <div className="mt-3 w-full aspect-[16/9] rounded-2xl overflow-hidden border border-gray-200">
-                                  <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                <div className="mt-3 w-full rounded-2xl overflow-hidden border border-gray-200">
+                                  <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                                 </div>
                               )}
                               <div className="flex justify-between mt-3 text-gray-500">
@@ -2657,8 +2657,8 @@ export default function CreateContentPage() {
                           <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                         </div>
                         {generatedImage && (
-                          <div className="w-full aspect-[1.91/1] overflow-hidden">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <div className="w-full overflow-hidden">
+                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div className="px-4 pt-2">
@@ -2750,8 +2750,8 @@ export default function CreateContentPage() {
                           <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                         </div>
                         {generatedImage && (
-                          <div className="w-full aspect-[1.91/1] overflow-hidden">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <div className="w-full overflow-hidden">
+                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div className="px-4 pt-2">
@@ -2834,8 +2834,8 @@ export default function CreateContentPage() {
                           <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                         </div>
                         {generatedImage && (
-                          <div className="w-full aspect-[1.91/1] overflow-hidden">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          <div className="w-full overflow-hidden">
+                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div className="px-4 py-2">

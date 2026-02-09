@@ -101,7 +101,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                         <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
                         {imageUrl && (
                           <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
-                            <img src={imageUrl} alt="" className="w-full aspect-[16/9] object-cover" />
+                            <img src={imageUrl} alt="" className="w-full h-auto object-contain" />
                           </div>
                         )}
                       </div>
@@ -136,7 +136,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                     </div>
                     <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
                   </div>
-                  {imageUrl && <img src={imageUrl} alt="" className="w-full aspect-[1.91/1] object-cover" />}
+                  {imageUrl && <img src={imageUrl} alt="" className="w-full h-auto object-contain" />}
                   {/* Facebook reactions bar */}
                   <div className="px-4 py-2.5">
                     <div className="flex items-center justify-between text-[13px] text-gray-500 pb-2.5 border-b border-gray-200">
@@ -203,7 +203,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                     </div>
                     <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
                   </div>
-                  {imageUrl && <img src={imageUrl} alt="" className="w-full aspect-[1.91/1] object-cover" />}
+                  {imageUrl && <img src={imageUrl} alt="" className="w-full h-auto object-contain" />}
                   {/* LinkedIn engagement bar */}
                   <div className="px-4 py-2.5">
                     <div className="flex items-center justify-between text-[12px] text-gray-500 pb-2 border-b border-gray-200">
@@ -254,7 +254,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                       </div>
                     </div>
                     <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
-                    {imageUrl && <div className="rounded-lg overflow-hidden mb-3"><img src={imageUrl} alt="" className="w-full aspect-[1.91/1] object-cover" /></div>}
+                    {imageUrl && <div className="rounded-lg overflow-hidden mb-3"><img src={imageUrl} alt="" className="w-full h-auto object-contain" /></div>}
                   </div>
                 </div>
               )

@@ -359,7 +359,7 @@ export async function POST(request: Request) {
             <path fill-rule="evenodd" fill="#000" d="${bottomStripPath}"/>
             <rect x="0" y="${stripH}" width="${sidePad}" height="${fh - 2 * stripH}" fill="#000"/>
             <rect x="${fw - sidePad}" y="${stripH}" width="${sidePad}" height="${fh - 2 * stripH}" fill="#000"/>
-            <rect x="${sidePad}" y="${stripH}" width="${fw - 2 * sidePad}" height="${fh - 2 * stripH}" fill="none" stroke="#000" stroke-width="1"/>
+            <!-- no inner stroke to avoid double-border effect -->
           </svg>`
         )
         composited = await sharp(composited)
