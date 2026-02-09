@@ -47,30 +47,79 @@ interface Business {
   seo_keywords?: string | null
   default_tone?: string | null
   service_areas?: string | null
+  preferred_image_styles?: string[]
+  avoid_image_styles?: string[]
 }
 
-// Image style definitions (must match backend)
+// Image style definitions (must match backend lib/openai/images.ts)
 const IMAGE_STYLES = {
   promotional: {
     name: 'Promotional',
-    description: 'Bold graphics for sales and offers',
-    keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free']
+    description: 'Cinematic images for sales & offers',
+    icon: '🎯',
+    subVariations: {} as Record<string, { name: string }>,
   },
   professional: {
     name: 'Professional',
-    description: 'Clean, polished images',
-    keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service']
+    description: 'Editorial documentary style',
+    icon: '📸',
+    subVariations: {} as Record<string, { name: string }>,
   },
   friendly: {
     name: 'Friendly',
-    description: 'Warm, approachable illustrations',
-    keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love']
+    description: 'Warm candid lifestyle',
+    icon: '🤝',
+    subVariations: {} as Record<string, { name: string }>,
   },
   seasonal: {
     name: 'Seasonal',
-    description: 'Holiday themed graphics',
-    keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween']
-  }
+    description: 'Subtle seasonal themes',
+    icon: '🍂',
+    subVariations: {} as Record<string, { name: string }>,
+  },
+  artistic: {
+    name: 'Artistic',
+    description: 'Painterly illustrative styles',
+    icon: '🎨',
+    subVariations: {
+      watercolor: { name: 'Watercolor' },
+      'oil-painting': { name: 'Oil Painting' },
+      sketch: { name: 'Sketch' },
+    } as Record<string, { name: string }>,
+  },
+  graffiti: {
+    name: 'Graffiti',
+    description: 'Bold urban street art energy',
+    icon: '🏙️',
+    subVariations: {
+      full: { name: 'Full Graffiti' },
+      'subtle-accents': { name: 'Subtle Accents' },
+    } as Record<string, { name: string }>,
+  },
+  lifestyle: {
+    name: 'Lifestyle',
+    description: 'Candid real-people moments',
+    icon: '🏡',
+    subVariations: {} as Record<string, { name: string }>,
+  },
+  minimalist: {
+    name: 'Minimalist',
+    description: 'Clean premium modern',
+    icon: '✨',
+    subVariations: {} as Record<string, { name: string }>,
+  },
+  vintage: {
+    name: 'Vintage',
+    description: 'Film grain retro nostalgia',
+    icon: '📷',
+    subVariations: {} as Record<string, { name: string }>,
+  },
+  wellness: {
+    name: 'Wellness',
+    description: 'Serene spa-like calm',
+    icon: '🧘',
+    subVariations: {} as Record<string, { name: string }>,
+  },
 } as const
 
 type ImageStyleKey = keyof typeof IMAGE_STYLES
@@ -244,6 +293,7 @@ export default function CreateContentPage() {
   const [generateImageFlag] = useState(true) // Always generate images
   const [imageSource, setImageSource] = useState<'stock' | 'ai'>('stock') // 'stock' = free Unsplash, 'ai' = DALL-E
   const [imageStyle, setImageStyle] = useState<ImageStyleKey>('professional')
+  const [subVariation, setSubVariation] = useState<string | null>(null)
   const [imagesRemaining, setImagesRemaining] = useState<number | null>(null)
   
   // Multi-business support
@@ -303,6 +353,11 @@ export default function CreateContentPage() {
   const step3UploadInputRef = useRef<HTMLInputElement>(null)
   const step3CameraInputRef = useRef<HTMLInputElement>(null)
   const aiRegenerateMenuRef = useRef<HTMLDivElement>(null)
+
+  // A/B Style Compare
+  const [compareImages, setCompareImages] = useState<Array<{ url: string; style: string; loading: boolean }>>([])
+  const [showCompare, setShowCompare] = useState(false)
+  const [comparingStyles, setComparingStyles] = useState(false)
 
   // Image Library: recent user images for Step 3 picker
   const [libraryImages, setLibraryImages] = useState<Array<{ id: string; public_url: string; filename: string }>>([])
@@ -1132,6 +1187,10 @@ export default function CreateContentPage() {
           generateImageFlag: mode === 'text' ? false : true,
           imageSource: mode === 'image' ? effectiveImageSource : 'stock',
           imageStyle,
+          subVariation: subVariation ?? undefined,
+          postType: selectedTemplate,
+          preferredStyles: currentBusiness?.preferred_image_styles ?? undefined,
+          avoidStyles: currentBusiness?.avoid_image_styles ?? undefined,
           regenerateMode: mode,
           tagline: currentBusiness?.tagline ?? undefined,
           defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
@@ -1441,10 +1500,14 @@ export default function CreateContentPage() {
           industry,
           businessName,
           style: styleToUse,
+          subVariation: subVariation ?? undefined,
           contentType: selectedTemplate,
+          postType: selectedTemplate,
           brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
           brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
           brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+          preferredStyles: currentBusiness?.preferred_image_styles ?? undefined,
+          avoidStyles: currentBusiness?.avoid_image_styles ?? undefined,
         }),
       })
       const data = await res.json()
@@ -1464,6 +1527,64 @@ export default function CreateContentPage() {
     } finally {
       setGeneratingAiImage(false)
     }
+  }
+
+  // A/B Style Compare: generate 3 images in parallel with different styles
+  const handleCompareStyles = async () => {
+    if (comparingStyles) return
+    setComparingStyles(true)
+    setShowCompare(true)
+    // Pick 3 different styles to compare (current + 2 random others)
+    const allStyles = Object.keys(IMAGE_STYLES) as ImageStyleKey[]
+    const stylesToCompare: ImageStyleKey[] = [imageStyle]
+    const otherStyles = allStyles.filter(s => s !== imageStyle)
+    for (let i = 0; i < 2 && otherStyles.length > 0; i++) {
+      const idx = Math.floor(Math.random() * otherStyles.length)
+      stylesToCompare.push(otherStyles.splice(idx, 1)[0])
+    }
+    setCompareImages(stylesToCompare.map(s => ({ url: '', style: s, loading: true })))
+    // Generate in parallel
+    const results = await Promise.allSettled(
+      stylesToCompare.map(async (s) => {
+        const res = await fetch('/api/content/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            industry,
+            businessName,
+            style: s,
+            contentType: selectedTemplate,
+            brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+            brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+            brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+          }),
+        })
+        const data = await res.json()
+        return { url: data.url || '', style: s }
+      })
+    )
+    const finalImages = results.map((r, i) => {
+      if (r.status === 'fulfilled' && r.value.url) {
+        return { url: r.value.url, style: r.value.style, loading: false }
+      }
+      return { url: '', style: stylesToCompare[i], loading: false }
+    })
+    setCompareImages(finalImages)
+    setComparingStyles(false)
+    if (finalImages.some(img => img.url)) {
+      setImagesRemaining(prev => prev !== null ? Math.max(0, prev - finalImages.filter(img => img.url).length) : null)
+    }
+  }
+
+  const handlePickCompareImage = (img: { url: string; style: string }) => {
+    if (!img.url) return
+    setStep3AIImage({ url: img.url, style: img.style, size: '1024x1024', generated_image_id: null })
+    setGeneratedImage({ url: img.url, style: img.style, generatedAt: new Date().toISOString(), source: 'ai' })
+    setSelectedStockImage(null)
+    setAppliedBrandingForImageUrl(null)
+    setShowCompare(false)
+    setImageStyle(img.style as ImageStyleKey)
   }
 
   const handleStep3Upload = async (file: File) => {
@@ -1931,24 +2052,52 @@ export default function CreateContentPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">AI image style</label>
               <p className="text-xs text-gray-500 mb-3">Choose the look for AI-generated images (used when you select &quot;Generate with AI&quot; in the next step).</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setImageStyle(key)}
-                    className={`px-3 py-3 rounded-xl border-2 text-left transition-all ${
+                    onClick={() => { setImageStyle(key); setSubVariation(null) }}
+                    className={`px-2.5 py-2.5 rounded-xl border-2 text-left transition-all ${
                       imageStyle === key
                         ? 'border-[var(--brand-primary)] shadow-sm'
-                        : 'bg-white border-gray-300 text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50'
+                        : 'bg-white border-gray-200 text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50'
                     }`}
                     style={imageStyle === key ? { backgroundColor: hexToRgba(primary, 0.08), borderColor: primary } : undefined}
                   >
-                    <span className="block font-medium text-sm">{config.name}</span>
-                    <span className="block text-xs mt-0.5 opacity-80">{config.description}</span>
+                    <span className="block text-base mb-0.5">{config.icon}</span>
+                    <span className="block font-medium text-xs">{config.name}</span>
+                    <span className="block text-[10px] mt-0.5 opacity-70 leading-tight">{config.description}</span>
                   </button>
                 ))}
               </div>
+              {/* Sub-variation picker */}
+              {Object.keys(IMAGE_STYLES[imageStyle].subVariations).length > 0 && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Sub-style for {IMAGE_STYLES[imageStyle].name}:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSubVariation(null)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${!subVariation ? 'text-white border-transparent shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                      style={!subVariation ? { backgroundColor: primary } : undefined}
+                    >
+                      Auto / Default
+                    </button>
+                    {Object.entries(IMAGE_STYLES[imageStyle].subVariations).map(([svKey, svConfig]) => (
+                      <button
+                        key={svKey}
+                        type="button"
+                        onClick={() => setSubVariation(svKey)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${subVariation === svKey ? 'text-white border-transparent shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                        style={subVariation === svKey ? { backgroundColor: primary } : undefined}
+                      >
+                        {svConfig.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <p className="text-sm text-gray-500 border-t border-gray-100 pt-5 mt-5">
@@ -2195,10 +2344,13 @@ export default function CreateContentPage() {
                       <div ref={aiRegenerateMenuRef} className="relative">
                         <button type="button" onClick={(e) => { e.stopPropagation(); setAiRegenerateMenuOpen(!aiRegenerateMenuOpen) }} className="text-[10px] font-medium text-gray-700 hover:text-teal-600 flex items-center gap-0.5">New <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg></button>
                         {aiRegenerateMenuOpen && (
-                          <div className="absolute right-0 top-full mt-0.5 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1">
-                            <button type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage() }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">Same style</button>
+                          <div className="absolute right-0 top-full mt-0.5 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 max-h-64 overflow-y-auto">
+                            <button type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage() }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50 font-medium">Same style</button>
+                            <div className="border-t border-gray-100 my-0.5" />
                             {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
-                              <button key={key} type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage(key) }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">{config.name}</button>
+                              <button key={key} type="button" onClick={() => { setAiRegenerateMenuOpen(false); handleGenerateStep3AiImage(key) }} className="w-full px-3 py-1.5 text-left text-[11px] text-gray-700 hover:bg-gray-50">
+                                <span className="mr-1">{config.icon}</span> {config.name}
+                              </button>
                             ))}
                           </div>
                         )}
@@ -2210,6 +2362,56 @@ export default function CreateContentPage() {
                 </div>
               </div>
             </div>
+
+            {/* Compare Styles */}
+            <div className="mb-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCompareStyles}
+                disabled={comparingStyles || imagesRemaining === 0 || !topic?.trim()}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>
+                {comparingStyles ? 'Comparing...' : 'Compare 3 AI Styles'}
+              </button>
+              <span className="text-[10px] text-amber-600">Uses 3 AI image credits</span>
+            </div>
+            {showCompare && compareImages.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Style Comparison</p>
+                  <button type="button" onClick={() => setShowCompare(false)} className="text-[10px] text-gray-400 hover:text-gray-600">Close</button>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {compareImages.map((img, i) => (
+                    <div key={i} className="flex flex-col">
+                      <button
+                        type="button"
+                        onClick={() => handlePickCompareImage(img)}
+                        disabled={!img.url || img.loading}
+                        className={`relative aspect-square w-full rounded-t-lg overflow-hidden border-2 transition-all ${img.url && generatedImage?.url === img.url ? 'border-teal-500 ring-2 ring-teal-200' : 'border-gray-200 hover:border-gray-300'} ${!img.url && !img.loading ? 'bg-red-50' : 'bg-white'}`}
+                      >
+                        {img.loading ? (
+                          <div className="flex items-center justify-center h-full">
+                            <svg className="animate-spin w-6 h-6 text-teal-500" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                          </div>
+                        ) : img.url ? (
+                          <img src={img.url} alt={img.style} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-xs text-red-400">Failed</div>
+                        )}
+                      </button>
+                      <div className="px-2 py-1.5 rounded-b-lg border-2 border-t-0 border-gray-200 bg-white text-center">
+                        <span className="text-[10px] font-medium text-gray-700">
+                          {(IMAGE_STYLES[img.style as ImageStyleKey]?.icon || '')} {IMAGE_STYLES[img.style as ImageStyleKey]?.name || img.style}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-2 text-center">Click an image to select it</p>
+              </div>
+            )}
 
             {/* Row 2: My Library */}
             {(libraryImages.length > 0 || libraryLoading) && (

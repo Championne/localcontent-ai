@@ -31,10 +31,14 @@ export async function POST(request: Request) {
       industry,
       businessName,
       style: requestedStyle,
+      subVariation,
       contentType = 'social-post',
+      postType,
       brandPrimaryColor,
       brandSecondaryColor,
       brandAccentColor,
+      preferredStyles,
+      avoidStyles,
     } = body
 
     if (!topic || !industry || !businessName) {
@@ -66,9 +70,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const finalStyle: ImageStyle = requestedStyle && ['promotional', 'professional', 'friendly', 'seasonal'].includes(requestedStyle)
+    const ALL_STYLES: ImageStyle[] = ['promotional', 'professional', 'friendly', 'seasonal', 'artistic', 'graffiti', 'lifestyle', 'minimalist', 'vintage', 'wellness']
+    // Fetch business preferences if a businessId is available
+    let bizPreferred: string[] | undefined = Array.isArray(preferredStyles) ? preferredStyles : undefined
+    let bizAvoided: string[] | undefined = Array.isArray(avoidStyles) ? avoidStyles : undefined
+    const finalStyle: ImageStyle = requestedStyle && ALL_STYLES.includes(requestedStyle)
       ? requestedStyle
-      : detectBestStyle(topic)
+      : detectBestStyle(topic, industry, postType || contentType, bizPreferred, bizAvoided)
 
     // Fetch AI prompt overrides for this user
     let sceneHintOverride: string | null = null
@@ -98,7 +106,11 @@ export async function POST(request: Request) {
       businessName,
       industry,
       style: finalStyle,
+      subVariation: subVariation || undefined,
       contentType,
+      postType: postType || contentType,
+      preferredStyles: bizPreferred,
+      avoidStyles: bizAvoided,
       brandPrimaryColor: brandPrimaryColor || undefined,
       brandSecondaryColor: brandSecondaryColor || undefined,
       brandAccentColor: brandAccentColor || undefined,

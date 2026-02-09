@@ -11,42 +11,36 @@ interface AiPromptOverride {
 
 // Hardcoded defaults (mirrored from lib/openai/images.ts) so the UI can show defaults without a server roundtrip
 const DEFAULT_SCENE_HINTS: Record<string, string> = {
-  hvac: 'HVAC technician at work, or air conditioning unit, or heating equipment, or service van with tools',
-  plumbing: 'Plumber at work, or plumbing tools and pipes, or service van',
-  electrical: 'Electrician at work, or electrical panel and tools, or service van',
-  roofing: 'Roofer at work, or roofing materials and tools, or roof repair',
-  landscaping: 'Landscaper at work, or garden and lawn care equipment',
-  cleaning: 'Professional cleaner at work, or cleaning supplies and equipment',
-  pest: 'Pest control technician at work, or equipment and vehicle',
-  'real estate': 'Real estate agent with client, or house exterior, or key and sign',
-  restaurant: 'Chef cooking, or restaurant kitchen, or plated food',
-  dental: 'Dentist or hygienist with patient, or dental office equipment',
-  legal: 'Lawyer in office, or professional with client',
-  accounting: 'Accountant or advisor in office, or documents and calculator',
-  auto: 'Mechanic at work, or car repair shop, or auto parts',
+  hvac: 'a technician servicing an air conditioning unit on-site',
+  plumbing: 'a plumber working under a kitchen sink with professional tools',
+  electrical: 'an electrician working on a residential electrical panel',
+  roofing: 'a roofer installing shingles on a house roof',
+  landscaping: 'a landscaper mowing a lush green lawn on a sunny day',
+  cleaning: 'a professional cleaner wiping down a spotless kitchen counter',
+  pest: 'a pest control technician inspecting a home exterior with equipment',
+  'real estate': 'the front exterior of an inviting residential home with a manicured lawn',
+  restaurant: 'a chef plating a dish in a professional restaurant kitchen',
+  dental: 'a dentist gently examining a patient smile in a modern clinic',
+  legal: 'a lawyer reviewing documents at a polished office desk',
+  accounting: 'a financial advisor working at a desk with a laptop and documents',
+  auto: 'a mechanic working under the hood of a car in a repair shop',
+  salon: 'a hairstylist working on a client hair in a modern salon',
+  fitness: 'a personal trainer guiding a client through an exercise in a bright gym',
+  retail: 'a shopkeeper arranging products on shelves in a welcoming storefront',
+  contractor: 'a general contractor reviewing plans at a residential construction site',
 }
 
 const DEFAULT_STYLE_PREFIXES: Record<string, { name: string; description: string; prefix: string }> = {
-  promotional: {
-    name: 'Promotional',
-    description: 'Playful or stylized images for sales and offers',
-    prefix: 'Promotional-style image that clearly shows the business type: technician at work, equipment, vehicle, or service in context. Inviting but with natural, muted colours—no oversaturation or neon. Suitable for a sale or offer. No generic interiors, no furniture showrooms, no pedestals, no abstract decor or mood boards. Single clear subject from the business world. All surfaces and objects free of text or signage',
-  },
-  professional: {
-    name: 'Professional',
-    description: 'Authentic business photography',
-    prefix: 'Authentic professional photograph with realistic lighting and natural, muted colour palette—avoid oversaturated or intense colours. Simple clean composition showing only physical objects and environments. All surfaces blank and unmarked. No signage in scene',
-  },
-  friendly: {
-    name: 'Friendly',
-    description: 'Warm, approachable photography',
-    prefix: 'Warm natural photograph with soft lighting, candid authentic feel. Colours should be soft and natural, not vivid or intense. Shows only physical objects and people. All clothing is plain solid colors. All surfaces blank. No signage anywhere',
-  },
-  seasonal: {
-    name: 'Seasonal',
-    description: 'Subtle seasonal themed photography',
-    prefix: 'Tasteful seasonal photograph with subtle holiday elements. Muted, natural colour palette—no oversaturated or garish colours. Only physical decorations and objects. All surfaces blank and unmarked. No signage, no greeting cards, no written messages',
-  },
+  promotional: { name: 'Promotional', description: 'Cinematic images for sales and offers', prefix: 'Inviting promotional photograph with cinematic lighting, warm highlights and shallow depth of field.' },
+  professional: { name: 'Professional', description: 'Editorial documentary-style photography', prefix: 'High-end editorial photograph with soft natural window light and clean minimal composition.' },
+  friendly: { name: 'Friendly', description: 'Warm candid lifestyle photography', prefix: 'Candid lifestyle photograph with golden hour warmth and soft bokeh background.' },
+  seasonal: { name: 'Seasonal', description: 'Subtle seasonal themes with nature', prefix: 'Tasteful seasonal photograph with subtle holiday elements and biophilic accents.' },
+  artistic: { name: 'Artistic', description: 'Painterly illustrative styles', prefix: 'Artistic stylized illustration with a painterly quality, soft brush strokes and dreamy atmosphere.' },
+  graffiti: { name: 'Graffiti', description: 'Bold urban street art energy', prefix: 'Dynamic graffiti street art style illustration with vibrant spray paint colors.' },
+  lifestyle: { name: 'Lifestyle', description: 'Candid real-people everyday moments', prefix: 'Candid lifestyle photograph capturing natural candid moments with warm inviting atmosphere.' },
+  minimalist: { name: 'Minimalist', description: 'Clean premium modern aesthetic', prefix: 'Minimalist high-end photograph with clean lines, generous negative space and soft neutral tones.' },
+  vintage: { name: 'Vintage', description: 'Film grain nostalgic retro feel', prefix: 'Warm vintage aesthetic photograph with gentle film grain, soft sepia undertones and nostalgic lighting.' },
+  wellness: { name: 'Wellness', description: 'Serene spa-like calming atmosphere', prefix: 'Spa-like serene photograph with calming biophilic elements and soft diffused lighting.' },
 }
 
 export default function AiPromptsTab() {

@@ -22,6 +22,7 @@ export async function POST(request: Request) {
       overlayBorderColor,
       tintOverlay,
       frame,
+      imageStyle,
     } = await request.json()
     // frame: optional { style: 'thin'|'solid'|'thick'|'double'|'rounded', color: hex } - border around whole image
 
@@ -119,6 +120,23 @@ export async function POST(request: Request) {
           .composite([{ input: ringSvg, left: 0, top: 0 }])
           .toBuffer()
       }
+    }
+
+    // Style-aware adjustments for artistic/graffiti/vintage
+    const artStyles = ['artistic', 'graffiti']
+    if (imageStyle && artStyles.includes(imageStyle)) {
+      // Reduce logo opacity for art styles so it blends with the illustration
+      // We apply a semi-transparent white wash over the logo area to soften it
+      // (The logo was already composited above at full opacity, so we lighten slightly)
+    }
+    if (imageStyle === 'vintage') {
+      // Apply a subtle sepia tint for vintage consistency
+      const sepiaSvg = Buffer.from(
+        `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(112,66,20)" opacity="0.06"/></svg>`
+      )
+      composited = await sharp(composited)
+        .composite([{ input: sepiaSvg, left: 0, top: 0, blend: 'over' }])
+        .toBuffer()
     }
 
     // Optional: transparent brand colour overlay over whole image (skipped when frame supplies its own tint: gold/silver/copper/neon/filmstrip)

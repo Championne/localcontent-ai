@@ -20,6 +20,8 @@ interface Business {
   default_tone: string | null
   social_handles: string | null
   short_about: string | null
+  preferred_image_styles: string[]
+  avoid_image_styles: string[]
   created_at: string
 }
 
@@ -176,6 +178,8 @@ export default function BrandingPage() {
           default_tone: business.default_tone,
           social_handles: business.social_handles,
           short_about: business.short_about,
+          preferred_image_styles: business.preferred_image_styles || [],
+          avoid_image_styles: business.avoid_image_styles || [],
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -741,6 +745,66 @@ export default function BrandingPage() {
                   <input type="text" value={business.social_handles || ''} onChange={(e) => updateBusiness(business.id, { social_handles: e.target.value || null })} placeholder="@mybusiness" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   <label className="block text-xs font-medium text-gray-500 mb-1">Short About (2–4 sentences)</label>
                   <textarea value={business.short_about || ''} onChange={(e) => updateBusiness(business.id, { short_about: e.target.value || null })} placeholder="Used in Google Business Profile, blog author box, About sections" rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none" />
+                    </div>
+                  </div>
+
+                  {/* Image Style Preferences */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center text-sm font-medium">5</span>
+                      <h4 className="font-medium text-gray-900">Image style preferences</h4>
+                    </div>
+                    <div className="space-y-4 pl-10">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Preferred styles (AI will favour these)</label>
+                        <div className="flex flex-wrap gap-2">
+                          {(['promotional','professional','friendly','seasonal','artistic','graffiti','lifestyle','minimalist','vintage','wellness'] as const).map((s) => {
+                            const isSelected = (business.preferred_image_styles || []).includes(s)
+                            const isAvoided = (business.avoid_image_styles || []).includes(s)
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                disabled={isAvoided}
+                                onClick={() => {
+                                  const current = business.preferred_image_styles || []
+                                  const next = isSelected ? current.filter((x: string) => x !== s) : [...current, s]
+                                  updateBusiness(business.id, { preferred_image_styles: next })
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isSelected ? 'text-white border-transparent shadow-sm' : isAvoided ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                                style={isSelected ? { backgroundColor: 'var(--brand-primary)' } : undefined}
+                              >
+                                {s.charAt(0).toUpperCase() + s.slice(1)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-500 mb-2">Avoid styles (AI will never pick these)</label>
+                        <div className="flex flex-wrap gap-2">
+                          {(['promotional','professional','friendly','seasonal','artistic','graffiti','lifestyle','minimalist','vintage','wellness'] as const).map((s) => {
+                            const isAvoided = (business.avoid_image_styles || []).includes(s)
+                            const isPreferred = (business.preferred_image_styles || []).includes(s)
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                disabled={isPreferred}
+                                onClick={() => {
+                                  const current = business.avoid_image_styles || []
+                                  const next = isAvoided ? current.filter((x: string) => x !== s) : [...current, s]
+                                  updateBusiness(business.id, { avoid_image_styles: next })
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${isAvoided ? 'bg-red-500 text-white border-transparent shadow-sm' : isPreferred ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                              >
+                                {s.charAt(0).toUpperCase() + s.slice(1)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-400">Preferred styles get a boost in AI auto-detection. Avoided styles are never used for this business.</p>
                     </div>
                   </div>
 

@@ -34,6 +34,8 @@ export interface Business {
   social_handles: string | null
   service_areas: string | null
   short_about: string | null
+  preferred_image_styles: string[]
+  avoid_image_styles: string[]
   created_at: string
   updated_at: string
 }

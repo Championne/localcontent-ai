@@ -8,30 +8,75 @@ interface AiPromptOverride {
   prompt_text: string
 }
 
-const DEFAULT_STYLE_PREFIXES: Record<string, { name: string; description: string; keywords: string[]; prefix: string }> = {
+const DEFAULT_STYLE_PREFIXES: Record<string, { name: string; description: string; keywords: string[]; prefix: string; subVariations?: Record<string, { name: string; prefix: string }> }> = {
   promotional: {
     name: 'Promotional',
-    description: 'Playful or stylized images for sales and offers',
-    keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free'],
-    prefix: 'Promotional-style image that clearly shows the business type: technician at work, equipment, vehicle, or service in context. Inviting but with natural, muted colours—no oversaturation or neon. Suitable for a sale or offer. No generic interiors, no furniture showrooms, no pedestals, no abstract decor or mood boards. Single clear subject from the business world. All surfaces and objects free of text or signage',
+    description: 'Cinematic images for sales and offers',
+    keywords: ['sale', 'discount', 'off', 'special', 'deal', 'offer', 'limited', 'save', 'price', 'free', 'promo', 'promotion', 'coupon'],
+    prefix: 'Inviting promotional photograph with cinematic lighting, warm highlights and shallow depth of field. Natural but vibrant tones matching an energetic mood. Single clear subject from the business world, premium focus on the product or service.',
   },
   professional: {
     name: 'Professional',
-    description: 'Authentic business photography',
-    keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service'],
-    prefix: 'Authentic professional photograph with realistic lighting and natural, muted colour palette—avoid oversaturated or intense colours. Simple clean composition showing only physical objects and environments. All surfaces blank and unmarked. No signage in scene',
+    description: 'Editorial documentary-style photography',
+    keywords: ['tips', 'how to', 'guide', 'advice', 'learn', 'info', 'update', 'news', 'service', 'announcement', 'launch'],
+    prefix: 'High-end editorial photograph with soft natural window light and clean minimal composition. Documentary-style realism with a muted, sophisticated colour palette. DSLR quality with subtle depth of field.',
   },
   friendly: {
     name: 'Friendly',
-    description: 'Warm, approachable photography',
-    keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love'],
-    prefix: 'Warm natural photograph with soft lighting, candid authentic feel. Colours should be soft and natural, not vivid or intense. Shows only physical objects and people. All clothing is plain solid colors. All surfaces blank. No signage anywhere',
+    description: 'Warm candid lifestyle photography',
+    keywords: ['thank', 'welcome', 'community', 'team', 'family', 'customer', 'appreciate', 'love', 'happy', 'together'],
+    prefix: 'Candid lifestyle photograph with golden hour warmth and soft bokeh background. Genuine, approachable feel. Soft diffused lighting, warm colour tones.',
   },
   seasonal: {
     name: 'Seasonal',
-    description: 'Subtle seasonal themed photography',
-    keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween'],
-    prefix: 'Tasteful seasonal photograph with subtle holiday elements. Muted, natural colour palette—no oversaturated or garish colours. Only physical decorations and objects. All surfaces blank and unmarked. No signage, no greeting cards, no written messages',
+    description: 'Subtle seasonal themes with nature',
+    keywords: ['holiday', 'christmas', 'summer', 'spring', 'fall', 'winter', 'new year', 'valentine', 'easter', 'thanksgiving', 'halloween', 'season'],
+    prefix: 'Tasteful seasonal photograph with subtle holiday elements and biophilic accents. Muted, natural colour palette. Only physical decorations and objects.',
+  },
+  artistic: {
+    name: 'Artistic',
+    description: 'Painterly illustrative styles',
+    keywords: ['creative', 'inspire', 'transform', 'journey', 'dream', 'vision', 'art', 'style', 'unique', 'elevate', 'design', 'craft'],
+    prefix: 'Artistic stylized illustration with a painterly quality, soft brush strokes and dreamy atmosphere. Vibrant yet harmonious colors, high detail, cinematic composition.',
+    subVariations: {
+      watercolor: { name: 'Watercolor', prefix: 'Soft dreamy watercolor illustration with translucent washes, gentle colour bleeding and delicate brush strokes.' },
+      'oil-painting': { name: 'Oil Painting', prefix: 'Rich textured oil painting illustration with visible thick brush strokes, deep saturated colors and dramatic lighting.' },
+      sketch: { name: 'Sketch', prefix: 'Clean modern line art sketch illustration with confident pen strokes on a light background. Minimal colour accents.' },
+    },
+  },
+  graffiti: {
+    name: 'Graffiti',
+    description: 'Bold urban street art energy',
+    keywords: ['urban', 'street', 'bold', 'edgy', 'fun', 'rebel', 'standout', 'loud', 'colorful', 'mural'],
+    prefix: 'Dynamic graffiti street art style illustration with vibrant spray paint colors. Bold lines and energetic composition, urban artistic vibe with high contrast.',
+    subVariations: {
+      full: { name: 'Full Graffiti', prefix: 'Immersive full graffiti mural illustration covering the entire scene with vibrant spray paint colors, bold dripping lines, and explosive energy.' },
+      'subtle-accents': { name: 'Subtle Accents', prefix: 'Clean professional photograph with subtle graffiti-style accent elements at the edges. Main subject is photographically realistic.' },
+    },
+  },
+  lifestyle: {
+    name: 'Lifestyle',
+    description: 'Candid real-people everyday moments',
+    keywords: ['everyday', 'real', 'life', 'experience', 'home', 'moment', 'routine', 'authentic', 'people', 'living'],
+    prefix: 'Candid lifestyle photograph capturing natural candid moments with warm inviting atmosphere. Soft natural light, relatable and aspirational feel, DSLR quality.',
+  },
+  minimalist: {
+    name: 'Minimalist',
+    description: 'Clean premium modern aesthetic',
+    keywords: ['clean', 'modern', 'minimal', 'sleek', 'premium', 'sophisticated', 'elegant', 'simple', 'refined', 'luxury'],
+    prefix: 'Minimalist high-end photograph with clean lines, generous negative space and soft neutral tones. Premium feel with matte textures and geometric simplicity.',
+  },
+  vintage: {
+    name: 'Vintage',
+    description: 'Film grain nostalgic retro feel',
+    keywords: ['vintage', 'retro', 'classic', 'old-school', 'nostalgia', 'heritage', 'tradition', 'throwback', 'timeless'],
+    prefix: 'Warm vintage aesthetic photograph with gentle film grain, soft sepia undertones and nostalgic lighting. Slightly faded colours reminiscent of 35mm film photography.',
+  },
+  wellness: {
+    name: 'Wellness',
+    description: 'Serene spa-like calming atmosphere',
+    keywords: ['wellness', 'calm', 'relax', 'peace', 'health', 'comfort', 'spa', 'zen', 'mindful', 'healing', 'self-care', 'yoga'],
+    prefix: 'Spa-like serene photograph with calming biophilic elements. Soft diffused lighting creating a peaceful mood. Muted earth tones with hints of sage green and warm ivory.',
   },
 }
 
@@ -126,7 +171,7 @@ export default function StylePromptsTab() {
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
         <h3 className="text-sm font-semibold text-blue-900 mb-1">How style prompts work</h3>
         <p className="text-xs text-blue-700 leading-relaxed">
-          When GeoSpark generates an AI image, it automatically picks a style based on the topic keywords. For example, posts about "sales" or "discounts" get the <strong>Promotional</strong> style, while "tips" or "how to" content gets <strong>Professional</strong>. Each style has a prompt prefix that tells DALL-E what kind of photograph to create. You can override these prompts to fine-tune the look of your generated images.
+          When GeoSpark generates an AI image, it picks a style based on weighted scoring: topic keywords (50%), industry bias (30%), and post type (20%). You can also set preferred/avoided styles per business in Brand Identity. Each style has a prompt prefix that tells DALL-E what kind of image to create. Styles with sub-variations (Artistic, Graffiti) offer additional refinement. You can override any prompt below.
         </p>
       </div>
 
@@ -134,6 +179,7 @@ export default function StylePromptsTab() {
       {Object.entries(DEFAULT_STYLE_PREFIXES).map(([key, style]) => {
         const override = getOverrideValue(key)
         const isEditing = editingStyle?.key === key
+        const hasSubVars = style.subVariations && Object.keys(style.subVariations).length > 0
         return (
           <div key={key} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             {/* Header */}
@@ -145,6 +191,9 @@ export default function StylePromptsTab() {
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 font-medium">custom</span>
                   ) : (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">default</span>
+                  )}
+                  {hasSubVars && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">has sub-styles</span>
                   )}
                 </div>
                 <p className="text-sm text-gray-500">{style.description}</p>
@@ -197,6 +246,34 @@ export default function StylePromptsTab() {
                 <p className="text-sm text-gray-700 leading-relaxed">{override ?? style.prefix}</p>
               )}
             </div>
+
+            {/* Sub-variations */}
+            {hasSubVars && (
+              <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/30">
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-3">Sub-style variations</p>
+                <div className="space-y-3">
+                  {Object.entries(style.subVariations!).map(([svKey, sv]) => {
+                    const svOverrideKey = `${key}:${svKey}`
+                    const svOverride = getOverrideValue(svOverrideKey)
+                    return (
+                      <div key={svKey} className="bg-white rounded-lg border border-gray-200 p-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-800">{sv.name}</span>
+                            {svOverride ? (
+                              <span className="text-[9px] px-1 py-0.5 rounded bg-teal-100 text-teal-700 font-medium">custom</span>
+                            ) : (
+                              <span className="text-[9px] px-1 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">default</span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 leading-relaxed">{svOverride ?? sv.prefix}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )
       })}

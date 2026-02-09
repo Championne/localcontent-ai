@@ -118,6 +118,8 @@ export async function PATCH(request: Request) {
       social_handles,
       service_areas,
       short_about,
+      preferred_image_styles,
+      avoid_image_styles,
     } = body
 
     if (!id) {
@@ -149,6 +151,8 @@ export async function PATCH(request: Request) {
     if (social_handles !== undefined) updates.social_handles = toStr(social_handles)
     if (service_areas !== undefined) updates.service_areas = toStr(service_areas)
     if (short_about !== undefined) updates.short_about = toStr(short_about)
+    if (preferred_image_styles !== undefined) updates.preferred_image_styles = Array.isArray(preferred_image_styles) ? preferred_image_styles : []
+    if (avoid_image_styles !== undefined) updates.avoid_image_styles = Array.isArray(avoid_image_styles) ? avoid_image_styles : []
 
     const { data, error } = await supabase
       .from('businesses')

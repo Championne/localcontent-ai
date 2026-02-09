@@ -56,6 +56,11 @@ export async function POST(request: Request) {
       gbpExpiration,
       gbpEventDate,
       gbpEventTime,
+      // New style system fields
+      subVariation,
+      postType: requestPostType,
+      preferredStyles,
+      avoidStyles,
     } = body
     
     // Determine what to generate based on mode
@@ -118,8 +123,14 @@ export async function POST(request: Request) {
       )
     }
 
-    // Determine image style (use provided or auto-detect)
-    const finalImageStyle: ImageStyle = imageStyle || detectBestStyle(topic)
+    // Determine image style (use provided or auto-detect with weighted scoring)
+    const ALL_STYLES: ImageStyle[] = ['promotional', 'professional', 'friendly', 'seasonal', 'artistic', 'graffiti', 'lifestyle', 'minimalist', 'vintage', 'wellness']
+    const bizPreferred = Array.isArray(preferredStyles) ? preferredStyles : undefined
+    const bizAvoided = Array.isArray(avoidStyles) ? avoidStyles : undefined
+    const effectivePostType = requestPostType || template
+    const finalImageStyle: ImageStyle = (imageStyle && ALL_STYLES.includes(imageStyle))
+      ? imageStyle
+      : detectBestStyle(topic, industry, effectivePostType, bizPreferred, bizAvoided)
 
     // Handle social-pack separately
     if (template === 'social-pack') {
@@ -169,7 +180,11 @@ export async function POST(request: Request) {
               businessName,
               industry,
               style: finalImageStyle,
+              subVariation: subVariation || undefined,
               contentType: template,
+              postType: effectivePostType,
+              preferredStyles: bizPreferred,
+              avoidStyles: bizAvoided,
               brandPrimaryColor: brandPrimaryColor || undefined,
               brandSecondaryColor: brandSecondaryColor || undefined,
               brandAccentColor: brandAccentColor || undefined,
@@ -356,7 +371,11 @@ export async function POST(request: Request) {
             businessName,
             industry,
             style: finalImageStyle,
+            subVariation: subVariation || undefined,
             contentType: template,
+            postType: effectivePostType,
+            preferredStyles: bizPreferred,
+            avoidStyles: bizAvoided,
             brandPrimaryColor: brandPrimaryColor || undefined,
             brandSecondaryColor: brandSecondaryColor || undefined,
             brandAccentColor: brandAccentColor || undefined,
