@@ -85,7 +85,7 @@ export default async function DashboardPage() {
   })
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pt-4 sm:pt-6">
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">

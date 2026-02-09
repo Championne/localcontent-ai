@@ -424,7 +424,10 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
         </header>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-6 pt-20 lg:pt-6">
+        <main
+          className="p-4 lg:p-6 pt-20 lg:pt-6 min-h-[calc(100vh-4rem)]"
+          style={{ background: `linear-gradient(180deg, ${hexToRgba(brandPrimary, 0.13)} 0%, ${hexToRgba(brandPrimary, 0.06)} 50%, ${hexToRgba(brandPrimary, 0.10)} 100%)` }}
+        >
           {children}
         </main>
       </div>

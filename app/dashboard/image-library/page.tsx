@@ -178,11 +178,11 @@ export default function ImageLibraryPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto pt-4 sm:pt-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Image Library</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Brand Images</h1>
           <p className="text-gray-500 text-sm mt-1">{total} image{total !== 1 ? 's' : ''} · Upload photos of your business to reuse across posts</p>
         </div>
         <div className="flex gap-2">
@@ -213,7 +213,7 @@ export default function ImageLibraryPage() {
 
       {/* Business Selector */}
       {businesses.length > 0 && (
-        <div className="mb-5 flex items-center gap-3">
+        <div className="mb-5 flex items-center gap-3 bg-white/70 backdrop-blur-sm rounded-xl p-3 border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
             Business:

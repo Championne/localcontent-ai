@@ -91,21 +91,21 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto pt-4 sm:pt-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">{isImageStudioRoute ? 'Image Studio' : 'Settings'}</h1>
 
       {/* Tab navigation */}
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      <div className="flex gap-1 bg-white/80 backdrop-blur-sm rounded-xl p-1 border border-gray-100 shadow-sm mb-6">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-sm font-medium transition-all rounded-lg ${
               activeTab === tab.id
-                ? ''
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
             }`}
-            style={activeTab === tab.id ? { borderColor: 'var(--brand-primary)', color: 'var(--brand-primary)' } : {}}
+            style={activeTab === tab.id ? { backgroundColor: 'var(--brand-primary)' } : {}}
           >
             {tab.label}
           </button>
@@ -136,7 +136,7 @@ export default function SettingsPage() {
           )}
 
           {/* Profile Section */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+          <div className="bg-white border border-gray-100 rounded-xl p-6 mb-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile</h2>
             <div className="space-y-4">
               <div>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Subscription Section */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscription</h2>
             <div className="flex items-center justify-between">
               <div>

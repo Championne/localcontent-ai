@@ -300,16 +300,10 @@ export default function BrandingPage() {
   }
 
   const pagePrimary = businesses[0]?.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(businesses[0].brand_primary_color) ? businesses[0].brand_primary_color : '#0d9488'
-    const pageSecondary = businesses[0]?.brand_secondary_color && /^#[0-9A-Fa-f]{6}$/.test(businesses[0].brand_secondary_color) ? businesses[0].brand_secondary_color : '#0f766e'
 
   return (
-    <div
-      className="min-h-screen transition-colors duration-300"
-      style={{
-        background: `linear-gradient(160deg, ${pagePrimary}08 0%, ${pageSecondary}06 40%, transparent 70%)`,
-      }}
-    >
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="transition-colors duration-300">
+      <div className="max-w-3xl mx-auto pt-4 sm:pt-6">
         {message && (
           <div
             ref={messageRef}

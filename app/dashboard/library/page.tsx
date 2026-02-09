@@ -120,14 +120,17 @@ export default function ContentLibraryPage() {
   }
 
   return (
-    <div>
+    <div className="pt-4 sm:pt-6">
       <div className='flex justify-between items-center mb-6'>
-        <h1 className='text-2xl font-bold'>Spark Library</h1>
+        <h1 className='text-2xl font-bold text-gray-900'>Spark Library</h1>
         <Link
           href='/dashboard/content'
-          className='px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity'
+          className='px-5 py-2.5 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-sm flex items-center gap-2'
           style={{ backgroundColor: 'var(--brand-primary)' }}
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
           Create New
         </Link>
       </div>
@@ -139,9 +142,9 @@ export default function ContentLibraryPage() {
       )}
 
       {/* Filter Bar */}
-      <div className='flex gap-4 mb-6'>
+      <div className='flex gap-3 mb-6 bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-gray-100 shadow-sm'>
         <select 
-          className='px-3 py-2 border rounded-md'
+          className='px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm'
           value={filter.type}
           onChange={(e) => {
             setFilter({ ...filter, type: e.target.value })
@@ -156,7 +159,7 @@ export default function ContentLibraryPage() {
           <option value='email'>Email</option>
         </select>
         <select 
-          className='px-3 py-2 border rounded-md'
+          className='px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm'
           value={filter.status}
           onChange={(e) => {
             setFilter({ ...filter, status: e.target.value })
@@ -171,7 +174,7 @@ export default function ContentLibraryPage() {
         <input
           type='text'
           placeholder='Search content...'
-          className='flex-1 px-3 py-2 border rounded-md'
+          className='flex-1 px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm'
           value={filter.search}
           onChange={(e) => setFilter({ ...filter, search: e.target.value })}
         />
@@ -179,12 +182,12 @@ export default function ContentLibraryPage() {
 
       {/* Content List */}
       {filteredContent.length > 0 ? (
-        <div className='bg-card border rounded-lg divide-y'>
+        <div className='bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-100'>
           {filteredContent.map((item) => (
             <div
               key={item.id}
               onClick={() => router.push(`/dashboard/content?edit=${item.id}`)}
-              className='p-4 flex items-center gap-4 hover:bg-muted/50 cursor-pointer transition-colors'
+              className='p-4 flex items-center gap-4 hover:bg-gray-50 cursor-pointer transition-colors'
             >
               {/* Thumbnail: show image if we have a URL and it hasn't failed to load */}
               {getThumbnailUrl(item) && !failedThumbnails[item.id] ? (
@@ -205,8 +208,8 @@ export default function ContentLibraryPage() {
                 </div>
               )}
               <div className='flex-1 min-w-0'>
-                <h3 className='font-medium truncate'>{item.title}</h3>
-                <p className='text-sm text-muted-foreground'>
+                <h3 className='font-medium text-gray-900 truncate text-sm'>{item.title}</h3>
+                <p className='text-xs text-gray-500 mt-0.5'>
                   {getTemplateLabel(item.template)} • {formatDate(item.created_at)}
                 </p>
                 {getThumbnailUrl(item) && (item.metadata?.image_source === 'stock' || item.metadata?.photographer_url) && (
@@ -249,10 +252,10 @@ export default function ContentLibraryPage() {
           ))}
         </div>
       ) : (
-        <div className='bg-card border rounded-lg p-12 text-center'>
-          <div className='w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4'>
+        <div className='bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center'>
+          <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
             <svg
-              className='w-8 h-8 text-muted-foreground'
+              className='w-8 h-8 text-gray-400'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -265,15 +268,18 @@ export default function ContentLibraryPage() {
               />
             </svg>
           </div>
-          <h3 className='text-lg font-medium mb-2'>No content yet</h3>
-          <p className='text-muted-foreground mb-4'>
+          <h3 className='text-lg font-medium text-gray-900 mb-2'>No content yet</h3>
+          <p className='text-gray-500 mb-4'>
             Start creating content to build your library
           </p>
           <Link
             href='/dashboard/content'
-            className='inline-block px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity'
+            className='inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-sm'
             style={{ backgroundColor: 'var(--brand-primary)' }}
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
             Create Your First Content
           </Link>
         </div>
