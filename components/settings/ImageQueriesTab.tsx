@@ -20,12 +20,33 @@ type Tier = 'primary' | 'secondary' | 'generic'
 export default function ImageQueriesTab() {
   const [industries, setIndustries] = useState<IndustryConfig[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
-  const [editingTier, setEditingTier] = useState<{ tier: Tier; queries: string[] } | null>(null)
+  const [editingTier, setEditingTier] = useState<{ industryKey: string; tier: Tier; queries: string[] } | null>(null)
   const [newTag, setNewTag] = useState('')
   const [preview, setPreview] = useState<{ query: string; images: PreviewImage[]; totalHits: number; loading: boolean } | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const toggleExpand = (key: string) => {
+    setExpandedKeys(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) { next.delete(key) } else { next.add(key) }
+      return next
+    })
+    setEditingTier(null)
+    setPreview(null)
+  }
+
+  const allExpanded = industries.length > 0 && expandedKeys.size === industries.length
+  const toggleAll = () => {
+    if (allExpanded) {
+      setExpandedKeys(new Set())
+    } else {
+      setExpandedKeys(new Set(industries.map(i => i.key)))
+    }
+    setEditingTier(null)
+    setPreview(null)
+  }
 
   const fetchIndustries = useCallback(async () => {
     try {
@@ -33,15 +54,12 @@ export default function ImageQueriesTab() {
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
       setIndustries(data.industries)
-      if (!selectedKey && data.industries.length > 0) {
-        setSelectedKey(data.industries[0].key)
-      }
     } catch {
       setMessage({ type: 'error', text: 'Failed to load image queries' })
     } finally {
       setLoading(false)
     }
-  }, [selectedKey])
+  }, [])
 
   useEffect(() => { fetchIndustries() }, [fetchIndustries])
 
@@ -50,17 +68,16 @@ export default function ImageQueriesTab() {
     setTimeout(() => setMessage(null), 3000)
   }
 
-  const handleSaveTier = async (tier: Tier, queries: string[]) => {
-    if (!selectedKey) return
+  const handleSaveTier = async (industryKey: string, tier: Tier, queries: string[]) => {
     setSaving(true)
     try {
       const res = await fetch('/api/image-queries', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ industry_key: selectedKey, tier, queries }),
+        body: JSON.stringify({ industry_key: industryKey, tier, queries }),
       })
       if (!res.ok) throw new Error('Failed to save')
-      showMsg('success', `Saved ${tier} queries for ${selectedKey}`)
+      showMsg('success', `Saved ${tier} queries for ${industryKey}`)
       await fetchIndustries()
       setEditingTier(null)
     } catch {
@@ -70,14 +87,13 @@ export default function ImageQueriesTab() {
     }
   }
 
-  const handleResetTier = async (tier: Tier) => {
-    if (!selectedKey) return
+  const handleResetTier = async (industryKey: string, tier: Tier) => {
     setSaving(true)
     try {
       const res = await fetch('/api/image-queries', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ industry_key: selectedKey, tier }),
+        body: JSON.stringify({ industry_key: industryKey, tier }),
       })
       if (!res.ok) throw new Error('Failed to reset')
       showMsg('success', `Reset ${tier} queries to defaults`)
@@ -133,9 +149,23 @@ export default function ImageQueriesTab() {
         </p>
       </div>
 
+      {/* Expand / Collapse All */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="text-xs font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-teal-50 transition-colors"
+        >
+          <svg className={`w-3.5 h-3.5 transition-transform ${allExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          {allExpanded ? 'Collapse All' : 'Expand All'}
+        </button>
+      </div>
+
       {/* All industries listed */}
       {industries.map(ind => {
-        const isSelected = ind.key === selectedKey
+        const isExpanded = expandedKeys.has(ind.key)
         const total = ind.primary.length + ind.secondary.length + ind.generic.length
         const hasOv = ind.hasOverrides.primary || ind.hasOverrides.secondary || ind.hasOverrides.generic
 
@@ -144,7 +174,7 @@ export default function ImageQueriesTab() {
             {/* Industry header — click to expand */}
             <button
               type="button"
-              onClick={() => { setSelectedKey(isSelected ? null : ind.key); setEditingTier(null); setPreview(null) }}
+              onClick={() => toggleExpand(ind.key)}
               className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
             >
               <div className="flex items-center gap-2">
@@ -152,18 +182,18 @@ export default function ImageQueriesTab() {
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">{total} queries</span>
                 {hasOv && <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 text-teal-700 font-medium">custom</span>}
               </div>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform ${isSelected ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
             {/* Expanded tier editors */}
-            {isSelected && (
+            {isExpanded && (
               <div className="border-t border-gray-100 p-4 space-y-3">
                 {(['primary', 'secondary', 'generic'] as Tier[]).map(tier => {
                   const queries = ind[tier]
                   const hasOverride = ind.hasOverrides[tier]
-                  const isEditing = editingTier?.tier === tier
+                  const isEditing = editingTier?.industryKey === ind.key && editingTier?.tier === tier
 
                   return (
                     <div key={tier} className="border border-gray-100 rounded-lg p-3">
@@ -178,17 +208,17 @@ export default function ImageQueriesTab() {
                         </div>
                         <div className="flex gap-2">
                           {hasOverride && !isEditing && (
-                            <button onClick={() => handleResetTier(tier)} disabled={saving} className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50">
+                            <button onClick={() => handleResetTier(ind.key, tier)} disabled={saving} className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50">
                               Reset
                             </button>
                           )}
                           {!isEditing ? (
-                            <button onClick={() => setEditingTier({ tier, queries: [...queries] })} className="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                            <button onClick={() => setEditingTier({ industryKey: ind.key, tier, queries: [...queries] })} className="text-xs text-teal-600 hover:text-teal-700 font-medium">
                               Edit
                             </button>
                           ) : (
                             <div className="flex gap-2">
-                              <button onClick={() => handleSaveTier(tier, editingTier.queries)} disabled={saving} className="text-xs text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50">
+                              <button onClick={() => handleSaveTier(ind.key, tier, editingTier.queries)} disabled={saving} className="text-xs text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50">
                                 {saving ? 'Saving...' : 'Save'}
                               </button>
                               <button onClick={() => setEditingTier(null)} className="text-xs text-gray-500 hover:text-gray-700">
