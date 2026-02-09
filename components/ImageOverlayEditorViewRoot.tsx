@@ -24,9 +24,9 @@ export default function ImageOverlayEditorViewRoot(props: {
   const frameWrapperStyle = c.frameWrapperStyle
   const containerStyle = c.containerStyle
   return (
-    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
+    <div className="rounded-xl border border-gray-200 shadow-sm" style={{ backgroundColor: rootBg }}>
       {/* Header: compact */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80" style={{ backgroundColor: headerBg }}>
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80 rounded-t-xl" style={{ backgroundColor: headerBg }}>
         <div className="flex-shrink-0">
           <div className="w-10 h-10 rounded-lg overflow-hidden shadow-sm">
             <img src="/favicon-512.png" alt="GeoSpark" className="w-full h-full object-contain" />
@@ -582,7 +582,7 @@ export default function ImageOverlayEditorViewRoot(props: {
         </div>
       </div>
 
-      <div className="px-4 py-3 border-t border-gray-200 flex justify-between items-center" style={{ backgroundColor: headerBg }}>
+      <div className="px-4 py-3 border-t border-gray-200 flex justify-between items-center rounded-b-xl" style={{ backgroundColor: headerBg }}>
         <button onClick={p.onSkip} className="text-sm text-gray-600 hover:text-gray-800 font-medium">Skip</button>
         <button
           onClick={() => p.onApply({ imageOverlays: p.overlays, overlayBorderColors: p.overlayBorderColors, tintOverlay: p.tintOverlay, textOverlays: p.textOverlays, frame: p.frame })}
