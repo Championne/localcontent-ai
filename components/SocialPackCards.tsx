@@ -87,9 +87,9 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                   <div className="p-4">
                     <div className="flex gap-3">
                       {logoUrl ? (
-                        <img src={logoUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                        <img src={logoUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                           {initial(businessName)}
                         </div>
                       )}
@@ -101,10 +101,18 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                         <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
                         {imageUrl && (
                           <div className="mt-3 rounded-2xl overflow-hidden border border-gray-200">
-                            <img src={imageUrl} alt="" className="w-full" />
+                            <img src={imageUrl} alt="" className="w-full aspect-[16/9] object-cover" />
                           </div>
                         )}
                       </div>
+                    </div>
+                  </div>
+                  {/* Twitter engagement bar */}
+                  <div className="px-4 pb-3 pl-[64px]">
+                    <div className="flex justify-between text-gray-500 text-[13px] max-w-[300px]">
+                      <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> 12</span>
+                      <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> 48</span>
+                      <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg> 156</span>
                     </div>
                   </div>
                 </div>
@@ -112,7 +120,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
             case 'facebook':
               return (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="p-4">
+                  <div className="p-4 pb-3">
                     <div className="flex items-center gap-3 mb-3">
                       {logoUrl ? (
                         <img src={logoUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
@@ -123,11 +131,23 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                       )}
                       <div>
                         <div className="font-semibold text-gray-900 text-[15px]">{businessName}</div>
-                        <div className="text-xs text-gray-500">Just now</div>
+                        <div className="text-xs text-gray-500 flex items-center gap-1">Just now · <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1.5 15l-5-5 1.41-1.41L10.5 14.17l7.09-7.09L19 8.5l-8.5 8.5z"/></svg></div>
                       </div>
                     </div>
-                    <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
-                    {imageUrl && <div className="-mx-4 mb-3"><img src={imageUrl} alt="" className="w-full" /></div>}
+                    <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                  </div>
+                  {imageUrl && <img src={imageUrl} alt="" className="w-full aspect-[1.91/1] object-cover" />}
+                  {/* Facebook reactions bar */}
+                  <div className="px-4 py-2.5">
+                    <div className="flex items-center justify-between text-[13px] text-gray-500 pb-2.5 border-b border-gray-200">
+                      <span className="flex items-center gap-1">👍❤️ 24</span>
+                      <span>3 comments</span>
+                    </div>
+                    <div className="flex justify-around pt-1.5 text-gray-600 font-semibold text-[13px]">
+                      <span className="flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg> Like</span>
+                      <span className="flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> Comment</span>
+                      <span className="flex items-center gap-1.5"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg> Share</span>
+                    </div>
                   </div>
                 </div>
               )
@@ -166,7 +186,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
             case 'linkedin':
               return (
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                  <div className="p-4">
+                  <div className="p-4 pb-3">
                     <div className="flex gap-3 mb-3">
                       {logoUrl ? (
                         <img src={logoUrl} alt="" className="w-12 h-12 rounded-full object-cover" />
@@ -177,11 +197,25 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                       )}
                       <div className="flex-1">
                         <div className="font-semibold text-gray-900">{businessName}</div>
-                        <div className="text-xs text-gray-500">Local {industry || 'Business'} Expert · 1h</div>
+                        <div className="text-xs text-gray-500">Local {industry || 'Business'} Expert</div>
+                        <div className="text-xs text-gray-400">1h · <svg className="w-3 h-3 inline" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm-1.5 15l-5-5 1.41-1.41L10.5 14.17l7.09-7.09L19 8.5l-8.5 8.5z"/></svg></div>
                       </div>
                     </div>
-                    <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
-                    {imageUrl && <div className="-mx-4 mb-3"><img src={imageUrl} alt="" className="w-full" /></div>}
+                    <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                  </div>
+                  {imageUrl && <img src={imageUrl} alt="" className="w-full aspect-[1.91/1] object-cover" />}
+                  {/* LinkedIn engagement bar */}
+                  <div className="px-4 py-2.5">
+                    <div className="flex items-center justify-between text-[12px] text-gray-500 pb-2 border-b border-gray-200">
+                      <span>👍 18</span>
+                      <span>2 comments</span>
+                    </div>
+                    <div className="flex justify-around pt-1.5 text-gray-600 font-semibold text-[13px]">
+                      <span>👍 Like</span>
+                      <span>💬 Comment</span>
+                      <span>🔁 Repost</span>
+                      <span>📤 Send</span>
+                    </div>
                   </div>
                 </div>
               )
@@ -190,9 +224,9 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                 <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
                   <div className="relative">
                     {imageUrl ? (
-                      <img src={imageUrl} alt="" className="w-full aspect-[9/12] object-cover" />
+                      <img src={imageUrl} alt="" className="w-full aspect-[9/16] object-cover" />
                     ) : (
-                      <div className="w-full aspect-[9/12] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                      <div className="w-full aspect-[9/16] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                         <span className="text-6xl">🎵</span>
                       </div>
                     )}
@@ -220,7 +254,7 @@ export function SocialPackCards({ pack, businessName, industry = '', imageUrl, l
                       </div>
                     </div>
                     <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
-                    {imageUrl && <div className="rounded-lg overflow-hidden mb-3"><img src={imageUrl} alt="" className="w-full" /></div>}
+                    {imageUrl && <div className="rounded-lg overflow-hidden mb-3"><img src={imageUrl} alt="" className="w-full aspect-[1.91/1] object-cover" /></div>}
                   </div>
                 </div>
               )
