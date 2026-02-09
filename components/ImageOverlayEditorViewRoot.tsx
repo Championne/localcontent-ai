@@ -45,7 +45,7 @@ export default function ImageOverlayEditorViewRoot(props: {
       </div>
 
       <div className="flex flex-col md:flex-row">
-        <div className="w-full md:w-28 lg:w-32 border-r border-gray-200/80 p-2.5 flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible md:overflow-y-auto md:max-h-[480px] flex-shrink-0" style={{ backgroundColor: sidebarBg }}>
+        <div className="w-full md:w-28 lg:w-32 border-r border-gray-200/80 p-2.5 flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible flex-shrink-0" style={{ backgroundColor: sidebarBg }}>
           <div className="text-center">
             {p.effectiveLogoUrl ? (
               <div
@@ -187,9 +187,9 @@ export default function ImageOverlayEditorViewRoot(props: {
           )}
         </div>
 
-        <div className="flex-1 p-4 flex flex-col items-center justify-center min-w-0">
+        <div className="flex-1 p-4 flex flex-col items-center justify-center min-w-0" style={{ backgroundColor: sidebarBg }}>
           <div
-            className="relative bg-gray-100 rounded-lg overflow-hidden w-full max-w-[480px] aspect-square"
+            className="relative rounded-lg overflow-hidden w-full max-w-[480px] aspect-square shadow-sm"
             style={frameWrapperStyle}
           >
             <div
@@ -356,7 +356,7 @@ export default function ImageOverlayEditorViewRoot(props: {
         </div>
 
         {/* Right panel: Effects (Tint + Frame) */}
-        <div className="w-44 sm:w-52 border-l border-gray-200/80 p-3 overflow-y-auto max-h-[480px] hidden md:block" style={{ backgroundColor: sidebarBg }}>
+        <div className="w-44 sm:w-52 border-l border-gray-200/80 p-3 hidden md:block" style={{ backgroundColor: sidebarBg }}>
           <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-3">Effects</p>
 
           {/* Tint */}
