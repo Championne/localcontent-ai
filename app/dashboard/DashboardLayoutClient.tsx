@@ -113,6 +113,19 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
     return () => window.removeEventListener('geospark:business-updated', handleBusinessUpdated)
   }, [])
 
+  // Listen for business selection changes from child pages (e.g. Details page dropdown)
+  useEffect(() => {
+    const onDetailsBusinessChanged = (e: Event) => {
+      const id = (e as CustomEvent).detail?.businessId
+      if (id && id !== selectedBusinessId) {
+        setSelectedBusinessId(id)
+        // localStorage already updated by the dispatching page
+      }
+    }
+    window.addEventListener('geospark:details-business-changed', onDetailsBusinessChanged)
+    return () => window.removeEventListener('geospark:details-business-changed', onDetailsBusinessChanged)
+  }, [selectedBusinessId])
+
   const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
   const brandPrimary = (selectedBusiness?.brand_primary_color && /^#[0-9A-Fa-f]{6}$/.test(selectedBusiness.brand_primary_color)) ? selectedBusiness.brand_primary_color : '#0d9488'
 

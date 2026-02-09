@@ -409,7 +409,7 @@ export default function CreateContentPage() {
     const onBusinessChanged = (e: Event) => {
       const businessId = (e as CustomEvent).detail?.businessId
       if (businessId && businessId !== selectedBusinessId) {
-        handleBusinessChange(businessId)
+        handleBusinessChange(businessId, true) // fromSidebar=true to avoid dispatching back
       }
     }
     window.addEventListener('geospark:business-changed', onBusinessChanged)
@@ -641,13 +641,18 @@ export default function CreateContentPage() {
   }, [searchParams])
 
   // Update business name/industry when selected business changes
-  const handleBusinessChange = (businessId: string) => {
+  const handleBusinessChange = (businessId: string, fromSidebar = false) => {
     setSelectedBusinessId(businessId)
     const business = businesses.find(b => b.id === businessId)
     if (business) {
       setBusinessName(business.name || '')
       setIndustry(business.industry || '')
       if (business.default_tone) setTone(business.default_tone)
+    }
+    // Sync back to sidebar (localStorage + event) when change originates from the Details page
+    if (!fromSidebar) {
+      localStorage.setItem('geospark_selected_business_id', businessId)
+      window.dispatchEvent(new CustomEvent('geospark:details-business-changed', { detail: { businessId } }))
     }
   }
 
