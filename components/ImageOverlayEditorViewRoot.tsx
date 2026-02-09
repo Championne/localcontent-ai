@@ -28,15 +28,9 @@ export default function ImageOverlayEditorViewRoot(props: {
       {/* Header: compact */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200/80" style={{ backgroundColor: headerBg }}>
         <div className="flex-shrink-0">
-          {p.effectiveLogoUrl ? (
-            <div className="w-12 h-12 rounded-lg overflow-hidden border-2 shadow-sm" style={{ borderColor: buttonBorder }}>
-              <img src={p.effectiveLogoUrl} alt="Your brand" className="w-full h-full object-contain bg-white" />
-            </div>
-          ) : (
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 bg-white/80" style={{ borderColor: buttonBorder }}>
-              <span className="text-[9px] font-medium text-gray-400 text-center px-0.5">Logo</span>
-            </div>
-          )}
+          <div className="w-10 h-10 rounded-lg overflow-hidden shadow-sm">
+            <img src="/favicon-512.png" alt="GeoSpark" className="w-full h-full object-contain" />
+          </div>
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-gray-900 text-sm">Customize Your Image</h3>
