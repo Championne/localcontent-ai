@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import WelcomeModal from '@/components/WelcomeModal'
 
 interface DashboardLayoutClientProps {
@@ -13,7 +13,6 @@ interface DashboardLayoutClientProps {
 }
 
 export default function DashboardLayoutClient({ children, userName, isSalesUser = false }: DashboardLayoutClientProps) {
-  const searchParams = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
   const [checkingBusiness, setCheckingBusiness] = useState(true)
@@ -82,7 +81,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
     ? [
         { href: '/dashboard/outreach', label: 'Email campaign', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
         { href: '/dashboard/sales', label: 'Sales', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-        { href: '/dashboard/settings?tab=image-queries', label: 'Image Studio', icon: 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z' },
+        { href: '/dashboard/image-studio', label: 'Image Studio', icon: 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z' },
       ]
     : []
 
@@ -154,18 +153,9 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
             <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Menu</span>
           </div>
           {navItems.map((item) => {
-            const tab = searchParams.get('tab')
-            const onImageStudioTabs = pathname === '/dashboard/settings' && (tab === 'image-queries' || tab === 'ai-prompts')
-            let isActive: boolean
-            if (item.href === '/dashboard') {
-              isActive = pathname === '/dashboard'
-            } else if (item.href.includes('tab=image-queries')) {
-              isActive = onImageStudioTabs
-            } else if (item.href === '/dashboard/settings') {
-              isActive = pathname?.startsWith('/dashboard/settings') === true && !onImageStudioTabs
-            } else {
-              isActive = pathname?.startsWith(item.href) === true
-            }
+            const isActive = item.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname?.startsWith(item.href) === true
             return (
               <Link
                 key={item.href}
@@ -190,10 +180,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">GeoSpark internal</span>
               </div>
               {internalNavItems.map((item) => {
-                const isImageStudioInternal = item.href.includes('tab=image-queries')
-                const isActive = isImageStudioInternal
-                  ? pathname === '/dashboard/settings' && (searchParams.get('tab') === 'image-queries' || searchParams.get('tab') === 'ai-prompts')
-                  : pathname?.startsWith(item.href) === true
+                const isActive = pathname?.startsWith(item.href) === true
                 return (
                   <Link
                     key={item.href}
