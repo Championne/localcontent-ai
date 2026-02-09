@@ -1961,60 +1961,8 @@ export default function CreateContentPage() {
               </div>
             </div>
 
-            {/* AI image style: used when user picks "Generate with AI" in Step 3 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">AI image style</label>
-              <p className="text-xs text-gray-500 mb-3">Choose the look for AI-generated images (used when you select &quot;Generate with AI&quot; in the next step).</p>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => { setImageStyle(key); setSubVariation(null) }}
-                    className={`px-2.5 py-2.5 rounded-xl border-2 text-left transition-all ${
-                      imageStyle === key
-                        ? 'border-[var(--brand-primary)] shadow-sm'
-                        : 'bg-white border-gray-200 text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50'
-                    }`}
-                    style={imageStyle === key ? { backgroundColor: hexToRgba(primary, 0.08), borderColor: primary } : undefined}
-                  >
-                    <span className="block text-base mb-0.5">{config.icon}</span>
-                    <span className="block font-medium text-xs">{config.name}</span>
-                    <span className="block text-[10px] mt-0.5 opacity-70 leading-tight">{config.description}</span>
-                  </button>
-                ))}
-              </div>
-              {/* Sub-variation picker */}
-              {Object.keys(IMAGE_STYLES[imageStyle].subVariations).length > 0 && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                  <p className="text-xs font-medium text-gray-600 mb-2">Sub-style for {IMAGE_STYLES[imageStyle].name}:</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSubVariation(null)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${!subVariation ? 'text-white border-transparent shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
-                      style={!subVariation ? { backgroundColor: primary } : undefined}
-                    >
-                      Auto / Default
-                    </button>
-                    {Object.entries(IMAGE_STYLES[imageStyle].subVariations).map(([svKey, svConfig]) => (
-                      <button
-                        key={svKey}
-                        type="button"
-                        onClick={() => setSubVariation(svKey)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${subVariation === svKey ? 'text-white border-transparent shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
-                        style={subVariation === svKey ? { backgroundColor: primary } : undefined}
-                      >
-                        {svConfig.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* AI image generation opt-in */}
-            <div className="border-t border-gray-100 pt-5 mt-5">
+            {/* AI image generation opt-in toggle — placed BEFORE style picker so user enables first */}
+            <div className="border-t border-gray-100 pt-5 mt-1">
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative flex-shrink-0 mt-0.5">
                   <input
@@ -2040,6 +1988,60 @@ export default function CreateContentPage() {
                 </div>
               </label>
             </div>
+
+            {/* AI image style: only visible when AI generation is enabled */}
+            {includeAiImage && (
+            <div className="mt-4 p-4 bg-teal-50/40 border border-teal-200 rounded-xl">
+              <label className="block text-sm font-medium text-gray-700 mb-2">AI image style</label>
+              <p className="text-xs text-gray-500 mb-3">Choose the visual style for your AI-generated image.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {(Object.entries(IMAGE_STYLES) as Array<[ImageStyleKey, typeof IMAGE_STYLES[ImageStyleKey]]>).map(([key, config]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => { setImageStyle(key); setSubVariation(null) }}
+                    className={`px-2.5 py-2.5 rounded-xl border-2 text-left transition-all ${
+                      imageStyle === key
+                        ? 'border-[var(--brand-primary)] shadow-sm'
+                        : 'bg-white border-gray-200 text-gray-700 shadow-sm hover:border-gray-400 hover:bg-gray-50'
+                    }`}
+                    style={imageStyle === key ? { backgroundColor: hexToRgba(primary, 0.08), borderColor: primary } : undefined}
+                  >
+                    <span className="block text-base mb-0.5">{config.icon}</span>
+                    <span className="block font-medium text-xs">{config.name}</span>
+                    <span className="block text-[10px] mt-0.5 opacity-70 leading-tight">{config.description}</span>
+                  </button>
+                ))}
+              </div>
+              {/* Sub-variation picker */}
+              {Object.keys(IMAGE_STYLES[imageStyle].subVariations).length > 0 && (
+                <div className="mt-3 p-3 bg-white/60 rounded-xl border border-teal-100">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Sub-style for {IMAGE_STYLES[imageStyle].name}:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSubVariation(null)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${!subVariation ? 'text-white border-transparent shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                      style={!subVariation ? { backgroundColor: primary } : undefined}
+                    >
+                      Auto / Default
+                    </button>
+                    {Object.entries(IMAGE_STYLES[imageStyle].subVariations).map(([svKey, svConfig]) => (
+                      <button
+                        key={svKey}
+                        type="button"
+                        onClick={() => setSubVariation(svKey)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${subVariation === svKey ? 'text-white border-transparent shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'}`}
+                        style={subVariation === svKey ? { backgroundColor: primary } : undefined}
+                      >
+                        {svConfig.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            )}
 
             <p className="text-sm text-gray-500 pt-3">
               Next: choose your image (stock, AI, or upload), then add your branding.
