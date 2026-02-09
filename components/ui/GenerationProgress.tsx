@@ -74,16 +74,15 @@ export function GenerationProgress({
         setMessage('')
       } else {
         const elapsed = (Date.now() - intervalStart) / 1000
-        const raw = (elapsed / estimatedTime) * 100
-        const eased = Math.min(95, raw * (1 - raw / 200))
+        const eased = Math.min(95, 95 * (1 - Math.exp(-elapsed * 2.5 / estimatedTime)))
         setProgress(Math.round(eased))
       }
     }
 
     const interval = setInterval(() => {
       const elapsed = (Date.now() - intervalStart) / 1000
-      const rawProgress = (elapsed / estimatedTime) * 100
-      const easedProgress = Math.min(95, rawProgress * (1 - rawProgress / 200))
+      // Asymptotic easing: reaches ~70% at halfway, ~92% at estimated time, caps at 95%
+      const easedProgress = Math.min(95, 95 * (1 - Math.exp(-elapsed * 2.5 / estimatedTime)))
       setProgress((prev) => Math.max(prev, Math.round(easedProgress)))
       const progressThresholds = Object.keys(PROGRESS_MESSAGES)
         .map(Number)
@@ -169,8 +168,7 @@ export function GenerationProgressInline({
     const startTime = Date.now()
     const interval = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000
-      const rawProgress = (elapsed / 20) * 100
-      const easedProgress = Math.min(95, rawProgress * (1 - rawProgress / 200))
+      const easedProgress = Math.min(95, 95 * (1 - Math.exp(-elapsed * 2.5 / 20)))
       setProgress((prev) => Math.max(prev, Math.round(easedProgress)))
     }, 100)
     return () => clearInterval(interval)
