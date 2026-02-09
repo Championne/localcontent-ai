@@ -5,7 +5,6 @@ type FrameStyle =
   | 'solid'
   | 'thick'
   | 'double'
-  | 'rounded'
   | 'classic'
   | 'wooden'
   | 'filmstrip'
@@ -22,7 +21,7 @@ const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: Fra
   'social-pack': [
     { style: 'solid', colorKey: 'neutral' },
     { style: 'neon', colorKey: 'primary' },
-    { style: 'rounded', colorKey: 'primary' },
+    { style: 'thick', colorKey: 'primary' },
     { style: 'shadow', colorKey: 'neutral' },
     { style: 'thin', colorKey: 'primary' },
   ],
@@ -42,8 +41,8 @@ const FRAME_BY_TEMPLATE: Record<string, Array<{ style: FrameStyle; colorKey: Fra
   email: [
     { style: 'solid', colorKey: 'neutral' },
     { style: 'thin', colorKey: 'primary' },
-    { style: 'rounded', colorKey: 'secondary' },
-    { style: 'rounded', colorKey: 'accent' },
+    { style: 'solid', colorKey: 'secondary' },
+    { style: 'thick', colorKey: 'accent' },
   ],
 }
 

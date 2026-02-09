@@ -503,7 +503,6 @@ export default function ImageOverlayEditorViewRoot(props: {
                 <option value="solid">Solid border</option>
                 <option value="thick">Thick border</option>
                 <option value="double">Double line</option>
-                <option value="rounded">Rounded corners</option>
               </optgroup>
               <optgroup label="Frames">
                 <option value="classic">Painting frame</option>
@@ -586,7 +585,7 @@ export default function ImageOverlayEditorViewRoot(props: {
             <p className="text-[11px] font-medium text-gray-600 mr-1">Frame</p>
             <select value={p.frame?.style ?? ''} onChange={(e) => { const v = e.target.value as FrameStyle | ''; if (v === 'gold' || v === 'silver' || v === 'copper' || v === 'neon' || v === 'filmstrip' || v === 'vignette') p.setTintOverlay(null); if (!v) p.setFrame(null); else if (v === 'gold' || v === 'silver' || v === 'copper') p.setFrame({ style: v, colorKey: v }); else p.setFrame(prev => ({ style: v, colorKey: prev?.colorKey ?? 'primary' })) }} className="text-[11px] border border-gray-200 rounded-md px-2.5 py-1.5 bg-white text-gray-800 focus:ring-2 focus:ring-gray-200 outline-none flex-1 min-w-[120px]">
               <option value="">None</option>
-              <option value="thin">Thin</option><option value="solid">Solid</option><option value="thick">Thick</option><option value="rounded">Rounded</option>
+              <option value="thin">Thin</option><option value="solid">Solid</option><option value="thick">Thick</option>
               <option value="classic">Painting</option><option value="wooden">Wooden</option>
               <option value="vignette">Vignette</option><option value="neon">Neon</option><option value="filmstrip">Film strip</option>
               <option value="gold">Gold</option><option value="silver">Silver</option><option value="copper">Copper</option>

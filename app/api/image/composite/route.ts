@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       frame,
       imageStyle,
     } = await request.json()
-    // frame: optional { style: 'thin'|'solid'|'thick'|'double'|'rounded', color: hex } - border around whole image
+    // frame: optional { style: 'thin'|'solid'|'thick'|'double', color: hex } - border around whole image
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
     }
 
     // Optional: frame around whole image (brand colour or effect)
-    const frameStyles = ['thin', 'solid', 'thick', 'double', 'rounded', 'classic', 'wooden', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper'] as const
+    const frameStyles = ['thin', 'solid', 'thick', 'double', 'classic', 'wooden', 'filmstrip', 'vignette', 'neon', 'shadow', 'gold', 'silver', 'copper'] as const
     const frameOpt = frame && typeof frame.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(frame.color)
       ? { style: frameStyles.includes(frame.style as typeof frameStyles[number]) ? frame.style : 'solid', color: frame.color }
       : null
@@ -796,7 +796,9 @@ export async function POST(request: Request) {
           composited = await sharp(composited)
             .composite([{ input: doubleSvg, left: 0, top: 0 }])
             .toBuffer()
-        } else if (style === 'rounded') {
+        }
+        // Apply rounded corners to thin, solid, thick borders
+        if (style === 'thin' || style === 'solid' || style === 'thick') {
           const radius = Math.min(28, Math.round(extendPad * 1.8))
           const roundSvg = Buffer.from(
             `<svg width="${fw}" height="${fh}"><rect x="0" y="0" width="${fw}" height="${fh}" rx="${radius}" ry="${radius}" fill="white"/></svg>`

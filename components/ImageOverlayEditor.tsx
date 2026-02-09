@@ -42,7 +42,6 @@ export type FrameStyle =
   | 'solid'
   | 'thick'
   | 'double'
-  | 'rounded'
   | 'classic'
   | 'wooden'
   | 'filmstrip'
