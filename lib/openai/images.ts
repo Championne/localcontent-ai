@@ -748,9 +748,14 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       revisedPrompt: revisedPrompt,
       fullPrompt: prompt
     }
-  } catch (error) {
-    console.error('DALL-E image generation error:', error)
-    throw new Error('Failed to generate image. Please try again.')
+  } catch (error: unknown) {
+    // Preserve the actual error details for debugging (billing, quota, content policy, etc.)
+    const errObj = error as { status?: number; code?: string; message?: string; error?: { message?: string; code?: string; type?: string } }
+    const apiMsg = errObj?.error?.message || errObj?.message || String(error)
+    const apiCode = errObj?.error?.code || errObj?.code || errObj?.status
+    console.error(`DALL-E image generation error [${apiCode}]:`, apiMsg)
+    const detailedMsg = `DALL-E failed (${apiCode || 'unknown'}): ${apiMsg}`
+    throw new Error(detailedMsg)
   }
 }
 
