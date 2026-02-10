@@ -117,14 +117,14 @@ export async function POST(request: Request) {
         const lw = logoMeta.width || logoWidth
         if (isCircular) {
           const cx = boundedLeft + lw / 2
-          const cy = boundedTop + logoHeight / 2
+        const cy = boundedTop + logoHeight / 2
           const r = lw / 2 + ringPx / 2
-          const ringSvg = Buffer.from(
-            `<svg width="${imgWidth}" height="${imgHeight}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringHex}" stroke-width="${ringPx}"/></svg>`
-          )
-          composited = await sharp(composited)
-            .composite([{ input: ringSvg, left: 0, top: 0 }])
-            .toBuffer()
+        const ringSvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringHex}" stroke-width="${ringPx}"/></svg>`
+        )
+        composited = await sharp(composited)
+          .composite([{ input: ringSvg, left: 0, top: 0 }])
+          .toBuffer()
         } else {
           // Rounded-rect border for logos
           const br = Math.max(3, Math.round(Math.min(lw, logoHeight) * 0.06))
@@ -1245,10 +1245,10 @@ export async function POST(request: Request) {
         }
         uploadOk = true
       } else {
-        const message = uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')
-          ? 'Storage bucket is not set up. Please create a bucket named "generated-images" in Supabase Storage and allow authenticated uploads.'
-          : uploadError.message || 'Failed to save image'
-        return NextResponse.json({ error: message }, { status: 500 })
+      const message = uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('not found')
+        ? 'Storage bucket is not set up. Please create a bucket named "generated-images" in Supabase Storage and allow authenticated uploads.'
+        : uploadError.message || 'Failed to save image'
+      return NextResponse.json({ error: message }, { status: 500 })
       }
     } else {
       uploadOk = true

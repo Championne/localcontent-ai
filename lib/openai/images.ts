@@ -722,7 +722,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
 
   // Use 'vivid' for artistic/graffiti styles, 'natural' for everything else
   const dalleStyle = ILLUSTRATION_STYLES.has(params.style) ? 'vivid' : 'natural'
-
+  
   try {
     const response = await client.images.generate({
       model: 'dall-e-3',
@@ -732,14 +732,14 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       quality: 'standard',
       style: dalleStyle,
     })
-
+    
     const imageUrl = response.data[0]?.url
     const revisedPrompt = response.data[0]?.revised_prompt
-
+    
     if (!imageUrl) {
       throw new Error('No image URL returned from DALL-E')
     }
-
+    
     return {
       url: imageUrl,
       style: params.style,
