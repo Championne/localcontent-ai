@@ -1,0 +1,13 @@
+---
+description: Sales/CRM – access checks, leads, dialer, Instantly outreach, types/sales
+alwaysApply: false
+globs: ["app/dashboard/sales/**", "app/api/sales/**", "app/api/outreach/**", "types/sales.ts"]
+---
+
+# Sales / CRM
+
+- **API access:** Use `checkSalesApiAccess()` from `@/lib/auth/salesApiAccess` in sales API routes. Return its `errorResponse` (401/403) when not authorized. UI: use `checkSalesAccess()` from `@/lib/auth/salesAccess` for sales layout/nav (e.g. `isSalesUser`).
+- **Types:** Reference `types/sales.ts` for LeadStatus, LeadPriority, DealStage, CallStatus, CallOutcome, DialerQueueStatus, SalesTeamMember, Lead, Deal, etc. Use these enums and interfaces; don’t redefine status strings.
+- **Leads:** CRUD and touchpoints under `app/api/sales/leads/`; scoring and queue logic consistent with LeadStatus/LeadPriority. Outreach linkage where applicable.
+- **Dialer:** Token from `app/api/sales/calls/token/route.ts`; call lifecycle and recording via `app/api/sales/calls/` and Twilio webhooks. Queue: `app/api/sales/dialer-queue/route.ts`; use DialerQueueStatus.
+- **Instantly outreach:** Campaigns, push leads, sync via `lib/instantly.ts` and `app/api/outreach/instantly/`. Webhooks: `app/api/outreach/webhooks/instantly/route.ts`. Compliance: use INSTANTLY_API_KEY server-side only; follow existing patterns for lead add/campaign.

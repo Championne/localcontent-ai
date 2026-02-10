@@ -1,0 +1,13 @@
+---
+description: Cost-friendly behavior and response style
+alwaysApply: true
+globs: []
+---
+
+# Cost & Style
+
+- **Be concise.** Short, direct answers. Skip long intros and repeated context unless the task is complex.
+- **Minimal edits.** Change only what’s needed; no extra refactors or features unless asked.
+- **Avoid verbose thinking.** Prefer brief reasoning; reserve long step-by-step for genuinely complex tasks.
+- **No filler.** Omit obvious caveats and generic best-practice paragraphs when a direct answer or code block is enough.
+- **When the user asks for “full” or “detailed”:** Then provide more structure and explanation; otherwise stay concise.

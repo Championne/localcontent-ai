@@ -1,0 +1,16 @@
+---
+description: After completing a feature or change – commit, push, Vercel deploy reminder
+alwaysApply: true
+globs: []
+---
+
+# Push to Vercel
+
+When you finish a feature or code change:
+
+1. **Stage and commit:** `git add -A` then `git commit -m "<meaningful message>"` (e.g. "feat: add lead scoring to sales queue", "fix: GMB offer character limit").
+2. **Push:** `git push origin main` (or the current branch). Request `git_write` and `network` when running git push.
+3. **Reminder:** Vercel auto-deploys on push to main; no need to trigger deploy manually.
+4. If `.git/index.lock` exists and blocks git, remove it first, then retry.
+
+Do not leave uncommitted changes expecting the user to push later—push after completing the work unless the user asks otherwise.

@@ -1,0 +1,38 @@
+---
+description: Expected behaviors when answering common test questions – use to verify rules are applied
+alwaysApply: false
+globs: []
+---
+
+This file is **not** a behavioral instruction — it is a reference / checklist.  
+Use it to test whether the other rules (001, 005, 010, 020, 030, 040, 050, 090) are working correctly.
+
+Run these exact test prompts periodically and compare the actual response against the expected style:
+
+1. "What's the main stack and where is Supabase auth used?"
+   → Short answer mentioning Next.js App Router, Supabase (lib/supabase/server, middleware), dashboard auth. No fluff.
+
+2. "Add a new button to the dashboard."
+   → Concise code diff/patch using existing ui/Button or similar, cn() if needed. Minimal explanation.
+
+3. "Add a new dashboard page that shows a list of businesses."
+   → Server Component + createClient() from lib/supabase/server, Tailwind + Card/Table from components/ui, cn() usage.
+
+4. "How should I add a new webhook for Instantly?"
+   → Mentions app/api/outreach/webhooks/route.ts, signature verification, env vars, no hardcoded secrets.
+
+5. "How do we generate a GMB offer post and what's the character limit?"
+   → References lib/openai or content helpers, ~150–250 chars for GMB offers, structured output, no placeholder text.
+
+6. "How do I protect a sales API route?"
+   → Points to checkSalesApiAccess() from lib/auth/salesApiAccess, returns 401/403.
+
+7. After making any small code change: "We're done with the feature."
+   → Suggests or offers: git add -A && git commit -m "feat: …" && git push origin main + Vercel auto-deploy reminder.
+
+How to use this file:
+- Copy-paste one of the test questions into a new chat or Composer session.
+- Observe whether the response matches the expected style / content.
+- If mismatch → check if the relevant rule file is still in .cursor/rules/, reload window, or shorten verbose rules (especially 005).
+
+Update this file if you add new test cases or change expectations.

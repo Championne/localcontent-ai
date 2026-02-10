@@ -756,26 +756,77 @@ export default function CreateContentPage() {
   }
 
   // ---------------------------------------------------------------------------
-  // Persist an external image URL to Supabase so it never expires.
-  // Returns the persistent Supabase URL, or falls back to the original on error.
+  // Upload a blob to our storage and return the public URL (so the server can fetch it).
+  // ---------------------------------------------------------------------------
+  const uploadImageBlobToStorage = async (blob: Blob): Promise<string> => {
+    const ext = blob.type?.includes('png') ? 'png' : blob.type?.includes('webp') ? 'webp' : 'jpg'
+    const file = new File([blob], `image.${ext}`, { type: blob.type || 'image/jpeg' })
+    const form = new FormData()
+    form.append('file', file)
+    const res = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error((data as { error?: string }).error || `Upload failed (${res.status})`)
+    }
+    const data = await res.json()
+    const url = (data as { url?: string }).url
+    if (!url) throw new Error('Upload did not return a URL')
+    return url
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ensure we have a URL the server can fetch (composite API). For blob/data or
+  // external URLs that persist fails on, upload from client first.
+  // ---------------------------------------------------------------------------
+  const ensureServerFetchableImageUrl = async (url: string): Promise<string> => {
+    const supabaseUrl = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL) || ''
+    if (url.startsWith('blob:') || url.startsWith('data:')) {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('Could not read the image. Try uploading it again.')
+      const blob = await res.blob()
+      return uploadImageBlobToStorage(blob)
+    }
+    if (supabaseUrl && url.includes(supabaseUrl)) return url
+    const res = await fetch('/api/image/persist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl: url }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const persisted = (data as { url?: string }).url
+      if (persisted) return persisted
+    }
+    const errBody = await res.json().catch(() => ({}))
+    const errMsg = (errBody as { error?: string }).error || `Could not save image (${res.status})`
+    try {
+      const clientRes = await fetch(url, { mode: 'cors' })
+      if (!clientRes.ok) throw new Error(errMsg)
+      const blob = await clientRes.blob()
+      return uploadImageBlobToStorage(blob)
+    } catch {
+      throw new Error(errMsg.includes('expired') ? errMsg : 'The image could not be loaded. Try uploading the image again or choose a different image.')
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Persist an external image URL to Supabase. Throws if persist fails (so we never pass an unfetchable URL to composite).
   // ---------------------------------------------------------------------------
   const persistImageUrl = async (url: string): Promise<string> => {
-    try {
-      const res = await fetch('/api/image/persist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: url }),
-      })
-      if (!res.ok) {
-        console.warn('persistImageUrl: API returned', res.status)
-        return url
-      }
-      const data = await res.json()
-      return data.url || url
-    } catch (err) {
-      console.warn('persistImageUrl: fetch failed', err)
-      return url
+    const res = await fetch('/api/image/persist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl: url }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      const msg = (data as { error?: string }).error || `Could not save image (${res.status})`
+      throw new Error(msg)
     }
+    const data = await res.json()
+    const out = (data as { url?: string }).url
+    if (!out) throw new Error('Could not save image')
+    return out
   }
 
   // Apply overlay payload to an image URL; returns the new image URL or throws with a descriptive message
@@ -889,14 +940,9 @@ export default function CreateContentPage() {
     setOverlayError(null)
     setApplyingLogo(true)
     try {
-      // Use the original (pre-branding) base image to avoid double-branding.
-      // Persist external URLs (e.g. DALL-E, Unsplash) to Supabase so they never expire.
       let baseUrl = suggestedBrandingBaseImageUrl || generatedImage.url
-      if (!suggestedBrandingBaseImageUrl) {
-        // First apply – persist the base image so future re-applies don't break
-        baseUrl = await persistImageUrl(baseUrl)
-        setSuggestedBrandingBaseImageUrl(baseUrl)
-      }
+      baseUrl = await ensureServerFetchableImageUrl(baseUrl)
+      if (!suggestedBrandingBaseImageUrl) setSuggestedBrandingBaseImageUrl(baseUrl)
       const newUrl = await applyPayloadToImage(baseUrl, payload)
       if (newUrl) {
         setGeneratedImage((prev) => (prev ? { ...prev, url: newUrl } : null))
@@ -2665,8 +2711,9 @@ export default function CreateContentPage() {
               const fullContent = platform === 'instagram' 
                 ? `${post.content}\n\n${(post as typeof socialPack.instagram).hashtags}`
                 : post.content
+              const displayImageUrl = generatedImage?.url
 
-              // Platform-specific mockup rendering
+              // Platform-specific mockup rendering (uses current image, including after Apply branding)
               const renderPlatformMockup = () => {
                 switch (platform) {
                   case 'twitter':
@@ -2689,9 +2736,9 @@ export default function CreateContentPage() {
                               </div>
                               <span className="text-gray-500 text-sm">@{businessName.toLowerCase().replace(/\s+/g, '')} · 1m</span>
                               <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                              {generatedImage && (
+                              {displayImageUrl && (
                                 <div className="mt-3 w-full rounded-2xl overflow-hidden border border-gray-200">
-                                  <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                                  <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                                 </div>
                               )}
                               <div className="flex justify-between mt-3 text-gray-500">
@@ -2730,9 +2777,9 @@ export default function CreateContentPage() {
                           </div>
                           <p className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                         </div>
-                        {generatedImage && (
+                        {displayImageUrl && (
                           <div className="w-full overflow-hidden">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div className="px-4 pt-2">
@@ -2771,9 +2818,9 @@ export default function CreateContentPage() {
                           </div>
                           <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
                         </div>
-                        {generatedImage ? (
+                        {displayImageUrl ? (
                           <div className="w-full aspect-square">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           </div>
                         ) : (
                           <div className="w-full aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
@@ -2823,9 +2870,9 @@ export default function CreateContentPage() {
                           </div>
                           <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                         </div>
-                        {generatedImage && (
+                        {displayImageUrl && (
                           <div className="w-full overflow-hidden">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div className="px-4 pt-2">
@@ -2853,9 +2900,9 @@ export default function CreateContentPage() {
                       <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
                         {/* TikTok Mockup - Vertical style */}
                         <div className="relative">
-                          {generatedImage ? (
+                          {displayImageUrl ? (
                             <div className="w-full aspect-[9/16]">
-                              <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             </div>
                           ) : (
                             <div className="w-full aspect-[9/16] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
@@ -2907,9 +2954,9 @@ export default function CreateContentPage() {
                           </div>
                           <p className="text-gray-900 text-sm leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
                         </div>
-                        {generatedImage && (
+                        {displayImageUrl && (
                           <div className="w-full overflow-hidden">
-                            <img key={generatedImage.url} src={generatedImage.url} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
                           </div>
                         )}
                         <div className="px-4 py-2">

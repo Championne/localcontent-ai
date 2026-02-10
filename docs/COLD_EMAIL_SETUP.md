@@ -4,6 +4,28 @@ Complete step-by-step guide to set up your cold email infrastructure.
 
 ---
 
+## Continue from here (quick checklist)
+
+If you already have **localgrowthpro.co** in Google Workspace with 3 users and MX/SPF in Porkbun:
+
+| Step | Task | Where |
+|------|------|--------|
+| 1 | Add secondary domains `smallbizboost.co` and `bizgrowthtips.org` | Google Admin → Account → Domains → Add domain |
+| 2 | Verify both domains (TXT in Porkbun) | Porkbun DNS for each domain |
+| 3 | Create 6 more users (3 per new domain) | Google Admin → Directory → Users → Add user |
+| 4 | Enable 2FA + App passwords for all 9 accounts | myaccount.google.com (each account) |
+| 5 | DNS for smallbizboost.co & bizgrowthtips.org (MX, SPF, track CNAME, DMARC) | Porkbun DNS for each |
+| 6 | Add DKIM for all 3 domains | Google Admin → Apps → Gmail → Authenticate email |
+| 7 | Connect all 9 accounts to Instantly (SMTP/IMAP + app password) | Instantly → Email Accounts → Add New |
+| 8 | Enable warmup on all 9 | Instantly → toggle Warmup ON per account |
+| 9 | Set tracking domain `track.localgrowthpro.co` | Instantly → Settings → Tracking Domain |
+| 10 | Generate API key, add to .env.local | Instantly → Settings → API |
+| 11 | Add webhook `https://geospark.app/api/outreach/webhooks/instantly` | Instantly → Settings → Webhooks |
+
+After step 11, warmup runs automatically (Day 1–14: 0 cold emails; Day 15+: limits apply).
+
+---
+
 ## Overview
 
 | Component | Purpose | Cost |
@@ -217,6 +239,8 @@ Do the same for `smallbizboost.co` and `bizgrowthtips.org`
 3. Ensure you're on the **Growth** plan ($37/month)
 
 ## Step 3.2: Connect Email Accounts
+
+<!-- Placeholder values below for documentation only. Do not put real passwords or API keys in this file. -->
 
 For each of the 9 accounts, in Instantly -> **"Email Accounts"** -> **"+ Add New"** -> **"Any Provider (SMTP)"**:
 

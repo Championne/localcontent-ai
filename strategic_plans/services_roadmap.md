@@ -76,34 +76,29 @@ See prioritization below.
 
 ### 2. Google Business Post Automation (P1)
 
+**Integration strategy (locked in):** GMB = **direct** (own OAuth + API). Social (FB, IG, LinkedIn, X, etc.) = **Late API** (getlate.dev) as aggregator. See `docs/SOCIAL_AGGREGATOR_CHOICE.md`.
+
 **Problem Solved:** GMB is the most neglected channel. 67% of local businesses never post to GMB.
 
 **Features:**
-- Auto-schedule GMB posts from generated content
+- Auto-schedule GMB posts from generated content (direct GMB API)
 - Weekly posting cadence (configurable)
 - Post types: Updates, Offers, Events, Products
 - Image attachment from content library
-- Performance tracking (views, clicks)
+- Performance tracking (views, clicks) via GMB insights
+- Social posting via Late API (one integration for all social channels)
 
 **Technical Requirements:**
-- Google Business Profile API integration
-- Post scheduling system
-- Image upload handling
-- Analytics tracking
+- Google Business Profile API (direct) — connect/post/insights per business
+- Late API for social: create Social Set per business, post/schedule via Late REST API
+- Post scheduling system; image upload handling
 
-**Files to Create:**
+**Files (GeoSpark repo):**
 ```
-web/app/gmb-automation/
-├── page.tsx           # Settings & schedule view
-├── components/
-│   ├── PostScheduler.tsx
-│   ├── PostPreview.tsx
-│   └── GMBConnector.tsx
-pages/api/gmb/
-├── connect.ts         # OAuth flow
-├── post.ts            # Create post
-├── schedule.ts        # Manage schedule
-└── analytics.ts       # Get post performance
+app/api/integrations/gmb/     # connect, callback (done); post, insights (to build)
+app/dashboard/gmb-automation/ # optional: schedule UI
+app/api/integrations/         # list integrations; later: Late connect + post
+lib/google-business.ts       # GMB API wrapper (done)
 ```
 
 ---

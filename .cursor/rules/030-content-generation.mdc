@@ -1,0 +1,14 @@
+---
+description: Content generation – OpenAI/OpenRouter, templates, multi-platform, limits, no placeholders
+alwaysApply: false
+globs: ["lib/openai/**", "lib/content/**", "app/api/content/**", "app/api/generate/**"]
+---
+
+# Content Generation
+
+- **AI client:** `lib/openai/index.ts` — OpenAI SDK; OpenRouter when `OPENROUTER_API_KEY` is set. Model: OpenRouter → `AI_MODEL` (e.g. Claude) or `OPENAI_MODEL` (e.g. gpt-4o-mini).
+- **Templates:** blog-post, social-post, social-pack, gmb-post, email, review-response. GBP types: offer | event | update; each has dedicated system prompt and ~150–250 character guidance.
+- **Multi-platform:** Social pack = Twitter, Facebook, Instagram, LinkedIn, TikTok, Nextdoor; return JSON with platform-specific copy; Instagram: separate `content` and `hashtags`. GMB: lead with benefit/offer/event; CTA button hint (Get Offer / Book / Learn More).
+- **Character limits:** Respect template limits (e.g. GMB 150–250 chars); social platform guidance in prompts.
+- **No placeholders.** Never output bracketed placeholders ([City], [Phone], etc.); write around missing data naturally (e.g. “in your area”, “contact us today”).
+- **JSON when appropriate.** Social pack and structured outputs: return valid JSON; strip markdown code fences before parse. Use existing `GenerateContentParams`, `SocialPackResult`, and template types from `lib/openai`.

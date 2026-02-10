@@ -113,6 +113,63 @@ export interface Analytics {
   created_at: string
 }
 
+// Integrations & Impact Analytics (user_integrations, baseline_snapshots, metric_history)
+// All scoped per business: each business has its own GMB, social connections, baseline, metrics.
+export type IntegrationPlatform =
+  | 'google_business'
+  | 'google_search_console'
+  | 'google_analytics'
+  | 'facebook'
+  | 'instagram'
+  | 'linkedin'
+  | 'nextdoor'
+  | 'yelp'
+  | 'tiktok'
+  | 'pinterest'
+  | 'late_aggregator'
+
+export interface UserIntegration {
+  id: string
+  user_id: string
+  business_id: string
+  platform: IntegrationPlatform
+  access_token: string | null
+  refresh_token: string | null
+  token_expires_at: string | null
+  account_id: string | null
+  account_name: string | null
+  location_id: string | null
+  metadata: Record<string, unknown>
+  connected_at: string
+  last_sync_at: string | null
+  last_error: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface BaselineSnapshot {
+  id: string
+  user_id: string
+  business_id: string
+  metric_type: string
+  metric_value: number | null
+  metric_source: string | null
+  captured_at: string
+  is_baseline: boolean
+  created_at: string
+}
+
+export interface MetricHistory {
+  id: string
+  user_id: string
+  business_id: string
+  metric_type: string
+  metric_value: number | null
+  metric_source: string | null
+  recorded_date: string
+  created_at: string
+}
+
 // API Request/Response types
 export interface GenerateContentRequest {
   template: string

@@ -1,0 +1,27 @@
+---
+description: Core GeoSpark project overview and conventions
+alwaysApply: true
+globs: []
+---
+
+# GeoSpark – Core Project
+
+## Product
+- **AI content platform** for local businesses: blog, social post pack, Google Business Profile posts, email copy, images.
+- **Internal sales/CRM:** lead import & scoring, power dialer (Twilio), cold outreach (Instantly.ai).
+
+## Stack
+- Next.js 14 App Router · Supabase (auth + Postgres) · OpenAI / OpenRouter · Stripe · Twilio · Resend / SendGrid · Instantly.ai · Vercel Blob · Tailwind + Radix UI + Recharts
+
+## Key paths
+- `app/` — dashboard, auth, API routes
+- `lib/` — supabase, openai, stripe, instantly, email, auth helpers
+- `components/ui/` — shared UI primitives
+- `types/database.ts` — DB/Content/Business/Subscription types
+- `types/sales.ts` — leads, deals, dialer, commissions, sales team
+
+## Conventions
+- **TypeScript:** Strict typing; prefer `types/` and existing interfaces; avoid `any`.
+- **Imports:** Use `@/` alias (e.g. `@/lib/supabase/server`, `@/components/ui/button`).
+- **Clean code:** Small, focused modules; reuse existing helpers and types; no duplicate logic.
+- **Security:** No secrets in code; use `process.env`; validate auth in API routes before work; verify webhooks where supported.

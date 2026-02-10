@@ -68,8 +68,10 @@ From the sales strategy:
 ## 🎯 Current Priorities
 
 1. **P0 (Critical):** Impact Analytics Dashboard - reduces churn by 30%
-2. **P1:** GMB Auto-Poster, Review Responder, Photo-to-Post
+2. **P1:** GMB Auto-Poster (direct API), Review Responder, Photo-to-Post
 3. **P2:** Competitor Alerts, Local Events, Voice-to-Content
+
+**Integrations (locked in):** GMB = direct. Social (FB, IG, LinkedIn, X) = **Late API** aggregator. See `docs/SOCIAL_AGGREGATOR_CHOICE.md` in repo.
 
 ---
 

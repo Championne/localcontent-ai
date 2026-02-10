@@ -1,0 +1,14 @@
+---
+description: Frontend and UI guidelines – Tailwind, Server Components, Radix, a11y
+alwaysApply: false
+globs: ["app/**/*.tsx", "components/**/*.tsx", "components/ui/**/*.tsx"]
+---
+
+# Frontend & UI
+
+- **Tailwind only.** Use utility classes; custom CSS only in `app/globals.css` (e.g. CSS variables, `@layer`). Prefer semantic tokens: `bg-primary`, `text-primary-foreground`, `bg-accent`, `--radius`.
+- **Server Components first.** Add `"use client"` only when needed: hooks, event handlers, browser APIs, client-only context. Fetch in server components/layouts with `createClient()` from `@/lib/supabase/server`.
+- **Use `cn()` for classes.** Compose and override with `cn()` from `@/lib/utils`; avoid string concatenation for Tailwind.
+- **Radix primitives.** Use `components/ui/` (Button, Card, Dialog, Input, Label, Tabs, Toast, etc.); don’t reinvent patterns that exist there.
+- **Responsive-first.** Prefer responsive utilities (`sm:`, `md:`, `lg:`) and mobile-first class order.
+- **Accessibility.** Preserve Radix keyboard/focus behavior; use semantic HTML (buttons for actions, links for nav); support loading and error states clearly.

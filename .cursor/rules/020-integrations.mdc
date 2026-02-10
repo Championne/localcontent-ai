@@ -1,0 +1,15 @@
+---
+description: Integrations – Supabase, Stripe, Twilio, Instantly, OAuth, webhooks, env
+alwaysApply: false
+globs: ["app/api/**/*.ts", "lib/**/*.ts", "lib/supabase/**", "lib/integrations/**"]
+---
+
+# Integrations
+
+- **Supabase:** Server: `createClient()` from `@/lib/supabase/server` in Route Handlers and Server Components. Middleware: session refresh in `@/lib/supabase/middleware`. Auth callback: `app/auth/callback/route.ts`; use server client with cookie adapter.
+- **Stripe:** Use `lib/stripe/stripe.ts` server-side. Webhooks: verify signature with `STRIPE_WEBHOOK_SECRET` in `app/api/stripe/webhook/route.ts`. Never expose secret key to client.
+- **Twilio:** Token and call routes under `app/api/sales/calls/`; use `TWILIO_*` env vars; verify webhook signatures where supported.
+- **Instantly.ai:** `lib/instantly.ts`; key from `INSTANTLY_API_KEY`. Outreach routes under `app/api/outreach/instantly/` and webhooks; verify payload/signature if provided.
+- **OAuth / security:** Validate auth first in API routes (`supabase.auth.getUser()` or `checkSalesApiAccess()` for sales); return 401/403 before doing work. Validate and sanitize request bodies.
+- **Env vars only.** All API keys and secrets in `process.env`; no hardcoded secrets. Use existing env names (e.g. `OPENROUTER_API_KEY`, `INSTANTLY_API_KEY`).
+- **Webhooks.** Verify signatures when the provider supports it; treat webhook URLs as sensitive.

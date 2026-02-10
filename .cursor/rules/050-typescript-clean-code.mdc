@@ -1,0 +1,15 @@
+---
+description: TypeScript and clean code – strict typing, naming, cn(), imports, JSDoc, no any
+alwaysApply: false
+globs: ["**/*.ts", "**/*.tsx"]
+---
+
+# TypeScript & Clean Code
+
+- **Strict TypeScript.** Prefer explicit types for params and return values; use types from `types/database.ts` and `types/sales.ts` for domain models. Avoid `any`.
+- **Naming.** kebab-case for files; PascalCase for components and types. One main component per file when practical.
+- **Use `cn()` for class names.** Conditional or composed Tailwind classes via `cn()` from `@/lib/utils`.
+- **Imports.** Prefer `import type` for type-only imports. Use `@/` alias for project modules.
+- **JSDoc where helpful.** Comment non-obvious business logic, security-sensitive code, or public API surface; avoid restating obvious code.
+- **Modular functions.** Small, single-purpose functions; reuse existing helpers in `lib/` and `types/`. API routes: validate input; return 400/401/403 with clear shapes.
+- **No `any`.** Use `unknown` and type guards if needed; otherwise proper types from codebase or Supabase.
