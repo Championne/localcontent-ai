@@ -255,7 +255,7 @@ export default function ImageOverlayEditorViewRoot(props: {
               >
               <img src={p.imageUrl} alt="Generated" className="w-full h-full object-cover" draggable={false} style={p.frame?.style === 'filmstrip' ? { filter: 'saturate(0.88)' } : p.frame?.style === 'polaroid' ? { filter: 'sepia(0.15) contrast(1.08) brightness(1.05) saturate(0.9)' } : undefined} />
               {p.frame?.style === 'vignette' && (() => {
-                const intensity = p.vignetteIntensity ?? 0.65
+                const intensity = p.vignetteIntensity ?? 0.35
                 return (
                   <>
                     {/* Layer 1: Smooth radial vignette — organic lens-falloff curve */}
@@ -337,6 +337,94 @@ export default function ImageOverlayEditorViewRoot(props: {
                   }}
                   aria-hidden
                 />
+              )}
+              {/* Classic painting frame: SVG ornate moulding overlay on the frame border */}
+              {p.frame?.style === 'classic' && (
+                <style>{`
+                  .classic-frame-ornate {
+                    position: absolute;
+                    inset: -26px;
+                    pointer-events: none;
+                    z-index: 3;
+                    overflow: visible;
+                  }
+                  .classic-frame-ornate svg {
+                    width: 100%;
+                    height: 100%;
+                    display: block;
+                  }
+                `}</style>
+              )}
+              {p.frame?.style === 'classic' && (
+                <div className="classic-frame-ornate" aria-hidden>
+                  <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      {/* Repeating bead/egg pattern for carved moulding along edges */}
+                      <pattern id="cBeadH" patternUnits="userSpaceOnUse" width="24" height="8" patternTransform="translate(0,0)">
+                        <ellipse cx="12" cy="4" rx="8" ry="3.5" fill="#c9a227" opacity="0.6"/>
+                        <ellipse cx="12" cy="3.5" rx="6" ry="2.5" fill="#f5e6a8" opacity="0.35"/>
+                      </pattern>
+                      <pattern id="cBeadV" patternUnits="userSpaceOnUse" width="8" height="24" patternTransform="translate(0,0)">
+                        <ellipse cx="4" cy="12" rx="3.5" ry="8" fill="#c9a227" opacity="0.6"/>
+                        <ellipse cx="3.5" cy="12" rx="2.5" ry="6" fill="#f5e6a8" opacity="0.35"/>
+                      </pattern>
+                      {/* Outer stepped moulding gradient (top-lit) */}
+                      <linearGradient id="cMouldOuter" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f5e6a8" stopOpacity="0.9"/>
+                        <stop offset="30%" stopColor="#d4af37" stopOpacity="0.7"/>
+                        <stop offset="70%" stopColor="#8b6914" stopOpacity="0.6"/>
+                        <stop offset="100%" stopColor="#5c4a1a" stopOpacity="0.8"/>
+                      </linearGradient>
+                      {/* Inner concave cove shadow */}
+                      <linearGradient id="cCove" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3d2b1f" stopOpacity="0.5"/>
+                        <stop offset="50%" stopColor="#7d6510" stopOpacity="0.3"/>
+                        <stop offset="100%" stopColor="#c9a227" stopOpacity="0.15"/>
+                      </linearGradient>
+                      {/* Specular highlight sweep */}
+                      <linearGradient id="cSpec" x1="0" y1="0" x2="0.55" y2="0.55">
+                        <stop offset="0%" stopColor="white" stopOpacity="0.30"/>
+                        <stop offset="25%" stopColor="white" stopOpacity="0.10"/>
+                        <stop offset="50%" stopColor="white" stopOpacity="0"/>
+                        <stop offset="100%" stopColor="white" stopOpacity="0"/>
+                      </linearGradient>
+                      {/* Clip to frame band only (exclude inner image area) */}
+                      <clipPath id="cFrameMask">
+                        <path fillRule="evenodd" d="M0,0 H1000 V1000 H0Z M52,52 V948 H948 V52Z"/>
+                      </clipPath>
+                    </defs>
+                    <g clipPath="url(#cFrameMask)">
+                      {/* Outer bead moulding band — carved egg pattern */}
+                      <rect x="0" y="4" width="1000" height="10" fill="url(#cBeadH)" opacity="0.7"/>
+                      <rect x="0" y="986" width="1000" height="10" fill="url(#cBeadH)" opacity="0.5"/>
+                      <rect x="4" y="0" width="10" height="1000" fill="url(#cBeadV)" opacity="0.7"/>
+                      <rect x="986" y="0" width="10" height="1000" fill="url(#cBeadV)" opacity="0.5"/>
+                      {/* Stepped moulding profile lines */}
+                      <rect x="16" y="16" width="968" height="968" fill="none" stroke="#f5e6a8" strokeWidth="1.5" opacity="0.5"/>
+                      <rect x="20" y="20" width="960" height="960" fill="none" stroke="#5c4a1a" strokeWidth="1" opacity="0.35"/>
+                      {/* Concave cove channel */}
+                      <rect x="24" y="24" width="952" height="952" fill="none" stroke="#3d2b1f" strokeWidth="2" opacity="0.25"/>
+                      {/* Inner bead moulding band */}
+                      <rect x="0" y="38" width="1000" height="8" fill="url(#cBeadH)" opacity="0.5"/>
+                      <rect x="0" y="954" width="1000" height="8" fill="url(#cBeadH)" opacity="0.35"/>
+                      <rect x="38" y="0" width="8" height="1000" fill="url(#cBeadV)" opacity="0.5"/>
+                      <rect x="954" y="0" width="8" height="1000" fill="url(#cBeadV)" opacity="0.35"/>
+                      {/* Inner gold fillet (bright edge where frame meets mat) */}
+                      <rect x="48" y="48" width="904" height="904" fill="none" stroke="#f5e6a8" strokeWidth="1.5" opacity="0.6"/>
+                      {/* Corner rosette decorations */}
+                      <circle cx="26" cy="26" r="14" fill="none" stroke="#d4af37" strokeWidth="1.5" opacity="0.55"/>
+                      <circle cx="26" cy="26" r="7" fill="#c9a227" opacity="0.3"/>
+                      <circle cx="974" cy="26" r="14" fill="none" stroke="#d4af37" strokeWidth="1.5" opacity="0.45"/>
+                      <circle cx="974" cy="26" r="7" fill="#c9a227" opacity="0.25"/>
+                      <circle cx="26" cy="974" r="14" fill="none" stroke="#d4af37" strokeWidth="1.5" opacity="0.45"/>
+                      <circle cx="26" cy="974" r="7" fill="#c9a227" opacity="0.25"/>
+                      <circle cx="974" cy="974" r="14" fill="none" stroke="#d4af37" strokeWidth="1.5" opacity="0.35"/>
+                      <circle cx="974" cy="974" r="7" fill="#c9a227" opacity="0.2"/>
+                      {/* Specular highlight sweep across entire frame */}
+                      <rect width="1000" height="1000" fill="url(#cSpec)"/>
+                    </g>
+                  </svg>
+                </div>
               )}
               {(p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper') && (
                 <div

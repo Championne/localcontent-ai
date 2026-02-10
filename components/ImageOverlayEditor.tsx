@@ -117,7 +117,7 @@ export default function ImageOverlayEditor({
   const [overlayBorderColors, setOverlayBorderColors] = useState<Record<string, string>>(() => initialState?.overlayBorderColors ?? {})
   const [tintOverlay, setTintOverlay] = useState<{ colorKey: 'primary' | 'secondary' | 'accent'; opacity: number } | null>(() => initialState?.tintOverlay ?? null)
   const [frame, setFrame] = useState<{ style: FrameStyle; colorKey: FrameColorKey } | null>(() => initialState?.frame ?? null)
-  const [vignetteIntensity, setVignetteIntensity] = useState(0.65)
+  const [vignetteIntensity, setVignetteIntensity] = useState(0.35)
   const [textOverlays, setTextOverlays] = useState<TextOverlayItem[]>(() => initialState?.textOverlays ?? [])
   const [draggingNew, setDraggingNew] = useState<'logo' | 'photo' | 'tagline' | 'website' | 'social' | null>(null)
   const [draggingExisting, setDraggingExisting] = useState<string | null>(null)

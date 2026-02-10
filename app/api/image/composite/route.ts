@@ -192,9 +192,9 @@ export async function POST(request: Request) {
       if (style === 'vignette') {
         const vw = imgWidth
         const vh = imgHeight
-        // Allow intensity override from client (0.2–1.0), default 0.65
-        const intensity = Math.max(0.2, Math.min(1.0, Number(frame?.vignetteIntensity) || 0.65))
-        const scale = intensity / 0.65 // normalize relative to default
+        // Allow intensity override from client (0.2–1.0), default 0.35
+        const intensity = Math.max(0.2, Math.min(1.0, Number(frame?.vignetteIntensity) || 0.35))
+        const scale = intensity / 0.35 // normalize relative to default
 
         // Layer 1: Primary elliptical vignette with smooth multi-stop falloff
         const vig1 = Buffer.from(
@@ -824,22 +824,22 @@ export async function POST(request: Request) {
           ])
           .toBuffer()
       }
-      // Classic painting frame: ornate gold with white mat, glass overlay, wall shadow
+      // Classic painting frame: SVG ornate gilded mouldings with carved bead patterns, corner rosettes, white mat, glass overlay, wall shadow
       else if (style === 'classic') {
         const g = {
           dark: '#5c4a1a', midDark: '#7d6510', mid: '#a67c32', midLight: '#c9a227',
           light: '#e8c547', highlight: '#f5e6a8', rabbet: '#3d3208',
-          // Per-side lighting
-          sTop: ['#f5e6a8', '#e8c547', '#a67c32'],
-          sRight: ['#c9a227', '#8b6914', '#5c4a1a'],
-          sBottom: ['#7d6510', '#5c4a1a', '#3d2b1f'],
-          sLeft: ['#e8c547', '#a67c32', '#7d6510'],
+          burnish: '#d4af37', deepGold: '#b8860b',
+          // Per-side lighting (top-left lit)
+          sTop: ['#f5e6a8', '#e8c547', '#d4af37', '#a67c32'],
+          sRight: ['#c9a227', '#a67c32', '#8b6914', '#5c4a1a'],
+          sBottom: ['#7d6510', '#5c4a1a', '#3d2b1f', '#2a1e13'],
+          sLeft: ['#e8c547', '#d4af37', '#a67c32', '#7d6510'],
         }
-        const ornateW = 20 // ornate frame band width
-        const matW = 12    // white mat width
-        const totalFrame = ornateW + matW
+        const ornateW = 30 // wider ornate frame band for carved details
+        const matW = 10    // off-white mat width
 
-        // 1. Add white mat around the photo
+        // 1. Add off-white mat around the photo
         composited = await sharp(composited)
           .extend({ top: matW, bottom: matW, left: matW, right: matW, background: { r: 250, g: 248, b: 242, alpha: 1 } })
           .toBuffer()
@@ -860,7 +860,7 @@ export async function POST(request: Request) {
           .composite([{ input: matShadowSvg, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
 
-        // 3. Glass reflection overlay on the photo (before adding the ornate frame)
+        // 3. Glass reflection overlay on the photo
         const glassSvg = Buffer.from(
           `<svg width="${matW2}" height="${matH2}" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -887,45 +887,116 @@ export async function POST(request: Request) {
         const fw = fMeta.width!
         const fh = fMeta.height!
 
-        // Trapezoidal miter-joint panels with per-side directional gradients
+        // Trapezoidal miter-joint panels with per-side multi-stop directional gradients
         const tl = '0,0', tr = `${fw},0`, br = `${fw},${fh}`, bl = `0,${fh}`
         const itl = `${ornateW},${ornateW}`, itr = `${fw - ornateW},${ornateW}`
         const ibr = `${fw - ornateW},${fh - ornateW}`, ibl = `${ornateW},${fh - ornateW}`
         const iiw = fw - 2 * ornateW, iih = fh - 2 * ornateW
 
+        // Bead pattern spacing (for carved egg-and-dart moulding)
+        const beadSpaceH = 18  // horizontal bead spacing
+        const beadSpaceV = 18  // vertical bead spacing
+        const beadRx = 6, beadRy = 3  // elliptical bead dimensions
+
         const frameSvg = Buffer.from(
           `<svg width="${fw}" height="${fh}" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="cTop" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="${g.sTop[2]}"/><stop offset="40%" stop-color="${g.sTop[1]}"/><stop offset="100%" stop-color="${g.sTop[0]}"/></linearGradient>
-              <linearGradient id="cRight" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${g.sRight[0]}"/><stop offset="50%" stop-color="${g.sRight[1]}"/><stop offset="100%" stop-color="${g.sRight[2]}"/></linearGradient>
-              <linearGradient id="cBottom" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${g.sBottom[0]}"/><stop offset="50%" stop-color="${g.sBottom[1]}"/><stop offset="100%" stop-color="${g.sBottom[2]}"/></linearGradient>
-              <linearGradient id="cLeft" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${g.sLeft[2]}"/><stop offset="40%" stop-color="${g.sLeft[1]}"/><stop offset="100%" stop-color="${g.sLeft[0]}"/></linearGradient>
-              <linearGradient id="cShine" x1="0" y1="0" x2="0.6" y2="0.6">
-                <stop offset="0%" stop-color="white" stop-opacity="0.40"/>
-                <stop offset="20%" stop-color="white" stop-opacity="0.15"/>
-                <stop offset="40%" stop-color="white" stop-opacity="0"/>
+              <!-- Multi-stop directional gradients per side (top-left lit) -->
+              <linearGradient id="cTop" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stop-color="${g.sTop[3]}"/><stop offset="30%" stop-color="${g.sTop[2]}"/>
+                <stop offset="60%" stop-color="${g.sTop[1]}"/><stop offset="100%" stop-color="${g.sTop[0]}"/>
+              </linearGradient>
+              <linearGradient id="cRight" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="${g.sRight[0]}"/><stop offset="35%" stop-color="${g.sRight[1]}"/>
+                <stop offset="70%" stop-color="${g.sRight[2]}"/><stop offset="100%" stop-color="${g.sRight[3]}"/>
+              </linearGradient>
+              <linearGradient id="cBottom" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${g.sBottom[0]}"/><stop offset="35%" stop-color="${g.sBottom[1]}"/>
+                <stop offset="70%" stop-color="${g.sBottom[2]}"/><stop offset="100%" stop-color="${g.sBottom[3]}"/>
+              </linearGradient>
+              <linearGradient id="cLeft" x1="1" y1="0" x2="0" y2="0">
+                <stop offset="0%" stop-color="${g.sLeft[3]}"/><stop offset="30%" stop-color="${g.sLeft[2]}"/>
+                <stop offset="60%" stop-color="${g.sLeft[1]}"/><stop offset="100%" stop-color="${g.sLeft[0]}"/>
+              </linearGradient>
+              <!-- Repeating carved bead pattern (horizontal) -->
+              <pattern id="cBeadH" patternUnits="userSpaceOnUse" width="${beadSpaceH}" height="8">
+                <ellipse cx="${beadSpaceH / 2}" cy="4" rx="${beadRx}" ry="${beadRy}" fill="${g.burnish}" opacity="0.55"/>
+                <ellipse cx="${beadSpaceH / 2}" cy="3.5" rx="${beadRx - 1.5}" ry="${beadRy - 0.8}" fill="${g.highlight}" opacity="0.3"/>
+              </pattern>
+              <!-- Repeating carved bead pattern (vertical) -->
+              <pattern id="cBeadV" patternUnits="userSpaceOnUse" width="8" height="${beadSpaceV}">
+                <ellipse cx="4" cy="${beadSpaceV / 2}" rx="${beadRy}" ry="${beadRx}" fill="${g.burnish}" opacity="0.55"/>
+                <ellipse cx="3.5" cy="${beadSpaceV / 2}" rx="${beadRy - 0.8}" ry="${beadRx - 1.5}" fill="${g.highlight}" opacity="0.3"/>
+              </pattern>
+              <!-- Specular highlight sweep -->
+              <linearGradient id="cShine" x1="0" y1="0" x2="0.55" y2="0.55">
+                <stop offset="0%" stop-color="white" stop-opacity="0.35"/>
+                <stop offset="20%" stop-color="white" stop-opacity="0.12"/>
+                <stop offset="45%" stop-color="white" stop-opacity="0"/>
                 <stop offset="100%" stop-color="white" stop-opacity="0"/>
               </linearGradient>
+              <!-- Clip to frame band only -->
               <clipPath id="cFrameClip"><path fill-rule="evenodd" d="M0,0 h${fw} v${fh} h-${fw}Z M${ornateW},${ornateW} v${iih} h${iiw} v-${iih}Z"/></clipPath>
             </defs>
-            <!-- Miter-joint side panels -->
+
+            <!-- Miter-joint side panels (base colour) -->
             <polygon points="${tl} ${tr} ${itr} ${itl}" fill="url(#cTop)"/>
             <polygon points="${tr} ${br} ${ibr} ${itr}" fill="url(#cRight)"/>
             <polygon points="${br} ${bl} ${ibl} ${ibr}" fill="url(#cBottom)"/>
             <polygon points="${bl} ${tl} ${itl} ${ibl}" fill="url(#cLeft)"/>
-            <!-- Specular highlight sweep -->
+
+            <!-- SVG ornate carved moulding layers (clipped to frame band) -->
             <g clip-path="url(#cFrameClip)">
+              <!-- Outer bead band — carved egg-and-dart pattern along each edge -->
+              <rect x="0" y="4" width="${fw}" height="8" fill="url(#cBeadH)" opacity="0.65"/>
+              <rect x="0" y="${fh - 12}" width="${fw}" height="8" fill="url(#cBeadH)" opacity="0.45"/>
+              <rect x="4" y="0" width="8" height="${fh}" fill="url(#cBeadV)" opacity="0.65"/>
+              <rect x="${fw - 12}" y="0" width="8" height="${fh}" fill="url(#cBeadV)" opacity="0.45"/>
+
+              <!-- Outer stepped moulding profile line (bright highlight) -->
+              <rect x="14" y="14" width="${fw - 28}" height="${fh - 28}" fill="none" stroke="${g.highlight}" stroke-width="1.5" opacity="0.5"/>
+              <!-- Concave cove channel (dark recess) -->
+              <rect x="18" y="18" width="${fw - 36}" height="${fh - 36}" fill="none" stroke="${g.dark}" stroke-width="2" opacity="0.3"/>
+              <!-- Flat fillet -->
+              <rect x="22" y="22" width="${fw - 44}" height="${fh - 44}" fill="none" stroke="${g.midDark}" stroke-width="1" opacity="0.2"/>
+
+              <!-- Inner bead band — second carved bead row -->
+              <rect x="0" y="${ornateW - 12}" width="${fw}" height="7" fill="url(#cBeadH)" opacity="0.5"/>
+              <rect x="0" y="${fh - ornateW + 5}" width="${fw}" height="7" fill="url(#cBeadH)" opacity="0.35"/>
+              <rect x="${ornateW - 12}" y="0" width="7" height="${fh}" fill="url(#cBeadV)" opacity="0.5"/>
+              <rect x="${fw - ornateW + 5}" y="0" width="7" height="${fh}" fill="url(#cBeadV)" opacity="0.35"/>
+
+              <!-- Inner gold fillet (bright edge where frame meets mat) -->
+              <rect x="${ornateW - 1}" y="${ornateW - 1}" width="${iiw + 2}" height="${iih + 2}" fill="none" stroke="${g.highlight}" stroke-width="1.5" opacity="0.6"/>
+
+              <!-- Corner rosette decorations (ornate medallions at each corner) -->
+              <circle cx="${ornateW / 2}" cy="${ornateW / 2}" r="${ornateW * 0.42}" fill="none" stroke="${g.burnish}" stroke-width="2" opacity="0.5"/>
+              <circle cx="${ornateW / 2}" cy="${ornateW / 2}" r="${ornateW * 0.22}" fill="${g.midLight}" opacity="0.35"/>
+              <circle cx="${ornateW / 2}" cy="${ornateW / 2}" r="${ornateW * 0.10}" fill="${g.highlight}" opacity="0.25"/>
+
+              <circle cx="${fw - ornateW / 2}" cy="${ornateW / 2}" r="${ornateW * 0.42}" fill="none" stroke="${g.burnish}" stroke-width="2" opacity="0.4"/>
+              <circle cx="${fw - ornateW / 2}" cy="${ornateW / 2}" r="${ornateW * 0.22}" fill="${g.midLight}" opacity="0.3"/>
+              <circle cx="${fw - ornateW / 2}" cy="${ornateW / 2}" r="${ornateW * 0.10}" fill="${g.highlight}" opacity="0.2"/>
+
+              <circle cx="${ornateW / 2}" cy="${fh - ornateW / 2}" r="${ornateW * 0.42}" fill="none" stroke="${g.burnish}" stroke-width="2" opacity="0.4"/>
+              <circle cx="${ornateW / 2}" cy="${fh - ornateW / 2}" r="${ornateW * 0.22}" fill="${g.midLight}" opacity="0.3"/>
+              <circle cx="${ornateW / 2}" cy="${fh - ornateW / 2}" r="${ornateW * 0.10}" fill="${g.highlight}" opacity="0.2"/>
+
+              <circle cx="${fw - ornateW / 2}" cy="${fh - ornateW / 2}" r="${ornateW * 0.42}" fill="none" stroke="${g.burnish}" stroke-width="2" opacity="0.35"/>
+              <circle cx="${fw - ornateW / 2}" cy="${fh - ornateW / 2}" r="${ornateW * 0.22}" fill="${g.midLight}" opacity="0.25"/>
+              <circle cx="${fw - ornateW / 2}" cy="${fh - ornateW / 2}" r="${ornateW * 0.10}" fill="${g.highlight}" opacity="0.15"/>
+
+              <!-- Specular highlight sweep across entire frame -->
               <rect width="${fw}" height="${fh}" fill="url(#cShine)"/>
             </g>
+
             <!-- Outer dark edge -->
-            <rect x="0" y="0" width="${fw}" height="${fh}" fill="none" stroke="${g.dark}" stroke-width="2"/>
-            <!-- Inner ornate edge (thin gold highlight where frame meets mat) -->
-            <rect x="${ornateW - 1}" y="${ornateW - 1}" width="${iiw + 2}" height="${iih + 2}" fill="none" stroke="${g.highlight}" stroke-width="1" opacity="0.6"/>
+            <rect x="0" y="0" width="${fw}" height="${fh}" fill="none" stroke="${g.dark}" stroke-width="2.5"/>
             <!-- Corner miter diagonals -->
-            <line x1="0" y1="0" x2="${ornateW}" y2="${ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.5"/>
-            <line x1="${fw}" y1="0" x2="${fw - ornateW}" y2="${ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.4"/>
-            <line x1="${fw}" y1="${fh}" x2="${fw - ornateW}" y2="${fh - ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.6"/>
-            <line x1="0" y1="${fh}" x2="${ornateW}" y2="${fh - ornateW}" stroke="${g.dark}" stroke-width="1" opacity="0.4"/>
+            <line x1="0" y1="0" x2="${ornateW}" y2="${ornateW}" stroke="${g.dark}" stroke-width="1.2" opacity="0.5"/>
+            <line x1="${fw}" y1="0" x2="${fw - ornateW}" y2="${ornateW}" stroke="${g.dark}" stroke-width="1.2" opacity="0.4"/>
+            <line x1="${fw}" y1="${fh}" x2="${fw - ornateW}" y2="${fh - ornateW}" stroke="${g.dark}" stroke-width="1.2" opacity="0.6"/>
+            <line x1="0" y1="${fh}" x2="${ornateW}" y2="${fh - ornateW}" stroke="${g.dark}" stroke-width="1.2" opacity="0.4"/>
           </svg>`
         )
         composited = await sharp(composited)
@@ -933,14 +1004,14 @@ export async function POST(request: Request) {
           .toBuffer()
 
         // 5. Wall shadow: frame floating off the surface
-        const shPad = 14
+        const shPad = 16
         const shadowBg = await sharp({
           create: { width: fw + 2 * shPad, height: fh + 2 * shPad, channels: 4 as const, background: { r: 245, g: 247, b: 250, alpha: 255 } },
         }).png().toBuffer()
         const dropShadowSvg = Buffer.from(
           `<svg width="${fw + 2 * shPad}" height="${fh + 2 * shPad}" xmlns="http://www.w3.org/2000/svg">
-            <defs><filter id="cSh"><feGaussianBlur stdDeviation="7"/></filter></defs>
-            <rect x="${shPad + 2}" y="${shPad + 5}" width="${fw}" height="${fh}" rx="1" fill="black" opacity="0.30" filter="url(#cSh)"/>
+            <defs><filter id="cSh"><feGaussianBlur stdDeviation="8"/></filter></defs>
+            <rect x="${shPad + 2}" y="${shPad + 6}" width="${fw}" height="${fh}" rx="1" fill="black" opacity="0.35" filter="url(#cSh)"/>
           </svg>`
         )
         composited = await sharp(shadowBg)

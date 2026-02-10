@@ -44,18 +44,21 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
 
   // Background
   if (fs === 'classic') {
-    // Gallery painting frame: dark ornate outer frame with gold tones
-    base.border = '18px solid #3d2b1f'
-    base.borderImage = 'linear-gradient(135deg, #f5e6a8 0%, #c9a227 15%, #8b6914 35%, #5c4a1a 55%, #7d6510 70%, #b8860b 85%, #e8c547 100%) 1'
-    base.padding = '12px' // White mat area between frame and image
+    // Ornate SVG-style painting frame: wide gilded moulding with carved details
+    base.border = '26px solid #3d2b1f'
+    base.borderImage = 'linear-gradient(135deg, #f5e6a8 0%, #d4af37 8%, #c9a227 18%, #b8860b 30%, #8b6914 45%, #5c4a1a 55%, #7d6510 65%, #b8860b 75%, #d4af37 88%, #f5e6a8 100%) 1'
+    base.padding = '10px' // Off-white mat area between frame and image
     base.background = '#faf8f2' // Off-white mat colour
     base.boxShadow = [
-      // Shadow on the mat (inner)
-      'inset 0 0 12px rgba(0,0,0,0.15)',
-      'inset 0 0 3px rgba(0,0,0,0.08)',
-      // Wall shadow (outer depth)
-      '0 10px 30px rgba(0,0,0,0.45)',
-      '0 4px 12px rgba(0,0,0,0.25)',
+      // Inner carved depth simulation (multiple inset shadows for layered moulding)
+      'inset 0 0 14px rgba(0,0,0,0.18)',
+      'inset 0 0 4px rgba(0,0,0,0.10)',
+      'inset 2px 2px 0 rgba(245,230,168,0.25)',
+      'inset -1px -1px 0 rgba(61,43,15,0.20)',
+      // Wall shadow (outer depth — floating off wall)
+      '0 12px 36px rgba(0,0,0,0.50)',
+      '0 4px 12px rgba(0,0,0,0.30)',
+      '0 1px 3px rgba(0,0,0,0.15)',
     ].join(', ')
   } else if (fs === 'wooden') {
     // Realistic wooden frame: grain texture + miter joint borders + wall shadow
@@ -179,7 +182,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
   }
 
   const shadowMap: Record<string, string> = {
-    classic: 'inset 2px 2px 6px rgba(0,0,0,0.25), inset -1px -1px 3px rgba(0,0,0,0.10), inset 0 0 0 1px rgba(92,74,26,0.20)',
+    classic: 'inset 3px 3px 8px rgba(0,0,0,0.30), inset -1px -1px 4px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(245,230,168,0.15), inset 0 0 0 2px rgba(92,74,26,0.20)',
     wooden: 'inset 2px 2px 5px rgba(0,0,0,0.50), inset -1px -1px 3px rgba(0,0,0,0.20), inset 0 0 0 1px rgba(0,0,0,0.15)',
     shadow: [
       // Layered smooth shadows: stacked for a natural, non-muddy transition
