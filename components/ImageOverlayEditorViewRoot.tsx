@@ -427,22 +427,49 @@ export default function ImageOverlayEditorViewRoot(props: {
                 </div>
               )}
               {(p.frame?.style === 'gold' || p.frame?.style === 'silver' || p.frame?.style === 'copper') && (
-                <div
-                  className="absolute inset-0 pointer-events-none z-[2]"
-                  style={{
-                    background: p.frame.style === 'gold'
-                      ? 'linear-gradient(135deg, rgba(191,149,63,0.08) 0%, rgba(252,246,186,0.12) 40%, rgba(170,119,29,0.08) 100%)'
-                      : p.frame.style === 'silver'
-                      ? 'linear-gradient(135deg, rgba(189,195,199,0.06) 0%, rgba(230,233,240,0.10) 40%, rgba(149,165,166,0.06) 100%)'
-                      : 'linear-gradient(135deg, rgba(128,74,0,0.08) 0%, rgba(237,201,175,0.12) 40%, rgba(93,58,26,0.08) 100%)',
-                    boxShadow: p.frame.style === 'gold'
-                      ? 'inset 2px 2px 8px rgba(0,0,0,0.20), inset -1px -1px 4px rgba(0,0,0,0.08)'
-                      : p.frame.style === 'silver'
-                      ? 'inset 2px 2px 8px rgba(0,0,0,0.16), inset -1px -1px 4px rgba(0,0,0,0.06)'
-                      : 'inset 2px 2px 8px rgba(0,0,0,0.20), inset -1px -1px 4px rgba(0,0,0,0.08)',
-                  }}
-                  aria-hidden
-                />
+                <>
+                  {/* Layer 1: Transparent metallic colour overlay inside picture */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[2]"
+                    style={{
+                      background: p.frame.style === 'gold'
+                        ? 'rgba(184,134,11,0.08)'
+                        : p.frame.style === 'silver'
+                        ? 'rgba(192,192,192,0.07)'
+                        : 'rgba(160,82,45,0.08)',
+                    }}
+                    aria-hidden
+                  />
+                  {/* Layer 2: Radial metallic vignette — darker tint at edges, clear center */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[2]"
+                    style={{
+                      background: p.frame.style === 'gold'
+                        ? 'radial-gradient(ellipse 75% 75% at 50% 48%, transparent 0%, transparent 50%, rgba(184,134,11,0.12) 75%, rgba(92,74,26,0.18) 100%)'
+                        : p.frame.style === 'silver'
+                        ? 'radial-gradient(ellipse 75% 75% at 50% 48%, transparent 0%, transparent 50%, rgba(149,165,166,0.10) 75%, rgba(44,62,80,0.15) 100%)'
+                        : 'radial-gradient(ellipse 75% 75% at 50% 48%, transparent 0%, transparent 50%, rgba(160,82,45,0.12) 75%, rgba(93,58,26,0.18) 100%)',
+                    }}
+                    aria-hidden
+                  />
+                  {/* Layer 3: Diagonal gradient tint + inset shadow for depth */}
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[2]"
+                    style={{
+                      background: p.frame.style === 'gold'
+                        ? 'linear-gradient(135deg, rgba(245,230,168,0.12) 0%, rgba(252,246,186,0.06) 30%, transparent 50%, rgba(139,105,20,0.08) 75%, rgba(92,74,26,0.12) 100%)'
+                        : p.frame.style === 'silver'
+                        ? 'linear-gradient(135deg, rgba(238,241,245,0.10) 0%, rgba(230,233,240,0.05) 30%, transparent 50%, rgba(149,165,166,0.07) 75%, rgba(44,62,80,0.10) 100%)'
+                        : 'linear-gradient(135deg, rgba(237,201,175,0.12) 0%, rgba(212,167,106,0.06) 30%, transparent 50%, rgba(128,74,0,0.08) 75%, rgba(93,58,26,0.12) 100%)',
+                      boxShadow: p.frame.style === 'gold'
+                        ? 'inset 3px 3px 12px rgba(92,74,26,0.22), inset -2px -2px 8px rgba(0,0,0,0.10), inset 0 0 20px rgba(184,134,11,0.08)'
+                        : p.frame.style === 'silver'
+                        ? 'inset 3px 3px 12px rgba(44,62,80,0.18), inset -2px -2px 8px rgba(0,0,0,0.08), inset 0 0 20px rgba(149,165,166,0.06)'
+                        : 'inset 3px 3px 12px rgba(93,58,26,0.22), inset -2px -2px 8px rgba(0,0,0,0.10), inset 0 0 20px rgba(160,82,45,0.08)',
+                    }}
+                    aria-hidden
+                  />
+                </>
               )}
               {/* Neon: atmospheric overlays — color spill, bloom, subtle darkening */}
               {p.frame?.style === 'neon' && (

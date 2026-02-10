@@ -361,12 +361,36 @@ export async function POST(request: Request) {
               sLeft: ['#d4a76a', '#a0522d', '#804a00'],
             }
 
-        // Subtle metallic tint on the photo itself
-        const tintSvg = Buffer.from(
-          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" opacity="${metal.tintOpacity}"/></svg>`
+        // Metallic overlay inside the picture: flat tint + radial vignette + diagonal gradient
+        const metalOverlaySvg = Buffer.from(
+          `<svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Radial metallic vignette: darker tint at edges, clear center -->
+              <radialGradient id="metalVig" cx="50%" cy="48%" r="52%" fx="50%" fy="48%">
+                <stop offset="0%" stop-color="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" stop-opacity="0"/>
+                <stop offset="50%" stop-color="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" stop-opacity="0"/>
+                <stop offset="75%" stop-color="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" stop-opacity="${metal.tintOpacity * 0.8}"/>
+                <stop offset="100%" stop-color="${metal.dark}" stop-opacity="${metal.tintOpacity * 1.2}"/>
+              </radialGradient>
+              <!-- Diagonal gradient for metallic depth -->
+              <linearGradient id="metalDiag" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="${metal.highlight}" stop-opacity="${metal.tintOpacity * 0.7}"/>
+                <stop offset="30%" stop-color="${metal.light}" stop-opacity="${metal.tintOpacity * 0.35}"/>
+                <stop offset="50%" stop-color="${metal.light}" stop-opacity="0"/>
+                <stop offset="75%" stop-color="${metal.dark}" stop-opacity="${metal.tintOpacity * 0.5}"/>
+                <stop offset="100%" stop-color="${metal.dark}" stop-opacity="${metal.tintOpacity * 0.7}"/>
+              </linearGradient>
+            </defs>
+            <!-- Layer 1: Flat metallic colour tint -->
+            <rect width="100%" height="100%" fill="rgb(${metal.tint.r},${metal.tint.g},${metal.tint.b})" opacity="${metal.tintOpacity * 0.6}"/>
+            <!-- Layer 2: Radial vignette — metal colour fades from edges -->
+            <rect width="100%" height="100%" fill="url(#metalVig)"/>
+            <!-- Layer 3: Diagonal gradient for directional metallic sheen -->
+            <rect width="100%" height="100%" fill="url(#metalDiag)"/>
+          </svg>`
         )
         composited = await sharp(composited)
-          .composite([{ input: tintSvg, left: 0, top: 0, blend: 'over' }])
+          .composite([{ input: metalOverlaySvg, left: 0, top: 0, blend: 'over' }])
           .toBuffer()
 
         const frameWidth = 28
