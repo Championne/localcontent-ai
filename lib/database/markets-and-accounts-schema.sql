@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS email_accounts (
   market_id UUID REFERENCES markets(id),
   
   -- Provider connection
-  provider TEXT DEFAULT 'zoho',          -- "zoho", "google", "microsoft"
+  provider TEXT DEFAULT 'google',         -- "google", "microsoft", "zoho"
   instantly_connected BOOLEAN DEFAULT FALSE,
   instantly_account_id TEXT,
   

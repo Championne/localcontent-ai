@@ -1,6 +1,6 @@
 # GeoSpark + Instantly Setup – Ready for Your First Campaign
 
-This guide gets the **GeoSpark app** and **Instantly** connected so you can run cold email campaigns. Do this after you have **Zoho** and **Instantly** accounts set up (see [COLD_EMAIL_SETUP.md](./COLD_EMAIL_SETUP.md)).
+This guide gets the **GeoSpark app** and **Instantly** connected so you can run cold email campaigns. Do this after you have **Google Workspace** and **Instantly** accounts set up (see [COLD_EMAIL_SETUP.md](./COLD_EMAIL_SETUP.md)).
 
 ---
 
@@ -8,7 +8,7 @@ This guide gets the **GeoSpark app** and **Instantly** connected so you can run 
 
 **Campaigns are built in GeoSpark.** You create the campaign (name, sequence steps, subject lines, body copy) in the GeoSpark environment. GeoSpark stores them in `outreach_campaigns` and `outreach_emails`.
 
-**Instantly is the sending engine.** Emails are sent by Instantly using the email accounts you connected there (e.g. Zoho). So the same campaign must exist in Instantly for sending. The intended flow is:
+**Instantly is the sending engine.** Emails are sent by Instantly using the email accounts you connected there (Google Workspace via SMTP). So the same campaign must exist in Instantly for sending. The intended flow is:
 
 1. **Create campaign in GeoSpark** (name + sequence steps).
 2. **Sync to Instantly** – GeoSpark will create (or update) the campaign in Instantly via API and store the link (`instantly_campaign_id`). *This sync is being implemented; until then see "Temporary: campaign in Instantly" below.*

@@ -9,7 +9,7 @@ Complete step-by-step guide to set up your cold email infrastructure.
 | Component | Purpose | Cost |
 |-----------|---------|------|
 | **Porkbun** | Domain DNS management | Already paid |
-| **Zoho Mail** | Email hosting (free) | Free |
+| **Google Workspace** | Email hosting (Business Starter) | $7/user/month |
 | **Instantly.ai** | Email sending + warmup | $37/month |
 | **GeoSpark** | CRM + lead management | Your app |
 
@@ -24,61 +24,78 @@ You purchased these domains:
 
 ---
 
-# PART 1: ZOHO MAIL SETUP
+# PART 1: GOOGLE WORKSPACE SETUP
 
-## Step 1.1: Create Zoho Account
+## Step 1.1: Create Google Workspace Account
 
-1. Go to **https://www.zoho.com/mail/zohomail-pricing.html**
-2. Scroll to **"Forever Free Plan"**
-3. Click **"SIGN UP NOW"**
-4. Click **"Add your existing domain"**
+1. Go to **https://workspace.google.com/business/signup**
+2. Enter business name: `GeoSpark` (or `Local Growth Pro`)
+3. Number of employees: `Just you`
+4. Enter your current email (for account recovery): your personal email
+5. Enter your first domain: **`localgrowthpro.co`**
+6. Create your first admin user: `gert@localgrowthpro.co`
+7. Choose plan: **Business Starter** ($7/user/month)
+8. Enter payment info and complete sign-up
+9. **Save your admin password!**
 
-## Step 1.2: Add Your First Domain
+## Step 1.2: Verify Domain Ownership
 
-1. Enter domain: `localgrowthpro.co`
-2. Click **"Add"**
-3. Fill in:
-   - Organization name: `Local Growth Pro`
-   - Your name: `Gert Jan`
-   - Email: `gert` (creates gert@localgrowthpro.co)
-   - Password: Create strong password (SAVE IT!)
-4. Click **"Sign Up"**
+Google will show a verification TXT record:
+1. Copy the `google-site-verification=XXXX...` value
+2. Go to Porkbun to add it (see Part 2, Step 2.1)
+3. Come back to Google and click **"Verify"**
 
-## Step 1.3: Verify Domain
+## Step 1.3: Add Secondary Domains
 
-1. Zoho shows a TXT record like:
-   ```
-   zoho-verification=zb12345678.zmverify.zoho.com
-   ```
-2. **COPY THIS** - you'll add it to Porkbun
-3. **DON'T CLICK VERIFY YET**
+Once `localgrowthpro.co` is verified:
 
-## Step 1.4: Get DKIM Record (After Verification)
+1. Go to **Google Admin Console**: https://admin.google.com
+2. Navigate to **Account** -> **Domains** -> **Manage domains**
+3. Click **"Add a domain"**
+4. Add **`smallbizboost.co`** as a **"Secondary domain"**
+5. Verify it (same TXT record process via Porkbun)
+6. Repeat for **`bizgrowthtips.org`**
 
-1. Go to **https://mailadmin.zoho.com**
-2. Click **"Email Configuration"** → **"DKIM"**
-3. Click **"Add Selector"**
-4. Enter `zoho` as selector name
-5. Click **"Add"**
-6. **COPY THE DKIM TXT VALUE**
+## Step 1.4: Create All 9 Email Accounts
 
-## Step 1.5: Create Additional Email Addresses
+In Google Admin Console -> **Directory** -> **Users** -> **Add new user**:
 
-1. In Zoho Admin → **"Users"**
-2. Click **"Add User"**
-3. Create:
-   - `hello@localgrowthpro.co`
-   - `support@localgrowthpro.co`
+**Domain 1 -- localgrowthpro.co:**
+- `gert@localgrowthpro.co` (already created as admin)
+- `hello@localgrowthpro.co`
+- `support@localgrowthpro.co`
 
-## Step 1.6: Repeat for Other Domains
+**Domain 2 -- smallbizboost.co:**
+- `gert@smallbizboost.co`
+- `hello@smallbizboost.co`
+- `support@smallbizboost.co`
 
-Repeat for `smallbizboost.co` and `bizgrowthtips.org`
+**Domain 3 -- bizgrowthtips.org:**
+- `gert@bizgrowthtips.org`
+- `hello@bizgrowthtips.org`
+- `support@bizgrowthtips.org`
 
-**Total: 9 email accounts (3 per domain)**
+Set strong passwords for each. **Save all 9 passwords!**
+
+## Step 1.5: Enable 2-Step Verification & Generate App Passwords
+
+For each of the 9 accounts:
+
+1. Log in to the account at https://myaccount.google.com
+2. Go to **Security** -> **2-Step Verification** -> Enable it
+3. Once enabled, go to **Security** -> **App passwords**
+4. Select **"Mail"** and **"Other"** -> name it `Instantly`
+5. Click **"Generate"**
+6. **Copy the 16-character app password** (e.g. `abcd efgh ijkl mnop`)
+7. **Save it!** -- you'll need it to connect to Instantly
+
+Repeat for all 9 accounts.
 
 ---
 
 # PART 2: PORKBUN DNS SETUP
+
+Do this for **each** of the 3 domains.
 
 ## Step 2.1: Login to Porkbun
 
@@ -92,72 +109,61 @@ Repeat for `smallbizboost.co` and `bizgrowthtips.org`
 2. Find `localgrowthpro.co`
 3. Click **"DNS"**
 
-## Step 2.3: Add Zoho Verification Record
+## Step 2.3: Add Google Verification Record
 
 ```
 Type: TXT
 Host: (leave empty)
-Answer: [paste zoho-verification=... from Step 1.3]
+Answer: google-site-verification=XXXXX (from Step 1.2)
 TTL: 600
 ```
 Click **Add**
 
-## Step 2.4: Verify in Zoho
+## Step 2.4: Go Back to Google and Verify
 
-1. Go back to Zoho
-2. Click **"Verify TXT Record"**
-3. Wait 1-5 minutes if it fails
+1. Return to Google Admin Console
+2. Click **"Verify"**
+3. Wait 1-5 minutes if it fails (DNS propagation)
 
-## Step 2.5: Add MX Records
+## Step 2.5: Replace MX Records
 
-**Delete existing MX records first!**
+**Delete ALL existing MX records first!**
 
-Add these 3:
+Add these 5 Google MX records:
 
-**MX Record 1:**
-```
-Type: MX
-Host: (leave empty)
-Answer: mx.zoho.com
-Priority: 10
-TTL: 600
-```
-
-**MX Record 2:**
-```
-Type: MX
-Host: (leave empty)
-Answer: mx2.zoho.com
-Priority: 20
-TTL: 600
-```
-
-**MX Record 3:**
-```
-Type: MX
-Host: (leave empty)
-Answer: mx3.zoho.com
-Priority: 50
-TTL: 600
-```
+| Type | Host | Answer | Priority | TTL |
+|------|------|--------|----------|-----|
+| MX | (empty) | ASPMX.L.GOOGLE.COM | 1 | 600 |
+| MX | (empty) | ALT1.ASPMX.L.GOOGLE.COM | 5 | 600 |
+| MX | (empty) | ALT2.ASPMX.L.GOOGLE.COM | 5 | 600 |
+| MX | (empty) | ALT3.ASPMX.L.GOOGLE.COM | 10 | 600 |
+| MX | (empty) | ALT4.ASPMX.L.GOOGLE.COM | 10 | 600 |
 
 ## Step 2.6: Add SPF Record
 
 ```
 Type: TXT
 Host: (leave empty)
-Answer: v=spf1 include:zoho.com ~all
+Answer: v=spf1 include:_spf.google.com ~all
 TTL: 600
 ```
 
 ## Step 2.7: Add DKIM Record
 
+1. In Google Admin Console -> **Apps** -> **Google Workspace** -> **Gmail** -> **Authenticate email**
+2. Select the domain
+3. Click **"Generate new record"** (prefix: `google`)
+4. Copy the TXT record value
+5. In Porkbun, add:
+
 ```
 Type: TXT
-Host: zoho._domainkey
-Answer: [paste DKIM value from Step 1.4 - it's very long]
+Host: google._domainkey
+Answer: (paste the long DKIM value from Google)
 TTL: 600
 ```
+
+6. Go back to Google Admin and click **"Start authentication"**
 
 ## Step 2.8: Add DMARC Record
 
@@ -167,6 +173,8 @@ Host: _dmarc
 Answer: v=DMARC1; p=none; rua=mailto:gert@localgrowthpro.co
 TTL: 600
 ```
+
+(For domains 2 and 3, change the `rua` email to match that domain.)
 
 ## Step 2.9: Add Instantly Tracking Domain
 
@@ -179,17 +187,19 @@ TTL: 600
 
 ## Step 2.10: Verify DNS Records
 
-Your DNS should show:
+Your DNS for each domain should show:
 
 | Type | Host | Answer |
 |------|------|--------|
-| TXT | (empty) | zoho-verification=... |
-| TXT | (empty) | v=spf1 include:zoho.com ~all |
-| TXT | zoho._domainkey | v=DKIM1;... |
+| TXT | (empty) | google-site-verification=... |
+| TXT | (empty) | v=spf1 include:_spf.google.com ~all |
+| TXT | google._domainkey | v=DKIM1;... |
 | TXT | _dmarc | v=DMARC1; p=none;... |
-| MX | (empty) | mx.zoho.com (10) |
-| MX | (empty) | mx2.zoho.com (20) |
-| MX | (empty) | mx3.zoho.com (50) |
+| MX | (empty) | ASPMX.L.GOOGLE.COM (1) |
+| MX | (empty) | ALT1.ASPMX.L.GOOGLE.COM (5) |
+| MX | (empty) | ALT2.ASPMX.L.GOOGLE.COM (5) |
+| MX | (empty) | ALT3.ASPMX.L.GOOGLE.COM (10) |
+| MX | (empty) | ALT4.ASPMX.L.GOOGLE.COM (10) |
 | CNAME | track | track.instantly.ai |
 
 ## Step 2.11: Repeat for Other Domains
@@ -200,89 +210,87 @@ Do the same for `smallbizboost.co` and `bizgrowthtips.org`
 
 # PART 3: INSTANTLY.AI SETUP
 
-## Step 3.1: Create Account
+## Step 3.1: Log In / Create Account
 
 1. Go to **https://instantly.ai**
-2. Sign up with `gert@geospark.app`
-3. Choose **"Growth"** plan ($37/month)
+2. Log in (or sign up) with `gert@geospark.app`
+3. Ensure you're on the **Growth** plan ($37/month)
 
-## Step 3.2: Get SMTP Settings from Zoho
+## Step 3.2: Connect Email Accounts
 
-Zoho SMTP settings:
+For each of the 9 accounts, in Instantly -> **"Email Accounts"** -> **"+ Add New"** -> **"Any Provider (SMTP)"**:
+
 ```
-SMTP Server: smtp.zoho.com
+Email: gert@localgrowthpro.co
+First Name: Gert Jan
+
+SMTP Host: smtp.gmail.com
+SMTP Port: 587
+SMTP Username: gert@localgrowthpro.co
+SMTP Password: [16-char app password from Step 1.5]
+Use TLS: Yes
+
+IMAP Host: imap.gmail.com
+IMAP Port: 993
+IMAP Username: gert@localgrowthpro.co
+IMAP Password: [same 16-char app password]
+Use SSL: Yes
+```
+
+Click **"Connect Account"**. Repeat for all 9 accounts.
+
+**Google SMTP/IMAP settings (same for all accounts):**
+```
+SMTP Host: smtp.gmail.com
 SMTP Port: 587
 Security: TLS
 
-IMAP Server: imap.zoho.com
+IMAP Host: imap.gmail.com
 IMAP Port: 993
 Security: SSL
 ```
 
-## Step 3.3: Connect Email Account
+## Step 3.3: Enable Warmup
 
-1. In Instantly → **"Email Accounts"** → **"+ Add New"**
-2. Click **"Any Provider (SMTP)"**
-3. Enter:
-   ```
-   Email: gert@localgrowthpro.co
-   First Name: Gert Jan
-   
-   SMTP Host: smtp.zoho.com
-   SMTP Port: 587
-   SMTP Username: gert@localgrowthpro.co
-   SMTP Password: [your Zoho password]
-   Use TLS: Yes ✓
-   
-   IMAP Host: imap.zoho.com
-   IMAP Port: 993
-   IMAP Username: gert@localgrowthpro.co
-   IMAP Password: [same password]
-   Use SSL: Yes ✓
-   ```
-4. Click **"Connect Account"**
-
-## Step 3.4: Enable Warmup
-
-1. Find account in Email Accounts list
-2. Toggle **"Warmup"** ON
-3. Settings:
+For each connected account:
+1. Toggle **"Warmup"** ON
+2. Settings:
    ```
    Daily warmup limit: 5 (start)
    Ramp up: 2 per day
    Reply rate: 30%
    ```
 
-## Step 3.5: Repeat for All 9 Accounts
+## Step 3.4: Repeat for All 9 Accounts
 
 Connect and enable warmup for ALL accounts.
 
-## Step 3.6: Set Up Tracking Domain
+## Step 3.5: Set Up Tracking Domain
 
-1. Instantly → **"Settings"** → **"Tracking Domain"**
+1. Instantly -> **"Settings"** -> **"Tracking Domain"**
 2. Click **"Add Custom Domain"**
 3. Enter: `track.localgrowthpro.co`
 4. Click **"Verify"**
 
-## Step 3.7: Get API Key
+## Step 3.6: Get API Key
 
-1. Instantly → **"Settings"** → **"API"**
+1. Instantly -> **"Settings"** -> **"API"**
 2. Click **"Generate API Key"**
 3. Copy key (looks like: `ak_xxxxxxxx...`)
 4. **SAVE THIS!**
 
-## Step 3.8: Set Up Webhook
+## Step 3.7: Set Up Webhook
 
-1. Instantly → **"Settings"** → **"Webhooks"**
+1. Instantly -> **"Settings"** -> **"Webhooks"**
 2. Click **"Add Webhook"**
 3. URL: `https://geospark.app/api/outreach/webhooks/instantly`
 4. Select events:
-   - ✅ Email Sent
-   - ✅ Email Opened
-   - ✅ Email Clicked
-   - ✅ Email Replied
-   - ✅ Email Bounced
-   - ✅ Lead Unsubscribed
+   - Email Sent
+   - Email Opened
+   - Email Clicked
+   - Email Replied
+   - Email Bounced
+   - Lead Unsubscribed
 5. Click **"Save"**
 
 ---
@@ -302,11 +310,11 @@ Connect and enable warmup for ALL accounts.
 
 In Supabase SQL Editor, run these files **in this order**:
 
-1. `lib/database/unified-sales-schema.sql` – industries, leads (CRM)
-2. `lib/database/outreach-schema.sql` – outreach_leads, campaigns
-3. `lib/database/lead-scoring-schema.sql` – score, webhook support
-4. `lib/database/markets-and-accounts-schema.sql` – markets, email_accounts
-5. `lib/database/outreach-sales-integration.sql` – link outreach → sales
+1. `lib/database/unified-sales-schema.sql` -- industries, leads (CRM)
+2. `lib/database/outreach-schema.sql` -- outreach_leads, campaigns
+3. `lib/database/lead-scoring-schema.sql` -- score, webhook support
+4. `lib/database/markets-and-accounts-schema.sql` -- markets, email_accounts
+5. `lib/database/outreach-sales-integration.sql` -- link outreach -> sales
 
 **Full step-by-step:** See [COLD_EMAIL_GEOSPARK_SETUP.md](./COLD_EMAIL_GEOSPARK_SETUP.md) for webhook URL and first campaign flow.
 
@@ -320,9 +328,10 @@ POST /api/outreach/accounts
   "email": "gert@localgrowthpro.co",
   "display_name": "Gert Jan",
   "domain": "localgrowthpro.co",
+  "provider": "google",
   "market_id": "[usa-market-uuid]",
   "instantly_connected": true,
-  "warmup_started_at": "2025-02-04T00:00:00Z"
+  "warmup_started_at": "2026-02-10T00:00:00Z"
 }
 ```
 
@@ -339,8 +348,8 @@ Or use the dashboard UI when available.
 # TIMELINE
 
 ## Week 1-2: Setup & Warmup
-- [ ] Day 1: Set up Zoho accounts
-- [ ] Day 1: Configure Porkbun DNS
+- [ ] Day 1: Set up Google Workspace (accounts + app passwords)
+- [ ] Day 1: Configure Porkbun DNS (all 3 domains)
 - [ ] Day 1: Connect accounts to Instantly
 - [ ] Day 1: Enable warmup on ALL accounts
 - [ ] Day 1-14: **WAIT - Let warmup run!**
@@ -352,7 +361,7 @@ Or use the dashboard UI when available.
 
 ## Week 4+: Scale
 - [ ] Increase volume gradually
-- [ ] Add more domains if needed
+- [ ] Add more domains if needed (buy on Porkbun, add as secondary domain in Google Workspace)
 - [ ] Expand to more markets
 
 ---
@@ -363,10 +372,10 @@ Or use the dashboard UI when available.
 
 | Phase | Days | Daily Limit |
 |-------|------|-------------|
-| 🔴 Warmup | 1-14 | 0 |
-| 🟡 Limited | 15-21 | 15 |
-| 🟠 Ramping | 22-35 | 30 |
-| 🟢 Active | 36+ | 50 |
+| Warmup | 1-14 | 0 |
+| Limited | 15-21 | 15 |
+| Ramping | 22-35 | 30 |
+| Active | 36+ | 50 |
 
 ## Your Capacity Projection
 
@@ -377,62 +386,92 @@ Or use the dashboard UI when available.
 | Day 35 | 9 | 270 (ramping) |
 | Day 36+ | 9 | 450 (full) |
 
+## Scaling (Future)
+
+To scale beyond 450/day, buy more domains on Porkbun and add them as secondary domains in Google Workspace. Keep 3-5 accounts per domain max.
+
+| Setup | Accounts | Daily Capacity | Monthly Cost |
+|-------|----------|----------------|-------------|
+| 3 domains x 3 accounts | 9 | 450/day | $63/month |
+| 4 domains x 3 accounts | 12 | 600/day | $84/month |
+| 5 domains x 3 accounts | 15 | 750/day | $105/month |
+| 7 domains x 3 accounts | 21 | 1,050/day | $147/month |
+
 ---
 
 # TROUBLESHOOTING
 
-## "Domain verification failed" in Zoho
+## "Domain verification failed" in Google
 - Wait 5-10 minutes (DNS propagation)
-- Check TXT record is correct
+- Check TXT record is correct in Porkbun
 - Make sure Host field is empty (not "@")
 
 ## "SMTP connection failed" in Instantly
-- Verify password (no typos)
-- Use port 587 with TLS
-- If Zoho has 2FA, create an App Password
+- Verify you're using the 16-char **app password**, NOT your Google password
+- Use `smtp.gmail.com` port 587 with TLS
+- Make sure 2-Step Verification is enabled on the Google account
+- If app passwords option is missing, enable 2FA first
+
+## "App passwords not available" in Google
+- You must enable **2-Step Verification** first
+- Go to Security -> 2-Step Verification -> Turn on
+- Then App passwords will appear under Security
 
 ## "Warmup not working"
-- Check DKIM and SPF records
-- Wait 24 hours for DNS propagation
+- Check DKIM and SPF records in Porkbun
+- Wait 24-48 hours for DNS propagation
 - Contact Instantly support
 
 ## Emails going to spam
 - Check DMARC record
 - Reduce sending volume
 - Improve email copy (less salesy)
-- Ensure SPF and DKIM pass
+- Ensure SPF and DKIM pass (use https://mxtoolbox.com to verify)
+
+---
+
+# MONTHLY COST SUMMARY
+
+| Service | Cost |
+|---------|------|
+| Google Workspace (9 users x $7) | $63/month |
+| Instantly.ai (Growth plan) | $37/month |
+| Domains (3, annual) | ~$30-45/year |
+| **Total** | **~$100/month** |
 
 ---
 
 # CHECKLIST
 
-## Initial Setup
-- [ ] Zoho account created
-- [ ] Domain 1 added to Zoho
-- [ ] Domain 2 added to Zoho
-- [ ] Domain 3 added to Zoho
+## Google Workspace
+- [ ] Account created (Business Starter plan)
+- [ ] Domain 1 (`localgrowthpro.co`) verified
+- [ ] Domain 2 (`smallbizboost.co`) added and verified
+- [ ] Domain 3 (`bizgrowthtips.org`) added and verified
 - [ ] 9 email accounts created
+- [ ] 2-Step Verification enabled on all 9
+- [ ] App passwords generated for all 9
 
 ## DNS (Per Domain)
-- [ ] Zoho verification TXT
-- [ ] MX records (3)
-- [ ] SPF record
-- [ ] DKIM record
+- [ ] Google verification TXT
+- [ ] MX records (5 Google servers)
+- [ ] SPF record (`include:_spf.google.com`)
+- [ ] DKIM record (`google._domainkey`)
 - [ ] DMARC record
 - [ ] Instantly tracking CNAME
 
 ## Instantly
-- [ ] Account created
-- [ ] All 9 accounts connected
-- [ ] Warmup enabled on all
+- [ ] Account created / logged in
+- [ ] All 9 accounts connected (SMTP + IMAP)
+- [ ] Warmup enabled on all 9
 - [ ] Tracking domain verified
 - [ ] API key generated
-- [ ] Webhook configured → URL: `https://YOUR-DOMAIN/api/outreach/webhooks/instantly` (see COLD_EMAIL_GEOSPARK_SETUP.md)
+- [ ] Webhook configured -> URL: `https://geospark.app/api/outreach/webhooks/instantly`
 
 ## GeoSpark
-- [ ] API key in .env.local
+- [ ] API key in `.env.local`
 - [ ] Database migrations run
-- [ ] Email accounts added
+- [ ] Email accounts added (provider: `google`)
 - [ ] Deployed to Vercel
 
 ## Ready to Send
