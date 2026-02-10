@@ -1166,7 +1166,7 @@ export async function POST(request: Request) {
       }
       // Default: thin, solid, thick, double, rounded
       else {
-        const doublePad = style === 'double' ? 20 : pad
+        const doublePad = style === 'double' ? 40 : pad
         const extendPad = style === 'double' ? doublePad : pad
         // For double frame use white background so the gap between the two lines is visible (not same as frame color)
         const extendBg = style === 'double' ? { r: 255, g: 255, b: 255, alpha: 1 } : { r: fr, g: fg, b: fb, alpha: 1 }
@@ -1178,9 +1178,9 @@ export async function POST(request: Request) {
         const fh = meta.height || imgHeight + 2 * extendPad
         // Double line: two equal-width lines with clear white space between (no third line)
         if (style === 'double') {
-          const lineWidth = 2
-          const gap = 8
-          const outerInset = 1
+          const lineWidth = 4
+          const gap = 16
+          const outerInset = 2
           const innerInset = outerInset + lineWidth + gap
           const outerW = fw - 2 * outerInset
           const outerH = fh - 2 * outerInset

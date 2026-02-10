@@ -246,7 +246,7 @@ export default function ImageOverlayEditorViewRoot(props: {
                 style={
                   p.frame?.style === 'double'
                     ? {
-                        border: `3px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
+                        border: `6px solid ${p.frame ? p.getFrameHex(p.frame.colorKey) : '#e5e7eb'}`,
                         boxSizing: 'border-box',
                         borderRadius: 0,
                       }

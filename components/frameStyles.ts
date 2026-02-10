@@ -26,7 +26,7 @@ export function computeFrameWrapperStyle(input: FrameStyleInput): CSSProperties 
   {
     const padMap: Record<string, number> = {
       thin: 3,
-      double: 3,
+      double: 6,
       classic: 20,
       wooden: 20,
       thick: 16,
@@ -160,7 +160,7 @@ export function computeContainerStyle(input: FrameStyleInput): CSSProperties {
   }
 
   if (fs === 'double') {
-    base.padding = '4px'
+    base.padding = '8px'
     base.background = '#ffffff'
     base.boxSizing = 'border-box'
   } else {
