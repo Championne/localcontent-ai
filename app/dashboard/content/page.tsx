@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import ImageOverlayEditor, { type OverlayApplyPayload, type BrandColors, FRAME_PRESET_COLORS } from '@/components/ImageOverlayEditor'
 import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
-import { ImageTextOverlay } from '@/components/ui/ImageTextOverlay'
+
 import { GenerationProgress } from '@/components/ui/GenerationProgress'
 
 interface SocialPackResult {
@@ -314,8 +314,6 @@ export default function CreateContentPage() {
   const [applyingPhoto, setApplyingPhoto] = useState(false)
   const [photoSkipped, setPhotoSkipped] = useState(false)
   
-  // Text overlay editor
-  const [showTextOverlay, setShowTextOverlay] = useState(false)
   const [overlayError, setOverlayError] = useState<string | null>(null)
 
   // Auto branding recommendation: applied when user selects an image in Step 3
@@ -969,30 +967,6 @@ export default function CreateContentPage() {
   const handleSkipPhoto = () => {
     setShowPhotoPositioner(false)
     setPhotoSkipped(true)
-  }
-
-  // Apply text-overlay image to content (upload blob, set as generated image, close overlay)
-  const handleTextOverlaySave = async (blob: Blob) => {
-    if (!generatedImage) return
-    try {
-      const form = new FormData()
-      form.append('file', blob, 'content-image.png')
-      const res = await fetch('/api/image/upload-overlay', { method: 'POST', body: form })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        setOverlayError(err.error || 'Failed to apply text to image.')
-        return
-      }
-      const data = await res.json()
-      if (data.url) {
-        setGeneratedImage((prev) => (prev ? { ...prev, url: data.url } : prev))
-        setShowTextOverlay(false)
-        setOverlayError(null)
-      }
-    } catch (e) {
-      console.error('Text overlay save error:', e)
-      setOverlayError('Failed to apply text to image.')
-    }
   }
 
   // Image style is set only by the user on Step 2 (Details) and kept for regeneration
@@ -2546,11 +2520,11 @@ export default function CreateContentPage() {
 
           {/* Image Overlay Editor - Modal Popup */}
           {generatedImage && showOverlayEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
               {/* Backdrop */}
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }} />
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }} />
               {/* Modal content */}
-              <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-black/10">
+              <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] ring-1 ring-black/10 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
                 {/* Modal header */}
                 <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3.5 border-b bg-white/95 backdrop-blur-sm rounded-t-2xl" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                   <div className="flex items-center gap-2.5">
@@ -2601,29 +2575,7 @@ export default function CreateContentPage() {
               </div>
             </div>
           )}
-          {generatedImage && showTextOverlay ? (
-            <div className="mb-6">
-              {overlayError && (
-                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                  {overlayError}
-                </div>
-              )}
-              <ImageTextOverlay
-                imageUrl={generatedImage.url}
-                suggestedTexts={[
-                  topic || 'Your headline here',
-                  businessName || 'Business Name',
-                  `${topic} - ${businessName}`,
-                  'Follow Us'
-                ].filter(Boolean)}
-                industry={industry}
-                businessName={businessName}
-                onSave={handleTextOverlaySave}
-                onClose={() => { setShowTextOverlay(false); setOverlayError(null) }}
-                matchPreviewSize
-              />
-            </div>
-          ) : generatedImage && (
+          {generatedImage && (
             <div className="mb-6 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
               <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                 <div className="flex items-center gap-3 min-w-0">
@@ -3227,11 +3179,11 @@ export default function CreateContentPage() {
 
           {/* Image Overlay Editor - Modal Popup (same as social-pack flow) */}
           {generatedImage && showOverlayEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
               {/* Backdrop */}
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }} />
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }} />
               {/* Modal content */}
-              <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-black/10">
+              <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] ring-1 ring-black/10 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
                 {/* Modal header */}
                 <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3.5 border-b bg-white/95 backdrop-blur-sm rounded-t-2xl" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                   <div className="flex items-center gap-2.5">
@@ -3283,30 +3235,7 @@ export default function CreateContentPage() {
             </div>
           )}
           {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
-          {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && showTextOverlay && (
-            <div className="mb-4">
-              {overlayError && (
-                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                  {overlayError}
-                </div>
-              )}
-              <ImageTextOverlay
-                imageUrl={generatedImage.url}
-                suggestedTexts={[
-                  topic || 'Your headline here',
-                  businessName || 'Business Name',
-                  selectedTemplate === 'gmb-post' ? 'Learn More' : 'Contact Us Today',
-                  `${topic} - ${businessName}`
-                ].filter(Boolean)}
-                industry={industry}
-                businessName={businessName}
-                onSave={handleTextOverlaySave}
-                onClose={() => { setShowTextOverlay(false); setOverlayError(null) }}
-                matchPreviewSize
-              />
-            </div>
-          )}
-          {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && !showTextOverlay && (
+          {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && (
             <div className="mb-4 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
               <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                 <div className="flex items-center gap-3 min-w-0">
