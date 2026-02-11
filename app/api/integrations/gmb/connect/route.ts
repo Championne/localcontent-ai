@@ -54,10 +54,13 @@ export async function GET(request: Request) {
     })
     return NextResponse.redirect(authUrl)
   } catch (e) {
+    const message = e instanceof Error ? e.message : ''
     console.error('GMB connect error:', e)
-    return NextResponse.json(
-      { error: 'Server misconfiguration: Google OAuth not configured' },
-      { status: 500 }
-    )
+    // Show which env var is missing (no secret values), otherwise generic message
+    const safeMessage =
+      message && (message.includes('GOOGLE_CLIENT_ID') || message.includes('GOOGLE_CLIENT_SECRET'))
+        ? `${message} Add it to .env.local (or Vercel env for production) and restart the server.`
+        : 'Server misconfiguration: Google OAuth not configured'
+    return NextResponse.json({ error: safeMessage }, { status: 500 })
   }
 }

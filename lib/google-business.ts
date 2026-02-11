@@ -39,9 +39,8 @@ export async function exchangeCodeForTokens(
 ): Promise<GoogleTokenResponse> {
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  if (!clientId || !clientSecret) {
-    throw new Error('GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not set')
-  }
+  if (!clientId) throw new Error('GOOGLE_CLIENT_ID is not set')
+  if (!clientSecret) throw new Error('GOOGLE_CLIENT_SECRET is not set')
 
   const res = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
@@ -75,9 +74,8 @@ export function tokenExpiresAt(expiresInSeconds: number): Date {
 export async function refreshAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
-  if (!clientId || !clientSecret) {
-    throw new Error('GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not set')
-  }
+  if (!clientId) throw new Error('GOOGLE_CLIENT_ID is not set')
+  if (!clientSecret) throw new Error('GOOGLE_CLIENT_SECRET is not set')
 
   const res = await fetch(GOOGLE_TOKEN_URL, {
     method: 'POST',
