@@ -46,11 +46,11 @@ This is the screen users see when they click “Connect Google Business Profile�
    - **Authorized domains** (optional for Testing): if you add a home page URL, add the domain there (e.g. `geospark.ai`) without `https://`.
    - Click **Save and Continue**.
 
-4. **Scopes (step 2)**
-   - Click **Add or remove scopes**.
-   - In the filter/search box, type: `business.manage`.
-   - Enable: **“…/auth/business.manage”** (Google My Business API: manage your Business Profile).
-   - Click **Update** at the bottom of the scope list, then **Save and Continue**.
+4. **Scopes (step 2)** — *Where to find Scopes*
+   - You are **not** on the right place if you only see "Audience" or "Test users". Scopes are in the **OAuth consent screen edit flow**.
+   - **Option A (classic UI):** Go to [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent). Click **EDIT APP** (or "App registration" → Edit). Go through the steps: after **App information** (step 1) click **Save and Continue**; step 2 is **Scopes**.
+   - **Option B (Google Auth Platform):** From the left sidebar (Overview, Branding, Audience, **Clients**, Data Access…), try **Data Access** for scopes, or use the **hamburger menu (≡)** → **APIs & Services** → **OAuth consent screen** → **Edit app** to get the step-by-step flow where Scopes is step 2.
+   - On the Scopes step: Click **Add or remove scopes**. In the filter/search box, type: `business.manage`. Enable **“…/auth/business.manage”** (Google My Business API: manage your Business Profile). Click **Update** at the bottom, then **Save and Continue**.
 
 5. **Test users (step 3)** — only if the app is in **Testing** mode
    - You’ll see “Test users” (or “Add users”).
@@ -64,6 +64,16 @@ This is the screen users see when they click “Connect Google Business Profile�
    - Click **Back to Dashboard**.
 
 **If you see “Publishing status: Testing”:** only Test users can complete the OAuth flow. To allow any Google user (e.g. customers), you’d need to submit the app for verification later; for now, Test users are enough.
+
+### Testing vs Publish app — when to change
+
+| Situation | What to do |
+|-----------|------------|
+| **Only you or a small team** (e.g. internal use, a few test users) | **Keep "Testing"**. Add everyone who needs access under **Test users**. No need to click "Publish app". |
+| **Real customers** (any Google account) should connect their Business Profile | Click **Publish app** so the app is no longer in Testing. Note: the scope we use (`business.manage`) is a **restricted** scope. After publishing, Google may still require **app verification** before unlimited external users can approve it. Until verification, a limited number of users (e.g. 100) may be allowed; beyond that, or for a fully trusted experience, you must complete **Verification** in the Google Cloud Console (Verification Center). |
+| **Ready for production** (public product) | 1. Click **Publish app**. 2. In the left menu open **Verification Center** (or **OAuth consent screen** → prepare for verification). 3. Submit the form and any requested info (privacy policy, demo video, etc.). Once verified, any Google user can connect their Business Profile. |
+
+**Summary:** Stay on **Testing** until you need non–test users. When you need real customers to connect, use **Publish app**, then plan for **verification** if you want unrestricted use of the Business Profile scope.
 
 ---
 
@@ -120,9 +130,13 @@ When you deploy (e.g. Vercel):
 
 If you get an error:
 
-- **redirect_uri_mismatch** → The redirect URI in the request must match exactly one of the URIs in step 2.4 (including http vs https and trailing slashes).
+- **redirect_uri_mismatch** → The redirect URI in the request must match exactly one of the URIs in step 2.4 (including http vs https and trailing slashes). No trailing slash on the callback URL.
 - **access_denied** or consent screen → Add your test user in OAuth consent screen (Test users) or publish the app.
-- **Server misconfiguration** → Check that `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in `.env.local` and restart `npm run dev`.
+- **Server misconfiguration** (or "Google OAuth not configured") → Check that `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in `.env.local` (and in Vercel for production) and restart `npm run dev`.
+- **Session expired** / **gmb_invalid_state** / **gmb_missing_business** → Cookies expired or blocked. Select your business on Analytics again and click "Connect Google Business Profile" without waiting too long.
+- **gmb_save_failed** → Check server logs for the actual Supabase error; ensure `user_integrations` table and RLS policies exist (see `lib/database/integrations-and-analytics-schema.sql`).
+
+**Required APIs (step 2.2):** If "Google My Business Account Management API" or "Business Information API" are not enabled, the app still saves the connection but may not show an account name. Enable them for full behaviour.
 
 ---
 

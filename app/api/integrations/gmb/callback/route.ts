@@ -71,12 +71,13 @@ export async function GET(request: Request) {
     const first = accounts[0]
     if (first) {
       accountId = first.name
-      accountName = first.accountName || first.name
+      accountName = first.accountName ?? first.name
       const loc = await fetchFirstGmbLocation(accessToken, first.name)
       if (loc) locationId = loc.name
     }
-  } catch {
-    // Non-fatal: we still save the integration
+  } catch (e) {
+    // Non-fatal: we still save the integration; log for debugging
+    console.warn('GMB accounts/locations fetch failed (integration will still be saved):', e)
   }
 
   const { data: business } = await supabase
@@ -116,7 +117,7 @@ export async function GET(request: Request) {
   cookieStore.set(BUSINESS_COOKIE, '', { path: '/', maxAge: 0 })
 
   if (upsertError) {
-    console.error('GMB integration upsert error:', upsertError)
+    console.error('GMB integration upsert error:', upsertError.message, upsertError.code, upsertError.details)
     return NextResponse.redirect(`${redirectBase}?error=gmb_save_failed`)
   }
 

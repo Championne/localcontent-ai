@@ -80,9 +80,14 @@ function AnalyticsContent() {
   }, [selectedBusinessId])
 
   const connectedGmb = integrations.some((i) => i.platform === 'google_business')
+  const connectedLate = integrations.some((i) => i.platform === 'late_aggregator')
   const connectUrl = selectedBusinessId
     ? `/api/integrations/gmb/connect?businessId=${encodeURIComponent(selectedBusinessId)}`
     : '#'
+  const connectLateUrl = (platform: string) =>
+    selectedBusinessId
+      ? `/api/integrations/late/connect?businessId=${encodeURIComponent(selectedBusinessId)}&platform=${platform}`
+      : '#'
   const successParam = searchParams.get('connected')
   const errorParam = searchParams.get('error')
 
@@ -92,7 +97,7 @@ function AnalyticsContent() {
 
       <p className="text-muted-foreground mb-6">
         Track your content performance and see the impact on your business. Connect Google Business
-        Profile (GMB) and, later, social accounts via Late.
+        Profile (GMB) and social accounts (Facebook, Instagram, LinkedIn, X) via Late.
       </p>
 
       {error && (
@@ -125,14 +130,25 @@ function AnalyticsContent() {
           Google Business Profile connected successfully.
         </div>
       )}
+      {successParam === 'late' && (
+        <div className="mb-4 p-4 rounded-lg bg-green-500/10 text-green-700 dark:text-green-400 text-sm">
+          Social account connected. You can connect more platforms (Facebook, Instagram, etc.) from the link below.
+        </div>
+      )}
       {errorParam && (
         <div className="mb-4 p-4 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 text-sm">
           {errorParam === 'gmb_denied' && 'Connection was cancelled or denied.'}
           {errorParam === 'gmb_missing_params' && 'Missing parameters. Try connecting again.'}
           {errorParam === 'gmb_invalid_state' && 'Session expired. Try connecting again.'}
+          {errorParam === 'gmb_missing_business' && 'Session expired. Please select a business and try again.'}
+          {errorParam === 'gmb_business_invalid' && 'Business not found. Please try again.'}
           {errorParam === 'gmb_token_failed' && 'Could not complete connection. Try again.'}
           {errorParam === 'gmb_save_failed' && 'Connection succeeded but saving failed. Contact support.'}
-          {!['gmb_denied', 'gmb_missing_params', 'gmb_invalid_state', 'gmb_token_failed', 'gmb_save_failed'].includes(errorParam) && `Error: ${errorParam}`}
+          {errorParam === 'late_denied' && 'Social connection was cancelled or denied.'}
+          {errorParam === 'late_missing_business' && 'Session expired. Try connecting again.'}
+          {errorParam === 'late_business_invalid' && 'Business not found. Try again.'}
+          {errorParam === 'late_save_failed' && 'Connection succeeded but saving failed. Contact support.'}
+          {!['gmb_denied', 'gmb_missing_params', 'gmb_invalid_state', 'gmb_missing_business', 'gmb_business_invalid', 'gmb_token_failed', 'gmb_save_failed', 'late_denied', 'late_missing_business', 'late_business_invalid', 'late_save_failed'].includes(errorParam) && `Error: ${errorParam}`}
         </div>
       )}
 
@@ -149,7 +165,11 @@ function AnalyticsContent() {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-sm"
               >
                 <span>
-                  {i.platform === 'google_business' ? 'Google Business' : i.platform.replace(/_/g, ' ')}
+                  {i.platform === 'google_business'
+                    ? 'Google Business'
+                    : i.platform === 'late_aggregator'
+                      ? 'Social (Late)'
+                      : i.platform.replace(/_/g, ' ')}
                 </span>
                 {i.account_name && (
                   <span className="text-muted-foreground">({i.account_name})</span>
@@ -210,8 +230,8 @@ function AnalyticsContent() {
       <div className="bg-card border rounded-lg p-8">
         <h2 className="text-lg font-semibold mb-4">Impact Dashboard</h2>
         <p className="text-muted-foreground mb-6">
-          Connect Google Business Profile to capture a baseline and see before/after metrics. Social
-          channels will be connectable via Late next.
+          Connect Google Business Profile to capture a baseline and see before/after metrics. Connect
+          social channels (Facebook, Instagram, LinkedIn, X) via the buttons below.
         </p>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -253,16 +273,43 @@ function AnalyticsContent() {
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-4">
+        <div className="mt-8 flex flex-wrap items-center gap-4">
           <a
             href={connectUrl}
             className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium"
           >
             {connectedGmb ? 'Reconnect Google Business Profile' : 'Connect Google Business Profile'}
           </a>
-          <span className="text-sm text-muted-foreground self-center">
-            Social (Facebook, Instagram, LinkedIn, X) via Late — coming next.
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-muted-foreground">Social:</span>
+            <a
+              href={connectLateUrl('facebook')}
+              className="px-4 py-2 border border-input rounded-md hover:bg-muted text-sm font-medium"
+            >
+              Facebook
+            </a>
+            <a
+              href={connectLateUrl('instagram')}
+              className="px-4 py-2 border border-input rounded-md hover:bg-muted text-sm font-medium"
+            >
+              Instagram
+            </a>
+            <a
+              href={connectLateUrl('linkedin')}
+              className="px-4 py-2 border border-input rounded-md hover:bg-muted text-sm font-medium"
+            >
+              LinkedIn
+            </a>
+            <a
+              href={connectLateUrl('twitter')}
+              className="px-4 py-2 border border-input rounded-md hover:bg-muted text-sm font-medium"
+            >
+              X (Twitter)
+            </a>
+            {connectedLate && (
+              <span className="text-sm text-green-600 dark:text-green-400">Connected</span>
+            )}
+          </div>
         </div>
       </div>
 

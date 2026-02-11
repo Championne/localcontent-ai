@@ -71,6 +71,56 @@ export function tokenExpiresAt(expiresInSeconds: number): Date {
   return d
 }
 
+/** Refresh access token using refresh_token. Returns new tokens. */
+export async function refreshAccessToken(refreshToken: string): Promise<GoogleTokenResponse> {
+  const clientId = process.env.GOOGLE_CLIENT_ID
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET
+  if (!clientId || !clientSecret) {
+    throw new Error('GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is not set')
+  }
+
+  const res = await fetch(GOOGLE_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      refresh_token: refreshToken,
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Token refresh failed: ${res.status} ${err}`)
+  }
+
+  const data = (await res.json()) as GoogleTokenResponse
+  return data
+}
+
+/** Integration row from DB (minimal fields needed for token refresh). */
+export interface GmbIntegrationRow {
+  access_token: string
+  refresh_token: string | null
+  token_expires_at: string | null
+}
+
+/** Return a valid access token, refreshing if expired (with 5 min buffer). Caller should persist new token/expiry if refreshed. */
+export async function getValidAccessToken(
+  row: GmbIntegrationRow
+): Promise<{ accessToken: string; expiresAt: string | null; refreshed: boolean }> {
+  const bufferMs = 5 * 60 * 1000
+  const now = Date.now()
+  const expiresAt = row.token_expires_at ? new Date(row.token_expires_at).getTime() : 0
+  if (row.refresh_token && expiresAt && now >= expiresAt - bufferMs) {
+    const tokens = await refreshAccessToken(row.refresh_token)
+    const newExpires = tokens.expires_in ? tokenExpiresAt(tokens.expires_in).toISOString() : null
+    return { accessToken: tokens.access_token, expiresAt: newExpires, refreshed: true }
+  }
+  return { accessToken: row.access_token, expiresAt: row.token_expires_at, refreshed: false }
+}
+
 /**
  * Fetch GMB account and first location for display (account name).
  * Uses Business Profile API v1 (accounts.list, locations.list).
