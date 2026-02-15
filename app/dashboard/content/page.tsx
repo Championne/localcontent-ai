@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
 // ImageOverlayEditor removed — images are now auto-branded on generation
 // Stub types kept for remaining dead-code functions until full cleanup
-type OverlayApplyPayload = { imageOverlays: Array<{ id: string; type: string; url: string; x: number; y: number; widthPct: number; borderColor?: string }>; overlayBorderColors: Record<string, string>; tintOverlay?: { colorKey: string; opacity: number } | null; textOverlays: Array<{ id: string; text: string; x: number; y: number; fontSize: number; fontFamily: string; colorKey: string }>; frame?: { preset: string; colorKey: string; vignette?: number } | null }
+type OverlayApplyPayload = { imageOverlays: Array<{ id: string; type: string; url: string; x: number; y: number; widthPct: number; borderColor?: string; scale?: number }>; overlayBorderColors: Record<string, string>; tintOverlay?: { colorKey: string; opacity: number } | null; textOverlays: Array<{ id: string; text: string; x: number; y: number; fontSize: number; fontFamily: string; colorKey: string }>; frame?: { preset: string; colorKey: string; vignette?: number } | null }
 type BrandColors = { primary: string; secondary: string; accent: string }
 const FRAME_PRESET_COLORS: Record<string, string> = { silver: '#c0c0c0', gold: '#ffd700', copper: '#b87333', neutral: '#e5e7eb' }
 import RatingStars from '@/components/RatingStars'
