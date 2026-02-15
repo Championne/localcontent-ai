@@ -269,6 +269,92 @@ const FRAMEWORK_LABELS: Record<MarketingFramework, string> = {
   '4ps': '4Ps (Promise → Picture → Proof → Push)',
 }
 
+// ---------------------------------------------------------------------------
+// User-facing descriptions & educational content
+// ---------------------------------------------------------------------------
+
+export const FRAMEWORK_DESCRIPTIONS: Record<MarketingFramework, {
+  name: string
+  subtitle: string
+  description: string
+  whyItWorks: string
+  bestFor: string
+  color: string        // Tailwind color key for UI theming
+}> = {
+  aida: {
+    name: 'AIDA',
+    subtitle: 'Attention \u2192 Interest \u2192 Desire \u2192 Action',
+    description: 'Grabs attention, builds curiosity, creates desire, then drives action. The classic marketing funnel in content form.',
+    whyItWorks: 'AIDA mirrors how humans naturally make decisions \u2014 first something catches your eye, then you get curious, then you want it, then you act. By following this sequence, your content guides the reader through the entire buying journey in seconds.',
+    bestFor: 'New services, cold audiences, awareness campaigns',
+    color: 'blue',
+  },
+  pas: {
+    name: 'PAS',
+    subtitle: 'Problem \u2192 Agitate \u2192 Solution',
+    description: 'Validates the reader\'s pain, makes it vivid and urgent, then presents your fix as the relief.',
+    whyItWorks: 'PAS leverages loss aversion \u2014 people are 2x more motivated to avoid pain than to gain pleasure. By naming the problem and amplifying the consequences of inaction, you create urgency that makes your solution feel like a rescue, not a sales pitch.',
+    bestFor: 'Emergency services, urgent needs, high-competition markets',
+    color: 'red',
+  },
+  bab: {
+    name: 'BAB',
+    subtitle: 'Before \u2192 After \u2192 Bridge',
+    description: 'Shows the journey from frustration to resolution, with your business as the bridge.',
+    whyItWorks: 'BAB activates the contrast principle \u2014 by painting a vivid "before" (pain) and "after" (transformation), the gap becomes emotionally compelling. Your business is positioned as the bridge that makes the transformation possible, which feels natural rather than pushy.',
+    bestFor: 'Service businesses, case studies, transformation stories',
+    color: 'green',
+  },
+  fab: {
+    name: 'FAB',
+    subtitle: 'Features \u2192 Advantages \u2192 Benefits',
+    description: 'Translates what you offer into why it matters to the customer.',
+    whyItWorks: 'FAB works because customers don\'t buy features \u2014 they buy outcomes. By translating each feature into an advantage and then a tangible life improvement, you help analytical buyers see exactly how your product solves their specific problem.',
+    bestFor: 'Product comparisons, educated buyers, technical audiences',
+    color: 'purple',
+  },
+  '4ps': {
+    name: '4Ps',
+    subtitle: 'Promise \u2192 Picture \u2192 Proof \u2192 Push',
+    description: 'Makes a bold promise, helps visualize the result, proves it with evidence, then pushes for action.',
+    whyItWorks: '4Ps uses social proof and commitment psychology. The bold promise hooks attention, visualization creates desire, proof (reviews, guarantees) removes doubt, and the push leverages scarcity to drive immediate action. It\'s the framework that closes deals.',
+    bestFor: 'Conversion campaigns, offers with proof, high-intent audiences',
+    color: 'amber',
+  },
+}
+
+export const AWARENESS_LEVEL_DESCRIPTIONS: Record<AwarenessLevel, {
+  label: string
+  description: string
+  icon: string
+}> = {
+  unaware: {
+    label: 'Unaware',
+    description: 'Your audience doesn\'t know they have a problem yet. Content needs to educate and spark curiosity.',
+    icon: '\uD83D\uDCA1',
+  },
+  'problem-aware': {
+    label: 'Problem-Aware',
+    description: 'Your audience knows they have a problem but doesn\'t know the solution. Content needs to validate their pain and introduce your fix.',
+    icon: '\uD83C\uDFAF',
+  },
+  'solution-aware': {
+    label: 'Solution-Aware',
+    description: 'Your audience knows solutions exist but hasn\'t chosen yours yet. Content needs to differentiate and show transformation.',
+    icon: '\uD83D\uDD0D',
+  },
+  'product-aware': {
+    label: 'Product-Aware',
+    description: 'Your audience knows your product but needs convincing. Content needs to highlight advantages and proof.',
+    icon: '\u2B50',
+  },
+  'most-aware': {
+    label: 'Ready to Buy',
+    description: 'Your audience is ready to act \u2014 they just need a push. Content needs proof, urgency, and a clear call to action.',
+    icon: '\uD83D\uDE80',
+  },
+}
+
 /** Returns a prompt block ready to inject into the user prompt sent to the LLM. */
 export function getFrameworkPromptBlock(rec: FrameworkRecommendation): string {
   const label = FRAMEWORK_LABELS[rec.framework]

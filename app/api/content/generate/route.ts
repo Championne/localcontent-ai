@@ -11,7 +11,7 @@ import {
   ImageStyle,
   FRAMEWORK_IMAGE_MOODS,
 } from '@/lib/openai/images'
-import { selectOptimalFramework } from '@/lib/content/framework-selector'
+import { selectOptimalFramework, FRAMEWORK_DESCRIPTIONS, AWARENESS_LEVEL_DESCRIPTIONS } from '@/lib/content/framework-selector'
 import { persistContentImage } from '@/lib/content-image'
 import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
@@ -152,10 +152,45 @@ export async function POST(request: Request) {
     })
     const frameworkMood = FRAMEWORK_IMAGE_MOODS[frameworkRec.framework] || null
 
+    // Build enriched framework info for the frontend (shared by social-pack and regular content)
+    const brandPersonalityObj = brandPrimaryColor
+      ? detectBrandPersonality(brandPrimaryColor, brandSecondaryColor)
+      : null
+    const fwDesc = FRAMEWORK_DESCRIPTIONS[frameworkRec.framework]
+    const awDesc = AWARENESS_LEVEL_DESCRIPTIONS[frameworkRec.awarenessLevel]
+
+    function buildEnrichedFrameworkInfo(result: { framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string }) {
+      return {
+        framework: result.framework,
+        frameworkReasoning: result.frameworkReasoning,
+        frameworkConfidence: result.frameworkConfidence,
+        awarenessLevel: result.awarenessLevel,
+        // Enriched fields for Marketing Intelligence Brief
+        frameworkName: fwDesc?.name || result.framework.toUpperCase(),
+        frameworkSubtitle: fwDesc?.subtitle || '',
+        frameworkDescription: fwDesc?.description || '',
+        frameworkWhyItWorks: fwDesc?.whyItWorks || '',
+        frameworkBestFor: fwDesc?.bestFor || '',
+        frameworkColor: fwDesc?.color || 'blue',
+        frameworkSteps: frameworkRec.structure.sections,
+        awarenessLabel: awDesc?.label || result.awarenessLevel,
+        awarenessDescription: awDesc?.description || '',
+        awarenessIcon: awDesc?.icon || '',
+        imageMood: frameworkMood ? {
+          moodOverride: frameworkMood.moodOverride,
+          lightingStyle: frameworkMood.lightingStyle,
+          colorIntensity: frameworkMood.colorIntensity,
+          composition: frameworkMood.composition,
+        } : null,
+        brandPersonality: brandPersonalityObj?.personality || null,
+        brandMood: brandPersonalityObj?.mood || null,
+      }
+    }
+
     // Handle social-pack separately
     if (template === 'social-pack') {
       let socialPack: SocialPackResult | null = null
-      let frameworkInfo: { framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string } | null = null
+      let frameworkInfo: ReturnType<typeof buildEnrichedFrameworkInfo> | null = null
 
       // Only generate text if requested
       if (shouldGenerateText) {
@@ -178,12 +213,12 @@ export async function POST(request: Request) {
             campaignGoal: campaignGoal || undefined,
           })
           socialPack = result.pack
-          frameworkInfo = {
+          frameworkInfo = buildEnrichedFrameworkInfo({
             framework: result.framework,
             frameworkReasoning: result.frameworkReasoning,
             frameworkConfidence: result.frameworkConfidence,
             awarenessLevel: result.awarenessLevel,
-          }
+          })
         } else {
           // Mock social pack for development
           socialPack = generateMockSocialPack(businessName, industry, topic)
@@ -423,7 +458,7 @@ export async function POST(request: Request) {
 
     // Handle regular content templates
     let content: string | null = null
-    let frameworkInfo: { framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string } | null = null
+    let frameworkInfo: ReturnType<typeof buildEnrichedFrameworkInfo> | null = null
 
     // Only generate text if requested
     if (shouldGenerateText) {
@@ -451,12 +486,12 @@ export async function POST(request: Request) {
           campaignGoal: campaignGoal || undefined,
         })
         content = result.content
-        frameworkInfo = {
+        frameworkInfo = buildEnrichedFrameworkInfo({
           framework: result.framework,
           frameworkReasoning: result.frameworkReasoning,
           frameworkConfidence: result.frameworkConfidence,
           awarenessLevel: result.awarenessLevel,
-        }
+        })
       } else {
         content = generateMockContent(template, businessName, industry, topic, tone, gbpPostType)
       }

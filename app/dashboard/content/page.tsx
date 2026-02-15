@@ -59,6 +59,16 @@ const IMAGE_STYLE_NAMES: Record<string, string> = {
   lifestyle: 'Lifestyle', minimalist: 'Minimalist', vintage: 'Vintage', wellness: 'Wellness',
 }
 type ImageStyleKey = string
+
+// Framework color theme mapping
+const FRAMEWORK_COLORS: Record<string, { bg: string; border: string; badge: string; text: string; accent: string; stepBg: string; stepActive: string }> = {
+  blue:   { bg: 'bg-blue-50',   border: 'border-blue-200',  badge: 'bg-blue-100 text-blue-800',   text: 'text-blue-900',   accent: 'text-blue-600',   stepBg: 'bg-blue-100',   stepActive: 'bg-blue-500 text-white' },
+  red:    { bg: 'bg-red-50',    border: 'border-red-200',   badge: 'bg-red-100 text-red-800',     text: 'text-red-900',    accent: 'text-red-600',    stepBg: 'bg-red-100',    stepActive: 'bg-red-500 text-white' },
+  green:  { bg: 'bg-green-50',  border: 'border-green-200', badge: 'bg-green-100 text-green-800', text: 'text-green-900',  accent: 'text-green-600',  stepBg: 'bg-green-100',  stepActive: 'bg-green-500 text-white' },
+  purple: { bg: 'bg-purple-50', border: 'border-purple-200',badge: 'bg-purple-100 text-purple-800',text: 'text-purple-900',accent: 'text-purple-600',stepBg: 'bg-purple-100',stepActive: 'bg-purple-500 text-white' },
+  amber:  { bg: 'bg-amber-50',  border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800', text: 'text-amber-900',  accent: 'text-amber-600',  stepBg: 'bg-amber-100',  stepActive: 'bg-amber-500 text-white' },
+}
+
 // GBP Post Types with descriptions
 const GBP_POST_TYPES = {
   offer: {
@@ -189,6 +199,29 @@ function WordCount({ count }: { count: number }) {
 
 
 
+// Strategy crafting animation step
+function StrategyStep({ label, delayMs, startTime }: { label: string; delayMs: number; startTime: number }) {
+  const [visible, setVisible] = useState(false)
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    const elapsed = Date.now() - startTime
+    const showTimer = setTimeout(() => setVisible(true), Math.max(0, delayMs - elapsed))
+    const doneTimer = setTimeout(() => setDone(true), Math.max(0, delayMs + 900 - elapsed))
+    return () => { clearTimeout(showTimer); clearTimeout(doneTimer) }
+  }, [delayMs, startTime])
+  if (!visible) return null
+  return (
+    <div className={`flex items-center gap-2.5 transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+      {done ? (
+        <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+      ) : (
+        <svg className="animate-spin w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+      )}
+      <span className={`text-sm transition-colors ${done ? 'text-slate-700 font-medium' : 'text-slate-500'}`}>{label}</span>
+    </div>
+  )
+}
+
 // Motivational tips for impact card
 const MOTIVATIONAL_TIPS = [
   { icon: '📈', text: 'Businesses posting 3x/week see 40% more customer inquiries' },
@@ -214,7 +247,15 @@ export default function CreateContentPage() {
   const [generatedContent, setGeneratedContent] = useState('')
   const [socialPack, setSocialPack] = useState<SocialPackResult | null>(null)
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null)
-  const [frameworkInfo, setFrameworkInfo] = useState<{ framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string } | null>(null)
+  const [frameworkInfo, setFrameworkInfo] = useState<{
+    framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string;
+    frameworkName?: string; frameworkSubtitle?: string; frameworkDescription?: string;
+    frameworkWhyItWorks?: string; frameworkBestFor?: string; frameworkColor?: string;
+    frameworkSteps?: string[]; awarenessLabel?: string; awarenessDescription?: string; awarenessIcon?: string;
+    imageMood?: { moodOverride: string; lightingStyle: string; colorIntensity: string; composition: string } | null;
+    brandPersonality?: string | null; brandMood?: string | null;
+  } | null>(null)
+  const [intelligenceBriefExpanded, setIntelligenceBriefExpanded] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
   
@@ -248,6 +289,44 @@ export default function CreateContentPage() {
   // Product image — optional upload in Step 2 for product-specific content
   const [productImage, setProductImage] = useState<{ file: File; preview: string } | null>(null)
   const productImageInputRef = useRef<HTMLInputElement>(null)
+
+  // Live topic analysis (Step 2) — predicted framework as user types
+  const [topicAnalysis, setTopicAnalysis] = useState<{
+    framework: string; frameworkName: string; frameworkSubtitle: string; frameworkColor: string;
+    confidence: number; reasoning: string; awarenessLabel: string; awarenessIcon: string;
+    brandPersonality: string | null; imageMood: { moodOverride: string; lightingStyle: string } | null;
+  } | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const analysisTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounced topic analysis
+  useEffect(() => {
+    if (step !== 2 || !topic.trim() || topic.trim().length < 5 || !industry) {
+      setTopicAnalysis(null)
+      return
+    }
+    if (analysisTimerRef.current) clearTimeout(analysisTimerRef.current)
+    setAnalysisLoading(true)
+    analysisTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/content/analyze-topic', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic, industry, contentType: selectedTemplate,
+            brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+            brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setTopicAnalysis(data)
+        }
+      } catch { /* ignore */ }
+      setAnalysisLoading(false)
+    }, 600)
+    return () => { if (analysisTimerRef.current) clearTimeout(analysisTimerRef.current) }
+  }, [topic, industry, selectedTemplate, step, currentBusiness?.brand_primary_color, currentBusiness?.brand_secondary_color])
 
   // Quality ratings: link to generated_images / generated_texts when saving
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
@@ -416,6 +495,7 @@ export default function CreateContentPage() {
       name: 'Blog Post', 
       description: 'SEO-optimized blog article for your website',
       benefit: 'Drive traffic and show expertise',
+      bestFor: 'Best for: building authority & organic traffic',
       color: 'teal',
       time: '~30 sec'
     },
@@ -424,6 +504,7 @@ export default function CreateContentPage() {
       name: 'Social Media Pack', 
       description: '6 optimized posts for all major platforms',
       benefit: 'One idea, six ready-to-publish posts',
+      bestFor: 'Best for: reach & engagement across channels',
       color: 'orange',
       badge: '6 platforms',
       popular: true,
@@ -434,6 +515,7 @@ export default function CreateContentPage() {
       name: 'Google Business Post', 
       description: 'Updates, offers, or events for your GBP profile (4:3 image)',
       benefit: 'Stay visible to local searchers',
+      bestFor: 'Best for: attracting nearby customers searching now',
       color: 'blue',
       time: '~20 sec'
     },
@@ -442,6 +524,7 @@ export default function CreateContentPage() {
       name: 'Email Newsletter', 
       description: 'Professional email content for your customers',
       benefit: 'Keep your list engaged with value',
+      bestFor: 'Best for: nurturing relationships & repeat business',
       color: 'purple',
       time: '~30 sec'
     },
@@ -453,6 +536,7 @@ export default function CreateContentPage() {
       id: 'promotion',
       icon: '🏷️',
       label: 'Running a promotion?',
+      hint: 'Uses urgency psychology to drive action',
       template: 'social-pack',
       topic: 'Special limited-time offer'
     },
@@ -460,6 +544,7 @@ export default function CreateContentPage() {
       id: 'traffic',
       icon: '📈',
       label: 'Need more website traffic?',
+      hint: 'AI picks the best framework for your topic',
       template: 'blog-post',
       topic: 'Expert tips and advice'
     },
@@ -467,6 +552,7 @@ export default function CreateContentPage() {
       id: 'feedback',
       icon: '⭐',
       label: 'Got great feedback?',
+      hint: 'Builds trust with proof psychology',
       template: 'gmb-post',
       topic: 'Customer success story'
     },
@@ -995,7 +1081,7 @@ export default function CreateContentPage() {
                 <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </h2>
-            <p className="text-gray-500">Pick a content type and we’ll guide you through the rest</p>
+            <p className="text-gray-500">Pick a content type — AI selects the best marketing psychology for your topic</p>
           </div>
 
           {/* Quick Starts */}
@@ -1008,12 +1094,12 @@ export default function CreateContentPage() {
                 <button
                   key={qs.id}
                   onClick={() => handleQuickStart(qs)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 transition-all hover:shadow-md"
+                  className="flex flex-col items-start gap-0.5 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 transition-all hover:shadow-md"
                 onMouseEnter={(e) => { e.currentTarget.style.borderColor = primary; e.currentTarget.style.backgroundColor = hexToRgba(primary, 0.08) }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.backgroundColor = '' }}
                 >
-                  <span>{qs.icon}</span>
-                  {qs.label}
+                  <span className="flex items-center gap-2"><span>{qs.icon}</span>{qs.label}</span>
+                  <span className="text-[10px] font-normal text-gray-400 ml-6">{qs.hint}</span>
                 </button>
               ))}
             </div>
@@ -1059,12 +1145,20 @@ export default function CreateContentPage() {
                   {'benefit' in template && (template as { benefit?: string }).benefit && (
                     <p className="text-xs mt-1 font-medium" style={{ color: primary }}>{(template as { benefit: string }).benefit}</p>
                   )}
-                  {/* Time Estimate */}
-                  <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-400">
-                    <svg className="w-3.5 h-3.5" style={{ color: accent }} fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    Ready in {template.time}
+                  {'bestFor' in template && (template as { bestFor?: string }).bestFor && (
+                    <p className="text-[10px] mt-1 text-gray-400 italic">{(template as { bestFor: string }).bestFor}</p>
+                  )}
+                  {/* Time Estimate + Psychology badge */}
+                  <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
+                    <span className="flex items-center gap-1.5">
+                      <svg className="w-3.5 h-3.5" style={{ color: accent }} fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                      </svg>
+                      Ready in {template.time}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                      <span>🧠</span> AI psychology
+                    </span>
                   </div>
                 </button>
               )
@@ -1209,6 +1303,36 @@ export default function CreateContentPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none transition-shadow resize-none"
                 placeholder="e.g., Spring cleaning tips for homeowners, our new seasonal menu, 20% off promotion this week..."
               />
+              {/* Live AI Analysis Preview */}
+              {(topicAnalysis || analysisLoading) && !generating && (
+                <div className={`mt-2 rounded-lg border px-3 py-2.5 transition-all duration-300 ${topicAnalysis ? `${(FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue).bg} ${(FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue).border}` : 'bg-gray-50 border-gray-200'}`}>
+                  {analysisLoading && !topicAnalysis ? (
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                      <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                      AI is analyzing your topic...
+                    </div>
+                  ) : topicAnalysis && (() => {
+                    const fc = FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue
+                    return (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs">🧠</span>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${fc.badge}`}>{topicAnalysis.frameworkName}</span>
+                          <span className={`text-[11px] font-medium ${fc.accent}`}>{topicAnalysis.confidence}% match</span>
+                          {topicAnalysis.awarenessLabel && (
+                            <span className="text-[10px] text-gray-500">{topicAnalysis.awarenessIcon} {topicAnalysis.awarenessLabel}</span>
+                          )}
+                          {topicAnalysis.brandPersonality && (
+                            <span className="text-[10px] text-gray-400 capitalize">• {topicAnalysis.brandPersonality} brand</span>
+                          )}
+                          {analysisLoading && <svg className="animate-spin w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
+                        </div>
+                        <p className={`text-[11px] leading-relaxed ${fc.accent}`}>{topicAnalysis.reasoning}</p>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Writing Tone</label>
@@ -1353,15 +1477,31 @@ export default function CreateContentPage() {
               )}
             </div>
             
-            {/* Progress Bar */}
+            {/* Strategy Crafting Animation */}
             {generating && (
-              <div className="mt-6">
-                <GenerationProgress 
-                  isGenerating={generating} 
-                  contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
-                  startTime={generationStartTime ?? undefined}
-                  size="lg"
-                />
+              <div className="mt-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-slate-200 p-5 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">🧠</span>
+                  <span className="text-sm font-semibold text-slate-800">AI Marketing Strategy</span>
+                </div>
+                {[
+                  { label: 'Analyzing your topic...', delay: 0 },
+                  { label: 'Selecting marketing framework...', delay: 1200 },
+                  { label: 'Aligning with your brand personality...', delay: 2400 },
+                  { label: 'Crafting psychologically structured content...', delay: 3600 },
+                  { label: 'Generating brand-aware image...', delay: 5000 },
+                ].map((step, i) => (
+                  <StrategyStep key={i} label={step.label} delayMs={step.delay} startTime={generationStartTime ?? Date.now()} />
+                ))}
+                <div className="pt-2">
+                  <GenerationProgress 
+                    isGenerating={generating} 
+                    contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
+                    startTime={generationStartTime ?? undefined}
+                    size="sm"
+                    showPercentage={false}
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -1371,14 +1511,125 @@ export default function CreateContentPage() {
       {/* Step 3: Branding - Social Pack */}
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div className="w-full">
-          {/* Marketing Framework Badge */}
-          {frameworkInfo && (
-            <div className="mx-0 mt-4 mb-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 font-semibold text-blue-900">{frameworkInfo.framework.toUpperCase()}</span>
-              <span className="text-blue-600 font-medium">{frameworkInfo.frameworkConfidence}% match</span>
-              <span className="text-blue-700 hidden sm:inline">— {frameworkInfo.frameworkReasoning}</span>
-            </div>
-          )}
+          {/* Marketing Intelligence Brief */}
+          {frameworkInfo && (() => {
+            const fc = FRAMEWORK_COLORS[frameworkInfo.frameworkColor || 'blue'] || FRAMEWORK_COLORS.blue
+            return (
+              <div className={`mx-0 mt-4 mb-4 rounded-xl border overflow-hidden ${fc.bg} ${fc.border}`}>
+                {/* Collapsed summary / toggle header */}
+                <button
+                  type="button"
+                  onClick={() => setIntelligenceBriefExpanded(!intelligenceBriefExpanded)}
+                  className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:opacity-90 transition-opacity"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-lg flex-shrink-0">🧠</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${fc.badge}`}>{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}</span>
+                        <span className={`text-xs font-semibold ${fc.accent}`}>{frameworkInfo.frameworkConfidence}% match</span>
+                        {frameworkInfo.brandPersonality && (
+                          <span className="text-xs text-gray-500 capitalize">• {frameworkInfo.brandPersonality} brand</span>
+                        )}
+                      </div>
+                      {!intelligenceBriefExpanded && (
+                        <p className={`text-xs mt-0.5 truncate ${fc.accent}`}>{frameworkInfo.frameworkReasoning}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide hidden sm:inline">Marketing Intelligence</span>
+                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${intelligenceBriefExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </button>
+
+                {/* Expanded content */}
+                {intelligenceBriefExpanded && (
+                  <div className="px-4 pb-4 space-y-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+                    {/* Framework Pipeline Visual */}
+                    {frameworkInfo.frameworkSteps && frameworkInfo.frameworkSteps.length > 0 && (
+                      <div className="pt-3">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Content Structure</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {frameworkInfo.frameworkSteps.map((step, i) => (
+                            <div key={step} className="flex items-center gap-1.5">
+                              <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${fc.stepActive}`}>{step}</span>
+                              {i < (frameworkInfo.frameworkSteps?.length ?? 0) - 1 && (
+                                <svg className={`w-3.5 h-3.5 ${fc.accent} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Why this framework */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Why {frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}?</p>
+                      <p className={`text-sm leading-relaxed ${fc.text}`}>{frameworkInfo.frameworkReasoning}</p>
+                      {frameworkInfo.frameworkWhyItWorks && (
+                        <p className="text-xs text-gray-600 mt-1.5 leading-relaxed">{frameworkInfo.frameworkWhyItWorks}</p>
+                      )}
+                    </div>
+
+                    {/* Audience Awareness Level */}
+                    {frameworkInfo.awarenessLabel && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Your Audience</p>
+                        <div className="flex items-start gap-2">
+                          <span className="text-base">{frameworkInfo.awarenessIcon}</span>
+                          <div>
+                            <p className={`text-sm font-semibold ${fc.text}`}>{frameworkInfo.awarenessLabel}</p>
+                            <p className="text-xs text-gray-600">{frameworkInfo.awarenessDescription}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Image Psychology (side by side on desktop) */}
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {frameworkInfo.imageMood && (
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Image Psychology</p>
+                          <div className="space-y-1 text-xs text-gray-700">
+                            <p><span className="font-medium">Mood:</span> {frameworkInfo.imageMood.moodOverride}</p>
+                            <p><span className="font-medium">Lighting:</span> {frameworkInfo.imageMood.lightingStyle}</p>
+                            <p><span className="font-medium">Colors:</span> {frameworkInfo.imageMood.colorIntensity}</p>
+                            <p><span className="font-medium">Composition:</span> {frameworkInfo.imageMood.composition}</p>
+                          </div>
+                        </div>
+                      )}
+                      {frameworkInfo.brandPersonality && (
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Brand Alignment</p>
+                          <div className="space-y-1 text-xs text-gray-700">
+                            <p><span className="font-medium">Personality:</span> <span className="capitalize">{frameworkInfo.brandPersonality}</span></p>
+                            {frameworkInfo.brandMood && <p><span className="font-medium">Mood:</span> {frameworkInfo.brandMood}</p>}
+                            <p className="text-gray-500 mt-1">Image style, lighting and composition are tuned to match your brand identity.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Confidence meter + learn more */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-1.5 bg-white/80 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full transition-all ${frameworkInfo.frameworkConfidence >= 80 ? 'bg-green-500' : frameworkInfo.frameworkConfidence >= 60 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${frameworkInfo.frameworkConfidence}%` }} />
+                        </div>
+                        <span className="text-[10px] font-medium text-gray-500">{frameworkInfo.frameworkConfidence}% confidence</span>
+                      </div>
+                      <a href="/dashboard/resources/frameworks" className={`text-xs font-medium ${fc.accent} hover:underline flex items-center gap-1`}>
+                        Learn more about {frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
           {/* Header with Actions at Top */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 pt-4">
             <div className="flex items-center gap-3">
@@ -1923,7 +2174,7 @@ export default function CreateContentPage() {
             })}
           </div>
 
-          {/* Rating: at the very bottom */}
+          {/* Rating */}
           {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -1940,6 +2191,44 @@ export default function CreateContentPage() {
               </div>
             </div>
           )}
+
+          {/* Impact Summary */}
+          <div className="mt-6 max-w-4xl mx-auto bg-gradient-to-r from-slate-50 to-teal-50 rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-base">📊</span>
+              <span className="text-sm font-semibold text-slate-800">Impact Summary</span>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 text-xs">
+              <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
+                <span className="text-base">⏱️</span>
+                <div>
+                  <p className="font-semibold text-slate-700">~45 min saved</p>
+                  <p className="text-slate-500">Strategy + copywriting + image creation done in seconds</p>
+                </div>
+              </div>
+              {frameworkInfo && (
+                <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
+                  <span className="text-base">🧠</span>
+                  <div>
+                    <p className="font-semibold text-slate-700">{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()} Framework</p>
+                    <p className="text-slate-500">Used by top marketing agencies for {frameworkInfo.frameworkBestFor?.toLowerCase() || 'effective campaigns'}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
+                <span className="text-base">🏆</span>
+                <div>
+                  <p className="font-semibold text-slate-700">Marketing edge</p>
+                  <p className="text-slate-500">Psychology-optimized content puts you ahead of competitors who post blindly</p>
+                </div>
+              </div>
+            </div>
+            {(() => { const tip = MOTIVATIONAL_TIPS[Date.now() % MOTIVATIONAL_TIPS.length]; return tip ? (
+              <p className="text-[10px] text-slate-400 mt-3 flex items-center gap-1">
+                <span>{tip.icon}</span> {tip.text}
+              </p>
+            ) : null })()}
+          </div>
         </div>
       )}
 
@@ -2234,14 +2523,55 @@ export default function CreateContentPage() {
               <span className="text-xs text-gray-400">{generatedContent.length} characters</span>
             </div>
 
-            {/* Marketing Framework Badge */}
-            {frameworkInfo && (
-              <div className="mx-4 mt-3 mb-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2 text-xs">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 font-semibold text-blue-900">{frameworkInfo.framework.toUpperCase()}</span>
-                <span className="text-blue-600 font-medium">{frameworkInfo.frameworkConfidence}% match</span>
-                <span className="text-blue-700 hidden sm:inline">— {frameworkInfo.frameworkReasoning}</span>
-              </div>
-            )}
+            {/* Marketing Intelligence Brief (compact for regular content) */}
+            {frameworkInfo && (() => {
+              const fc = FRAMEWORK_COLORS[frameworkInfo.frameworkColor || 'blue'] || FRAMEWORK_COLORS.blue
+              return (
+                <div className={`mx-4 mt-3 mb-2 rounded-lg border overflow-hidden ${fc.bg} ${fc.border}`}>
+                  <button type="button" onClick={() => setIntelligenceBriefExpanded(!intelligenceBriefExpanded)} className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left hover:opacity-90">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm">🧠</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${fc.badge}`}>{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}</span>
+                      <span className={`text-xs font-semibold ${fc.accent}`}>{frameworkInfo.frameworkConfidence}%</span>
+                      {!intelligenceBriefExpanded && <span className={`text-xs truncate hidden sm:inline ${fc.accent}`}>— {frameworkInfo.frameworkReasoning}</span>}
+                    </div>
+                    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${intelligenceBriefExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  {intelligenceBriefExpanded && (
+                    <div className="px-3 pb-3 space-y-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
+                      {frameworkInfo.frameworkSteps && frameworkInfo.frameworkSteps.length > 0 && (
+                        <div className="pt-2 flex items-center gap-1.5 flex-wrap">
+                          {frameworkInfo.frameworkSteps.map((s, i) => (
+                            <div key={s} className="flex items-center gap-1">
+                              <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${fc.stepActive}`}>{s}</span>
+                              {i < (frameworkInfo.frameworkSteps?.length ?? 0) - 1 && <svg className={`w-3 h-3 ${fc.accent}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className={`text-xs leading-relaxed ${fc.text}`}>{frameworkInfo.frameworkReasoning}</p>
+                      {frameworkInfo.frameworkWhyItWorks && <p className="text-xs text-gray-600 leading-relaxed">{frameworkInfo.frameworkWhyItWorks}</p>}
+                      {frameworkInfo.imageMood && (
+                        <div className="bg-white/60 rounded-md px-2.5 py-2 text-[11px] text-gray-600 space-y-0.5">
+                          <p className="font-semibold text-gray-500 uppercase tracking-wider text-[10px] mb-1">Image Psychology</p>
+                          <p><span className="font-medium">Mood:</span> {frameworkInfo.imageMood.moodOverride} · <span className="font-medium">Lighting:</span> {frameworkInfo.imageMood.lightingStyle}</p>
+                          <p><span className="font-medium">Composition:</span> {frameworkInfo.imageMood.composition} · <span className="font-medium">Colors:</span> {frameworkInfo.imageMood.colorIntensity}</p>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-20 h-1 bg-white/80 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${frameworkInfo.frameworkConfidence >= 80 ? 'bg-green-500' : frameworkInfo.frameworkConfidence >= 60 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${frameworkInfo.frameworkConfidence}%` }} />
+                          </div>
+                          <span className="text-[10px] text-gray-500">{frameworkInfo.frameworkConfidence}% confidence</span>
+                        </div>
+                        <a href="/dashboard/resources/frameworks" className={`text-[11px] font-medium ${fc.accent} hover:underline`}>Learn more →</a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Preview Mode - Enhanced Blog Style */}
             {viewMode === 'preview' && (
@@ -2303,7 +2633,7 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* Rating: at the very bottom */}
+          {/* Rating */}
           {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -2320,6 +2650,39 @@ export default function CreateContentPage() {
               </div>
             </div>
           )}
+
+          {/* Impact Summary */}
+          <div className="mt-6 max-w-4xl mx-auto bg-gradient-to-r from-slate-50 to-teal-50 rounded-xl border border-slate-200 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-base">📊</span>
+              <span className="text-sm font-semibold text-slate-800">Impact Summary</span>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 text-xs">
+              <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
+                <span className="text-base">⏱️</span>
+                <div>
+                  <p className="font-semibold text-slate-700">~30 min saved</p>
+                  <p className="text-slate-500">Strategy + copywriting + image done in seconds</p>
+                </div>
+              </div>
+              {frameworkInfo && (
+                <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
+                  <span className="text-base">🧠</span>
+                  <div>
+                    <p className="font-semibold text-slate-700">{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()} Framework</p>
+                    <p className="text-slate-500">{frameworkInfo.frameworkBestFor || 'Professional marketing psychology applied'}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
+                <span className="text-base">🏆</span>
+                <div>
+                  <p className="font-semibold text-slate-700">Marketing edge</p>
+                  <p className="text-slate-500">You&apos;re marketing smarter than most local businesses</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
