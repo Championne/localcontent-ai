@@ -1,4 +1,10 @@
 import OpenAI from 'openai'
+import {
+  selectOptimalFramework,
+  getFrameworkPromptBlock,
+  type CampaignGoal,
+  type FrameworkRecommendation,
+} from '@/lib/content/framework-selector'
 
 // Lazy-initialize OpenRouter client (OpenAI SDK compatible)
 let openrouterClient: OpenAI | null = null
@@ -62,6 +68,8 @@ export interface GenerateContentParams {
   gbpExpiration?: string
   gbpEventDate?: string
   gbpEventTime?: string
+  // Marketing framework selection
+  campaignGoal?: CampaignGoal
 }
 
 export interface SocialPackResult {
@@ -251,6 +259,19 @@ function buildPrompt(params: GenerateContentParams): string {
     prompt += `\n**Additional Context:** ${additionalContext}`
   }
 
+  // ── Marketing framework injection ──────────────────────────────────
+  const frameworkRec = selectOptimalFramework({
+    topic,
+    industry,
+    contentType: template,
+    campaignGoal: params.campaignGoal,
+  })
+  const frameworkBlock = getFrameworkPromptBlock(frameworkRec)
+  prompt += `\n\n${frameworkBlock}`
+
+  // Store recommendation on params so callers can retrieve it
+  ;(params as GenerateContentParams & { _frameworkRec?: FrameworkRecommendation })._frameworkRec = frameworkRec
+
   switch (template) {
     case 'blog-post':
       prompt += `
@@ -425,6 +446,19 @@ function buildSocialPackPrompt(params: GenerateContentParams): string {
     context += `\n**Additional Context:** ${additionalContext}`
   }
 
+  // ── Marketing framework injection for social pack ──────────────────
+  const socialFrameworkRec = selectOptimalFramework({
+    topic,
+    industry,
+    contentType: 'social-pack',
+    campaignGoal: params.campaignGoal,
+  })
+  const socialFrameworkBlock = getFrameworkPromptBlock(socialFrameworkRec)
+  context += `\n\n${socialFrameworkBlock}`
+
+  // Store recommendation so callers can retrieve it
+  ;(params as GenerateContentParams & { _frameworkRec?: FrameworkRecommendation })._frameworkRec = socialFrameworkRec
+
   return `${context}
 
 Generate optimized posts for ALL 6 platforms. Each post must be perfectly tailored to the platform's best practices:
@@ -505,6 +539,48 @@ export async function generateContent(params: GenerateContentParams): Promise<st
   } catch (error) {
     console.error('AI API error:', error)
     throw new Error('Failed to generate content with AI')
+  }
+}
+
+export interface ContentWithFramework {
+  content: string
+  framework: string
+  frameworkReasoning: string
+  frameworkConfidence: number
+  awarenessLevel: string
+}
+
+/** Like generateContent but also returns framework metadata. */
+export async function generateContentWithFramework(params: GenerateContentParams): Promise<ContentWithFramework> {
+  const content = await generateContent(params)
+  const rec = (params as GenerateContentParams & { _frameworkRec?: FrameworkRecommendation })._frameworkRec
+  return {
+    content,
+    framework: rec?.framework ?? 'aida',
+    frameworkReasoning: rec?.reasoning ?? '',
+    frameworkConfidence: rec?.confidence ?? 0,
+    awarenessLevel: rec?.awarenessLevel ?? 'unaware',
+  }
+}
+
+export interface SocialPackWithFramework {
+  pack: SocialPackResult
+  framework: string
+  frameworkReasoning: string
+  frameworkConfidence: number
+  awarenessLevel: string
+}
+
+/** Like generateSocialPack but also returns framework metadata. */
+export async function generateSocialPackWithFramework(params: Omit<GenerateContentParams, 'template'>): Promise<SocialPackWithFramework> {
+  const pack = await generateSocialPack(params)
+  const rec = (params as GenerateContentParams & { _frameworkRec?: FrameworkRecommendation })._frameworkRec
+  return {
+    pack,
+    framework: rec?.framework ?? 'aida',
+    frameworkReasoning: rec?.reasoning ?? '',
+    frameworkConfidence: rec?.confidence ?? 0,
+    awarenessLevel: rec?.awarenessLevel ?? 'unaware',
   }
 }
 

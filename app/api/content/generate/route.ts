@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { generateContent, generateSocialPack, ContentTemplate, isOpenAIConfigured, SocialPackResult, GbpPostType } from '@/lib/openai'
+import { generateContentWithFramework, generateSocialPackWithFramework, ContentTemplate, isOpenAIConfigured, SocialPackResult, GbpPostType } from '@/lib/openai'
 import {
   generateImage,
   isImageGenerationConfigured,
@@ -56,6 +56,8 @@ export async function POST(request: Request) {
       gbpExpiration,
       gbpEventDate,
       gbpEventTime,
+      // Marketing framework
+      campaignGoal,
       // New style system fields
       subVariation,
       postType: requestPostType,
@@ -136,11 +138,12 @@ export async function POST(request: Request) {
     // Handle social-pack separately
     if (template === 'social-pack') {
       let socialPack: SocialPackResult | null = null
+      let frameworkInfo: { framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string } | null = null
 
       // Only generate text if requested
       if (shouldGenerateText) {
         if (isOpenAIConfigured()) {
-          socialPack = await generateSocialPack({
+          const result = await generateSocialPackWithFramework({
             businessName,
             industry,
             topic,
@@ -155,7 +158,15 @@ export async function POST(request: Request) {
             website: website || undefined,
             socialHandles: socialHandles || undefined,
             serviceAreas: serviceAreas || undefined,
+            campaignGoal: campaignGoal || undefined,
           })
+          socialPack = result.pack
+          frameworkInfo = {
+            framework: result.framework,
+            frameworkReasoning: result.frameworkReasoning,
+            frameworkConfidence: result.frameworkConfidence,
+            awarenessLevel: result.awarenessLevel,
+          }
         } else {
           // Mock social pack for development
           socialPack = generateMockSocialPack(businessName, industry, topic)
@@ -305,6 +316,7 @@ export async function POST(request: Request) {
         generated_image_id: generatedImageId,
         generated_text_id: generatedTextId,
         template: 'social-pack',
+        ...(frameworkInfo && { frameworkInfo }),
         metadata: {
           businessName,
           industry,
@@ -323,11 +335,12 @@ export async function POST(request: Request) {
 
     // Handle regular content templates
     let content: string | null = null
+    let frameworkInfo: { framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string } | null = null
 
     // Only generate text if requested
     if (shouldGenerateText) {
       if (isOpenAIConfigured()) {
-        content = await generateContent({
+        const result = await generateContentWithFramework({
           template,
           businessName,
           industry,
@@ -347,7 +360,15 @@ export async function POST(request: Request) {
           gbpExpiration: template === 'gmb-post' && gbpPostType === 'offer' ? gbpExpiration : undefined,
           gbpEventDate: template === 'gmb-post' && gbpPostType === 'event' ? gbpEventDate : undefined,
           gbpEventTime: template === 'gmb-post' && gbpPostType === 'event' ? gbpEventTime : undefined,
+          campaignGoal: campaignGoal || undefined,
         })
+        content = result.content
+        frameworkInfo = {
+          framework: result.framework,
+          frameworkReasoning: result.frameworkReasoning,
+          frameworkConfidence: result.frameworkConfidence,
+          awarenessLevel: result.awarenessLevel,
+        }
       } else {
         content = generateMockContent(template, businessName, industry, topic, tone, gbpPostType)
       }
@@ -495,6 +516,7 @@ export async function POST(request: Request) {
       generated_image_id: generatedImageId,
       generated_text_id: generatedTextId,
       template,
+      ...(frameworkInfo && { frameworkInfo }),
       metadata: {
         businessName,
         industry,
