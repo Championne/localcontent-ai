@@ -500,6 +500,7 @@ export default function CreateContentPage() {
           url: currentBusiness.logo_url,
           x: rec.logoPosition.x,
           y: rec.logoPosition.y,
+          widthPct: rec.logoPosition.scale ?? 15,
           scale: rec.logoPosition.scale,
           type: 'logo',
         })
@@ -512,6 +513,7 @@ export default function CreateContentPage() {
           url: currentBusiness.profile_photo_url,
           x: rec.photoPosition.x,
           y: rec.photoPosition.y,
+          widthPct: rec.photoPosition.scale ?? 15,
           scale: rec.photoPosition.scale,
           type: 'photo',
         })
