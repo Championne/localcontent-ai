@@ -245,6 +245,10 @@ export default function CreateContentPage() {
   const [generatingAiImage, setGeneratingAiImage] = useState(false)
   const step3UploadInputRef = useRef<HTMLInputElement>(null)
 
+  // Product image — optional upload in Step 2 for product-specific content
+  const [productImage, setProductImage] = useState<{ file: File; preview: string } | null>(null)
+  const productImageInputRef = useRef<HTMLInputElement>(null)
+
   // Quality ratings: link to generated_images / generated_texts when saving
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
   const [generatedTextId, setGeneratedTextId] = useState<string | null>(null)
@@ -559,6 +563,16 @@ export default function CreateContentPage() {
     
     setViewMode('preview')
     
+    // Convert product image to base64 if present
+    let productImageBase64: string | undefined
+    if (productImage && mode !== 'text') {
+      const reader = new FileReader()
+      productImageBase64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.readAsDataURL(productImage.file)
+      })
+    }
+
     try {
       const response = await fetch('/api/content/generate', {
         method: 'POST',
@@ -586,6 +600,7 @@ export default function CreateContentPage() {
           brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
           brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
           brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+          productImage: productImageBase64,
         }),
       })
 
@@ -704,6 +719,16 @@ export default function CreateContentPage() {
     setGeneratingAiImage(true)
     setError('')
     try {
+      // Re-encode product image if present
+      let productImageBase64: string | undefined
+      if (productImage) {
+        const reader = new FileReader()
+        productImageBase64 = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.readAsDataURL(productImage.file)
+        })
+      }
+
       const res = await fetch('/api/content/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -716,6 +741,7 @@ export default function CreateContentPage() {
           brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
           brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
           brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+          productImage: productImageBase64,
         }),
       })
       const data = await res.json()
@@ -739,14 +765,36 @@ export default function CreateContentPage() {
     if (!file?.type.startsWith('image/')) return
     const form = new FormData()
     form.append('file', file, file.name)
+    if (selectedBusinessId) form.append('business_id', selectedBusinessId)
     try {
       const res = await fetch('/api/image-library', { method: 'POST', body: form })
       const data = await res.json()
-      if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed')
-      setGeneratedImage({ url: data.url, source: 'upload' })
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      const url = data.image?.public_url || data.url
+      if (!url) throw new Error('Upload failed — no URL returned')
+      setGeneratedImage({ url, source: 'upload' })
       setGeneratedImageId(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
+    }
+  }
+
+  // Upload product image — saves to brand library and stores for generation
+  const handleProductImageUpload = async (file: File) => {
+    if (!file?.type.startsWith('image/')) return
+    // Set local preview immediately
+    const preview = URL.createObjectURL(file)
+    setProductImage({ file, preview })
+
+    // Auto-save to brand library in background
+    const form = new FormData()
+    form.append('file', file, file.name)
+    form.append('tags', 'product')
+    if (selectedBusinessId) form.append('business_id', selectedBusinessId)
+    try {
+      await fetch('/api/image-library', { method: 'POST', body: form })
+    } catch {
+      // Non-blocking — library save is best-effort
     }
   }
 
@@ -1182,11 +1230,57 @@ export default function CreateContentPage() {
               </div>
             </div>
 
+            {/* Product image upload (optional) */}
+            <div className="border-t border-gray-100 pt-5 mt-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product Photo <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Upload a product image and we&apos;ll remove the background and place it in a brand-styled AI scene.
+              </p>
+              {productImage ? (
+                <div className="flex items-center gap-4">
+                  <div className="relative w-20 h-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={productImage.preview} alt="Product" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-sm text-gray-700 truncate max-w-[200px]">{productImage.file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => { setProductImage(null); if (productImageInputRef.current) productImageInputRef.current.value = '' }}
+                      className="text-xs text-red-500 hover:text-red-700 text-left"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => productImageInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-teal-400 hover:bg-teal-50/30 transition-colors group"
+                >
+                  <svg className="w-6 h-6 mx-auto text-gray-400 group-hover:text-teal-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm text-gray-500 group-hover:text-teal-600">Drop or click to add a product photo</span>
+                </button>
+              )}
+              <input
+                ref={productImageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProductImageUpload(f) }}
+              />
+            </div>
+
             {/* AI image included automatically — info only */}
             <div className="border-t border-gray-100 pt-5 mt-1">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <svg className="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                <span>AI image will be auto-generated to match your brand</span>
+                <span>{productImage ? 'Product will be composited into an AI-generated brand scene' : 'AI image will be auto-generated to match your brand'}</span>
                 {imagesRemaining !== null && (
                   <span className="ml-1 text-xs font-medium" style={{ color: imagesRemaining > 0 ? '#059669' : '#dc2626' }}>
                     ({imagesRemaining} credit{imagesRemaining !== 1 ? 's' : ''})

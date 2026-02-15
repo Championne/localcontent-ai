@@ -12,6 +12,8 @@ import {
 } from '@/lib/openai/images'
 import { persistContentImage } from '@/lib/content-image'
 import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
+import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
+import { compositeProduct } from '@/lib/image-processing/product-composition'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -64,6 +66,7 @@ export async function POST(request: Request) {
       preferredStyles,
       avoidStyles,
       includeAiImage = false, // explicit opt-in for DALL-E generation
+      productImage, // optional base64 data-URI of a product photo
     } = body
     
     // Determine what to generate based on mode
@@ -201,9 +204,32 @@ export async function POST(request: Request) {
               brandPrimaryColor: brandPrimaryColor || undefined,
               brandSecondaryColor: brandSecondaryColor || undefined,
               brandAccentColor: brandAccentColor || undefined,
+              hasProductImage: !!productImage,
             })
-            const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
-            const imageUrl = permanentUrl || imageResult.url
+
+            // Product image compositing: remove background → composite onto AI scene
+            let finalImageUrl = imageResult.url
+            let bgRemovalMethod: string | null = null
+            if (productImage) {
+              try {
+                // Decode base64 data-URI to Buffer
+                const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
+                const productBuffer = Buffer.from(base64Data, 'base64')
+                const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
+                bgRemovalMethod = method
+                // Fetch the AI background as a buffer
+                const bgRes = await fetch(imageResult.url)
+                const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
+                const composited = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
+                // Convert composited Buffer to base64 data-URI for persistence
+                finalImageUrl = `data:image/png;base64,${composited.toString('base64')}`
+              } catch (e) {
+                console.error('Product compositing failed, using raw AI image:', e)
+              }
+            }
+
+            const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
+            const imageUrl = permanentUrl || finalImageUrl
             image = {
               url: imageUrl,
               style: imageResult.style,
@@ -211,22 +237,25 @@ export async function POST(request: Request) {
               generatedAt: new Date().toISOString(),
               source: 'ai'
             }
+            const insertData: Record<string, unknown> = {
+              user_id: user.id,
+              image_url: imageUrl,
+              topic,
+              business_name: businessName,
+              industry,
+              style: imageResult.style,
+              content_type: template,
+              size: imageResult.size,
+              full_prompt: imageResult.fullPrompt || null,
+              revised_prompt: imageResult.revisedPrompt || null,
+              prompt_version: 'v1',
+              source: 'ai',
+            }
+            if (productImage) insertData.has_product_image = true
+            if (bgRemovalMethod) insertData.background_removal_method = bgRemovalMethod
             const { data: imgRow } = await supabase
               .from('generated_images')
-              .insert({
-                user_id: user.id,
-                image_url: imageUrl,
-                topic,
-                business_name: businessName,
-                industry,
-                style: imageResult.style,
-                content_type: template,
-                size: imageResult.size,
-                full_prompt: imageResult.fullPrompt || null,
-                revised_prompt: imageResult.revisedPrompt || null,
-                prompt_version: 'v1',
-                source: 'ai'
-              })
+              .insert(insertData)
               .select('id')
               .single()
             if (imgRow) generatedImageId = imgRow.id
@@ -402,9 +431,29 @@ export async function POST(request: Request) {
             brandPrimaryColor: brandPrimaryColor || undefined,
             brandSecondaryColor: brandSecondaryColor || undefined,
             brandAccentColor: brandAccentColor || undefined,
+            hasProductImage: !!productImage,
           })
-          const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
-          const imageUrl = permanentUrl || imageResult.url
+
+          // Product image compositing: remove background → composite onto AI scene
+          let finalImageUrl = imageResult.url
+          let bgRemovalMethod: string | null = null
+          if (productImage) {
+            try {
+              const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
+              const productBuffer = Buffer.from(base64Data, 'base64')
+              const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
+              bgRemovalMethod = method
+              const bgRes = await fetch(imageResult.url)
+              const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
+              const composited = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
+              finalImageUrl = `data:image/png;base64,${composited.toString('base64')}`
+            } catch (e) {
+              console.error('Product compositing failed, using raw AI image:', e)
+            }
+          }
+
+          const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
+          const imageUrl = permanentUrl || finalImageUrl
           image = {
             url: imageUrl,
             style: imageResult.style,
@@ -412,22 +461,25 @@ export async function POST(request: Request) {
             generatedAt: new Date().toISOString(),
             source: 'ai'
           }
+          const insertData: Record<string, unknown> = {
+            user_id: user.id,
+            image_url: imageUrl,
+            topic,
+            business_name: businessName,
+            industry,
+            style: imageResult.style,
+            content_type: template,
+            size: imageResult.size,
+            full_prompt: imageResult.fullPrompt || null,
+            revised_prompt: imageResult.revisedPrompt || null,
+            prompt_version: 'v1',
+            source: 'ai',
+          }
+          if (productImage) insertData.has_product_image = true
+          if (bgRemovalMethod) insertData.background_removal_method = bgRemovalMethod
           const { data: imgRow } = await supabase
             .from('generated_images')
-            .insert({
-              user_id: user.id,
-              image_url: imageUrl,
-              topic,
-              business_name: businessName,
-              industry,
-              style: imageResult.style,
-              content_type: template,
-              size: imageResult.size,
-              full_prompt: imageResult.fullPrompt || null,
-              revised_prompt: imageResult.revisedPrompt || null,
-              prompt_version: 'v1',
-              source: 'ai'
-            })
+            .insert(insertData)
             .select('id')
             .single()
           if (imgRow) generatedImageId = imgRow.id

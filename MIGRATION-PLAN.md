@@ -1,6 +1,8 @@
 # Setup and Migration: Old Windows Laptop → ThinkPad T14 Gen 4 + Linux Mint Cinnamon
 
-Step-by-step plan with checkboxes. **Estimate:** 4–8 hours over 1–2 days.  
+Step-by-step plan with checkboxes. **Estimate:** 4–8 hours over 1–2 days.
+
+**Current step:** Phase 1 done (upload to Proton in progress). Next: Rufus → Phase 2 on new laptop.  
 Assume new laptop is out-of-box (Windows 11 Pro). Dual-boot first, then remove Windows once everything works.
 
 ---
@@ -8,19 +10,20 @@ Assume new laptop is out-of-box (Windows 11 Pro). Dual-boot first, then remove W
 ## Phase 1: Backup and Prepare Old Laptop (1–2 hours)
 
 ### Backup important data
-- [ ] Copy files (documents, photos, code repos) to external USB or Proton Drive; use encrypted folders (e.g. VeraCrypt) for sensitive data
-- [ ] **Cursor:** Copy `C:\Users\Gert Jan\AppData\Roaming\Cursor\User\workspaceStorage` (hashed folders with `state.vscdb`) to USB
+- [x] Copy files (documents, photos, code repos) to external USB or Proton Drive; use encrypted folders (e.g. VeraCrypt) for sensitive data
+- [x] **Cursor:** Copy `C:\Users\Gert Jan\AppData\Roaming\Cursor\User\workspaceStorage` (hashed folders with `state.vscdb`) to USB
 - [ ] **Browser:** Export bookmarks/passwords (Firefox/Chrome)
 - [ ] **Proton:** Download offline copies if needed (already cloud-synced)
-- [ ] **Git repos:** Push everything to remote (GitHub/GitLab)
+- [x] **Git repos:** Push everything to remote (GitHub/GitLab) — GeoSpark.AI pushed
 
 ### Document and test
 - [ ] Note Windows configs (Citrix, software licenses, custom shortcuts)
 - [ ] Test ProtonVPN / Proton Mail / Proton Drive on old laptop once more
 
 ### Migration tools
-- [ ] Download Linux Mint Cinnamon ISO from [linuxmint.com](https://linuxmint.com) — verify SHA256
-- [ ] Create bootable USB with Rufus (16GB+ USB, DD Image mode)
+- [x] Download Linux Mint Cinnamon ISO from [linuxmint.com](https://linuxmint.com) — verify SHA256
+- [x] Verify ISO: SHA256 matches `a081ab20...c459bd4`
+- [ ] Create bootable USB with Rufus (16GB+ USB, DD Image mode) — upload to Proton in progress; use a *different* USB for Mint, or wait for upload to finish then use the 32GB
 
 ---
 
@@ -73,14 +76,11 @@ Assume new laptop is out-of-box (Windows 11 Pro). Dual-boot first, then remove W
 ## Phase 4: Proton Services (30 min)
 
 ### ProtonVPN
-- [ ] Download .deb from [protonvpn.com/download](https://protonvpn.com/download)
-- [ ] `cd ~/Downloads && sudo dpkg -i protonvpn*.deb && sudo apt install -f`
-- [ ] Launch, log in, enable kill‑switch / always‑on
+- [x] Download .deb from [protonvpn.com/download](https://protonvpn.com/download)
+- [x] Install (repo or .deb) + launch, log in, kill‑switch / always‑on
 
 ### Proton Mail
-- [ ] Install Thunderbird: `sudo apt install thunderbird`
-- [ ] Download Proton Mail Bridge from [proton.me/mail/bridge](https://proton.me/mail/bridge), install .deb
-- [ ] Run Bridge, log in, add to Thunderbird (IMAP/SMTP from Bridge)
+- [x] Install Thunderbird + Proton Mail Bridge, add to Thunderbird (IMAP/SMTP from Bridge)
 
 ### Proton Drive
 - [ ] `sudo apt install rclone && rclone config` — remote `protondrive`, WebDAV, url `r.proton.me`
