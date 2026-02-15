@@ -3,15 +3,17 @@ import { generateImage, IMAGE_STYLES, ImageStyle } from '@/lib/openai/images'
 import { put } from '@vercel/blob'
 import { createClient } from '@supabase/supabase-js'
 
-// Create Supabase client with service role for admin operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 // POST - Generate or save image for a blog post
 // If `previewUrl` is provided, saves that existing image instead of generating new
 export async function POST(request: NextRequest) {
+  const supabase = getSupabase()
   try {
     const { slug, title, style, category, previewUrl } = await request.json()
 
