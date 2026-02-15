@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { detectBrandPersonality } from '@/lib/branding/personality-detection'
 
 interface Business {
   id: string
@@ -701,6 +702,9 @@ export default function BrandingPage() {
                     <input type="color" value={/^#[0-9A-Fa-f]{6}$/.test(business.brand_accent_color || '') ? business.brand_accent_color! : '#6b7280'} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value })} className="w-10 h-10 rounded border border-gray-200 cursor-pointer" />
                     <input type="text" value={business.brand_accent_color || ''} onChange={(e) => updateBusiness(business.id, { brand_accent_color: e.target.value || null })} placeholder="#hex" className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   </div>
+
+                  {/* Brand personality preview */}
+                  <BrandPersonalityPreview primaryColor={business.brand_primary_color} secondaryColor={business.brand_secondary_color} />
                     </div>
                   </div>
 
@@ -770,6 +774,30 @@ export default function BrandingPage() {
         </div>
       )}
       </div>
+    </div>
+  )
+}
+
+// ── Brand Personality Preview ──────────────────────────────────────────────
+function BrandPersonalityPreview({ primaryColor, secondaryColor }: { primaryColor: string | null; secondaryColor: string | null }) {
+  const personality = useMemo(() => {
+    if (!primaryColor || !/^#[0-9A-Fa-f]{6}$/.test(primaryColor)) return null
+    return detectBrandPersonality(primaryColor, secondaryColor || undefined)
+  }, [primaryColor, secondaryColor])
+
+  if (!personality) return null
+
+  const icons: Record<string, string> = { energetic: '⚡', professional: '💼', friendly: '😊', luxury: '✨' }
+
+  return (
+    <div className="mt-3 p-3 rounded-lg border border-gray-200 bg-white/80">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-lg">{icons[personality.personality]}</span>
+        <span className="text-sm font-semibold capitalize text-gray-900">{personality.personality} brand</span>
+      </div>
+      <p className="text-xs text-gray-600 mb-1"><strong>Mood:</strong> {personality.mood}</p>
+      <p className="text-xs text-gray-500"><strong>Image style:</strong> {personality.lightingStyle}</p>
+      <p className="text-[11px] text-blue-600 mt-2">Images will automatically match this vibe</p>
     </div>
   )
 }

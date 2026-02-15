@@ -3,7 +3,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
-import ImageOverlayEditor, { type OverlayApplyPayload, type BrandColors, FRAME_PRESET_COLORS } from '@/components/ImageOverlayEditor'
+// ImageOverlayEditor removed — images are now auto-branded on generation
+// Stub types kept for remaining dead-code functions until full cleanup
+type OverlayApplyPayload = { imageOverlays: Array<{ id: string; type: string; url: string; x: number; y: number; widthPct: number; borderColor?: string }>; overlayBorderColors: Record<string, string>; tintOverlay?: { colorKey: string; opacity: number } | null; textOverlays: Array<{ id: string; text: string; x: number; y: number; fontSize: number; fontFamily: string; colorKey: string }>; frame?: { preset: string; colorKey: string; vignette?: number } | null }
+type BrandColors = { primary: string; secondary: string; accent: string }
+const FRAME_PRESET_COLORS: Record<string, string> = { silver: '#c0c0c0', gold: '#ffd700', copper: '#b87333', neutral: '#e5e7eb' }
 import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
 
@@ -278,6 +282,7 @@ export default function CreateContentPage() {
   const [generatedContent, setGeneratedContent] = useState('')
   const [socialPack, setSocialPack] = useState<SocialPackResult | null>(null)
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null)
+  const [frameworkInfo, setFrameworkInfo] = useState<{ framework: string; frameworkReasoning: string; frameworkConfidence: number; awarenessLevel: string } | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState('')
   
@@ -304,23 +309,18 @@ export default function CreateContentPage() {
   const currentBusinessLogo = currentBusiness?.logo_url || null
   const currentBusinessPhoto = currentBusiness?.profile_photo_url || null
   
-  // Logo positioning
-  const [showOverlayEditor, setShowOverlayEditor] = useState(false)
+  // Overlay editor removed — images are now auto-branded on generation
+  const showOverlayEditor = false
+  const setShowOverlayEditor = (_v: boolean) => {} // no-op stub
   const [applyingLogo, setApplyingLogo] = useState(false)
   const [logoSkipped, setLogoSkipped] = useState(false)
-  
-  // Profile photo positioning
   const [showPhotoPositioner, setShowPhotoPositioner] = useState(false)
   const [applyingPhoto, setApplyingPhoto] = useState(false)
   const [photoSkipped, setPhotoSkipped] = useState(false)
-  
   const [overlayError, setOverlayError] = useState<string | null>(null)
-
-  // Auto branding recommendation: applied when user selects an image in Step 3
   const [brandingRecommendationLoading, setBrandingRecommendationLoading] = useState(false)
   const [appliedBrandingForImageUrl, setAppliedBrandingForImageUrl] = useState<string | null>(null)
-  const [initialOverlayState, setInitialOverlayState] = useState<OverlayApplyPayload | null>(null)
-  // Base image URL that suggested branding was applied to (so "Revert to suggested branding" can re-apply)
+  const [initialOverlayState, setInitialOverlayState] = useState<Record<string, unknown> | null>(null)
   const [suggestedBrandingBaseImageUrl, setSuggestedBrandingBaseImageUrl] = useState<string | null>(null)
 
   // GBP-specific state
@@ -1222,6 +1222,10 @@ export default function CreateContentPage() {
           setSocialPack(data.socialPack)
         } else {
           setGeneratedContent(data.content)
+        }
+        // Capture marketing framework info
+        if (data.frameworkInfo) {
+          setFrameworkInfo(data.frameworkInfo)
         }
       }
 
@@ -2236,6 +2240,14 @@ export default function CreateContentPage() {
       {/* Step 3: Branding - Social Pack */}
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div className="w-full">
+          {/* Marketing Framework Badge */}
+          {frameworkInfo && (
+            <div className="mx-0 mt-4 mb-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2 text-xs">
+              <span className="font-semibold text-blue-900">{frameworkInfo.framework.toUpperCase()}</span>
+              <span className="text-blue-600">({frameworkInfo.frameworkConfidence}%)</span>
+              <span className="text-blue-700 hidden sm:inline">— {frameworkInfo.frameworkReasoning}</span>
+            </div>
+          )}
           {/* Header with Actions at Top */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 pt-4">
             <div className="flex items-center gap-3">
@@ -2564,63 +2576,7 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* Image Overlay Editor - Modal Popup */}
-          {generatedImage && showOverlayEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-              {/* Backdrop */}
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }} />
-              {/* Modal content */}
-              <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] ring-1 ring-black/10 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-                {/* Modal header */}
-                <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3.5 border-b bg-white/95 backdrop-blur-sm rounded-t-2xl" style={{ borderColor: hexToRgba(primary, 0.2) }}>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: hexToRgba(primary, 0.12) }}>
-                      <svg className="w-4 h-4" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Customize Image</h3>
-                      <p className="text-[11px] text-gray-500">Add logo, text, frames & effects</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                {/* Modal body */}
-                <div className="p-4 sm:p-5">
-                  {overlayError && (
-                    <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                      {overlayError}
-                    </div>
-                  )}
-                  <ImageOverlayEditor
-                    key={suggestedBrandingBaseImageUrl || generatedImage.url}
-                    imageUrl={suggestedBrandingBaseImageUrl || generatedImage.url}
-                    logoUrl={currentBusinessLogo}
-                    photoUrl={currentBusinessPhoto}
-                    brandColors={getBrandColors()}
-                    tagline={currentBusiness?.tagline ?? undefined}
-                    website={currentBusiness?.website ?? undefined}
-                    socialHandles={currentBusiness?.social_handles ?? undefined}
-                    onApply={(payload) => { handleApplyOverlays(payload); setShowOverlayEditor(false); }}
-                    onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
-                    applying={applyingLogo}
-                    onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
-                    onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
-                    initialState={suggestedBrandingBaseImageUrl && initialOverlayState ? initialOverlayState : (appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null)}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Image Overlay Editor removed — images are auto-branded */}
           {generatedImage && (
             <div className="mb-6 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
               <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
@@ -2652,32 +2608,6 @@ export default function CreateContentPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => setShowOverlayEditor(true)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 flex items-center gap-1"
-                style={{ backgroundColor: hexToRgba(primary, 0.15), color: primary }}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Customize
-                  </button>
-                  <button
-                    onClick={() => revertToSuggestedBranding()}
-                    disabled={brandingRecommendationLoading}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
-                style={{ backgroundColor: hexToRgba(accent, 0.2), color: '#92400e' }}
-                    title="Re-apply the suggested branding (logo, overlay, tint, text)"
-                  >
-                    {brandingRecommendationLoading ? (
-                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    )}
-                    Revert
-                  </button>
                   <button
                     onClick={handleDownloadImage}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1"
@@ -3224,65 +3154,9 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* Image Overlay Editor - Modal Popup (same as social-pack flow) */}
-          {generatedImage && showOverlayEditor && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-              {/* Backdrop */}
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }} />
-              {/* Modal content */}
-              <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] ring-1 ring-black/10 animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-                {/* Modal header */}
-                <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3.5 border-b bg-white/95 backdrop-blur-sm rounded-t-2xl" style={{ borderColor: hexToRgba(primary, 0.2) }}>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: hexToRgba(primary, 0.12) }}>
-                      <svg className="w-4 h-4" style={{ color: primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Customize Image</h3>
-                      <p className="text-[11px] text-gray-500">Add logo, text, frames & effects</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setShowOverlayEditor(false); setOverlayError(null); }}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                {/* Modal body */}
-                <div className="p-4 sm:p-5">
-                  {overlayError && (
-                    <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                      {overlayError}
-                    </div>
-                  )}
-                  <ImageOverlayEditor
-                    key={suggestedBrandingBaseImageUrl || generatedImage.url}
-                    imageUrl={suggestedBrandingBaseImageUrl || generatedImage.url}
-                    logoUrl={currentBusinessLogo}
-                    photoUrl={currentBusinessPhoto}
-                    brandColors={getBrandColors()}
-                    tagline={currentBusiness?.tagline ?? undefined}
-                    website={currentBusiness?.website ?? undefined}
-                    socialHandles={currentBusiness?.social_handles ?? undefined}
-                    onApply={(payload) => { handleApplyOverlays(payload); setShowOverlayEditor(false); }}
-                    onSkip={() => { setShowOverlayEditor(false); setLogoSkipped(true); setPhotoSkipped(true); }}
-                    applying={applyingLogo}
-                    onUploadLogo={selectedBusinessId ? handleUploadLogoInEditor : undefined}
-                    onUploadPhoto={selectedBusinessId ? handleUploadPhotoInEditor : undefined}
-                    initialState={suggestedBrandingBaseImageUrl && initialOverlayState ? initialOverlayState : (appliedBrandingForImageUrl === generatedImage.url ? initialOverlayState : null)}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Image Overlay Editor removed — images are auto-branded */}
           {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
-          {generatedImage && !showOverlayEditor && selectedTemplate !== 'blog-post' && (
+          {generatedImage && selectedTemplate !== 'blog-post' && (
             <div className="mb-4 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
               <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
                 <div className="flex items-center gap-3 min-w-0">
@@ -3316,32 +3190,6 @@ export default function CreateContentPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => setShowOverlayEditor(true)}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 flex items-center gap-1"
-                style={{ backgroundColor: hexToRgba(primary, 0.15), color: primary }}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Customize
-                  </button>
-                  <button
-                    onClick={() => revertToSuggestedBranding()}
-                    disabled={brandingRecommendationLoading}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
-                style={{ backgroundColor: hexToRgba(accent, 0.2), color: '#92400e' }}
-                    title="Re-apply the suggested branding (logo, overlay, tint, text)"
-                  >
-                    {brandingRecommendationLoading ? (
-                      <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    )}
-                    Revert
-                  </button>
                   <button
                     onClick={handleDownloadImage}
                     className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1"
@@ -3396,6 +3244,15 @@ export default function CreateContentPage() {
               </div>
               <span className="text-xs text-gray-400">{generatedContent.length} characters</span>
             </div>
+
+            {/* Marketing Framework Badge */}
+            {frameworkInfo && (
+              <div className="mx-4 mt-3 mb-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2 text-xs">
+                <span className="font-semibold text-blue-900">{frameworkInfo.framework.toUpperCase()}</span>
+                <span className="text-blue-600">({frameworkInfo.frameworkConfidence}%)</span>
+                <span className="text-blue-700 hidden sm:inline">— {frameworkInfo.frameworkReasoning}</span>
+              </div>
+            )}
 
             {/* Preview Mode - Enhanced Blog Style */}
             {viewMode === 'preview' && (

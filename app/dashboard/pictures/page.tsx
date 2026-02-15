@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { CostAnalyticsWidget } from '@/components/CostAnalyticsWidget'
 
 interface GeneratedImage {
   id: string
@@ -156,6 +157,11 @@ export default function PictureLibraryPage() {
       )}
 
       {imageGrid}
+
+      {/* Cost analytics */}
+      <div className="mt-8">
+        <CostAnalyticsWidget />
+      </div>
     </div>
   )
 }
