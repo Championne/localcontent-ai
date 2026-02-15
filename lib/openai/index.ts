@@ -552,14 +552,21 @@ export interface ContentWithFramework {
 
 /** Like generateContent but also returns framework metadata. */
 export async function generateContentWithFramework(params: GenerateContentParams): Promise<ContentWithFramework> {
+  // Run framework selection based on actual content context
+  const { selectOptimalFramework } = await import('@/lib/content/framework-selector')
+  const rec = selectOptimalFramework({
+    topic: params.topic,
+    industry: params.industry,
+    contentType: params.template || 'social-post',
+    campaignGoal: params.campaignGoal,
+  })
   const content = await generateContent(params)
-  const rec = (params as GenerateContentParams & { _frameworkRec?: FrameworkRecommendation })._frameworkRec
   return {
     content,
-    framework: rec?.framework ?? 'aida',
-    frameworkReasoning: rec?.reasoning ?? '',
-    frameworkConfidence: rec?.confidence ?? 0,
-    awarenessLevel: rec?.awarenessLevel ?? 'unaware',
+    framework: rec.framework,
+    frameworkReasoning: rec.reasoning,
+    frameworkConfidence: rec.confidence,
+    awarenessLevel: rec.awarenessLevel,
   }
 }
 
@@ -573,14 +580,21 @@ export interface SocialPackWithFramework {
 
 /** Like generateSocialPack but also returns framework metadata. */
 export async function generateSocialPackWithFramework(params: Omit<GenerateContentParams, 'template'>): Promise<SocialPackWithFramework> {
+  // Run framework selection based on actual content context
+  const { selectOptimalFramework } = await import('@/lib/content/framework-selector')
+  const rec = selectOptimalFramework({
+    topic: params.topic,
+    industry: params.industry,
+    contentType: 'social-pack',
+    campaignGoal: params.campaignGoal,
+  })
   const pack = await generateSocialPack(params)
-  const rec = (params as GenerateContentParams & { _frameworkRec?: FrameworkRecommendation })._frameworkRec
   return {
     pack,
-    framework: rec?.framework ?? 'aida',
-    frameworkReasoning: rec?.reasoning ?? '',
-    frameworkConfidence: rec?.confidence ?? 0,
-    awarenessLevel: rec?.awarenessLevel ?? 'unaware',
+    framework: rec.framework,
+    frameworkReasoning: rec.reasoning,
+    frameworkConfidence: rec.confidence,
+    awarenessLevel: rec.awarenessLevel,
   }
 }
 

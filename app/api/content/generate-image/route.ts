@@ -296,6 +296,14 @@ export async function POST(request: Request) {
     let permanentUrl: string | null = null
 
     if (finalBuffer) {
+      // Ensure the bucket exists before uploading
+      try {
+        const { error: getBucketErr } = await storageClient.storage.getBucket('generated-images')
+        if (getBucketErr) {
+          await storageClient.storage.createBucket('generated-images', { public: true, fileSizeLimit: 50 * 1024 * 1024 })
+        }
+      } catch { /* ignore */ }
+
       const filename = `${user.id}/generated_${Date.now()}.png`
       const { error: uploadError } = await storageClient.storage
         .from('generated-images')
@@ -312,6 +320,8 @@ export async function POST(request: Request) {
         permanentUrl = urlData.publicUrl
       } else {
         console.error('Storage upload error:', uploadError.message)
+        // Fallback: convert buffer to data URI so the image is still usable
+        permanentUrl = `data:image/png;base64,${finalBuffer.toString('base64')}`
       }
     }
 
