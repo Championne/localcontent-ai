@@ -17,6 +17,8 @@ import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
 import { compositeProduct } from '@/lib/image-processing/product-composition'
 import { addSmartTextOverlay, extractHeadline } from '@/lib/image-processing/smart-text-overlay'
+import { rateImageQuality } from '@/lib/rating/image-quality'
+import { detectBrandPersonality } from '@/lib/branding/personality-detection'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -271,6 +273,20 @@ export async function POST(request: Request) {
               generatedAt: new Date().toISOString(),
               source: 'ai'
             }
+            // Rate image quality (non-blocking — best effort)
+            let qualityScore: number | null = null
+            if (imageBuffer || finalImageUrl.startsWith('data:')) {
+              try {
+                const ratingBuffer = imageBuffer || Buffer.from(finalImageUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64')
+                const rating = await rateImageQuality(ratingBuffer, brandPrimaryColor || undefined)
+                qualityScore = rating.overallScore
+              } catch { /* non-blocking */ }
+            }
+
+            const brandPersonality = brandPrimaryColor
+              ? detectBrandPersonality(brandPrimaryColor, brandSecondaryColor)?.personality || null
+              : null
+
             const insertData: Record<string, unknown> = {
               user_id: user.id,
               image_url: imageUrl,
@@ -284,9 +300,14 @@ export async function POST(request: Request) {
               revised_prompt: imageResult.revisedPrompt || null,
               prompt_version: 'v1',
               source: 'ai',
+              model_used: imageResult.model || 'dalle3',
+              generation_cost: imageResult.cost || 0.04,
+              generation_time_ms: imageResult.generationTime || null,
+              brand_personality: brandPersonality,
             }
             if (productImage) insertData.has_product_image = true
             if (bgRemovalMethod) insertData.background_removal_method = bgRemovalMethod
+            if (qualityScore != null) insertData.quality_score = qualityScore
             const { data: imgRow } = await supabase
               .from('generated_images')
               .insert(insertData)
@@ -310,20 +331,24 @@ export async function POST(request: Request) {
       let generatedTextId: string | null = null
       const contentStr = JSON.stringify(socialPack)
       const preview = contentStr.length > 500 ? contentStr.slice(0, 500) + '…' : contentStr
+      const textInsert: Record<string, unknown> = {
+        user_id: user.id,
+        template: 'social-pack',
+        topic,
+        business_name: businessName,
+        industry,
+        tone,
+        content_preview: preview,
+        content_full: contentStr,
+        prompt_summary: `topic: ${topic}, template: social-pack, business: ${businessName}, industry: ${industry}`,
+        prompt_version: 'v1',
+        framework: frameworkRec.framework,
+        framework_confidence: frameworkRec.confidence,
+        awareness_level: frameworkRec.awarenessLevel,
+      }
       const { data: textRow } = await supabase
         .from('generated_texts')
-        .insert({
-          user_id: user.id,
-          template: 'social-pack',
-          topic,
-          business_name: businessName,
-          industry,
-          tone,
-          content_preview: preview,
-          content_full: contentStr,
-          prompt_summary: `topic: ${topic}, template: social-pack, business: ${businessName}, industry: ${industry}`,
-          prompt_version: 'v1'
-        })
+        .insert(textInsert)
         .select('id')
         .single()
       if (textRow) generatedTextId = textRow.id
@@ -520,6 +545,20 @@ export async function POST(request: Request) {
             generatedAt: new Date().toISOString(),
             source: 'ai'
           }
+          // Rate image quality (non-blocking)
+          let qualityScore2: number | null = null
+          if (imageBuffer || finalImageUrl.startsWith('data:')) {
+            try {
+              const ratingBuf = imageBuffer || Buffer.from(finalImageUrl.replace(/^data:image\/\w+;base64,/, ''), 'base64')
+              const rating = await rateImageQuality(ratingBuf, brandPrimaryColor || undefined)
+              qualityScore2 = rating.overallScore
+            } catch { /* non-blocking */ }
+          }
+
+          const brandPersonality2 = brandPrimaryColor
+            ? detectBrandPersonality(brandPrimaryColor, brandSecondaryColor)?.personality || null
+            : null
+
           const insertData: Record<string, unknown> = {
             user_id: user.id,
             image_url: imageUrl,
@@ -533,9 +572,14 @@ export async function POST(request: Request) {
             revised_prompt: imageResult.revisedPrompt || null,
             prompt_version: 'v1',
             source: 'ai',
+            model_used: imageResult.model || 'dalle3',
+            generation_cost: imageResult.cost || 0.04,
+            generation_time_ms: imageResult.generationTime || null,
+            brand_personality: brandPersonality2,
           }
           if (productImage) insertData.has_product_image = true
           if (bgRemovalMethod) insertData.background_removal_method = bgRemovalMethod
+          if (qualityScore2 != null) insertData.quality_score = qualityScore2
           const { data: imgRow } = await supabase
             .from('generated_images')
             .insert(insertData)
@@ -558,20 +602,24 @@ export async function POST(request: Request) {
     // Record text generation for Text Library
     let generatedTextId: string | null = null
     const contentPreview = content && content.length > 500 ? content.slice(0, 500) + '…' : (content || '')
+    const textInsert2: Record<string, unknown> = {
+      user_id: user.id,
+      template,
+      topic,
+      business_name: businessName,
+      industry,
+      tone,
+      content_preview: contentPreview,
+      content_full: content || null,
+      prompt_summary: `topic: ${topic}, template: ${template}, business: ${businessName}, industry: ${industry}`,
+      prompt_version: 'v1',
+      framework: frameworkRec.framework,
+      framework_confidence: frameworkRec.confidence,
+      awareness_level: frameworkRec.awarenessLevel,
+    }
     const { data: textRow } = await supabase
       .from('generated_texts')
-      .insert({
-        user_id: user.id,
-        template,
-        topic,
-        business_name: businessName,
-        industry,
-        tone,
-        content_preview: contentPreview,
-        content_full: content || null,
-        prompt_summary: `topic: ${topic}, template: ${template}, business: ${businessName}, industry: ${industry}`,
-        prompt_version: 'v1'
-      })
+      .insert(textInsert2)
       .select('id')
       .single()
     if (textRow) generatedTextId = textRow.id

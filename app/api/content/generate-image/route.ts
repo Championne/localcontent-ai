@@ -11,6 +11,7 @@ import {
 import { selectOptimalFramework } from '@/lib/content/framework-selector'
 import { persistContentImage } from '@/lib/content-image'
 import { detectBrandPersonality } from '@/lib/branding/personality-detection'
+import { rateImageQuality } from '@/lib/rating/image-quality'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
 import { compositeProduct } from '@/lib/image-processing/product-composition'
 import {
@@ -266,6 +267,10 @@ export async function POST(request: Request) {
             revised_prompt: imageRevisedPrompt,
             prompt_version: 'v2',
             source: 'ai',
+            model_used: model,
+            generation_cost: totalCost || 0.04,
+            generation_time_ms: imageResult.generationTime || null,
+            brand_personality: personality?.personality || null,
           })
           .select('id')
           .single()
@@ -342,23 +347,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to persist generated image' }, { status: 500 })
     }
 
+    // ── Quality rating (non-blocking) ──────────────────────────────────
+    let qualityScore: number | null = null
+    if (finalBuffer) {
+      try {
+        const rating = await rateImageQuality(finalBuffer, effectiveBrandColors?.primary)
+        qualityScore = rating.overallScore
+      } catch { /* non-blocking */ }
+    }
+
     // ── Save record + update quota ─────────────────────────────────────
+    const imgInsertData: Record<string, unknown> = {
+      user_id: user.id,
+      image_url: permanentUrl,
+      topic,
+      business_name: businessName,
+      industry,
+      style: finalStyle,
+      content_type: contentType,
+      size: imageSize,
+      full_prompt: imageFullPrompt,
+      revised_prompt: imageRevisedPrompt,
+      prompt_version: 'v2',
+      source: 'ai',
+      model_used: model,
+      generation_cost: totalCost,
+      brand_personality: personality?.personality || null,
+      has_product_image: !!productImage,
+      background_removal_method: removalMethod !== 'none' ? removalMethod : null,
+    }
+    if (qualityScore != null) imgInsertData.quality_score = qualityScore
     const { data: imgRow } = await supabase
       .from('generated_images')
-      .insert({
-        user_id: user.id,
-        image_url: permanentUrl,
-        topic,
-        business_name: businessName,
-        industry,
-        style: finalStyle,
-        content_type: contentType,
-        size: imageSize,
-        full_prompt: imageFullPrompt,
-        revised_prompt: imageRevisedPrompt,
-        prompt_version: 'v2',
-        source: 'ai',
-      })
+      .insert(imgInsertData)
       .select('id')
       .single()
 
