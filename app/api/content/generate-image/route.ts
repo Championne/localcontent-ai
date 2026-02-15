@@ -6,7 +6,9 @@ import {
   isImageGenerationConfigured,
   detectBestStyle,
   type ImageStyle,
+  FRAMEWORK_IMAGE_MOODS,
 } from '@/lib/openai/images'
+import { selectOptimalFramework } from '@/lib/content/framework-selector'
 import { persistContentImage } from '@/lib/content-image'
 import { detectBrandPersonality } from '@/lib/branding/personality-detection'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
@@ -136,6 +138,15 @@ export async function POST(request: Request) {
 
     console.log(`Brand personality: ${personality?.personality || 'none'}`)
 
+    // Framework mood alignment — align image tone with text psychology
+    const frameworkRec = selectOptimalFramework({
+      topic,
+      industry,
+      contentType,
+    })
+    const frameworkMood = FRAMEWORK_IMAGE_MOODS[frameworkRec.framework] || null
+    console.log(`Framework mood: ${frameworkMood?.framework || 'none'} → ${frameworkMood?.moodOverride || 'default'}`)
+
     let totalCost = 0
     let removalMethod: 'free' | 'paid' | 'none' = 'none'
     let model: 'dalle3' | 'sdxl' = 'dalle3'
@@ -181,6 +192,7 @@ export async function POST(request: Request) {
         brandAccentColor: brandAccentColor || undefined,
         sceneHintOverride,
         stylePrefixOverride,
+        frameworkMood,
       })
 
       totalCost += bgResult.cost || 0.04
@@ -222,6 +234,7 @@ export async function POST(request: Request) {
         brandAccentColor: brandAccentColor || undefined,
         sceneHintOverride,
         stylePrefixOverride,
+        frameworkMood,
       })
 
       totalCost += imageResult.cost || 0.04

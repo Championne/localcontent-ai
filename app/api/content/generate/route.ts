@@ -8,8 +8,10 @@ import {
   getRemainingImageQuota,
   detectBestStyle,
   IMAGE_LIMITS,
-  ImageStyle
+  ImageStyle,
+  FRAMEWORK_IMAGE_MOODS,
 } from '@/lib/openai/images'
+import { selectOptimalFramework } from '@/lib/content/framework-selector'
 import { persistContentImage } from '@/lib/content-image'
 import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
@@ -138,6 +140,15 @@ export async function POST(request: Request) {
       ? imageStyle
       : detectBestStyle(topic, industry, effectivePostType, bizPreferred, bizAvoided)
 
+    // Run framework selection once (used for both text framework badge and image mood alignment)
+    const frameworkRec = selectOptimalFramework({
+      topic,
+      industry,
+      contentType: template,
+      campaignGoal: campaignGoal || undefined,
+    })
+    const frameworkMood = FRAMEWORK_IMAGE_MOODS[frameworkRec.framework] || null
+
     // Handle social-pack separately
     if (template === 'social-pack') {
       let socialPack: SocialPackResult | null = null
@@ -205,6 +216,7 @@ export async function POST(request: Request) {
               brandSecondaryColor: brandSecondaryColor || undefined,
               brandAccentColor: brandAccentColor || undefined,
               hasProductImage: !!productImage,
+              frameworkMood,
             })
 
             // Product image compositing: remove background → composite onto AI scene
@@ -432,6 +444,7 @@ export async function POST(request: Request) {
             brandSecondaryColor: brandSecondaryColor || undefined,
             brandAccentColor: brandAccentColor || undefined,
             hasProductImage: !!productImage,
+            frameworkMood,
           })
 
           // Product image compositing: remove background → composite onto AI scene

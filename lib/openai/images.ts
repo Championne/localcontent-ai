@@ -551,6 +551,55 @@ export interface GenerateImageParams {
   hasProductImage?: boolean
   requiresComplexScene?: boolean
   forceModel?: 'dalle3' | 'sdxl'
+  /** Marketing framework mood override — aligns image tone with text psychology */
+  frameworkMood?: FrameworkImageMood | null
+}
+
+// Framework → Image mood mapping (from META_FRAMEWORK_ANALYSIS.md)
+export interface FrameworkImageMood {
+  framework: string
+  moodOverride: string
+  lightingStyle: string
+  colorIntensity: string
+  composition: string
+}
+
+export const FRAMEWORK_IMAGE_MOODS: Record<string, FrameworkImageMood> = {
+  pas: {
+    framework: 'pas',
+    moodOverride: 'urgent and serious',
+    lightingStyle: 'dramatic with contrast',
+    colorIntensity: 'high saturation for urgency',
+    composition: 'close-up, intense focus',
+  },
+  aida: {
+    framework: 'aida',
+    moodOverride: 'welcoming and clear',
+    lightingStyle: 'bright, even lighting',
+    colorIntensity: 'balanced, not overwhelming',
+    composition: 'open, spacious',
+  },
+  bab: {
+    framework: 'bab',
+    moodOverride: 'hopeful and aspirational',
+    lightingStyle: 'uplifting, warm glow',
+    colorIntensity: 'optimistic saturation',
+    composition: 'progress, movement',
+  },
+  '4ps': {
+    framework: '4ps',
+    moodOverride: 'trustworthy and premium',
+    lightingStyle: 'professional studio quality',
+    colorIntensity: 'sophisticated, refined',
+    composition: 'polished, authoritative',
+  },
+  fab: {
+    framework: 'fab',
+    moodOverride: 'modern and aspirational',
+    lightingStyle: 'clean, bright studio lighting',
+    colorIntensity: 'crisp and vibrant',
+    composition: 'product-focused, detail-oriented',
+  },
 }
 
 export interface GenerateImageResult {
@@ -795,7 +844,7 @@ function getPersonTypeForIndustry(industry: string): string {
 }
 
 function buildBrandAwarePrompt(params: GenerateImageParams): string {
-  const { topic, industry, brandColors, hasProductImage } = params
+  const { topic, industry, brandColors, hasProductImage, frameworkMood } = params
 
   let personality: BrandPersonality | null = null
   if (brandColors?.primary) {
@@ -803,25 +852,36 @@ function buildBrandAwarePrompt(params: GenerateImageParams): string {
     console.log(`Detected brand personality: ${personality.personality}`)
   }
 
+  // Framework mood overrides personality mood when present
+  const mood = frameworkMood?.moodOverride || personality?.mood || ''
+  const lighting = frameworkMood?.lightingStyle || personality?.lightingStyle || 'natural window light'
+  const compositionHint = frameworkMood?.composition || ''
+  const colorDesc = personality?.colorDescription || ''
+  const modifiers = personality?.promptModifiers || ''
+
+  if (frameworkMood) {
+    console.log(`Framework mood applied: ${frameworkMood.framework} → ${frameworkMood.moodOverride}`)
+  }
+
   let focalPrompt: string
 
   if (hasProductImage) {
     // Workflow A: branded background for product composite
     const environment = getEnvironmentForIndustry(industry)
-    if (!personality) {
+    if (!personality && !frameworkMood) {
       focalPrompt = `Clean professional surface for product photography in ${environment}. Soft natural shadows. Ample negative space in center. Modern clean aesthetic.`
     } else {
-      focalPrompt = `Clean professional surface for product photography in ${environment}. ${personality.mood} aesthetic. ${personality.colorDescription} integrated subtly into lighting and surfaces. ${personality.lightingStyle}. ${personality.promptModifiers}. Ample negative space in center for product placement. Soft natural shadows. No objects, no products, no text.`
+      focalPrompt = `Clean professional surface for product photography in ${environment}. ${mood} aesthetic. ${colorDesc ? colorDesc + ' integrated subtly into lighting and surfaces.' : ''} ${lighting}. ${modifiers}. ${compositionHint ? compositionHint + ' composition.' : ''} Ample negative space in center for product placement. Soft natural shadows. No objects, no products, no text.`
     }
   } else {
     // Workflow B: service worker / focal image
     const person = getPersonTypeForIndustry(industry)
     const action = sanitizeTopicForPrompt(topic)
     const environment = getEnvironmentForIndustry(industry)
-    if (!personality) {
+    if (!personality && !frameworkMood) {
       focalPrompt = `Close-up of ${person} actively working on ${action}. Face showing concentration. Hands with professional tools. ${environment} setting. Natural window light. One focal point: hands and tools.`
     } else {
-      focalPrompt = `Close-up of ${person} actively working on ${action}. Face showing genuine concentration. Hands in action with professional tools. ${environment} setting. ${personality.mood} atmosphere. ${personality.colorDescription} subtly present in environment. ${personality.lightingStyle}. ${personality.promptModifiers}. One focal point: hands and tools.`
+      focalPrompt = `Close-up of ${person} actively working on ${action}. Face showing genuine concentration. Hands in action with professional tools. ${environment} setting. ${mood} atmosphere. ${colorDesc ? colorDesc + ' subtly present in environment.' : ''} ${lighting}. ${modifiers}. ${compositionHint ? compositionHint + ' composition.' : ''} One focal point: hands and tools.`
     }
   }
 
