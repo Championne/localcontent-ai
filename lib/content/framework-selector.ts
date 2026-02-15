@@ -26,6 +26,8 @@ export interface FrameworkRecommendation {
   confidence: number // 0-100
   reasoning: string
   awarenessLevel: AwarenessLevel
+  /** Spark adaptive learning insight, if preference data influenced the pick */
+  preferenceReasoning?: string
   structure: {
     sections: string[]
     prompts: string[]

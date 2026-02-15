@@ -11,6 +11,7 @@ import {
 import { selectOptimalFramework } from '@/lib/content/framework-selector'
 import { persistContentImage } from '@/lib/content-image'
 import { detectBrandPersonality } from '@/lib/branding/personality-detection'
+import { getUserPreferences, getStyleBoosts } from '@/lib/ai-learning/preference-engine'
 import { rateImageQuality } from '@/lib/rating/image-quality'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
 import { compositeProduct } from '@/lib/image-processing/product-composition'
@@ -95,6 +96,13 @@ export async function POST(request: Request) {
       )
     }
 
+    // ── Spark adaptive preferences (non-blocking) ─────────────────────
+    let styleBoosts: Record<string, number> | undefined
+    try {
+      const userPrefs = await getUserPreferences(supabase, user.id)
+      styleBoosts = getStyleBoosts(userPrefs)
+    } catch { /* preference fetch is non-critical */ }
+
     // ── Style detection ────────────────────────────────────────────────
     const ALL_STYLES: ImageStyle[] = [
       'promotional', 'professional', 'friendly', 'seasonal', 'artistic',
@@ -104,7 +112,7 @@ export async function POST(request: Request) {
     const bizAvoided: string[] | undefined = Array.isArray(avoidStyles) ? avoidStyles : undefined
     const finalStyle: ImageStyle = requestedStyle && ALL_STYLES.includes(requestedStyle)
       ? requestedStyle
-      : detectBestStyle(topic, industry, postType || contentType, bizPreferred, bizAvoided)
+      : detectBestStyle(topic, industry, postType || contentType, bizPreferred, bizAvoided, styleBoosts)
 
     // ── AI prompt overrides (non-critical) ─────────────────────────────
     let sceneHintOverride: string | null = null

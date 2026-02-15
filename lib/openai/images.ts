@@ -457,6 +457,8 @@ export function detectBestStyle(
   postType?: string,
   preferredStyles?: string[],
   avoidStyles?: string[],
+  /** Spark adaptive learning: per-style score boosts from user rating history */
+  userPreferenceBoosts?: Record<string, number>,
 ): ImageStyle {
   const topicLower = topic.toLowerCase()
   const allStyles = Object.keys(IMAGE_STYLES) as ImageStyle[]
@@ -491,9 +493,14 @@ export function detectBestStyle(
     // Weighted total
     let total = (keywordScore * 0.5) + (industryScore * 0.3) + (postTypeScore * 0.2)
 
-    // 4. User preference boosts/blocks
+    // 4. User preference boosts/blocks (business-level)
     if (preferredStyles?.includes(style)) total += 0.3
     if (avoidStyles?.includes(style)) total = -Infinity
+
+    // 5. Spark adaptive preference boosts (from rating history)
+    if (userPreferenceBoosts && userPreferenceBoosts[style] !== undefined) {
+      total += userPreferenceBoosts[style]
+    }
 
     scores[style] = total
   }

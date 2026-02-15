@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import WelcomeModal from '@/components/WelcomeModal'
+import SparkFox from '@/components/ui/SparkFox'
 
 interface Business {
   id: string
@@ -41,6 +42,11 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
   const [usage, setUsage] = useState<{
     content: { used: number; limit: number; unlimited: boolean; percentage: number }
     subscription: { plan: string }
+  } | null>(null)
+  const [sparkPrefs, setSparkPrefs] = useState<{
+    totalRated: number; totalGenerated: number
+    learningLevel: 'new' | 'learning' | 'familiar' | 'expert'
+    learningLevelLabel: string
   } | null>(null)
   const pathname = usePathname()
   const router = useRouter()
@@ -97,6 +103,14 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
     
     checkBusiness()
     fetchUsage()
+
+    async function fetchSparkPrefs() {
+      try {
+        const res = await fetch('/api/user/preferences')
+        if (res.ok) setSparkPrefs(await res.json())
+      } catch { /* non-critical */ }
+    }
+    fetchSparkPrefs()
   }, [])
 
   // Listen for brand updates from child pages (e.g. Brand Identity page saves new colors)
@@ -369,6 +383,29 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
             </>
           )}
         </nav>
+
+        {/* Spark is Learning Indicator */}
+        {sparkPrefs && (
+          <Link
+            href="/dashboard/content"
+            onClick={() => setSidebarOpen(false)}
+            className="mx-3 mb-3 flex items-center gap-2.5 px-3 py-2 rounded-lg bg-amber-50/70 border border-amber-100 hover:bg-amber-50 transition-colors group"
+          >
+            <SparkFox expression="idle" size="sm" accentColor={brandPrimary} />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-gray-700 truncate">Spark</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex-1 h-1 rounded-full bg-amber-200/80 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all bg-amber-500"
+                    style={{ width: `${Math.min(100, (sparkPrefs.totalRated / 25) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-gray-400 flex-shrink-0">{sparkPrefs.learningLevelLabel}</span>
+              </div>
+            </div>
+          </Link>
+        )}
 
         {/* Usage Card */}
         <div className="mx-3 mb-4 p-4 rounded-xl" style={{ background: `linear-gradient(135deg, ${hexToRgba(brandPrimary, 0.08)}, ${hexToRgba(brandPrimary, 0.16)})` }}>

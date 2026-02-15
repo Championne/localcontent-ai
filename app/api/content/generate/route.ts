@@ -19,6 +19,7 @@ import { compositeProduct } from '@/lib/image-processing/product-composition'
 import { addSmartTextOverlay, extractHeadline } from '@/lib/image-processing/smart-text-overlay'
 import { rateImageQuality } from '@/lib/rating/image-quality'
 import { detectBrandPersonality } from '@/lib/branding/personality-detection'
+import { getUserPreferences, getStyleBoosts, getFrameworkBoost } from '@/lib/ai-learning/preference-engine'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -83,6 +84,12 @@ export async function POST(request: Request) {
         ? stockPage
         : Math.floor(1 + Math.random() * 8)
 
+    // Fetch Spark adaptive preferences (non-blocking: fallback to empty if it fails)
+    let userPrefs: Awaited<ReturnType<typeof getUserPreferences>> | null = null
+    try {
+      userPrefs = await getUserPreferences(supabase, user.id)
+    } catch { /* preference fetch is non-critical */ }
+
     // Validate required fields
     if (!template || !businessName || !industry || !topic) {
       return NextResponse.json(
@@ -139,9 +146,10 @@ export async function POST(request: Request) {
     const bizPreferred = Array.isArray(preferredStyles) ? preferredStyles : undefined
     const bizAvoided = Array.isArray(avoidStyles) ? avoidStyles : undefined
     const effectivePostType = requestPostType || template
+    const styleBoosts = userPrefs ? getStyleBoosts(userPrefs) : undefined
     const finalImageStyle: ImageStyle = (imageStyle && ALL_STYLES.includes(imageStyle))
       ? imageStyle
-      : detectBestStyle(topic, industry, effectivePostType, bizPreferred, bizAvoided)
+      : detectBestStyle(topic, industry, effectivePostType, bizPreferred, bizAvoided, styleBoosts)
 
     // Run framework selection once (used for both text framework badge and image mood alignment)
     const frameworkRec = selectOptimalFramework({
@@ -150,6 +158,14 @@ export async function POST(request: Request) {
       contentType: template,
       campaignGoal: campaignGoal || undefined,
     })
+    // Apply Spark adaptive preference boost after framework is selected
+    if (userPrefs) {
+      const fwBoost = getFrameworkBoost(userPrefs, frameworkRec.framework)
+      if (fwBoost.boost !== 0) {
+        frameworkRec.confidence = Math.min(100, Math.max(0, frameworkRec.confidence + fwBoost.boost))
+        if (fwBoost.reason) frameworkRec.preferenceReasoning = fwBoost.reason
+      }
+    }
     const frameworkMood = FRAMEWORK_IMAGE_MOODS[frameworkRec.framework] || null
 
     // Build enriched framework info for the frontend (shared by social-pack and regular content)
@@ -184,6 +200,11 @@ export async function POST(request: Request) {
         } : null,
         brandPersonality: brandPersonalityObj?.personality || null,
         brandMood: brandPersonalityObj?.mood || null,
+        // Spark adaptive learning data
+        sparkInsights: userPrefs?.insights || [],
+        preferenceReasoning: frameworkRec.preferenceReasoning || null,
+        learningLevel: userPrefs?.learningLevel || 'new',
+        totalRated: userPrefs?.totalRated || 0,
       }
     }
 

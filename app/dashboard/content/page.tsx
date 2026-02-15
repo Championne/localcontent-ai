@@ -8,6 +8,8 @@ import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
 
 import { GenerationProgress } from '@/components/ui/GenerationProgress'
+import SparkFox, { SparkMessage } from '@/components/ui/SparkFox'
+import type { SparkExpression } from '@/components/ui/SparkFox'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -254,6 +256,8 @@ export default function CreateContentPage() {
     frameworkSteps?: string[]; awarenessLabel?: string; awarenessDescription?: string; awarenessIcon?: string;
     imageMood?: { moodOverride: string; lightingStyle: string; colorIntensity: string; composition: string } | null;
     brandPersonality?: string | null; brandMood?: string | null;
+    sparkInsights?: string[]; preferenceReasoning?: string | null;
+    learningLevel?: string; totalRated?: number;
   } | null>(null)
   const [intelligenceBriefExpanded, setIntelligenceBriefExpanded] = useState(true)
   const [error, setError] = useState('')
@@ -333,6 +337,44 @@ export default function CreateContentPage() {
   const [generatedTextId, setGeneratedTextId] = useState<string | null>(null)
   const [imageRating, setImageRating] = useState<number | null>(null)
   const [textRating, setTextRating] = useState<number | null>(null)
+
+  // Spark adaptive preferences
+  const [sparkPrefs, setSparkPrefs] = useState<{
+    topStyles: { style: string; score: number; thumbsUp: number }[]
+    topFrameworks: { framework: string; score: number; thumbsUp: number }[]
+    totalRated: number; totalGenerated: number
+    learningLevel: 'new' | 'learning' | 'familiar' | 'expert'
+    learningLevelLabel: string
+    insights: string[]
+  } | null>(null)
+  const [sparkMilestone, setSparkMilestone] = useState<{ count: number; insight: string } | null>(null)
+
+  // Fetch Spark preferences on mount
+  useEffect(() => {
+    async function fetchSparkPrefs() {
+      try {
+        const res = await fetch('/api/user/preferences')
+        if (res.ok) {
+          const data = await res.json()
+          setSparkPrefs(data)
+          // Check for milestones
+          const milestones = [10, 25, 50, 100]
+          const dismissedKey = `spark_milestone_dismissed_${data.totalGenerated}`
+          if (milestones.includes(data.totalGenerated) && !sessionStorage.getItem(dismissedKey) && data.insights.length > 0) {
+            setSparkMilestone({ count: data.totalGenerated, insight: data.insights[0] })
+          }
+        }
+      } catch { /* non-critical */ }
+    }
+    fetchSparkPrefs()
+  }, [])
+
+  const dismissMilestone = () => {
+    if (sparkMilestone) {
+      sessionStorage.setItem(`spark_milestone_dismissed_${sparkMilestone.count}`, '1')
+      setSparkMilestone(null)
+    }
+  }
 
   // Edit existing content from library (?edit=contentId)
   const searchParams = useSearchParams()
@@ -788,6 +830,9 @@ export default function CreateContentPage() {
     }
   }
 
+  // Spark reaction after rating (Touchpoint 4)
+  const [sparkReaction, setSparkReaction] = useState<{ type: 'image' | 'text'; good: boolean } | null>(null)
+
   const handleRateImage = async (rating: number, feedbackReasons?: string[]) => {
     if (!generatedImageId) return
     try {
@@ -797,6 +842,8 @@ export default function CreateContentPage() {
         body: JSON.stringify({ rating, feedback_reasons: feedbackReasons || [] })
       })
       setImageRating(rating)
+      setSparkReaction({ type: 'image', good: rating >= 3 })
+      setTimeout(() => setSparkReaction(null), 4000)
     } catch (_) {}
   }
 
@@ -893,6 +940,8 @@ export default function CreateContentPage() {
         body: JSON.stringify({ rating, feedback_reasons: feedbackReasons || [] })
       })
       setTextRating(rating)
+      setSparkReaction({ type: 'text', good: rating >= 3 })
+      setTimeout(() => setSparkReaction(null), 4000)
     } catch (_) {}
   }
 
@@ -1070,9 +1119,49 @@ export default function CreateContentPage() {
         </div>
       )}
 
+      {/* Spark Milestone Banner (Touchpoint 5) */}
+      {sparkMilestone && (
+        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+          <SparkFox expression="celebrating" size="lg" accentColor={accent} />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-amber-900">
+              We&apos;ve created {sparkMilestone.count} posts together!
+            </p>
+            <p className="text-sm text-amber-700 mt-0.5">{sparkMilestone.insight}</p>
+          </div>
+          <button onClick={dismissMilestone} className="text-amber-400 hover:text-amber-600 text-lg leading-none">&times;</button>
+        </div>
+      )}
+
       {/* Step 1: Choose Template */}
       {!loadingEdit && step === 1 && (
         <div>
+          {/* Spark Greeting (Touchpoint 1) */}
+          <div className="mb-6 flex items-start gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
+            <SparkFox
+              expression={!sparkPrefs || sparkPrefs.learningLevel === 'new' ? 'happy' : 'encouraging'}
+              size="lg"
+              accentColor={accent}
+            />
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                {!sparkPrefs || sparkPrefs.learningLevel === 'new'
+                  ? "Hi! I\u2019m Spark, your AI marketing strategist. Pick a content type and I\u2019ll handle the strategy."
+                  : sparkPrefs.learningLevel === 'learning'
+                    ? `Welcome back! I\u2019m learning your style \u2014 ${sparkPrefs.totalRated} ratings so far.`
+                    : sparkPrefs.learningLevel === 'familiar'
+                      ? `Good to see you! Based on ${sparkPrefs.totalGenerated} posts, ${sparkPrefs.insights[0] || 'I know what works for your brand.'}`
+                      : `Your personal strategist is ready. ${sparkPrefs.insights[0] || 'I know your winning formula.'}`
+                }
+              </p>
+              {sparkPrefs && sparkPrefs.topFrameworks.length > 0 && sparkPrefs.topFrameworks[0].score > 0 && (
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Top framework: {sparkPrefs.topFrameworks[0].framework.toUpperCase()} ({sparkPrefs.topFrameworks[0].thumbsUp} thumbs up)
+                </p>
+              )}
+            </div>
+          </div>
+
           {/* Inspiring Header */}
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
@@ -1303,31 +1392,35 @@ export default function CreateContentPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none transition-shadow resize-none"
                 placeholder="e.g., Spring cleaning tips for homeowners, our new seasonal menu, 20% off promotion this week..."
               />
-              {/* Live AI Analysis Preview */}
+              {/* Live AI Analysis Preview (Touchpoint 2) */}
               {(topicAnalysis || analysisLoading) && !generating && (
                 <div className={`mt-2 rounded-lg border px-3 py-2.5 transition-all duration-300 ${topicAnalysis ? `${(FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue).bg} ${(FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue).border}` : 'bg-gray-50 border-gray-200'}`}>
                   {analysisLoading && !topicAnalysis ? (
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                      AI is analyzing your topic...
+                      <SparkFox expression="analyzing" size="sm" accentColor={accent} />
+                      <span>{!sparkPrefs || sparkPrefs.learningLevel === 'new' ? 'Analyzing your topic to find the best marketing approach...' : 'Analyzing based on what I know about your brand...'}</span>
                     </div>
                   ) : topicAnalysis && (() => {
                     const fc = FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue
+                    const sparkTopFw = sparkPrefs?.topFrameworks.find(f => f.framework === topicAnalysis.framework && f.score > 0)
                     return (
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs">🧠</span>
+                          <SparkFox expression="analyzing" size="sm" accentColor={accent} />
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${fc.badge}`}>{topicAnalysis.frameworkName}</span>
                           <span className={`text-[11px] font-medium ${fc.accent}`}>{topicAnalysis.confidence}% match</span>
                           {topicAnalysis.awarenessLabel && (
                             <span className="text-[10px] text-gray-500">{topicAnalysis.awarenessIcon} {topicAnalysis.awarenessLabel}</span>
                           )}
                           {topicAnalysis.brandPersonality && (
-                            <span className="text-[10px] text-gray-400 capitalize">• {topicAnalysis.brandPersonality} brand</span>
+                            <span className="text-[10px] text-gray-400 capitalize">&bull; {topicAnalysis.brandPersonality} brand</span>
                           )}
                           {analysisLoading && <svg className="animate-spin w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                         </div>
                         <p className={`text-[11px] leading-relaxed ${fc.accent}`}>{topicAnalysis.reasoning}</p>
+                        {sparkTopFw && (
+                          <p className="text-[10px] text-gray-500 italic">I&apos;m using {topicAnalysis.frameworkName} &mdash; you&apos;ve given it {sparkTopFw.thumbsUp} thumbs up in the past.</p>
+                        )}
                       </div>
                     )
                   })()}
@@ -1511,9 +1604,10 @@ export default function CreateContentPage() {
       {/* Step 3: Branding - Social Pack */}
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div className="w-full">
-          {/* Marketing Intelligence Brief */}
+          {/* Marketing Intelligence Brief (Touchpoint 3) */}
           {frameworkInfo && (() => {
             const fc = FRAMEWORK_COLORS[frameworkInfo.frameworkColor || 'blue'] || FRAMEWORK_COLORS.blue
+            const sparkExpr: SparkExpression = frameworkInfo.learningLevel === 'expert' ? 'encouraging' : frameworkInfo.learningLevel === 'familiar' ? 'happy' : 'idle'
             return (
               <div className={`mx-0 mt-4 mb-4 rounded-xl border overflow-hidden ${fc.bg} ${fc.border}`}>
                 {/* Collapsed summary / toggle header */}
@@ -1523,22 +1617,25 @@ export default function CreateContentPage() {
                   className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:opacity-90 transition-opacity"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-lg flex-shrink-0">🧠</span>
+                    <SparkFox expression={sparkExpr} size="md" accentColor={accent} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${fc.badge}`}>{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}</span>
                         <span className={`text-xs font-semibold ${fc.accent}`}>{frameworkInfo.frameworkConfidence}% match</span>
                         {frameworkInfo.brandPersonality && (
-                          <span className="text-xs text-gray-500 capitalize">• {frameworkInfo.brandPersonality} brand</span>
+                          <span className="text-xs text-gray-500 capitalize">&bull; {frameworkInfo.brandPersonality} brand</span>
                         )}
                       </div>
                       {!intelligenceBriefExpanded && (
                         <p className={`text-xs mt-0.5 truncate ${fc.accent}`}>{frameworkInfo.frameworkReasoning}</p>
                       )}
+                      {frameworkInfo.preferenceReasoning && (
+                        <p className="text-[10px] text-gray-500 italic mt-0.5">{frameworkInfo.preferenceReasoning}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide hidden sm:inline">Marketing Intelligence</span>
+                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide hidden sm:inline">Spark Intelligence</span>
                     <svg className={`w-4 h-4 text-gray-400 transition-transform ${intelligenceBriefExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </button>
@@ -2174,7 +2271,7 @@ export default function CreateContentPage() {
             })}
           </div>
 
-          {/* Rating */}
+          {/* Rating + Spark Reaction (Touchpoint 4 — Social Pack) */}
           {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -2189,6 +2286,16 @@ export default function CreateContentPage() {
                   </div>
                 ) : <div />}
               </div>
+              {sparkReaction && (
+                <div className="mt-3 pt-3 border-t border-gray-200/50 flex items-center gap-2">
+                  <SparkFox expression={sparkReaction.good ? 'celebrating' : 'learning'} size="md" accentColor={accent} />
+                  <p className="text-sm text-gray-600">
+                    {sparkReaction.good
+                      ? "Nice! I\u2019ll lean into this style more."
+                      : "Got it \u2014 I\u2019ll adjust next time."}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -2523,17 +2630,17 @@ export default function CreateContentPage() {
               <span className="text-xs text-gray-400">{generatedContent.length} characters</span>
             </div>
 
-            {/* Marketing Intelligence Brief (compact for regular content) */}
+            {/* Spark Intelligence Brief (compact for regular content — Touchpoint 3) */}
             {frameworkInfo && (() => {
               const fc = FRAMEWORK_COLORS[frameworkInfo.frameworkColor || 'blue'] || FRAMEWORK_COLORS.blue
               return (
                 <div className={`mx-4 mt-3 mb-2 rounded-lg border overflow-hidden ${fc.bg} ${fc.border}`}>
                   <button type="button" onClick={() => setIntelligenceBriefExpanded(!intelligenceBriefExpanded)} className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left hover:opacity-90">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm">🧠</span>
+                      <SparkFox expression={frameworkInfo.learningLevel === 'expert' ? 'encouraging' : 'idle'} size="sm" accentColor={accent} />
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${fc.badge}`}>{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}</span>
                       <span className={`text-xs font-semibold ${fc.accent}`}>{frameworkInfo.frameworkConfidence}%</span>
-                      {!intelligenceBriefExpanded && <span className={`text-xs truncate hidden sm:inline ${fc.accent}`}>— {frameworkInfo.frameworkReasoning}</span>}
+                      {!intelligenceBriefExpanded && <span className={`text-xs truncate hidden sm:inline ${fc.accent}`}>&mdash; {frameworkInfo.frameworkReasoning}</span>}
                     </div>
                     <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${intelligenceBriefExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                   </button>
@@ -2629,11 +2736,11 @@ export default function CreateContentPage() {
               <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span><strong>Tip:</strong> Click "Copy" to copy formatted text that pastes perfectly into WordPress, Wix, or any blog editor.</span>
+              <span><strong>Tip:</strong> Click &ldquo;Copy&rdquo; to copy formatted text that pastes perfectly into WordPress, Wix, or any blog editor.</span>
             </div>
           )}
 
-          {/* Rating */}
+          {/* Rating + Spark Reaction (Touchpoint 4 — Regular Content) */}
           {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -2648,6 +2755,16 @@ export default function CreateContentPage() {
                   </div>
                 ) : <div />}
               </div>
+              {sparkReaction && (
+                <div className="mt-3 pt-3 border-t border-gray-200/50 flex items-center gap-2">
+                  <SparkFox expression={sparkReaction.good ? 'celebrating' : 'learning'} size="md" accentColor={accent} />
+                  <p className="text-sm text-gray-600">
+                    {sparkReaction.good
+                      ? "Nice! I\u2019ll lean into this style more."
+                      : "Got it \u2014 I\u2019ll adjust next time."}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
