@@ -1,18 +1,35 @@
 import { createClient } from '@/lib/supabase/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 import {
   generateImage,
   isImageGenerationConfigured,
-  hasImageQuota,
   detectBestStyle,
-  type ImageStyle
+  type ImageStyle,
 } from '@/lib/openai/images'
 import { persistContentImage } from '@/lib/content-image'
+import { detectBrandPersonality } from '@/lib/branding/personality-detection'
+import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
+import { compositeProduct } from '@/lib/image-processing/product-composition'
+import {
+  addSmartTextOverlay,
+  extractHeadline,
+} from '@/lib/image-processing/smart-text-overlay'
+
+export const maxDuration = 60
 
 /**
  * POST /api/content/generate-image
- * Generate a single AI image for Step 3 "Choose your image".
- * Body: { topic, industry, businessName, style?, contentType?, brandPrimaryColor?, brandSecondaryColor?, brandAccentColor? }
+ *
+ * Body (existing fields):
+ *   topic, industry, businessName, style?, contentType?, brandPrimaryColor?,
+ *   brandSecondaryColor?, brandAccentColor?, preferredStyles?, avoidStyles?,
+ *   subVariation?, postType?
+ *
+ * Body (new fields):
+ *   productImage?      — base64 data-URI of a product photo
+ *   brandColors?       — { primary, secondary? } hex strings
+ *   addTextOverlay?    — boolean (default true when brandColors is provided)
  */
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -39,6 +56,10 @@ export async function POST(request: Request) {
       brandAccentColor,
       preferredStyles,
       avoidStyles,
+      // New hybrid-model fields
+      productImage,
+      brandColors,
+      addTextOverlay,
     } = body
 
     if (!topic || !industry || !businessName) {
@@ -48,6 +69,7 @@ export async function POST(request: Request) {
       )
     }
 
+    // ── Quota check ────────────────────────────────────────────────────
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('plan, images_generated_this_month')
@@ -70,15 +92,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const ALL_STYLES: ImageStyle[] = ['promotional', 'professional', 'friendly', 'seasonal', 'artistic', 'graffiti', 'lifestyle', 'minimalist', 'vintage', 'wellness']
-    // Fetch business preferences if a businessId is available
-    let bizPreferred: string[] | undefined = Array.isArray(preferredStyles) ? preferredStyles : undefined
-    let bizAvoided: string[] | undefined = Array.isArray(avoidStyles) ? avoidStyles : undefined
+    // ── Style detection ────────────────────────────────────────────────
+    const ALL_STYLES: ImageStyle[] = [
+      'promotional', 'professional', 'friendly', 'seasonal', 'artistic',
+      'graffiti', 'lifestyle', 'minimalist', 'vintage', 'wellness',
+    ]
+    const bizPreferred: string[] | undefined = Array.isArray(preferredStyles) ? preferredStyles : undefined
+    const bizAvoided: string[] | undefined = Array.isArray(avoidStyles) ? avoidStyles : undefined
     const finalStyle: ImageStyle = requestedStyle && ALL_STYLES.includes(requestedStyle)
       ? requestedStyle
       : detectBestStyle(topic, industry, postType || contentType, bizPreferred, bizAvoided)
 
-    // Fetch AI prompt overrides for this user
+    // ── AI prompt overrides (non-critical) ─────────────────────────────
     let sceneHintOverride: string | null = null
     let stylePrefixOverride: string | null = null
     try {
@@ -101,39 +126,214 @@ export async function POST(request: Request) {
       // Non-critical: continue without overrides
     }
 
-    const imageResult = await generateImage({
-      topic,
-      businessName,
-      industry,
-      style: finalStyle,
-      subVariation: subVariation || undefined,
-      contentType,
-      postType: postType || contentType,
-      preferredStyles: bizPreferred,
-      avoidStyles: bizAvoided,
-      brandPrimaryColor: brandPrimaryColor || undefined,
-      brandSecondaryColor: brandSecondaryColor || undefined,
-      brandAccentColor: brandAccentColor || undefined,
-      sceneHintOverride,
-      stylePrefixOverride,
-    })
+    // ── Derive brand personality ───────────────────────────────────────
+    const effectiveBrandColors = brandColors ?? (
+      brandPrimaryColor ? { primary: brandPrimaryColor, secondary: brandSecondaryColor } : undefined
+    )
+    const personality = effectiveBrandColors?.primary
+      ? detectBrandPersonality(effectiveBrandColors.primary, effectiveBrandColors.secondary)
+      : null
 
-    const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
+    console.log(`Brand personality: ${personality?.personality || 'none'}`)
 
+    let totalCost = 0
+    let removalMethod: 'free' | 'paid' | 'none' = 'none'
+    let model: 'dalle3' | 'sdxl' = 'dalle3'
+    let finalBuffer: Buffer | null = null
+    let imageFullPrompt: string | null = null
+    let imageRevisedPrompt: string | null = null
+    let imageSize = '1024x1024'
+
+    // Whether post-processing (overlay / composite) requires a buffer workflow
+    const needsTextOverlay = addTextOverlay !== false && !!effectiveBrandColors?.primary
+    const needsBufferWorkflow = !!productImage || needsTextOverlay
+
+    // ── WORKFLOW A: Product Image ──────────────────────────────────────
+    if (productImage) {
+      console.log('Workflow A: Product image generation')
+
+      // 1. Remove background
+      const productBuffer = Buffer.from(
+        productImage.replace(/^data:image\/\w+;base64,/, ''),
+        'base64'
+      )
+      const { buffer: cleanProduct, method, cost: bgCost } =
+        await smartBackgroundRemoval(productBuffer)
+      totalCost += bgCost
+      removalMethod = method
+
+      // 2. Generate branded background
+      const bgResult = await generateImage({
+        topic,
+        businessName,
+        industry,
+        style: finalStyle,
+        hasProductImage: true,
+        brandColors: effectiveBrandColors,
+        contentType,
+        requiresComplexScene: false,
+        subVariation: subVariation || undefined,
+        postType: postType || contentType,
+        preferredStyles: bizPreferred,
+        avoidStyles: bizAvoided,
+        brandPrimaryColor: brandPrimaryColor || undefined,
+        brandSecondaryColor: brandSecondaryColor || undefined,
+        brandAccentColor: brandAccentColor || undefined,
+        sceneHintOverride,
+        stylePrefixOverride,
+      })
+
+      totalCost += bgResult.cost || 0.04
+      model = bgResult.model || 'dalle3'
+      imageFullPrompt = bgResult.fullPrompt || null
+      imageRevisedPrompt = bgResult.revisedPrompt || null
+      imageSize = bgResult.size
+
+      const bgResponse = await fetch(bgResult.url)
+      const bgBuffer = Buffer.from(await bgResponse.arrayBuffer())
+
+      // 3. Composite product onto background
+      finalBuffer = await compositeProduct(
+        bgBuffer,
+        cleanProduct,
+        effectiveBrandColors?.primary || '#333333',
+        { productScale: 0.6, addShadow: true }
+      )
+    }
+    // ── WORKFLOW B: Service / Standard Image ──────────────────────────
+    else {
+      console.log('Workflow B: Service image generation')
+
+      const imageResult = await generateImage({
+        topic,
+        businessName,
+        industry,
+        style: finalStyle,
+        hasProductImage: false,
+        brandColors: effectiveBrandColors,
+        contentType,
+        requiresComplexScene: true,
+        subVariation: subVariation || undefined,
+        postType: postType || contentType,
+        preferredStyles: bizPreferred,
+        avoidStyles: bizAvoided,
+        brandPrimaryColor: brandPrimaryColor || undefined,
+        brandSecondaryColor: brandSecondaryColor || undefined,
+        brandAccentColor: brandAccentColor || undefined,
+        sceneHintOverride,
+        stylePrefixOverride,
+      })
+
+      totalCost += imageResult.cost || 0.04
+      model = imageResult.model || 'dalle3'
+      imageFullPrompt = imageResult.fullPrompt || null
+      imageRevisedPrompt = imageResult.revisedPrompt || null
+      imageSize = imageResult.size
+
+      if (needsBufferWorkflow) {
+        // Need buffer for text overlay — download into memory
+        const imageResponse = await fetch(imageResult.url)
+        finalBuffer = Buffer.from(await imageResponse.arrayBuffer())
+      } else {
+        // No post-processing needed — use the fast persist-by-URL path
+        const permanentUrl = await persistContentImage(supabase, user.id, imageResult.url)
+
+        const { data: imgRow } = await supabase
+          .from('generated_images')
+          .insert({
+            user_id: user.id,
+            image_url: permanentUrl || imageResult.url,
+            topic,
+            business_name: businessName,
+            industry,
+            style: imageResult.style,
+            content_type: contentType,
+            size: imageSize,
+            full_prompt: imageFullPrompt,
+            revised_prompt: imageRevisedPrompt,
+            prompt_version: 'v2',
+            source: 'ai',
+          })
+          .select('id')
+          .single()
+
+        await supabase
+          .from('subscriptions')
+          .update({
+            images_generated_this_month: imagesUsedThisMonth + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.id)
+
+        return NextResponse.json({
+          url: permanentUrl || imageResult.url,
+          style: imageResult.style,
+          size: imageSize,
+          generated_image_id: imgRow?.id ?? null,
+          cost: totalCost,
+          personality: personality?.personality || 'neutral',
+          removalMethod,
+          model,
+          hasProduct: false,
+        })
+      }
+    }
+
+    // ── Text overlay (only reached when needsBufferWorkflow) ─────────
+    if (needsTextOverlay && finalBuffer && effectiveBrandColors?.primary) {
+      const headline = extractHeadline(topic)
+      if (headline) {
+        finalBuffer = await addSmartTextOverlay(finalBuffer, {
+          headline,
+          businessName,
+          brandColor: effectiveBrandColors.primary,
+        })
+      }
+    }
+
+    // ── Persist buffer via admin client (bypasses RLS) ─────────────────
+    const storageClient = getSupabaseAdmin() || supabase
+    let permanentUrl: string | null = null
+
+    if (finalBuffer) {
+      const filename = `${user.id}/generated_${Date.now()}.png`
+      const { error: uploadError } = await storageClient.storage
+        .from('generated-images')
+        .upload(filename, finalBuffer, {
+          contentType: 'image/png',
+          cacheControl: '31536000',
+          upsert: true,
+        })
+
+      if (!uploadError) {
+        const { data: urlData } = storageClient.storage
+          .from('generated-images')
+          .getPublicUrl(filename)
+        permanentUrl = urlData.publicUrl
+      } else {
+        console.error('Storage upload error:', uploadError.message)
+      }
+    }
+
+    if (!permanentUrl) {
+      return NextResponse.json({ error: 'Failed to persist generated image' }, { status: 500 })
+    }
+
+    // ── Save record + update quota ─────────────────────────────────────
     const { data: imgRow } = await supabase
       .from('generated_images')
       .insert({
         user_id: user.id,
-        image_url: permanentUrl || imageResult.url,
+        image_url: permanentUrl,
         topic,
         business_name: businessName,
         industry,
-        style: imageResult.style,
+        style: finalStyle,
         content_type: contentType,
-        size: imageResult.size,
-        full_prompt: imageResult.fullPrompt || null,
-        revised_prompt: imageResult.revisedPrompt || null,
-        prompt_version: 'v1',
+        size: imageSize,
+        full_prompt: imageFullPrompt,
+        revised_prompt: imageRevisedPrompt,
+        prompt_version: 'v2',
         source: 'ai',
       })
       .select('id')
@@ -148,10 +348,15 @@ export async function POST(request: Request) {
       .eq('user_id', user.id)
 
     return NextResponse.json({
-      url: permanentUrl || imageResult.url,
-      style: imageResult.style,
-      size: imageResult.size,
+      url: permanentUrl,
+      style: finalStyle,
+      size: imageSize,
       generated_image_id: imgRow?.id ?? null,
+      cost: totalCost,
+      personality: personality?.personality || 'neutral',
+      removalMethod,
+      model,
+      hasProduct: !!productImage,
     })
   } catch (err) {
     console.error('Generate image error:', err)

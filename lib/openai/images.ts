@@ -1,4 +1,6 @@
 import OpenAI from 'openai'
+import { detectBrandPersonality, type BrandPersonality } from '@/lib/branding/personality-detection'
+import { generateWithSDXL, isSDXLAvailable } from '@/lib/image-generation/sdxl-client'
 
 // ---------------------------------------------------------------------------
 // Sub-variation type
@@ -544,6 +546,11 @@ export interface GenerateImageParams {
   sceneHintOverride?: string | null
   /** Optional: override style prefix (from Supabase) */
   stylePrefixOverride?: string | null
+  /** New hybrid-model fields */
+  brandColors?: { primary: string; secondary?: string }
+  hasProductImage?: boolean
+  requiresComplexScene?: boolean
+  forceModel?: 'dalle3' | 'sdxl'
 }
 
 export interface GenerateImageResult {
@@ -553,6 +560,9 @@ export interface GenerateImageResult {
   size: string
   revisedPrompt?: string
   fullPrompt?: string
+  model?: 'dalle3' | 'sdxl'
+  cost?: number
+  generationTime?: number
 }
 
 // ---------------------------------------------------------------------------
@@ -713,43 +723,187 @@ function buildImagePrompt(params: GenerateImageParams): string {
 }
 
 // ---------------------------------------------------------------------------
-// Generate an image using DALL-E 3
+// Hybrid model selection (SDXL for cheap backgrounds, DALL-E for complex)
+// ---------------------------------------------------------------------------
+function selectOptimalModel(params: GenerateImageParams): 'dalle3' | 'sdxl' {
+  if (params.forceModel) return params.forceModel
+  if (!isSDXLAvailable()) {
+    console.log('SDXL not available, using DALL-E 3')
+    return 'dalle3'
+  }
+  if (params.hasProductImage && !params.requiresComplexScene) {
+    console.log('Using SDXL for product background (cost-optimized)')
+    return 'sdxl'
+  }
+  if (!params.hasProductImage || params.requiresComplexScene) {
+    console.log('Using DALL-E 3 for complex scene (quality-optimized)')
+    return 'dalle3'
+  }
+  return 'dalle3'
+}
+
+// ---------------------------------------------------------------------------
+// Brand-aware prompt helpers (used when brandColors is provided)
+// ---------------------------------------------------------------------------
+
+function getEnvironmentForIndustry(industry: string): string {
+  const map: Record<string, string> = {
+    hvac: 'a modern home utility area',
+    plumber: 'a clean residential kitchen or bathroom',
+    plumbing: 'a clean residential kitchen or bathroom',
+    electrician: 'a well-lit modern home',
+    electrical: 'a well-lit modern home',
+    roofing: 'a suburban neighbourhood',
+    landscaping: 'a lush garden setting',
+    cleaning: 'a spotless modern interior',
+    restaurant: 'an inviting dining space',
+    dental: 'a bright modern clinic',
+    legal: 'a professional office',
+    salon: 'a stylish salon interior',
+    fitness: 'a modern gym or studio',
+    retail: 'a curated boutique storefront',
+    'real estate': 'a welcoming family home',
+    auto: 'a well-equipped auto shop',
+    bakery: 'a warm artisan bakery',
+  }
+  const key = industry.trim().toLowerCase()
+  return map[key] || map[key.split(/[\s/]/)[0]] || `a professional ${industry} setting`
+}
+
+function getPersonTypeForIndustry(industry: string): string {
+  const map: Record<string, string> = {
+    hvac: 'an HVAC technician',
+    plumber: 'a skilled plumber',
+    plumbing: 'a skilled plumber',
+    electrician: 'a certified electrician',
+    electrical: 'a certified electrician',
+    roofing: 'a professional roofer',
+    landscaping: 'a dedicated landscaper',
+    cleaning: 'a cleaning specialist',
+    restaurant: 'a talented chef',
+    dental: 'a gentle dentist',
+    legal: 'a knowledgeable attorney',
+    salon: 'a talented stylist',
+    fitness: 'a personal trainer',
+    retail: 'a welcoming shopkeeper',
+    'real estate': 'a friendly real estate agent',
+    auto: 'a skilled mechanic',
+    bakery: 'a skilled baker',
+  }
+  const key = industry.trim().toLowerCase()
+  return map[key] || map[key.split(/[\s/]/)[0]] || `a ${industry} professional`
+}
+
+function buildBrandAwarePrompt(params: GenerateImageParams): string {
+  const { topic, industry, brandColors, hasProductImage } = params
+
+  let personality: BrandPersonality | null = null
+  if (brandColors?.primary) {
+    personality = detectBrandPersonality(brandColors.primary, brandColors.secondary)
+    console.log(`Detected brand personality: ${personality.personality}`)
+  }
+
+  let focalPrompt: string
+
+  if (hasProductImage) {
+    // Workflow A: branded background for product composite
+    const environment = getEnvironmentForIndustry(industry)
+    if (!personality) {
+      focalPrompt = `Clean professional surface for product photography in ${environment}. Soft natural shadows. Ample negative space in center. Modern clean aesthetic.`
+    } else {
+      focalPrompt = `Clean professional surface for product photography in ${environment}. ${personality.mood} aesthetic. ${personality.colorDescription} integrated subtly into lighting and surfaces. ${personality.lightingStyle}. ${personality.promptModifiers}. Ample negative space in center for product placement. Soft natural shadows. No objects, no products, no text.`
+    }
+  } else {
+    // Workflow B: service worker / focal image
+    const person = getPersonTypeForIndustry(industry)
+    const action = sanitizeTopicForPrompt(topic)
+    const environment = getEnvironmentForIndustry(industry)
+    if (!personality) {
+      focalPrompt = `Close-up of ${person} actively working on ${action}. Face showing concentration. Hands with professional tools. ${environment} setting. Natural window light. One focal point: hands and tools.`
+    } else {
+      focalPrompt = `Close-up of ${person} actively working on ${action}. Face showing genuine concentration. Hands in action with professional tools. ${environment} setting. ${personality.mood} atmosphere. ${personality.colorDescription} subtly present in environment. ${personality.lightingStyle}. ${personality.promptModifiers}. One focal point: hands and tools.`
+    }
+  }
+
+  return `${focalPrompt} No text anywhere in the image.`
+}
+
+// ---------------------------------------------------------------------------
+// Generate an image using DALL-E 3 or SDXL (hybrid)
 // ---------------------------------------------------------------------------
 export async function generateImage(params: GenerateImageParams): Promise<GenerateImageResult> {
-  const client = getOpenAIClient()
-  const prompt = buildImagePrompt(params)
-  const imageSize = getImageSizeForContentType(params.contentType || 'social-post')
+  const startTime = Date.now()
 
-  // Use 'vivid' for artistic/graffiti styles, 'natural' for everything else
+  // Use the brand-aware prompt path when brandColors is provided
+  const useBrandAware = !!params.brandColors?.primary
+
+  // Model selection only applies when brand-aware path is active
+  const model = useBrandAware ? selectOptimalModel(params) : 'dalle3'
+
+  // ── SDXL path ──────────────────────────────────────────────────────────
+  if (model === 'sdxl') {
+    try {
+      const prompt = buildBrandAwarePrompt(params)
+      const result = await generateWithSDXL({
+        prompt,
+        width: 1024,
+        height: 1024,
+        brandColors: params.brandColors,
+      })
+      return {
+        url: result.url,
+        style: params.style,
+        subVariation: params.subVariation || null,
+        size: '1024x1024',
+        revisedPrompt: undefined,
+        fullPrompt: prompt,
+        model: 'sdxl',
+        cost: result.cost,
+        generationTime: result.generationTime,
+      }
+    } catch (sdxlError) {
+      console.error('SDXL failed, falling back to DALL-E 3:', sdxlError)
+      // fall through to DALL-E
+    }
+  }
+
+  // ── DALL-E 3 path ──────────────────────────────────────────────────────
+  const client = getOpenAIClient()
+  const prompt = useBrandAware ? buildBrandAwarePrompt(params) : buildImagePrompt(params)
+  const imageSize = getImageSizeForContentType(params.contentType || 'social-post')
   const dalleStyle = ILLUSTRATION_STYLES.has(params.style) ? 'vivid' : 'natural'
-  
+
   try {
     const response = await client.images.generate({
       model: 'dall-e-3',
-      prompt: prompt,
+      prompt,
       n: 1,
       size: imageSize,
       quality: 'standard',
       style: dalleStyle,
     })
-    
-    const imageUrl = response.data[0]?.url
-    const revisedPrompt = response.data[0]?.revised_prompt
-    
+
+    const imageUrl = response.data?.[0]?.url
+    const revisedPrompt = response.data?.[0]?.revised_prompt
+
     if (!imageUrl) {
       throw new Error('No image URL returned from DALL-E')
     }
-    
+
+    const generationTime = Date.now() - startTime
+
     return {
       url: imageUrl,
       style: params.style,
       subVariation: params.subVariation || null,
       size: imageSize,
-      revisedPrompt: revisedPrompt,
-      fullPrompt: prompt
+      revisedPrompt,
+      fullPrompt: prompt,
+      model: 'dalle3' as const,
+      cost: 0.04,
+      generationTime,
     }
   } catch (error: unknown) {
-    // Preserve the actual error details for debugging (billing, quota, content policy, etc.)
     const errObj = error as { status?: number; code?: string; message?: string; error?: { message?: string; code?: string; type?: string } }
     const apiMsg = errObj?.error?.message || errObj?.message || String(error)
     const apiCode = errObj?.error?.code || errObj?.code || errObj?.status
