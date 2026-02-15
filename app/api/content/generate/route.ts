@@ -16,6 +16,7 @@ import { persistContentImage } from '@/lib/content-image'
 import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
 import { compositeProduct } from '@/lib/image-processing/product-composition'
+import { addSmartTextOverlay, extractHeadline } from '@/lib/image-processing/smart-text-overlay'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -221,23 +222,44 @@ export async function POST(request: Request) {
 
             // Product image compositing: remove background → composite onto AI scene
             let finalImageUrl = imageResult.url
+            let imageBuffer: Buffer | null = null
             let bgRemovalMethod: string | null = null
             if (productImage) {
               try {
-                // Decode base64 data-URI to Buffer
                 const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
                 const productBuffer = Buffer.from(base64Data, 'base64')
                 const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
                 bgRemovalMethod = method
-                // Fetch the AI background as a buffer
                 const bgRes = await fetch(imageResult.url)
                 const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
-                const composited = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
-                // Convert composited Buffer to base64 data-URI for persistence
-                finalImageUrl = `data:image/png;base64,${composited.toString('base64')}`
+                imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
               } catch (e) {
                 console.error('Product compositing failed, using raw AI image:', e)
               }
+            }
+
+            // Smart text overlay — add branded headline to the image
+            if (brandPrimaryColor) {
+              try {
+                const headline = extractHeadline(topic)
+                if (headline) {
+                  if (!imageBuffer) {
+                    const imgRes = await fetch(imageResult.url)
+                    imageBuffer = Buffer.from(await imgRes.arrayBuffer())
+                  }
+                  imageBuffer = await addSmartTextOverlay(imageBuffer, {
+                    headline,
+                    businessName,
+                    brandColor: brandPrimaryColor,
+                  })
+                }
+              } catch (e) {
+                console.error('Text overlay failed, continuing without:', e)
+              }
+            }
+
+            if (imageBuffer) {
+              finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
             }
 
             const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
@@ -449,6 +471,7 @@ export async function POST(request: Request) {
 
           // Product image compositing: remove background → composite onto AI scene
           let finalImageUrl = imageResult.url
+          let imageBuffer: Buffer | null = null
           let bgRemovalMethod: string | null = null
           if (productImage) {
             try {
@@ -458,11 +481,34 @@ export async function POST(request: Request) {
               bgRemovalMethod = method
               const bgRes = await fetch(imageResult.url)
               const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
-              const composited = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
-              finalImageUrl = `data:image/png;base64,${composited.toString('base64')}`
+              imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
             } catch (e) {
               console.error('Product compositing failed, using raw AI image:', e)
             }
+          }
+
+          // Smart text overlay — add branded headline to the image
+          if (brandPrimaryColor) {
+            try {
+              const headline = extractHeadline(topic)
+              if (headline) {
+                if (!imageBuffer) {
+                  const imgRes = await fetch(imageResult.url)
+                  imageBuffer = Buffer.from(await imgRes.arrayBuffer())
+                }
+                imageBuffer = await addSmartTextOverlay(imageBuffer, {
+                  headline,
+                  businessName,
+                  brandColor: brandPrimaryColor,
+                })
+              }
+            } catch (e) {
+              console.error('Text overlay failed, continuing without:', e)
+            }
+          }
+
+          if (imageBuffer) {
+            finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
           }
 
           const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
