@@ -568,13 +568,17 @@ export default function CreateContentPage() {
   const secondary = brand?.secondary ?? '#6b7280'
   const accent = brand?.accent ?? '#6b7280'
 
-  // Client-side headline for text overlay (mirrors extractHeadline logic)
+  // Client-side headline for text overlay — sentence case, natural phrasing
   const overlayHeadline = (() => {
     if (!topic) return ''
-    const cleaned = topic.replace(/[^\w\s''-]/g, '').trim()
-    const words = cleaned.split(/\s+/).slice(0, 6)
-    const tc = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-    return tc.length > 50 ? tc.slice(0, 47) + '...' : tc
+    // Clean punctuation but keep commas/periods for natural reading
+    const cleaned = topic.replace(/[!?]+$/, '').trim()
+    if (cleaned.length <= 50) {
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    }
+    // Truncate at a word boundary near 50 chars
+    const truncated = cleaned.slice(0, 50).replace(/\s+\S*$/, '')
+    return truncated.charAt(0).toUpperCase() + truncated.slice(1) + '...'
   })()
 
   // Contrast color for text on brand background

@@ -124,10 +124,11 @@ function escapePango(text: string): string {
 /**
  * Extract a short headline for text overlay.
  *
+ * Uses sentence case (modern marketing standard for social media).
  * Priority:
- * 1. If `generatedContent` is provided (e.g. a Twitter post), use its first meaningful sentence
+ * 1. If `generatedContent` is provided, extract the best hook line
  * 2. Match promotional patterns (20% OFF, $49.99, etc.)
- * 3. Title-case the topic, max 6 words
+ * 3. Use the topic as-is in sentence case, truncated to ~50 chars
  */
 export function extractHeadline(topic: string, generatedContent?: string | null): string {
   // 1. Try to extract from generated content (e.g. the Twitter post)
@@ -137,22 +138,23 @@ export function extractHeadline(topic: string, generatedContent?: string | null)
       .map(l => l.replace(/^[#@🔥⚡💡🚀✨🏠🔧🎉📢💪🙌]+\s*/g, '').trim())
       .filter(l => l.length > 5 && l.length < 70 && !l.startsWith('#') && !l.startsWith('@') && !l.startsWith('http'))
     if (lines.length > 0) {
-      // Pick the shortest impactful line (often the hook)
       const best = lines.reduce((a, b) => a.length < b.length && a.length > 10 ? a : b)
       return best.length > 50 ? best.slice(0, 47) + '...' : best
     }
   }
 
-  // 2. Promotional patterns
+  // 2. Promotional patterns (keep uppercase for emphasis — industry standard)
   const percentMatch = topic.match(/(\d+%\s*(?:off|discount))/i)
   if (percentMatch) return percentMatch[1].toUpperCase()
 
   const dollarMatch = topic.match(/(\$\d+(?:\.\d{2})?)/)
   if (dollarMatch) return dollarMatch[1]
 
-  // 3. Title-case topic, max 6 words
-  const cleaned = topic.replace(/[^\w\s''-]/g, '').trim()
-  const words = cleaned.split(/\s+/).slice(0, 6)
-  const titleCase = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
-  return titleCase.length > 50 ? titleCase.slice(0, 47) + '...' : titleCase
+  // 3. Sentence case — capitalize first letter, keep rest natural
+  const cleaned = topic.replace(/[!?]+$/, '').trim()
+  if (cleaned.length <= 50) {
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+  }
+  const truncated = cleaned.slice(0, 50).replace(/\s+\S*$/, '')
+  return truncated.charAt(0).toUpperCase() + truncated.slice(1) + '...'
 }
