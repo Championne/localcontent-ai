@@ -301,6 +301,9 @@ export async function POST(request: Request) {
             if (brandPrimaryColor) {
               try {
                 const headline = extractHeadline(topic)
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:textOverlay',message:'Text overlay attempt',data:{headline,topic,brandPrimaryColor,businessName,hasBuffer:!!imageBuffer},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+                // #endregion
                 if (headline) {
                   if (!imageBuffer) {
                     const imgRes = await fetch(imageResult.url)
@@ -311,8 +314,14 @@ export async function POST(request: Request) {
                     businessName,
                     brandColor: brandPrimaryColor,
                   })
+                  // #region agent log
+                  fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:textOverlay:done',message:'Text overlay succeeded',data:{bufferSize:imageBuffer?.length},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+                  // #endregion
                 }
               } catch (e) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:textOverlay:error',message:'Text overlay FAILED',data:{error:e instanceof Error?e.message:String(e)},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+                // #endregion
                 console.error('Text overlay failed, continuing without:', e)
               }
             }

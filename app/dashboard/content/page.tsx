@@ -1048,6 +1048,9 @@ export default function CreateContentPage() {
   }
 
   const handleStep3Upload = async (file: File) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload',message:'Upload called',data:{fileName:file?.name,fileType:file?.type,fileSize:file?.size,selectedBusinessId},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+    // #endregion
     if (!file?.type.startsWith('image/')) return
     const form = new FormData()
     form.append('file', file, file.name)
@@ -1055,6 +1058,9 @@ export default function CreateContentPage() {
     try {
       const res = await fetch('/api/image-library', { method: 'POST', body: form })
       const data = await res.json()
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload:response',message:'Upload response',data:{ok:res.ok,status:res.status,url:data.image?.public_url||data.url||null,error:data.error||null},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
       if (!res.ok) throw new Error(data.error || 'Upload failed')
       const url = data.image?.public_url || data.url
       if (!url) throw new Error('Upload failed — no URL returned')
@@ -1062,10 +1068,16 @@ export default function CreateContentPage() {
       setGeneratedImageId(null)
       // Apply branding in background
       const brandedUrl = await applyBrandOverlay(url)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload:branded',message:'Brand overlay result',data:{originalUrl:url,brandedUrl,changed:brandedUrl!==url},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
       if (brandedUrl !== url) {
         setGeneratedImage({ url: brandedUrl, source: 'upload' })
       }
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload:error',message:'Upload error',data:{error:err instanceof Error?err.message:String(err)},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
       setError(err instanceof Error ? err.message : 'Upload failed')
     }
   }
