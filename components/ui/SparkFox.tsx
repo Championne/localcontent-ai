@@ -2,50 +2,51 @@
 
 /**
  * Spark Fox — AI Marketing Strategist avatar.
- * Pure SVG with CSS transitions for expression states.
+ * 80x80 viewBox SVG with upper body, bushy tail with lightning bolt,
+ * pointed snout, and 8 expression states via CSS transitions.
  */
 
 export type SparkExpression = 'idle' | 'thinking' | 'happy' | 'encouraging' | 'analyzing' | 'celebrating' | 'nudge' | 'learning'
-export type SparkSize = 'sm' | 'md' | 'lg'
+export type SparkSize = 'sm' | 'md' | 'lg' | 'xl'
 
 interface SparkFoxProps {
   expression?: SparkExpression
   size?: SparkSize
   className?: string
-  /** Brand accent color for the spark motif. Default: #f59e0b (amber) */
+  /** Brand accent color for the spark/lightning motif. Default: #f59e0b (amber) */
   accentColor?: string
 }
 
-const SIZES: Record<SparkSize, number> = { sm: 24, md: 32, lg: 48 }
+const SIZES: Record<SparkSize, number> = { sm: 24, md: 32, lg: 48, xl: 64 }
 
-// Eye variations per expression
+// Eye shapes per expression (positioned for 80x80 viewBox)
 const EYES: Record<SparkExpression, { left: string; right: string }> = {
-  idle:         { left: 'M11.5 14.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z', right: 'M18.5 14.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' },
-  thinking:     { left: 'M10.5 13.5a1 1.5 0 100-3 1 1.5 0 000 3z',     right: 'M19 13q.8 0 .8-.5t-.8-.5-.8.5.8.5z' }, // squint right
-  happy:        { left: 'M10 13q1.5-2 3 0',                              right: 'M17 13q1.5-2 3 0' }, // happy arcs
-  encouraging:  { left: 'M11.5 14.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z', right: 'M18.5 14.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z' },
-  analyzing:    { left: 'M10.5 13.5a1 1.5 0 100-3 1 1.5 0 000 3z',     right: 'M17.5 13.5a1 1.5 0 100-3 1 1.5 0 000 3z' }, // narrowed
-  celebrating:  { left: 'M10 13q1.5-2 3 0',                              right: 'M17 13q1.5-2 3 0' }, // happy arcs
-  nudge:        { left: 'M11.5 14.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z', right: 'M18 14a1 1 0 100-2 1 1 0 000 2z' }, // wink right
-  learning:     { left: 'M11.5 14a1.5 1.2 0 100-2.4 1.5 1.2 0 000 2.4z', right: 'M18.5 14a1.5 1.2 0 100-2.4 1.5 1.2 0 000 2.4z' },
+  idle:        { left: 'M30 30a3 3 0 100-6 3 3 0 000 6z', right: 'M50 30a3 3 0 100-6 3 3 0 000 6z' },
+  thinking:    { left: 'M30 29a2.5 3 0 100-6 2.5 3 0 000 6z', right: 'M50 29q1.5 0 1.5-1.5t-1.5-1.5-1.5 1.5 1.5 1.5z' },
+  happy:       { left: 'M26 28q4-4 8 0', right: 'M46 28q4-4 8 0' },
+  encouraging: { left: 'M30 30a3 3 0 100-6 3 3 0 000 6z', right: 'M50 30a3 3 0 100-6 3 3 0 000 6z' },
+  analyzing:   { left: 'M30 29a2.5 2 0 100-4 2.5 2 0 000 4z', right: 'M50 29a2.5 2 0 100-4 2.5 2 0 000 4z' },
+  celebrating: { left: 'M26 28q4-4 8 0', right: 'M46 28q4-4 8 0' },
+  nudge:       { left: 'M30 30a3 3 0 100-6 3 3 0 000 6z', right: 'M50 29a2 2 0 100-4 2 2 0 000 4z' },
+  learning:    { left: 'M30 29.5a3 2.5 0 100-5 3 2.5 0 000 5z', right: 'M50 29.5a3 2.5 0 100-5 3 2.5 0 000 5z' },
 }
 
 // Mouth shapes
 const MOUTHS: Record<SparkExpression, string> = {
-  idle:         'M13 18.5q2 1 4 0',        // gentle smile
-  thinking:     'M14 19h2',                  // neutral line
-  happy:        'M12.5 18q2.5 2.5 5 0',     // big smile
-  encouraging:  'M13 18q2 1.5 4 0',         // warm smile
-  analyzing:    'M13.5 19h3',               // neutral line
-  celebrating:  'M12 18q3 3 6 0',           // huge grin
-  nudge:        'M13 18.5q2 1.2 4 0',      // slight smile
-  learning:     'M13 18q2 1 4 0',           // small smile
+  idle:        'M35 40q5 3 10 0',
+  thinking:    'M37 41h6',
+  happy:       'M33 39q7 7 14 0',
+  encouraging: 'M34 40q6 4 12 0',
+  analyzing:   'M36 41h8',
+  celebrating: 'M32 39q8 8 16 0',
+  nudge:       'M35 40q5 3 10 0',
+  learning:    'M35 40q5 2 10 0',
 }
 
-// Ear tilt (rotation in degrees for the right ear tip)
+// Ear tilt (rotation for right ear)
 const EAR_TILTS: Record<SparkExpression, number> = {
-  idle: 0, thinking: -8, happy: 5, encouraging: 3,
-  analyzing: -5, celebrating: 10, nudge: 8, learning: -3,
+  idle: 0, thinking: -6, happy: 5, encouraging: 3,
+  analyzing: -4, celebrating: 8, nudge: 6, learning: -3,
 }
 
 export default function SparkFox({
@@ -63,112 +64,122 @@ export default function SparkFox({
     <svg
       width={px}
       height={px}
-      viewBox="0 0 30 30"
+      viewBox="0 0 80 80"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`flex-shrink-0 transition-transform duration-300 ${expression === 'celebrating' ? 'animate-bounce' : ''} ${className}`}
       role="img"
       aria-label={`Spark fox — ${expression}`}
     >
-      {/* Left Ear */}
+      {/* ── Tail (bushy, behind body) ── */}
       <path
-        d="M8 12L5 4l7 5z"
-        fill="#f97316"
+        d="M60 58c4-2 12-6 16-14s2-16-2-20c-3-3-6 1-5 5s-1 10-4 14c-2 3-5 6-8 8z"
+        fill="#ea580c"
         className="transition-all duration-300"
       />
-      <path d="M8 12L6 5.5l4 3z" fill="#fdba74" />
+      <path
+        d="M64 56c3-2 9-5 12-11s1-12-1-15c-2-2-4 1-3 4s-1 8-3 11c-2 3-4 5-6 6z"
+        fill="#fb923c"
+      />
+      {/* Lightning bolt on tail */}
+      <path
+        d="M72 30l-3 6h4l-5 8 2-5h-3.5l4.5-9z"
+        fill={accentColor}
+        stroke={accentColor}
+        strokeWidth="0.5"
+        strokeLinejoin="round"
+        className="transition-opacity duration-300"
+        style={{ opacity: expression === 'celebrating' || expression === 'happy' ? 1 : 0.75 }}
+      />
 
-      {/* Right Ear — tilts with expression */}
+      {/* ── Body (torso visible below head) ── */}
+      <ellipse cx="40" cy="60" rx="18" ry="14" fill="#fb923c" />
+      {/* Chest / belly lighter area */}
+      <ellipse cx="40" cy="62" rx="12" ry="10" fill="#fed7aa" />
+
+      {/* ── Left Ear ── */}
+      <path d="M22 22L14 4l16 12z" fill="#ea580c" />
+      <path d="M22 22L16 7l10 9z" fill="#fdba74" />
+
+      {/* ── Right Ear (tilts with expression) ── */}
       <g
-        className="transition-transform duration-300 origin-[22px_12px]"
+        className="transition-transform duration-300 origin-[58px_22px]"
         style={{ transform: `rotate(${earTilt}deg)` }}
       >
-        <path d="M22 12l3-8-7 5z" fill="#f97316" />
-        <path d="M22 12l2-6.5-4 3z" fill="#fdba74" />
-        {/* Spark motif on right ear */}
-        <path
-          d="M24.2 5.5l-.5 1.8.9-1.2.1 1.6.6-1.4"
-          stroke={accentColor}
-          strokeWidth="0.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="transition-opacity duration-300"
-          style={{ opacity: expression === 'celebrating' || expression === 'happy' ? 1 : 0.6 }}
-        />
+        <path d="M58 22l8-18-16 12z" fill="#ea580c" />
+        <path d="M58 22l6-15-10 9z" fill="#fdba74" />
       </g>
 
-      {/* Head shape */}
-      <ellipse cx="15" cy="16" rx="9" ry="10" fill="#fb923c" />
-      {/* Face (lighter belly/face area) */}
-      <ellipse cx="15" cy="17" rx="6.5" ry="7.5" fill="#fed7aa" />
+      {/* ── Head ── */}
+      <ellipse cx="40" cy="32" rx="22" ry="20" fill="#fb923c" />
 
-      {/* Eyes */}
+      {/* ── Face (lighter muzzle area, pointed snout shape) ── */}
       <path
-        d={eyes.left}
-        fill="#1e293b"
-        stroke="none"
-        className="transition-all duration-300"
+        d="M40 48c-10 0-16-6-16-14s6-14 16-14 16 6 16 14-6 14-16 14z"
+        fill="#fed7aa"
       />
-      <path
-        d={eyes.right}
-        fill="#1e293b"
-        stroke="none"
-        className="transition-all duration-300"
-      />
+      {/* Snout bump */}
+      <ellipse cx="40" cy="36" rx="8" ry="6" fill="#fef3c7" opacity="0.5" />
 
-      {/* Eye shine (for non-arc eyes) */}
+      {/* ── Eyes ── */}
+      <path d={eyes.left} fill="#1e293b" className="transition-all duration-300" />
+      <path d={eyes.right} fill="#1e293b" className="transition-all duration-300" />
+
+      {/* Eye shine (skip for happy-arc eyes) */}
       {!['happy', 'celebrating'].includes(expression) && (
         <>
-          <circle cx="12" cy="12.5" r="0.4" fill="white" />
-          <circle cx="19" cy="12.5" r="0.4" fill="white" />
+          <circle cx="29" cy="26" r="1" fill="white" />
+          <circle cx="49" cy="26" r="1" fill="white" />
         </>
       )}
 
-      {/* Nose */}
-      <ellipse cx="15" cy="16.2" rx="1.2" ry="0.8" fill="#1e293b" />
+      {/* ── Nose (triangular fox nose) ── */}
+      <path d="M40 34l-2.5 2.5h5z" fill="#1e293b" />
 
-      {/* Mouth */}
+      {/* ── Mouth ── */}
       <path
         d={mouth}
         stroke="#92400e"
-        strokeWidth="0.8"
+        strokeWidth="1.5"
         strokeLinecap="round"
         fill="none"
         className="transition-all duration-300"
       />
 
-      {/* Whisker dots */}
-      <circle cx="9" cy="16.5" r="0.4" fill="#f97316" opacity="0.5" />
-      <circle cx="9.5" cy="18" r="0.4" fill="#f97316" opacity="0.5" />
-      <circle cx="21" cy="16.5" r="0.4" fill="#f97316" opacity="0.5" />
-      <circle cx="20.5" cy="18" r="0.4" fill="#f97316" opacity="0.5" />
+      {/* ── Whisker lines ── */}
+      <g stroke="#d97706" strokeWidth="0.6" opacity="0.4" strokeLinecap="round">
+        <line x1="24" y1="35" x2="14" y2="33" />
+        <line x1="24" y1="37" x2="13" y2="38" />
+        <line x1="56" y1="35" x2="66" y2="33" />
+        <line x1="56" y1="37" x2="67" y2="38" />
+      </g>
+
+      {/* ── Expression-specific overlays ── */}
 
       {/* Celebration sparkles */}
       {expression === 'celebrating' && (
         <g className="animate-pulse">
-          <circle cx="4" cy="8" r="1" fill={accentColor} opacity="0.8" />
-          <circle cx="26" cy="6" r="0.8" fill={accentColor} opacity="0.7" />
-          <circle cx="3" cy="20" r="0.6" fill={accentColor} opacity="0.6" />
-          <circle cx="27" cy="18" r="0.7" fill={accentColor} opacity="0.7" />
+          <path d="M8 12l1.5-3 1.5 3-3-1.5h3z" fill={accentColor} opacity="0.9" />
+          <path d="M70 8l1-2.5 1 2.5-2.5-1h2.5z" fill={accentColor} opacity="0.8" />
+          <path d="M6 50l1-2 1 2-2-.8h2z" fill={accentColor} opacity="0.7" />
+          <circle cx="74" cy="45" r="1.5" fill={accentColor} opacity="0.6" />
         </g>
       )}
 
-      {/* Thinking indicator */}
+      {/* Thinking bubbles */}
       {expression === 'thinking' && (
-        <g className="animate-pulse" opacity="0.5">
-          <circle cx="25" cy="8" r="0.8" fill="#94a3b8" />
-          <circle cx="27" cy="5" r="1.2" fill="#94a3b8" />
+        <g className="animate-pulse" opacity="0.4">
+          <circle cx="68" cy="14" r="2" fill="#94a3b8" />
+          <circle cx="73" cy="8" r="3" fill="#94a3b8" />
         </g>
       )}
 
-      {/* Analyzing — glasses */}
+      {/* Analyzing — small glasses hint */}
       {expression === 'analyzing' && (
-        <g stroke="#475569" strokeWidth="0.6" fill="none" opacity="0.7">
-          <circle cx="11.5" cy="13" r="2.5" />
-          <circle cx="18.5" cy="13" r="2.5" />
-          <path d="M14 13h2" />
-          <path d="M9 13H7" />
-          <path d="M21 13h2" />
+        <g stroke="#475569" strokeWidth="1" fill="none" opacity="0.5">
+          <circle cx="29" cy="27" r="5" />
+          <circle cx="49" cy="27" r="5" />
+          <path d="M34 27h12" />
         </g>
       )}
     </svg>

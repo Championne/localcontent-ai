@@ -8,8 +8,10 @@ import RatingStars from '@/components/RatingStars'
 import { SafeImage } from '@/components/ui/SafeImage'
 
 import { GenerationProgress } from '@/components/ui/GenerationProgress'
-import SparkFox, { SparkMessage } from '@/components/ui/SparkFox'
+import SparkFox from '@/components/ui/SparkFox'
 import type { SparkExpression } from '@/components/ui/SparkFox'
+import SparkCard from '@/components/ui/SparkCard'
+import { getGreeting, getLiveAnalysis, getGenerationSteps, getPostRatingReaction, frameworkName } from '@/lib/spark/narratives'
 
 interface SocialPackResult {
   twitter: { content: string; charCount: number }
@@ -201,7 +203,7 @@ function WordCount({ count }: { count: number }) {
 
 
 
-// Strategy crafting animation step
+// Strategy crafting animation step (legacy)
 function StrategyStep({ label, delayMs, startTime }: { label: string; delayMs: number; startTime: number }) {
   const [visible, setVisible] = useState(false)
   const [done, setDone] = useState(false)
@@ -221,6 +223,22 @@ function StrategyStep({ label, delayMs, startTime }: { label: string; delayMs: n
       )}
       <span className={`text-sm transition-colors ${done ? 'text-slate-700 font-medium' : 'text-slate-500'}`}>{label}</span>
     </div>
+  )
+}
+
+// Spark generation step — conversational narration with fade-in
+function SparkGenerationStep({ message, delayMs, startTime }: { message: string; delayMs: number; startTime: number }) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const elapsed = Date.now() - startTime
+    const timer = setTimeout(() => setVisible(true), Math.max(0, delayMs - elapsed))
+    return () => clearTimeout(timer)
+  }, [delayMs, startTime])
+  if (!visible) return null
+  return (
+    <p className="text-sm text-gray-700 leading-relaxed animate-fadeIn">
+      {message}
+    </p>
   )
 }
 
@@ -348,6 +366,13 @@ export default function CreateContentPage() {
     insights: string[]
   } | null>(null)
   const [sparkMilestone, setSparkMilestone] = useState<{ count: number; insight: string } | null>(null)
+  const [sparkNarrative, setSparkNarrative] = useState<string | null>(null)
+  const [generatedHeadline, setGeneratedHeadline] = useState<string | null>(null)
+  const [generationStepMessages, setGenerationStepMessages] = useState<string[]>([])
+  const [sparkGreeting, setSparkGreeting] = useState<string>('')
+  const [showBrandLibrary, setShowBrandLibrary] = useState(false)
+  const [brandLibraryImages, setBrandLibraryImages] = useState<Array<{ id: string; url: string }>>([])
+  const [brandingUserImage, setBrandingUserImage] = useState(false)
 
   // Fetch Spark preferences on mount
   useEffect(() => {
@@ -357,6 +382,9 @@ export default function CreateContentPage() {
         if (res.ok) {
           const data = await res.json()
           setSparkPrefs(data)
+          // Generate greeting
+          const topFw = data.topFrameworks?.[0]?.framework
+          setSparkGreeting(getGreeting(data.learningLevel, undefined, topFw, data.totalRated))
           // Check for milestones
           const milestones = [10, 25, 50, 100]
           const dismissedKey = `spark_milestone_dismissed_${data.totalGenerated}`
@@ -368,6 +396,23 @@ export default function CreateContentPage() {
     }
     fetchSparkPrefs()
   }, [])
+
+  // Fetch brand library when picker is opened
+  useEffect(() => {
+    if (!showBrandLibrary) return
+    async function fetchLibrary() {
+      try {
+        const params = new URLSearchParams({ limit: '50' })
+        if (selectedBusinessId) params.set('business_id', selectedBusinessId)
+        const res = await fetch(`/api/image-library?${params}`)
+        if (res.ok) {
+          const data = await res.json()
+          setBrandLibraryImages((data.images || []).map((img: { id: string; url: string }) => ({ id: img.id, url: img.url })))
+        }
+      } catch { /* non-critical */ }
+    }
+    fetchLibrary()
+  }, [showBrandLibrary, selectedBusinessId])
 
   const dismissMilestone = () => {
     if (sparkMilestone) {
@@ -683,6 +728,13 @@ export default function CreateContentPage() {
     setGenerating(true)
     setError('')
     setRegenerateMenuOpen(false)
+    setSparkNarrative(null)
+    setGeneratedHeadline(null)
+
+    // Set up Spark generation step messages
+    const fwFull = topicAnalysis?.frameworkName || 'the best marketing approach'
+    const steps = getGenerationSteps(topic, businessName || undefined, fwFull)
+    setGenerationStepMessages(steps)
     
     if (mode === 'all') {
       setGeneratedImage(null)
@@ -748,6 +800,8 @@ export default function CreateContentPage() {
         if (data.frameworkInfo) {
           setFrameworkInfo(data.frameworkInfo)
         }
+        if (data.sparkNarrative) setSparkNarrative(data.sparkNarrative)
+        if (data.headline) setGeneratedHeadline(data.headline)
       }
 
       // Update image
@@ -907,8 +961,54 @@ export default function CreateContentPage() {
       if (!url) throw new Error('Upload failed — no URL returned')
       setGeneratedImage({ url, source: 'upload' })
       setGeneratedImageId(null)
+      // Apply branding in background
+      const brandedUrl = await applyBrandOverlay(url)
+      if (brandedUrl !== url) {
+        setGeneratedImage({ url: brandedUrl, source: 'upload' })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
+    }
+  }
+
+  // Apply brand overlay to a user-provided image (upload or library pick)
+  const applyBrandOverlay = async (imageUrl: string) => {
+    const brandColor = currentBusiness?.brand_primary_color
+    if (!brandColor || !businessName) {
+      // No brand color — just use the raw image
+      return imageUrl
+    }
+    setBrandingUserImage(true)
+    try {
+      const res = await fetch('/api/content/brand-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageUrl,
+          businessName,
+          brandColor,
+          headline: generatedHeadline || undefined,
+          topic: topic || undefined,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.url) return data.url
+      }
+    } catch { /* fall through to raw image */ }
+    finally { setBrandingUserImage(false) }
+    return imageUrl
+  }
+
+  // Pick image from brand library
+  const handleBrandLibraryPick = async (url: string) => {
+    setShowBrandLibrary(false)
+    setGeneratedImage({ url, source: 'upload' })
+    setGeneratedImageId(null)
+    // Apply branding in background
+    const brandedUrl = await applyBrandOverlay(url)
+    if (brandedUrl !== url) {
+      setGeneratedImage({ url: brandedUrl, source: 'upload' })
     }
   }
 
@@ -1119,48 +1219,34 @@ export default function CreateContentPage() {
         </div>
       )}
 
-      {/* Spark Milestone Banner (Touchpoint 5) */}
+      {/* Spark Milestone Banner */}
       {sparkMilestone && (
-        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-          <SparkFox expression="celebrating" size="lg" accentColor={accent} />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-amber-900">
-              We&apos;ve created {sparkMilestone.count} posts together!
-            </p>
-            <p className="text-sm text-amber-700 mt-0.5">{sparkMilestone.insight}</p>
+        <SparkCard expression="celebrating" accentColor={accent} className="mb-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                We&apos;ve created {sparkMilestone.count} posts together!
+              </p>
+              <p className="text-sm text-amber-700 mt-0.5">{sparkMilestone.insight}</p>
+            </div>
+            <button onClick={dismissMilestone} className="text-amber-400 hover:text-amber-600 text-lg leading-none">&times;</button>
           </div>
-          <button onClick={dismissMilestone} className="text-amber-400 hover:text-amber-600 text-lg leading-none">&times;</button>
-        </div>
+        </SparkCard>
       )}
 
       {/* Step 1: Choose Template */}
       {!loadingEdit && step === 1 && (
         <div>
-          {/* Spark Greeting (Touchpoint 1) */}
-          <div className="mb-6 flex items-start gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm">
-            <SparkFox
-              expression={!sparkPrefs || sparkPrefs.learningLevel === 'new' ? 'happy' : 'encouraging'}
-              size="lg"
-              accentColor={accent}
-            />
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                {!sparkPrefs || sparkPrefs.learningLevel === 'new'
-                  ? "Hi! I\u2019m Spark, your AI marketing strategist. Pick a content type and I\u2019ll handle the strategy."
-                  : sparkPrefs.learningLevel === 'learning'
-                    ? `Welcome back! I\u2019m learning your style \u2014 ${sparkPrefs.totalRated} ratings so far.`
-                    : sparkPrefs.learningLevel === 'familiar'
-                      ? `Good to see you! Based on ${sparkPrefs.totalGenerated} posts, ${sparkPrefs.insights[0] || 'I know what works for your brand.'}`
-                      : `Your personal strategist is ready. ${sparkPrefs.insights[0] || 'I know your winning formula.'}`
-                }
-              </p>
-              {sparkPrefs && sparkPrefs.topFrameworks.length > 0 && sparkPrefs.topFrameworks[0].score > 0 && (
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Top framework: {sparkPrefs.topFrameworks[0].framework.toUpperCase()} ({sparkPrefs.topFrameworks[0].thumbsUp} thumbs up)
-                </p>
-              )}
-            </div>
-          </div>
+          {/* Spark Greeting */}
+          <SparkCard
+            expression={!sparkPrefs || sparkPrefs.learningLevel === 'new' ? 'happy' : 'encouraging'}
+            accentColor={accent}
+            className="mb-6"
+          >
+            <p className="text-sm text-gray-800 leading-relaxed">
+              {sparkGreeting || "Hi! I\u2019m Spark, your marketing strategist. Pick a content type and I\u2019ll build the perfect strategy for you."}
+            </p>
+          </SparkCard>
 
           {/* Inspiring Header */}
           <div className="text-center mb-8">
@@ -1170,7 +1256,7 @@ export default function CreateContentPage() {
                 <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
             </h2>
-            <p className="text-gray-500">Pick a content type — AI selects the best marketing psychology for your topic</p>
+            <p className="text-gray-500">Pick a content type — Spark selects the best marketing strategy for your topic</p>
           </div>
 
           {/* Quick Starts */}
@@ -1392,38 +1478,23 @@ export default function CreateContentPage() {
                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent outline-none transition-shadow resize-none"
                 placeholder="e.g., Spring cleaning tips for homeowners, our new seasonal menu, 20% off promotion this week..."
               />
-              {/* Live AI Analysis Preview (Touchpoint 2) */}
+              {/* Spark Live Analysis (conversational narration) */}
               {(topicAnalysis || analysisLoading) && !generating && (
-                <div className={`mt-2 rounded-lg border px-3 py-2.5 transition-all duration-300 ${topicAnalysis ? `${(FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue).bg} ${(FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue).border}` : 'bg-gray-50 border-gray-200'}`}>
-                  {analysisLoading && !topicAnalysis ? (
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <SparkFox expression="analyzing" size="sm" accentColor={accent} />
-                      <span>{!sparkPrefs || sparkPrefs.learningLevel === 'new' ? 'Analyzing your topic to find the best marketing approach...' : 'Analyzing based on what I know about your brand...'}</span>
-                    </div>
-                  ) : topicAnalysis && (() => {
-                    const fc = FRAMEWORK_COLORS[topicAnalysis.frameworkColor] || FRAMEWORK_COLORS.blue
-                    const sparkTopFw = sparkPrefs?.topFrameworks.find(f => f.framework === topicAnalysis.framework && f.score > 0)
-                    return (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <SparkFox expression="analyzing" size="sm" accentColor={accent} />
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${fc.badge}`}>{topicAnalysis.frameworkName}</span>
-                          <span className={`text-[11px] font-medium ${fc.accent}`}>{topicAnalysis.confidence}% match</span>
-                          {topicAnalysis.awarenessLabel && (
-                            <span className="text-[10px] text-gray-500">{topicAnalysis.awarenessIcon} {topicAnalysis.awarenessLabel}</span>
-                          )}
-                          {topicAnalysis.brandPersonality && (
-                            <span className="text-[10px] text-gray-400 capitalize">&bull; {topicAnalysis.brandPersonality} brand</span>
-                          )}
-                          {analysisLoading && <svg className="animate-spin w-3 h-3 text-gray-300" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
-                        </div>
-                        <p className={`text-[11px] leading-relaxed ${fc.accent}`}>{topicAnalysis.reasoning}</p>
-                        {sparkTopFw && (
-                          <p className="text-[10px] text-gray-500 italic">I&apos;m using {topicAnalysis.frameworkName} &mdash; you&apos;ve given it {sparkTopFw.thumbsUp} thumbs up in the past.</p>
+                <div className="mt-3">
+                  <SparkCard expression="analyzing" accentColor={accent} compact>
+                    {analysisLoading && !topicAnalysis ? (
+                      <p className="text-sm text-gray-500">Let me study this topic to find the perfect marketing angle...</p>
+                    ) : topicAnalysis ? (
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {getLiveAnalysis(
+                          topicAnalysis.framework,
+                          topic,
+                          businessName || undefined,
+                          topicAnalysis.brandPersonality,
                         )}
-                      </div>
-                    )
-                  })()}
+                      </p>
+                    ) : null}
+                  </SparkCard>
                 </div>
               )}
             </div>
@@ -1570,25 +1641,19 @@ export default function CreateContentPage() {
               )}
             </div>
             
-            {/* Strategy Crafting Animation */}
+            {/* Spark Generation Narration */}
             {generating && (
-              <div className="mt-6 bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-slate-200 p-5 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-base">🧠</span>
-                  <span className="text-sm font-semibold text-slate-800">AI Marketing Strategy</span>
-                </div>
-                {[
-                  { label: 'Analyzing your topic...', delay: 0 },
-                  { label: 'Selecting marketing framework...', delay: 1200 },
-                  { label: 'Aligning with your brand personality...', delay: 2400 },
-                  { label: 'Crafting psychologically structured content...', delay: 3600 },
-                  { label: 'Generating brand-aware image...', delay: 5000 },
-                ].map((step, i) => (
-                  <StrategyStep key={i} label={step.label} delayMs={step.delay} startTime={generationStartTime ?? Date.now()} />
-                ))}
-                <div className="pt-2">
-                  <GenerationProgress 
-                    isGenerating={generating} 
+              <div className="mt-6 space-y-3">
+                <SparkCard expression="thinking" accentColor={accent}>
+                  <div className="space-y-2">
+                    {generationStepMessages.map((msg, i) => (
+                      <SparkGenerationStep key={i} message={msg} delayMs={i * 1800} startTime={generationStartTime ?? Date.now()} />
+                    ))}
+                  </div>
+                </SparkCard>
+                <div className="px-2">
+                  <GenerationProgress
+                    isGenerating={generating}
                     contentType={selectedTemplate as 'social-pack' | 'blog-post' | 'gmb-post' | 'email' || 'general'}
                     startTime={generationStartTime ?? undefined}
                     size="sm"
@@ -1604,128 +1669,26 @@ export default function CreateContentPage() {
       {/* Step 3: Branding - Social Pack */}
       {!loadingEdit && step === 3 && selectedTemplate === 'social-pack' && socialPack && (
         <div className="w-full">
-          {/* Marketing Intelligence Brief (Touchpoint 3) */}
-          {frameworkInfo && (() => {
-            const fc = FRAMEWORK_COLORS[frameworkInfo.frameworkColor || 'blue'] || FRAMEWORK_COLORS.blue
-            const sparkExpr: SparkExpression = frameworkInfo.learningLevel === 'expert' ? 'encouraging' : frameworkInfo.learningLevel === 'familiar' ? 'happy' : 'idle'
-            return (
-              <div className={`mx-0 mt-4 mb-4 rounded-xl border overflow-hidden ${fc.bg} ${fc.border}`}>
-                {/* Collapsed summary / toggle header */}
-                <button
-                  type="button"
-                  onClick={() => setIntelligenceBriefExpanded(!intelligenceBriefExpanded)}
-                  className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:opacity-90 transition-opacity"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <SparkFox expression={sparkExpr} size="md" accentColor={accent} />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${fc.badge}`}>{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}</span>
-                        <span className={`text-xs font-semibold ${fc.accent}`}>{frameworkInfo.frameworkConfidence}% match</span>
-                        {frameworkInfo.brandPersonality && (
-                          <span className="text-xs text-gray-500 capitalize">&bull; {frameworkInfo.brandPersonality} brand</span>
-                        )}
-                      </div>
-                      {!intelligenceBriefExpanded && (
-                        <p className={`text-xs mt-0.5 truncate ${fc.accent}`}>{frameworkInfo.frameworkReasoning}</p>
-                      )}
-                      {frameworkInfo.preferenceReasoning && (
-                        <p className="text-[10px] text-gray-500 italic mt-0.5">{frameworkInfo.preferenceReasoning}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wide hidden sm:inline">Spark Intelligence</span>
-                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${intelligenceBriefExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                  </div>
-                </button>
-
-                {/* Expanded content */}
-                {intelligenceBriefExpanded && (
-                  <div className="px-4 pb-4 space-y-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
-                    {/* Framework Pipeline Visual */}
-                    {frameworkInfo.frameworkSteps && frameworkInfo.frameworkSteps.length > 0 && (
-                      <div className="pt-3">
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Content Structure</p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {frameworkInfo.frameworkSteps.map((step, i) => (
-                            <div key={step} className="flex items-center gap-1.5">
-                              <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${fc.stepActive}`}>{step}</span>
-                              {i < (frameworkInfo.frameworkSteps?.length ?? 0) - 1 && (
-                                <svg className={`w-3.5 h-3.5 ${fc.accent} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Why this framework */}
-                    <div>
-                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Why {frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}?</p>
-                      <p className={`text-sm leading-relaxed ${fc.text}`}>{frameworkInfo.frameworkReasoning}</p>
-                      {frameworkInfo.frameworkWhyItWorks && (
-                        <p className="text-xs text-gray-600 mt-1.5 leading-relaxed">{frameworkInfo.frameworkWhyItWorks}</p>
-                      )}
-                    </div>
-
-                    {/* Audience Awareness Level */}
-                    {frameworkInfo.awarenessLabel && (
-                      <div>
-                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Your Audience</p>
-                        <div className="flex items-start gap-2">
-                          <span className="text-base">{frameworkInfo.awarenessIcon}</span>
-                          <div>
-                            <p className={`text-sm font-semibold ${fc.text}`}>{frameworkInfo.awarenessLabel}</p>
-                            <p className="text-xs text-gray-600">{frameworkInfo.awarenessDescription}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Image Psychology (side by side on desktop) */}
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      {frameworkInfo.imageMood && (
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Image Psychology</p>
-                          <div className="space-y-1 text-xs text-gray-700">
-                            <p><span className="font-medium">Mood:</span> {frameworkInfo.imageMood.moodOverride}</p>
-                            <p><span className="font-medium">Lighting:</span> {frameworkInfo.imageMood.lightingStyle}</p>
-                            <p><span className="font-medium">Colors:</span> {frameworkInfo.imageMood.colorIntensity}</p>
-                            <p><span className="font-medium">Composition:</span> {frameworkInfo.imageMood.composition}</p>
-                          </div>
-                        </div>
-                      )}
-                      {frameworkInfo.brandPersonality && (
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Brand Alignment</p>
-                          <div className="space-y-1 text-xs text-gray-700">
-                            <p><span className="font-medium">Personality:</span> <span className="capitalize">{frameworkInfo.brandPersonality}</span></p>
-                            {frameworkInfo.brandMood && <p><span className="font-medium">Mood:</span> {frameworkInfo.brandMood}</p>}
-                            <p className="text-gray-500 mt-1">Image style, lighting and composition are tuned to match your brand identity.</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Confidence meter + learn more */}
-                    <div className="flex items-center justify-between pt-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-1.5 bg-white/80 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all ${frameworkInfo.frameworkConfidence >= 80 ? 'bg-green-500' : frameworkInfo.frameworkConfidence >= 60 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${frameworkInfo.frameworkConfidence}%` }} />
-                        </div>
-                        <span className="text-[10px] font-medium text-gray-500">{frameworkInfo.frameworkConfidence}% confidence</span>
-                      </div>
-                      <a href="/dashboard/resources/frameworks" className={`text-xs font-medium ${fc.accent} hover:underline flex items-center gap-1`}>
-                        Learn more about {frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })()}
+          {/* Spark Strategy Narrative */}
+          {(sparkNarrative || frameworkInfo) && (
+            <SparkCard
+              expression={frameworkInfo?.learningLevel === 'expert' ? 'encouraging' : frameworkInfo?.learningLevel === 'familiar' ? 'happy' : 'encouraging'}
+              accentColor={accent}
+              className="mt-4 mb-4"
+            >
+              <p className="text-sm text-gray-800 leading-relaxed">
+                {sparkNarrative || frameworkInfo?.frameworkReasoning || ''}
+              </p>
+              {frameworkInfo && (
+                <p className="text-xs text-gray-500 mt-2">
+                  {frameworkInfo.frameworkConfidence}% confidence &middot;{' '}
+                  <a href="/dashboard/resources/frameworks" className="text-amber-600 hover:underline">
+                    Learn more about this approach
+                  </a>
+                </p>
+              )}
+            </SparkCard>
+          )}
 
           {/* Header with Actions at Top */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 pt-4">
@@ -1814,83 +1777,111 @@ export default function CreateContentPage() {
               </button>
             </div>
           </div>
-          {/* Image Preview + Actions (simplified — auto-generated AI image) */}
-          <div className="mb-6 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">Your image</h3>
-                <p className="text-xs text-gray-500">Auto-generated to match your brand personality.</p>
-              </div>
-            </div>
-            {generatedImage?.url ? (
-              <div className="rounded-xl overflow-hidden border border-gray-200 bg-white max-w-md mx-auto">
+          {/* Unified Image Section — single display + Upload / Brand Library options */}
+          <div className="mb-6">
+            <div className="rounded-xl border border-gray-200 overflow-hidden bg-white max-w-lg mx-auto">
+              {/* Image display */}
+              {generatedImage?.url ? (
                 <div className="relative aspect-square w-full">
-                  <img src={generatedImage.url} alt="Generated" className="w-full h-full object-cover" />
-                  {generatedImage.style && (
+                  <img src={generatedImage.url} alt="Content image" className="w-full h-full object-cover" />
+                  {generatedImage.style && generatedImage.source !== 'upload' && (
                     <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/50 text-[10px] font-medium text-white backdrop-blur-sm">
                       {IMAGE_STYLE_NAMES[generatedImage.style] || generatedImage.style}
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 p-3 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => handleRegenerateImage()}
-                    disabled={generatingAiImage || imagesRemaining === 0}
-                    className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {generatingAiImage ? (
-                      <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    )}
-                    Regenerate
-                  </button>
-                  <a
-                    href={generatedImage.url}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Download
-                  </a>
-                  {imagesRemaining !== null && (
-                    <span className="ml-auto text-[10px] font-medium" style={{ color: imagesRemaining > 0 ? '#059669' : '#dc2626' }}>
-                      {imagesRemaining} credit{imagesRemaining !== 1 ? 's' : ''} left
-                    </span>
+              ) : generatingAiImage ? (
+                <div className="aspect-square w-full flex flex-col items-center justify-center bg-gray-50">
+                  <svg className="animate-spin w-8 h-8 text-teal-500 mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                  <p className="text-sm text-gray-500">Creating your image...</p>
+                </div>
+              ) : (
+                <div className="aspect-square w-full flex flex-col items-center justify-center bg-gray-50">
+                  <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <p className="text-sm text-gray-400">Image will appear after generation</p>
+                </div>
+              )}
+
+              {/* Action bar */}
+              <div className="flex items-center justify-between gap-2 px-3 py-2.5 border-t border-gray-100">
+                <div className="flex items-center gap-2">
+                  {generatedImage?.url && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleRegenerateImage()}
+                        disabled={generatingAiImage || imagesRemaining === 0}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Regenerate
+                      </button>
+                      <a
+                        href={generatedImage.url}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-1.5"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        Download
+                      </a>
+                    </>
                   )}
                 </div>
-                <div className="px-3 pb-3">
+                {imagesRemaining !== null && (
+                  <span className="text-[10px] font-medium" style={{ color: imagesRemaining > 0 ? '#059669' : '#dc2626' }}>
+                    {imagesRemaining} credit{imagesRemaining !== 1 ? 's' : ''} left
+                  </span>
+                )}
+              </div>
+
+              {/* Image source options — Upload + Brand Library */}
+              <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+                <div>
                   <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
                   <button
                     type="button"
                     onClick={() => step3UploadInputRef.current?.click()}
-                    className="w-full px-4 py-2.5 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex items-center justify-center gap-2"
+                    className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex flex-col items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                    Upload your own image
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    Upload your own
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowBrandLibrary(prev => !prev)}
+                  className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-all flex flex-col items-center gap-1"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  Choose from Library
+                </button>
               </div>
-            ) : (
-              <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center py-12 max-w-md mx-auto">
-                {generatingAiImage ? (
-                  <>
-                    <svg className="animate-spin w-8 h-8 text-teal-500 mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    <p className="text-sm text-gray-500">Generating your image...</p>
-                  </>
+            </div>
+
+            {/* Brand Library Picker (inline) */}
+            {showBrandLibrary && (
+              <div className="mt-3 max-w-lg mx-auto rounded-xl border border-purple-200 bg-purple-50/50 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-purple-900">Brand Library</h4>
+                  <button onClick={() => setShowBrandLibrary(false)} className="text-purple-400 hover:text-purple-600 text-lg">&times;</button>
+                </div>
+                {brandLibraryImages.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                    {brandLibraryImages.map((img) => (
+                      <button
+                        key={img.id}
+                        type="button"
+                        onClick={() => handleBrandLibraryPick(img.url)}
+                        className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-purple-500 transition-all"
+                      >
+                        <img src={img.url} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 ) : (
-                  <>
-                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <p className="text-sm text-gray-400 mb-3">Image will appear here after generation</p>
-                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    <button type="button" onClick={() => step3UploadInputRef.current?.click()} className="px-5 py-2.5 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                      Upload your own image
-                    </button>
-                  </>
+                  <p className="text-sm text-purple-600 text-center py-4">No images in your brand library yet. Upload product images in Step 2 to build your library.</p>
                 )}
               </div>
             )}
@@ -1905,61 +1896,6 @@ export default function CreateContentPage() {
                 startTime={generationStartTime ?? undefined}
                 size="md"
               />
-            </div>
-          )}
-
-          {/* Generated Image Preview */}
-          {generatedImage && (
-            <div className="mb-6 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
-              <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600 flex-shrink-0">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-medium text-gray-900 text-sm">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
-                    {generatedImage.source !== 'upload' && (
-                      <p className="text-xs text-gray-500">Style: {(generatedImage.style && IMAGE_STYLE_NAMES[generatedImage.style]) || generatedImage.style || 'Auto'}</p>
-                    )}
-                    {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">
-                        Photo by{' '}
-                        {generatedImage.photographerUrl ? (
-                          <a href={generatedImage.photographerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">{generatedImage.photographerName || 'Photographer'}</a>
-                        ) : (
-                          <span>{generatedImage.photographerName || 'Photographer'}</span>
-                        )}{' '}
-                        on <a href="https://unsplash.com?utm_source=geospark&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">Unsplash</a>
-                      </p>
-                    )}
-                    {generatedImage.source === 'ai' && generatedImage.attribution && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{generatedImage.attribution}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={handleDownloadImage}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center rounded-b-xl" style={{ backgroundColor: hexToRgba(secondary, 0.08) }}>
-                <SafeImage 
-                  key={generatedImage.url}
-                  src={generatedImage.url} 
-                  alt="Generated content image" 
-                  className="max-w-[280px] w-full rounded-lg shadow-sm aspect-square object-cover"
-                  fallbackClassName="max-w-[280px] w-full aspect-square rounded-lg bg-gray-200"
-                />
-              </div>
             </div>
           )}
 
@@ -2271,7 +2207,7 @@ export default function CreateContentPage() {
             })}
           </div>
 
-          {/* Rating + Spark Reaction (Touchpoint 4 — Social Pack) */}
+          {/* Rating + Spark Reaction (Social Pack) */}
           {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -2287,14 +2223,9 @@ export default function CreateContentPage() {
                 ) : <div />}
               </div>
               {sparkReaction && (
-                <div className="mt-3 pt-3 border-t border-gray-200/50 flex items-center gap-2">
-                  <SparkFox expression={sparkReaction.good ? 'celebrating' : 'learning'} size="md" accentColor={accent} />
-                  <p className="text-sm text-gray-600">
-                    {sparkReaction.good
-                      ? "Nice! I\u2019ll lean into this style more."
-                      : "Got it \u2014 I\u2019ll adjust next time."}
-                  </p>
-                </div>
+                <SparkCard expression={sparkReaction.good ? 'celebrating' : 'learning'} accentColor={accent} compact className="mt-3">
+                  <p className="text-sm text-gray-700">{getPostRatingReaction(sparkReaction.good)}</p>
+                </SparkCard>
               )}
             </div>
           )}
@@ -2456,83 +2387,86 @@ export default function CreateContentPage() {
             <p className="text-xs text-gray-500 mt-2">Ready to save to your library when you're done.</p>
           </div>
           
-          {/* Image Preview + Actions (simplified — auto-generated AI image) */}
-          <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: hexToRgba(primary, 0.1), borderColor: hexToRgba(primary, 0.28) }}>
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">Your image</h3>
-            <p className="text-xs text-gray-500 mb-3">Auto-generated to match your brand personality.</p>
-            {generatedImage?.url ? (
-              <div className="rounded-xl overflow-hidden border border-gray-200 bg-white max-w-md mx-auto">
-                <div className="relative aspect-square w-full">
-                  <img src={generatedImage.url} alt="Generated" className="w-full h-full object-cover" />
-                  {generatedImage.style && (
-                    <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/50 text-[10px] font-medium text-white backdrop-blur-sm">
-                      {IMAGE_STYLE_NAMES[generatedImage.style] || generatedImage.style}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-2 p-3 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => handleRegenerateImage()}
-                    disabled={generatingAiImage || imagesRemaining === 0}
-                    className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {generatingAiImage ? (
-                      <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          {/* Unified Image Section (regular content) */}
+          {selectedTemplate !== 'blog-post' && (
+            <div className="mb-6">
+              <div className="rounded-xl border border-gray-200 overflow-hidden bg-white max-w-lg mx-auto">
+                {generatedImage?.url ? (
+                  <div className="relative aspect-square w-full">
+                    <img src={generatedImage.url} alt="Content image" className="w-full h-full object-cover" />
+                    {generatedImage.style && generatedImage.source !== 'upload' && (
+                      <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/50 text-[10px] font-medium text-white backdrop-blur-sm">
+                        {IMAGE_STYLE_NAMES[generatedImage.style] || generatedImage.style}
+                      </span>
                     )}
-                    Regenerate
-                  </button>
-                  <a
-                    href={generatedImage.url}
-                    download
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-2 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center gap-1.5"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Download
-                  </a>
+                  </div>
+                ) : generatingAiImage ? (
+                  <div className="aspect-square w-full flex flex-col items-center justify-center bg-gray-50">
+                    <svg className="animate-spin w-8 h-8 text-teal-500 mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    <p className="text-sm text-gray-500">Creating your image...</p>
+                  </div>
+                ) : (
+                  <div className="aspect-square w-full flex flex-col items-center justify-center bg-gray-50">
+                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <p className="text-sm text-gray-400">Image will appear after generation</p>
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-2 px-3 py-2.5 border-t border-gray-100">
+                  <div className="flex items-center gap-2">
+                    {generatedImage?.url && (
+                      <>
+                        <button type="button" onClick={() => handleRegenerateImage()} disabled={generatingAiImage || imagesRemaining === 0} className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-1.5 disabled:opacity-50">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                          Regenerate
+                        </button>
+                        <a href={generatedImage.url} download target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                          Download
+                        </a>
+                      </>
+                    )}
+                  </div>
                   {imagesRemaining !== null && (
-                    <span className="ml-auto text-[10px] font-medium" style={{ color: imagesRemaining > 0 ? '#059669' : '#dc2626' }}>
+                    <span className="text-[10px] font-medium" style={{ color: imagesRemaining > 0 ? '#059669' : '#dc2626' }}>
                       {imagesRemaining} credit{imagesRemaining !== 1 ? 's' : ''} left
                     </span>
                   )}
                 </div>
-                <div className="px-3 pb-3">
-                  <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                  <button
-                    type="button"
-                    onClick={() => step3UploadInputRef.current?.click()}
-                    className="w-full px-4 py-2.5 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                    Upload your own image
+                <div className="grid grid-cols-2 gap-2 px-3 pb-3">
+                  <div>
+                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
+                    <button type="button" onClick={() => step3UploadInputRef.current?.click()} className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex flex-col items-center gap-1">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                      Upload your own
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => setShowBrandLibrary(prev => !prev)} className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-all flex flex-col items-center gap-1">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Choose from Library
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 flex flex-col items-center justify-center py-12 max-w-md mx-auto">
-                {generatingAiImage ? (
-                  <>
-                    <svg className="animate-spin w-8 h-8 text-teal-500 mb-3" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                    <p className="text-sm text-gray-500">Generating your image...</p>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-10 h-10 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <p className="text-sm text-gray-400 mb-3">Image will appear here after generation</p>
-                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    <button type="button" onClick={() => step3UploadInputRef.current?.click()} className="px-5 py-2.5 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                      Upload your own image
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+              {showBrandLibrary && (
+                <div className="mt-3 max-w-lg mx-auto rounded-xl border border-purple-200 bg-purple-50/50 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-semibold text-purple-900">Brand Library</h4>
+                    <button onClick={() => setShowBrandLibrary(false)} className="text-purple-400 hover:text-purple-600 text-lg">&times;</button>
+                  </div>
+                  {brandLibraryImages.length > 0 ? (
+                    <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                      {brandLibraryImages.map((img) => (
+                        <button key={img.id} type="button" onClick={() => handleBrandLibraryPick(img.url)} className="aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-purple-500 transition-all">
+                          <img src={img.url} alt="" className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-purple-600 text-center py-4">No images in your brand library yet.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Progress Bar for Regeneration */}
           {generating && (
@@ -2543,61 +2477,6 @@ export default function CreateContentPage() {
                 startTime={generationStartTime ?? undefined}
                 size="md"
               />
-            </div>
-          )}
-
-          {/* Generated Image Preview - hidden for blog posts (uses hero image) */}
-          {generatedImage && selectedTemplate !== 'blog-post' && (
-            <div className="mb-4 rounded-xl border overflow-hidden" style={{ backgroundColor: hexToRgba(primary, 0.06), borderColor: hexToRgba(primary, 0.25) }}>
-              <div className="p-3 sm:p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderColor: hexToRgba(primary, 0.2) }}>
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-100 text-purple-600 flex-shrink-0">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-medium text-gray-900 text-sm">{generatedImage.source === 'upload' ? 'Your image' : 'Generated Image'}</h3>
-                    {generatedImage.source !== 'upload' && (
-                      <p className="text-xs text-gray-500">Style: {(generatedImage.style && IMAGE_STYLE_NAMES[generatedImage.style]) || generatedImage.style || 'Auto'}</p>
-                    )}
-                    {generatedImage.source === 'stock' && (generatedImage.photographerName || generatedImage.attribution) && (
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">
-                        Photo by{' '}
-                        {generatedImage.photographerUrl ? (
-                          <a href={generatedImage.photographerUrl} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">{generatedImage.photographerName || 'Photographer'}</a>
-                        ) : (
-                          <span>{generatedImage.photographerName || 'Photographer'}</span>
-                        )}{' '}
-                        on <a href="https://unsplash.com?utm_source=geospark&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline">Unsplash</a>
-                      </p>
-                    )}
-                    {generatedImage.source === 'ai' && generatedImage.attribution && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{generatedImage.attribution}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={handleDownloadImage}
-                    className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center gap-1"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download
-                  </button>
-                </div>
-              </div>
-              <div className="p-4 flex flex-col items-center rounded-b-xl" style={{ backgroundColor: hexToRgba(secondary, 0.08) }}>
-                <SafeImage 
-                  key={generatedImage.url}
-                  src={generatedImage.url} 
-                  alt="Generated content image" 
-                  className="max-w-[280px] w-full rounded-lg shadow-sm aspect-square object-cover"
-                  fallbackClassName="max-w-[280px] w-full aspect-square rounded-lg bg-gray-200"
-                />
-              </div>
             </div>
           )}
 
@@ -2630,55 +2509,22 @@ export default function CreateContentPage() {
               <span className="text-xs text-gray-400">{generatedContent.length} characters</span>
             </div>
 
-            {/* Spark Intelligence Brief (compact for regular content — Touchpoint 3) */}
-            {frameworkInfo && (() => {
-              const fc = FRAMEWORK_COLORS[frameworkInfo.frameworkColor || 'blue'] || FRAMEWORK_COLORS.blue
-              return (
-                <div className={`mx-4 mt-3 mb-2 rounded-lg border overflow-hidden ${fc.bg} ${fc.border}`}>
-                  <button type="button" onClick={() => setIntelligenceBriefExpanded(!intelligenceBriefExpanded)} className="w-full px-3 py-2 flex items-center justify-between gap-2 text-left hover:opacity-90">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <SparkFox expression={frameworkInfo.learningLevel === 'expert' ? 'encouraging' : 'idle'} size="sm" accentColor={accent} />
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${fc.badge}`}>{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()}</span>
-                      <span className={`text-xs font-semibold ${fc.accent}`}>{frameworkInfo.frameworkConfidence}%</span>
-                      {!intelligenceBriefExpanded && <span className={`text-xs truncate hidden sm:inline ${fc.accent}`}>&mdash; {frameworkInfo.frameworkReasoning}</span>}
-                    </div>
-                    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${intelligenceBriefExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                  </button>
-                  {intelligenceBriefExpanded && (
-                    <div className="px-3 pb-3 space-y-3 border-t" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>
-                      {frameworkInfo.frameworkSteps && frameworkInfo.frameworkSteps.length > 0 && (
-                        <div className="pt-2 flex items-center gap-1.5 flex-wrap">
-                          {frameworkInfo.frameworkSteps.map((s, i) => (
-                            <div key={s} className="flex items-center gap-1">
-                              <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${fc.stepActive}`}>{s}</span>
-                              {i < (frameworkInfo.frameworkSteps?.length ?? 0) - 1 && <svg className={`w-3 h-3 ${fc.accent}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <p className={`text-xs leading-relaxed ${fc.text}`}>{frameworkInfo.frameworkReasoning}</p>
-                      {frameworkInfo.frameworkWhyItWorks && <p className="text-xs text-gray-600 leading-relaxed">{frameworkInfo.frameworkWhyItWorks}</p>}
-                      {frameworkInfo.imageMood && (
-                        <div className="bg-white/60 rounded-md px-2.5 py-2 text-[11px] text-gray-600 space-y-0.5">
-                          <p className="font-semibold text-gray-500 uppercase tracking-wider text-[10px] mb-1">Image Psychology</p>
-                          <p><span className="font-medium">Mood:</span> {frameworkInfo.imageMood.moodOverride} · <span className="font-medium">Lighting:</span> {frameworkInfo.imageMood.lightingStyle}</p>
-                          <p><span className="font-medium">Composition:</span> {frameworkInfo.imageMood.composition} · <span className="font-medium">Colors:</span> {frameworkInfo.imageMood.colorIntensity}</p>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-20 h-1 bg-white/80 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${frameworkInfo.frameworkConfidence >= 80 ? 'bg-green-500' : frameworkInfo.frameworkConfidence >= 60 ? 'bg-amber-500' : 'bg-red-400'}`} style={{ width: `${frameworkInfo.frameworkConfidence}%` }} />
-                          </div>
-                          <span className="text-[10px] text-gray-500">{frameworkInfo.frameworkConfidence}% confidence</span>
-                        </div>
-                        <a href="/dashboard/resources/frameworks" className={`text-[11px] font-medium ${fc.accent} hover:underline`}>Learn more →</a>
-                      </div>
-                    </div>
+            {/* Spark Strategy Narrative (regular content) */}
+            {(sparkNarrative || frameworkInfo) && (
+              <div className="mx-4 mt-3 mb-2">
+                <SparkCard expression="encouraging" accentColor={accent} compact>
+                  <p className="text-sm text-gray-800 leading-relaxed">
+                    {sparkNarrative || frameworkInfo?.frameworkReasoning || ''}
+                  </p>
+                  {frameworkInfo && (
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      {frameworkInfo.frameworkConfidence}% confidence &middot;{' '}
+                      <a href="/dashboard/resources/frameworks" className="text-amber-600 hover:underline">Learn more</a>
+                    </p>
                   )}
-                </div>
-              )
-            })()}
+                </SparkCard>
+              </div>
+            )}
 
             {/* Preview Mode - Enhanced Blog Style */}
             {viewMode === 'preview' && (
@@ -2740,7 +2586,7 @@ export default function CreateContentPage() {
             </div>
           )}
 
-          {/* Rating + Spark Reaction (Touchpoint 4 — Regular Content) */}
+          {/* Rating + Spark Reaction (Regular Content) */}
           {(generatedTextId || generatedImageId || generatedImage) && (
             <div className="mt-6 p-4 rounded-lg border max-w-4xl mx-auto" style={{ backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.2) }}>
               <div className="flex items-center justify-between flex-wrap gap-4">
@@ -2756,14 +2602,9 @@ export default function CreateContentPage() {
                 ) : <div />}
               </div>
               {sparkReaction && (
-                <div className="mt-3 pt-3 border-t border-gray-200/50 flex items-center gap-2">
-                  <SparkFox expression={sparkReaction.good ? 'celebrating' : 'learning'} size="md" accentColor={accent} />
-                  <p className="text-sm text-gray-600">
-                    {sparkReaction.good
-                      ? "Nice! I\u2019ll lean into this style more."
-                      : "Got it \u2014 I\u2019ll adjust next time."}
-                  </p>
-                </div>
+                <SparkCard expression={sparkReaction.good ? 'celebrating' : 'learning'} accentColor={accent} compact className="mt-3">
+                  <p className="text-sm text-gray-700">{getPostRatingReaction(sparkReaction.good)}</p>
+                </SparkCard>
               )}
             </div>
           )}

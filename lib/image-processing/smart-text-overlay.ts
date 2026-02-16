@@ -156,31 +156,38 @@ function escapeXml(text: string): string {
     .replace(/'/g, '&apos;')
 }
 
-/** Extract a short headline from the topic string. */
-export function extractHeadline(topic: string): string {
+/**
+ * Extract a short headline for text overlay.
+ *
+ * Priority:
+ * 1. If `generatedContent` is provided (e.g. a Twitter post), use its first meaningful sentence
+ * 2. Match promotional patterns (20% OFF, $49.99, etc.)
+ * 3. Title-case the topic, max 6 words
+ */
+export function extractHeadline(topic: string, generatedContent?: string | null): string {
+  // 1. Try to extract from generated content (e.g. the Twitter post)
+  if (generatedContent) {
+    const lines = generatedContent
+      .split('\n')
+      .map(l => l.replace(/^[#@🔥⚡💡🚀✨🏠🔧🎉📢💪🙌]+\s*/g, '').trim())
+      .filter(l => l.length > 5 && l.length < 70 && !l.startsWith('#') && !l.startsWith('@') && !l.startsWith('http'))
+    if (lines.length > 0) {
+      // Pick the shortest impactful line (often the hook)
+      const best = lines.reduce((a, b) => a.length < b.length && a.length > 10 ? a : b)
+      return best.length > 50 ? best.slice(0, 47) + '...' : best
+    }
+  }
+
+  // 2. Promotional patterns
   const percentMatch = topic.match(/(\d+%\s*(?:off|discount))/i)
   if (percentMatch) return percentMatch[1].toUpperCase()
 
   const dollarMatch = topic.match(/(\$\d+(?:\.\d{2})?)/)
   if (dollarMatch) return dollarMatch[1]
 
-  const promoKeywords = ['new', 'sale', 'special', 'limited', 'free', 'today', 'now']
-  const words = topic.toLowerCase().split(/\s+/)
-  const promoWords = words.filter((w) =>
-    promoKeywords.some((kw) => w.includes(kw))
-  )
-
-  if (promoWords.length > 0) {
-    return promoWords.slice(0, 3).join(' ').toUpperCase()
-  }
-
-  const significantWords = words.filter(
-    (w) => w.length > 3 && !['the', 'and', 'for', 'with'].includes(w)
-  )
-
-  if (significantWords.length > 0) {
-    return significantWords.slice(0, 2).join(' ').toUpperCase()
-  }
-
-  return topic.slice(0, 20).toUpperCase()
+  // 3. Title-case topic, max 6 words
+  const cleaned = topic.replace(/[^\w\s''-]/g, '').trim()
+  const words = cleaned.split(/\s+/).slice(0, 6)
+  const titleCase = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+  return titleCase.length > 50 ? titleCase.slice(0, 47) + '...' : titleCase
 }

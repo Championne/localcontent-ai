@@ -20,6 +20,7 @@ import { addSmartTextOverlay, extractHeadline } from '@/lib/image-processing/sma
 import { rateImageQuality } from '@/lib/rating/image-quality'
 import { detectBrandPersonality } from '@/lib/branding/personality-detection'
 import { getUserPreferences, getStyleBoosts, getFrameworkBoost } from '@/lib/ai-learning/preference-engine'
+import { getFallbackNarrative, frameworkName } from '@/lib/spark/narratives'
 
 export async function POST(request: Request) {
   const supabase = createClient()
@@ -451,6 +452,19 @@ export async function POST(request: Request) {
         }
       }
 
+      // Build Spark narrative and extract headline from generated text
+      const sparkNarrative = getFallbackNarrative(
+        frameworkRec.framework, topic, businessName,
+        finalImageStyle, brandPersonalityObj?.personality,
+      )
+      // Extract headline from Twitter post (shortest, punchiest) or topic
+      let headline: string | null = null
+      if (socialPack?.twitter?.content) {
+        const firstLine = socialPack.twitter.content.split('\n')[0].replace(/^[#@🔥⚡💡🚀✨🏠🔧]+\s*/g, '').trim()
+        if (firstLine.length > 3 && firstLine.length < 80) headline = firstLine
+      }
+      if (!headline) headline = extractHeadline(topic)
+
       return NextResponse.json({
         success: true,
         socialPack,
@@ -460,6 +474,8 @@ export async function POST(request: Request) {
         generated_image_id: generatedImageId,
         generated_text_id: generatedTextId,
         template: 'social-pack',
+        sparkNarrative,
+        headline,
         ...(frameworkInfo && { frameworkInfo }),
         metadata: {
           businessName,
@@ -722,6 +738,18 @@ export async function POST(request: Request) {
       }
     }
 
+    // Build Spark narrative and extract headline
+    const sparkNarrativeRegular = getFallbackNarrative(
+      frameworkRec.framework, topic, businessName,
+      finalImageStyle, brandPersonalityObj?.personality,
+    )
+    let headlineRegular: string | null = null
+    if (content) {
+      const firstLine = content.split('\n').find(l => l.trim().length > 5 && l.trim().length < 80)
+      if (firstLine) headlineRegular = firstLine.replace(/^[#*_]+\s*/g, '').trim()
+    }
+    if (!headlineRegular) headlineRegular = extractHeadline(topic)
+
     return NextResponse.json({
       success: true,
       content,
@@ -731,6 +759,8 @@ export async function POST(request: Request) {
       generated_image_id: generatedImageId,
       generated_text_id: generatedTextId,
       template,
+      sparkNarrative: sparkNarrativeRegular,
+      headline: headlineRegular,
       ...(frameworkInfo && { frameworkInfo }),
       metadata: {
         businessName,
