@@ -2126,6 +2126,19 @@ export default function CreateContentPage() {
                 : post.content
               const displayImageUrl = generatedImage?.url
 
+              // Branded image with CSS overlay for mockups
+              const BrandedImage = ({ className = 'w-full h-auto object-contain', aspect }: { className?: string; aspect?: string }) => (
+                <div className={`relative ${aspect || ''}`}>
+                  <img key={displayImageUrl} src={displayImageUrl!} alt="" className={className} referrerPolicy="no-referrer" />
+                  {overlayHeadline && (
+                    <div className="absolute bottom-2 left-2 right-2 rounded-lg px-3 py-2 shadow-md" style={{ backgroundColor: primary + 'e6' }}>
+                      <p className="text-center font-bold leading-tight" style={{ color: overlayTextColor, fontSize: 'clamp(10px, 2.5vw, 16px)' }}>{overlayHeadline}</p>
+                      <p className="text-center font-bold mt-0.5 opacity-90 tracking-wide" style={{ color: overlayTextColor, fontSize: 'clamp(7px, 1.5vw, 9px)' }}>{businessName?.toUpperCase()}</p>
+                    </div>
+                  )}
+                </div>
+              )
+
               // Platform-specific mockup rendering (uses current image, including after Apply branding)
               const renderPlatformMockup = () => {
                 switch (platform) {
@@ -2151,7 +2164,7 @@ export default function CreateContentPage() {
                               <p className="mt-2 text-gray-900 text-[15px] leading-relaxed whitespace-pre-wrap">{post.content}</p>
                               {displayImageUrl && (
                                 <div className="mt-3 w-full rounded-2xl overflow-hidden border border-gray-200">
-                                  <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                                  <BrandedImage />
                                 </div>
                               )}
                               <div className="flex justify-between mt-3 text-gray-500">
@@ -2192,7 +2205,7 @@ export default function CreateContentPage() {
                         </div>
                         {displayImageUrl && (
                           <div className="w-full overflow-hidden">
-                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                            <BrandedImage />
                           </div>
                         )}
                         <div className="px-4 pt-2">
@@ -2232,9 +2245,7 @@ export default function CreateContentPage() {
                           <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/></svg>
                         </div>
                         {displayImageUrl ? (
-                          <div className="w-full aspect-square">
-                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          </div>
+                          <BrandedImage className="w-full h-full object-cover" aspect="w-full aspect-square" />
                         ) : (
                           <div className="w-full aspect-square bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100 flex items-center justify-center">
                             <span className="text-4xl">📸</span>
@@ -2285,7 +2296,7 @@ export default function CreateContentPage() {
                         </div>
                         {displayImageUrl && (
                           <div className="w-full overflow-hidden">
-                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                            <BrandedImage />
                           </div>
                         )}
                         <div className="px-4 pt-2">
@@ -2314,9 +2325,7 @@ export default function CreateContentPage() {
                         {/* TikTok Mockup - Vertical style */}
                         <div className="relative">
                           {displayImageUrl ? (
-                            <div className="w-full aspect-[9/16]">
-                              <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            </div>
+                            <BrandedImage className="w-full h-full object-cover" aspect="w-full aspect-[9/16]" />
                           ) : (
                             <div className="w-full aspect-[9/16] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
                               <span className="text-6xl">🎵</span>
@@ -2369,7 +2378,7 @@ export default function CreateContentPage() {
                         </div>
                         {displayImageUrl && (
                           <div className="w-full overflow-hidden">
-                            <img key={displayImageUrl} src={displayImageUrl} alt="" className="w-full h-auto object-contain" referrerPolicy="no-referrer" />
+                            <BrandedImage />
                           </div>
                         )}
                         <div className="px-4 py-2">
