@@ -773,6 +773,9 @@ export default function CreateContentPage() {
         reader.onloadend = () => resolve(reader.result as string)
         reader.readAsDataURL(productImage.file)
       })
+      console.log('[GeoSpark Debug] Product image included in generation', { fileName: productImage.file.name, base64Length: productImageBase64?.length })
+    } else {
+      console.log('[GeoSpark Debug] No product image for generation', { hasProductImage: !!productImage, mode })
     }
 
     try {

@@ -287,16 +287,21 @@ export async function POST(request: Request) {
             let imageBuffer: Buffer | null = null
             let bgRemovalMethod: string | null = null
             if (productImage) {
+              console.log('[Product] Starting compositing pipeline, base64 length:', (productImage as string).length)
               try {
                 const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
                 const productBuffer = Buffer.from(base64Data, 'base64')
+                console.log('[Product] Decoded buffer size:', productBuffer.length)
                 const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
                 bgRemovalMethod = method
+                console.log('[Product] Background removed, method:', method, 'size:', transparentProduct.length)
                 const bgRes = await fetch(imageResult.url)
                 const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
+                console.log('[Product] Fetched AI background, size:', bgBuffer.length)
                 imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
+                console.log('[Product] Compositing SUCCESS, final size:', imageBuffer.length)
               } catch (e) {
-                console.error('Product compositing failed, using raw AI image:', e)
+                console.error('[Product] Compositing FAILED, falling back to raw AI image:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
               }
             }
 
@@ -556,16 +561,21 @@ export async function POST(request: Request) {
           let imageBuffer: Buffer | null = null
           let bgRemovalMethod: string | null = null
           if (productImage) {
+            console.log('[Product-SP] Starting compositing pipeline, base64 length:', (productImage as string).length)
             try {
               const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
               const productBuffer = Buffer.from(base64Data, 'base64')
+              console.log('[Product-SP] Decoded buffer size:', productBuffer.length)
               const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
               bgRemovalMethod = method
+              console.log('[Product-SP] Background removed, method:', method, 'size:', transparentProduct.length)
               const bgRes = await fetch(imageResult.url)
               const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
+              console.log('[Product-SP] Fetched AI background, size:', bgBuffer.length)
               imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
+              console.log('[Product-SP] Compositing SUCCESS, final size:', imageBuffer.length)
             } catch (e) {
-              console.error('Product compositing failed, using raw AI image:', e)
+              console.error('[Product-SP] Compositing FAILED, falling back to raw AI image:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
             }
           }
 

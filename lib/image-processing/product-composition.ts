@@ -88,7 +88,7 @@ export async function compositeProduct(
 }
 
 // ---------------------------------------------------------------------------
-// Drop shadow via SVG filter rendered by Sharp
+// Drop shadow using Sharp-native operations (no SVG/librsvg dependency)
 // ---------------------------------------------------------------------------
 async function addNaturalShadow(
   productBuffer: Buffer,
@@ -97,37 +97,53 @@ async function addNaturalShadow(
   intensity: number = 0.3
 ): Promise<Buffer> {
   const shadowOffset = Math.round(Math.max(width, height) * 0.02)
-  const shadowBlur = Math.round(Math.max(width, height) * 0.04)
+  const blurSigma = Math.max(1, Math.round(Math.max(width, height) * 0.02))
 
   const canvasW = width + shadowOffset * 3
   const canvasH = height + shadowOffset * 3
 
-  const svgOverlay = Buffer.from(`
-    <svg width="${canvasW}" height="${canvasH}" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="${shadowBlur}"/>
-          <feOffset dx="${shadowOffset}" dy="${shadowOffset}" result="offsetblur"/>
-          <feComponentTransfer>
-            <feFuncA type="linear" slope="${intensity}"/>
-          </feComponentTransfer>
-          <feMerge>
-            <feMergeNode/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      <g filter="url(#shadow)">
-        <image
-          href="data:image/png;base64,${productBuffer.toString('base64')}"
-          x="${shadowOffset}"
-          y="${shadowOffset}"
-          width="${width}"
-          height="${height}"
-        />
-      </g>
-    </svg>
-  `)
+  // Extract alpha channel from product → use as shadow mask
+  const productImage = sharp(productBuffer).ensureAlpha()
+  const { data: alphaData } = await productImage
+    .clone()
+    .resize(width, height, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .extractChannel(3)
+    .raw()
+    .toBuffer({ resolveWithObject: true })
 
-  return sharp(svgOverlay).png().toBuffer()
+  // Build shadow: black pixels where product is opaque, scaled by intensity
+  const shadowPixels = Buffer.alloc(width * height * 4)
+  for (let i = 0; i < width * height; i++) {
+    const a = Math.round(alphaData[i] * intensity)
+    shadowPixels[i * 4] = 0     // R
+    shadowPixels[i * 4 + 1] = 0 // G
+    shadowPixels[i * 4 + 2] = 0 // B
+    shadowPixels[i * 4 + 3] = a // A
+  }
+
+  // Blur the shadow
+  const blurredShadow = await sharp(shadowPixels, { raw: { width, height, channels: 4 } })
+    .blur(blurSigma)
+    .png()
+    .toBuffer()
+
+  // Create transparent canvas, composite shadow (offset) then product
+  const canvas = await sharp({
+    create: { width: canvasW, height: canvasH, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .png()
+    .toBuffer()
+
+  const resizedProduct = await sharp(productBuffer)
+    .resize(width, height, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer()
+
+  return sharp(canvas)
+    .composite([
+      { input: blurredShadow, left: shadowOffset * 2, top: shadowOffset * 2, blend: 'over' },
+      { input: resizedProduct, left: shadowOffset, top: shadowOffset, blend: 'over' },
+    ])
+    .png()
+    .toBuffer()
 }
