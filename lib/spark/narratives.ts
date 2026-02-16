@@ -41,11 +41,11 @@ export function getGreeting(
 
   if (!learningLevel || learningLevel === 'new') {
     return pick([
-      `Hi! I'm Spark, your marketing strategist. Tell me what ${name} wants to share today and I'll build the perfect strategy for you.`,
-      `Welcome! I'm Spark — I help local businesses like ${name} create posts that actually attract customers. Pick a content type to get started.`,
-      `Hey there! I'm Spark. I'll figure out the best marketing approach for ${name} based on your topic. Just choose a content type above.`,
+      `Hi! I'm SparkFox, your marketing strategist. Tell me what ${name} wants to share today and I'll build the perfect strategy for you.`,
+      `Welcome! I'm SparkFox — I help local businesses like ${name} create posts that actually attract customers. Pick a content type to get started.`,
+      `Hey there! I'm SparkFox. I'll figure out the best marketing approach for ${name} based on your topic. Just choose a content type above.`,
       `Hello! I'm your AI marketing partner. Whatever ${name} needs to share, I'll craft a strategy that connects with your audience. Let's go!`,
-      `Great to meet you! I'm Spark. I study marketing psychology so ${name} doesn't have to. Pick what you want to create and I'll handle the rest.`,
+      `Great to meet you! I'm SparkFox. I study marketing psychology so ${name} doesn't have to. Pick what you want to create and I'll handle the rest.`,
     ])
   }
 

@@ -385,7 +385,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
           )}
         </nav>
 
-        {/* Spark is Learning Indicator */}
+        {/* SparkFox Learning Indicator */}
         {sparkPrefs && (
           <Link
             href="/dashboard/content"
@@ -394,7 +394,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
           >
             <SparkFox expression="idle" size="sm" accentColor={brandPrimary} />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-700 truncate">Spark</p>
+              <p className="text-xs font-medium text-gray-700 truncate">SparkFox</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="flex-1 h-1 rounded-full bg-amber-200/80 overflow-hidden">
                   <div
@@ -402,7 +402,7 @@ export default function DashboardLayoutClient({ children, userName, isSalesUser 
                     style={{ width: `${Math.min(100, (sparkPrefs.totalRated / 25) * 100)}%` }}
                   />
                 </div>
-                <span className="text-[10px] text-gray-400 flex-shrink-0">{sparkPrefs.learningLevelLabel}</span>
+                <span className="text-[10px] text-gray-400 flex-shrink-0">{Math.min(100, Math.round((sparkPrefs.totalRated / 25) * 100))}% &middot; {sparkPrefs.learningLevelLabel}</span>
               </div>
             </div>
           </Link>

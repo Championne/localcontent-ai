@@ -1343,7 +1343,7 @@ export default function CreateContentPage() {
             className="mb-6"
           >
             <p className="text-sm text-gray-800 leading-relaxed">
-              {sparkGreeting || "Hi! I\u2019m Spark, your marketing strategist. Pick a content type and I\u2019ll build the perfect strategy for you."}
+              {sparkGreeting || "Hi! I\u2019m SparkFox, your marketing strategist. Pick a content type and I\u2019ll build the perfect strategy for you."}
             </p>
           </SparkCard>
 
@@ -1444,8 +1444,14 @@ export default function CreateContentPage() {
       {/* Step 2: Add Details */}
       {!loadingEdit && step === 2 && (
         <div className="rounded-xl border shadow-sm p-6" style={{ backgroundColor: hexToRgba(primary, 0.12), borderColor: hexToRgba(primary, 0.4) }}>
-          <p className="text-sm font-medium mb-0.5" style={{ color: primary }}>You're creating a {templates.find(t => t.id === selectedTemplate)?.name || 'piece of content'}</p>
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us what it's about</h2>
+          {/* SparkFox Step 2 Greeting */}
+          <SparkCard expression="encouraging" accentColor={accent} className="mb-5">
+            <p className="text-sm text-gray-800 leading-relaxed">
+              Great choice! Tell me what this {templates.find(t => t.id === selectedTemplate)?.name?.toLowerCase() || 'content'} is about and I&apos;ll craft the perfect marketing strategy for <span className="font-semibold">{businessName || 'your business'}</span>.
+            </p>
+          </SparkCard>
+          <p className="text-sm font-medium mb-0.5" style={{ color: primary }}>You&apos;re creating a {templates.find(t => t.id === selectedTemplate)?.name || 'piece of content'}</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Tell us what it&apos;s about</h2>
           
           {/* Business Selection */}
           {businesses.length > 1 ? (
