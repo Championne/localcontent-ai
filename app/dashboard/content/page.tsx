@@ -567,6 +567,24 @@ export default function CreateContentPage() {
   const primary = brand?.primary ?? '#0d9488'
   const secondary = brand?.secondary ?? '#6b7280'
   const accent = brand?.accent ?? '#6b7280'
+
+  // Client-side headline for text overlay (mirrors extractHeadline logic)
+  const overlayHeadline = (() => {
+    if (!topic) return ''
+    const cleaned = topic.replace(/[^\w\s''-]/g, '').trim()
+    const words = cleaned.split(/\s+/).slice(0, 6)
+    const tc = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+    return tc.length > 50 ? tc.slice(0, 47) + '...' : tc
+  })()
+
+  // Contrast color for text on brand background
+  const overlayTextColor = (() => {
+    const hex = primary.replace('#', '')
+    const r = parseInt(hex.substring(0, 2), 16)
+    const g = parseInt(hex.substring(2, 4), 16)
+    const b = parseInt(hex.substring(4, 6), 16)
+    return (r * 299 + g * 587 + b * 114) / 1000 > 128 ? '#000000' : '#ffffff'
+  })()
   const hexToRgba = (hex: string, alpha: number) => {
     const r = parseInt(hex.slice(1, 3), 16)
     const g = parseInt(hex.slice(3, 5), 16)
@@ -1188,8 +1206,75 @@ export default function CreateContentPage() {
     }
   }
 
-  const handleDownloadImage = () => {
-    if (generatedImage?.url) {
+  const handleDownloadImage = async () => {
+    if (!generatedImage?.url) return
+    try {
+      // Bake text overlay into image using Canvas
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = reject
+        img.src = generatedImage.url
+      })
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.drawImage(img, 0, 0)
+
+      // Draw branded bar + text
+      if (overlayHeadline) {
+        const w = canvas.width
+        const h = canvas.height
+        const pad = Math.round(20 * (w / 1024))
+        const barH = Math.round(90 * (w / 1024))
+        const barY = h - barH - pad
+        const barW = w - pad * 2
+
+        // Bar background
+        ctx.fillStyle = primary + 'e6'
+        const radius = 12
+        ctx.beginPath()
+        ctx.moveTo(pad + radius, barY)
+        ctx.lineTo(pad + barW - radius, barY)
+        ctx.quadraticCurveTo(pad + barW, barY, pad + barW, barY + radius)
+        ctx.lineTo(pad + barW, barY + barH - radius)
+        ctx.quadraticCurveTo(pad + barW, barY + barH, pad + barW - radius, barY + barH)
+        ctx.lineTo(pad + radius, barY + barH)
+        ctx.quadraticCurveTo(pad, barY + barH, pad, barY + barH - radius)
+        ctx.lineTo(pad, barY + radius)
+        ctx.quadraticCurveTo(pad, barY, pad + radius, barY)
+        ctx.closePath()
+        ctx.fill()
+
+        // Headline text
+        const headSize = Math.max(16, Math.round(36 * (w / 1024)))
+        const bizSize = Math.max(10, Math.round(18 * (w / 1024)))
+        ctx.fillStyle = overlayTextColor
+        ctx.textAlign = 'center'
+        ctx.font = `bold ${headSize}px sans-serif`
+        ctx.fillText(overlayHeadline, w / 2, barY + barH * 0.42, barW - 20)
+        ctx.font = `bold ${bizSize}px sans-serif`
+        ctx.globalAlpha = 0.9
+        ctx.fillText(businessName?.toUpperCase() || '', w / 2, barY + barH * 0.75, barW - 20)
+        ctx.globalAlpha = 1
+      }
+
+      canvas.toBlob(blob => {
+        if (!blob) return
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `geospark-image-${Date.now()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      }, 'image/png')
+    } catch {
+      // Fallback: download raw image without overlay
       const link = document.createElement('a')
       link.href = generatedImage.url
       link.download = `geospark-image-${Date.now()}.png`
@@ -1915,6 +2000,13 @@ export default function CreateContentPage() {
                       {IMAGE_STYLE_NAMES[generatedImage.style] || generatedImage.style}
                     </span>
                   )}
+                  {/* Branded text overlay (client-side) */}
+                  {overlayHeadline && (
+                    <div className="absolute bottom-4 left-4 right-4 rounded-xl px-4 py-3 shadow-lg" style={{ backgroundColor: primary + 'e6' }}>
+                      <p className="text-center font-bold leading-tight" style={{ color: overlayTextColor, fontSize: 'clamp(14px, 3.5vw, 22px)' }}>{overlayHeadline}</p>
+                      <p className="text-center font-bold mt-0.5 opacity-90 tracking-wide" style={{ color: overlayTextColor, fontSize: 'clamp(9px, 2vw, 12px)' }}>{businessName?.toUpperCase()}</p>
+                    </div>
+                  )}
                 </div>
               ) : generatingAiImage ? (
                 <div className="aspect-square w-full flex flex-col items-center justify-center bg-gray-50">
@@ -2624,6 +2716,13 @@ export default function CreateContentPage() {
                       <span className="absolute top-2 left-2 px-2 py-1 rounded-md bg-black/50 text-[10px] font-medium text-white backdrop-blur-sm">
                         {IMAGE_STYLE_NAMES[generatedImage.style] || generatedImage.style}
                       </span>
+                    )}
+                    {/* Branded text overlay (client-side) */}
+                    {overlayHeadline && (
+                      <div className="absolute bottom-4 left-4 right-4 rounded-xl px-4 py-3 shadow-lg" style={{ backgroundColor: primary + 'e6' }}>
+                        <p className="text-center font-bold leading-tight" style={{ color: overlayTextColor, fontSize: 'clamp(14px, 3.5vw, 22px)' }}>{overlayHeadline}</p>
+                        <p className="text-center font-bold mt-0.5 opacity-90 tracking-wide" style={{ color: overlayTextColor, fontSize: 'clamp(9px, 2vw, 12px)' }}>{businessName?.toUpperCase()}</p>
+                      </div>
                     )}
                   </div>
                 ) : generatingAiImage ? (

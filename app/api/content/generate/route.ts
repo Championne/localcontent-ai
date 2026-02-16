@@ -16,7 +16,7 @@ import { persistContentImage } from '@/lib/content-image'
 import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
 import { compositeProduct } from '@/lib/image-processing/product-composition'
-import { addSmartTextOverlay, extractHeadline } from '@/lib/image-processing/smart-text-overlay'
+import { extractHeadline } from '@/lib/image-processing/smart-text-overlay'
 import { rateImageQuality } from '@/lib/rating/image-quality'
 import { detectBrandPersonality } from '@/lib/branding/personality-detection'
 import { getUserPreferences, getStyleBoosts, getFrameworkBoost } from '@/lib/ai-learning/preference-engine'
@@ -93,10 +93,6 @@ export async function POST(request: Request) {
     try {
       userPrefs = await getUserPreferences(supabase, user.id)
     } catch { /* preference fetch is non-critical */ }
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:entry',message:'Generate route entry',data:{template,brandPrimaryColor:brandPrimaryColor||null,brandSecondaryColor:brandSecondaryColor||null,businessName,topic:topic?.substring(0,50)},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
 
     // Validate required fields
     if (!template || !businessName || !industry || !topic) {
@@ -304,34 +300,7 @@ export async function POST(request: Request) {
               }
             }
 
-            // Smart text overlay — add branded headline to the image
-            if (brandPrimaryColor) {
-              try {
-                const headline = extractHeadline(topic)
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:textOverlay',message:'Text overlay attempt',data:{headline,topic,brandPrimaryColor,businessName,hasBuffer:!!imageBuffer},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-                // #endregion
-                if (headline) {
-                  if (!imageBuffer) {
-                    const imgRes = await fetch(imageResult.url)
-                    imageBuffer = Buffer.from(await imgRes.arrayBuffer())
-                  }
-                  imageBuffer = await addSmartTextOverlay(imageBuffer, {
-                    headline,
-                    businessName,
-                    brandColor: brandPrimaryColor,
-                  })
-                  // #region agent log
-                  fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:textOverlay:done',message:'Text overlay succeeded',data:{bufferSize:imageBuffer?.length},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-                  // #endregion
-                }
-              } catch (e) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:textOverlay:error',message:'Text overlay FAILED',data:{error:e instanceof Error?e.message:String(e)},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-                // #endregion
-                console.error('Text overlay failed, continuing without:', e)
-              }
-            }
+            // Text overlay moved to client-side (Vercel Lambda has no fonts for server-side rendering)
 
             if (imageBuffer) {
               finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
@@ -600,46 +569,13 @@ export async function POST(request: Request) {
             }
           }
 
-          // Smart text overlay — add branded headline to the image
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:overlayEntry',message:'Social-pack overlay entry',data:{brandPrimaryColor:brandPrimaryColor||null,hasBrandColor:!!brandPrimaryColor,topic,businessName},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-          // #endregion
-          if (brandPrimaryColor) {
-            try {
-              const headline = extractHeadline(topic)
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:headline',message:'Social-pack headline extracted',data:{headline,headlineLength:headline?.length},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-              // #endregion
-              if (headline) {
-                if (!imageBuffer) {
-                  const imgRes = await fetch(imageResult.url)
-                  imageBuffer = Buffer.from(await imgRes.arrayBuffer())
-                }
-                imageBuffer = await addSmartTextOverlay(imageBuffer, {
-                  headline,
-                  businessName,
-                  brandColor: brandPrimaryColor,
-                })
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:overlayDone',message:'Social-pack overlay done',data:{bufferSize:imageBuffer?.length},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
-                // #endregion
-              }
-            } catch (e) {
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:overlayError',message:'Social-pack overlay FAILED',data:{error:e instanceof Error?e.message:String(e)},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-              // #endregion
-              console.error('Text overlay failed, continuing without:', e)
-            }
-          }
+          // Text overlay moved to client-side (Vercel Lambda has no fonts for server-side rendering)
 
           if (imageBuffer) {
             finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
           }
 
           const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
-          // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:persist',message:'Social-pack persist result',data:{hadBuffer:!!imageBuffer,hadPermanentUrl:!!permanentUrl,finalUrlPrefix:finalImageUrl?.substring(0,50)},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
-          // #endregion
           const imageUrl = permanentUrl || finalImageUrl
           image = {
             url: imageUrl,
