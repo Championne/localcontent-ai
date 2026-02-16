@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       socialHandles,
       serviceAreas,
       location,
-      brandPrimaryColor,
+      brandPrimaryColor: rawBrandPrimaryColor,
       brandSecondaryColor,
       brandAccentColor,
       // GBP-specific fields
@@ -84,6 +84,9 @@ export async function POST(request: Request) {
       typeof stockPage === 'number' && stockPage >= 1 && stockPage <= 20
         ? stockPage
         : Math.floor(1 + Math.random() * 8)
+
+    // Default brand color to teal when not set (ensures text overlay always runs)
+    const brandPrimaryColor = rawBrandPrimaryColor || '#0d9488'
 
     // Fetch Spark adaptive preferences (non-blocking: fallback to empty if it fails)
     let userPrefs: Awaited<ReturnType<typeof getUserPreferences>> | null = null
