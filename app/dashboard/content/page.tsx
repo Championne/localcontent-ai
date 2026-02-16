@@ -1069,38 +1069,32 @@ export default function CreateContentPage() {
     }
   }
 
+  const [uploadingImage, setUploadingImage] = useState(false)
   const handleStep3Upload = async (file: File) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload',message:'Upload called',data:{fileName:file?.name,fileType:file?.type,fileSize:file?.size,selectedBusinessId},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
-    if (!file?.type.startsWith('image/')) return
+    console.log('[GeoSpark Debug] handleStep3Upload called', { name: file?.name, type: file?.type, size: file?.size })
+    if (!file?.type.startsWith('image/')) {
+      console.warn('[GeoSpark Debug] File rejected — not an image:', file?.type)
+      return
+    }
+    setUploadingImage(true)
     const form = new FormData()
     form.append('file', file, file.name)
     if (selectedBusinessId) form.append('business_id', selectedBusinessId)
     try {
+      console.log('[GeoSpark Debug] Uploading to /api/image-library...')
       const res = await fetch('/api/image-library', { method: 'POST', body: form })
       const data = await res.json()
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload:response',message:'Upload response',data:{ok:res.ok,status:res.status,url:data.image?.public_url||data.url||null,error:data.error||null},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-      // #endregion
+      console.log('[GeoSpark Debug] Upload response:', { ok: res.ok, status: res.status, url: data.image?.public_url || data.url, error: data.error })
       if (!res.ok) throw new Error(data.error || 'Upload failed')
       const url = data.image?.public_url || data.url
       if (!url) throw new Error('Upload failed — no URL returned')
       setGeneratedImage({ url, source: 'upload' })
       setGeneratedImageId(null)
-      // Apply branding in background
-      const brandedUrl = await applyBrandOverlay(url)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload:branded',message:'Brand overlay result',data:{originalUrl:url,brandedUrl,changed:brandedUrl!==url},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-      // #endregion
-      if (brandedUrl !== url) {
-        setGeneratedImage({ url: brandedUrl, source: 'upload' })
-      }
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload:error',message:'Upload error',data:{error:err instanceof Error?err.message:String(err)},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
-      // #endregion
+      console.error('[GeoSpark Debug] Upload error:', err)
       setError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -2065,14 +2059,19 @@ export default function CreateContentPage() {
               {/* Image source options — Upload + Brand Library */}
               <div className="grid grid-cols-2 gap-2 px-3 pb-3">
                 <div>
-                  <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
+                  <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { console.log('[GeoSpark Debug] File input change', e.target.files?.[0]?.name); const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
                   <button
                     type="button"
-                    onClick={() => step3UploadInputRef.current?.click()}
-                    className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex flex-col items-center gap-1"
+                    disabled={uploadingImage}
+                    onClick={() => { console.log('[GeoSpark Debug] Upload btn clicked, ref:', !!step3UploadInputRef.current); step3UploadInputRef.current?.click() }}
+                    className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex flex-col items-center gap-1 disabled:opacity-50"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                    Upload your own
+                    {uploadingImage ? (
+                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                    )}
+                    {uploadingImage ? 'Uploading...' : 'Upload your own'}
                   </button>
                 </div>
                 <button
@@ -2776,10 +2775,14 @@ export default function CreateContentPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 px-3 pb-3">
                   <div>
-                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
-                    <button type="button" onClick={() => step3UploadInputRef.current?.click()} className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex flex-col items-center gap-1">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                      Upload your own
+                    <input ref={step3UploadInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { console.log('[GeoSpark Debug] File input change (reg)', e.target.files?.[0]?.name); const f = e.target.files?.[0]; if (f) handleStep3Upload(f); e.target.value = '' }} />
+                    <button type="button" disabled={uploadingImage} onClick={() => { console.log('[GeoSpark Debug] Upload btn clicked (reg), ref:', !!step3UploadInputRef.current); step3UploadInputRef.current?.click() }} className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:border-teal-400 transition-all flex flex-col items-center gap-1 disabled:opacity-50">
+                      {uploadingImage ? (
+                        <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                      )}
+                      {uploadingImage ? 'Uploading...' : 'Upload your own'}
                     </button>
                   </div>
                   <button type="button" onClick={() => setShowBrandLibrary(prev => !prev)} className="w-full px-3 py-3 rounded-lg text-sm font-medium border-2 border-dashed border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-all flex flex-col items-center gap-1">
