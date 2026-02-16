@@ -129,16 +129,16 @@ function createTextBarSVG(params: {
 
       <text
         x="${textCenterX}" y="${headlineY}"
-        font-family="Inter, Helvetica, Arial, sans-serif"
-        font-size="${headlineFontSize}" font-weight="900"
-        fill="${textColor}" text-anchor="middle" dominant-baseline="middle"
+        font-family="sans-serif"
+        font-size="${headlineFontSize}" font-weight="bold"
+        fill="${textColor}" text-anchor="middle" dominant-baseline="central"
       >${escapeXml(headline)}</text>
 
       <text
         x="${textCenterX}" y="${businessNameY}"
-        font-family="Inter, Helvetica, Arial, sans-serif"
-        font-size="${businessNameFontSize}" font-weight="600"
-        fill="${textColor}" text-anchor="middle" dominant-baseline="middle" opacity="0.95"
+        font-family="sans-serif"
+        font-size="${businessNameFontSize}" font-weight="bold"
+        fill="${textColor}" text-anchor="middle" dominant-baseline="central" opacity="0.95"
       >${escapeXml(businessName.toUpperCase())}</text>
     </svg>
   `)
