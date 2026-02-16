@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
     if (mode === 'image') {
       // Return the actual PNG image
-      return new Response(result, {
+      return new Response(new Uint8Array(result), {
         headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' },
       })
     }
