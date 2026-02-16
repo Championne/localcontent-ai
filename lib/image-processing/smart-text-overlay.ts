@@ -2,7 +2,8 @@
  * Smart Text Overlay
  *
  * Adds a branded text bar (headline + business name) on top of a generated
- * image using Sharp + inline SVG.
+ * image. Uses Sharp's Pango text rendering for text (works on Vercel Lambda
+ * where librsvg has no fonts) and SVG only for the background bar shape.
  */
 
 import sharp from 'sharp'
@@ -35,123 +36,83 @@ export async function addSmartTextOverlay(
   const barColor = adjustAlpha(brandColor, barOpacity)
   const textColor = getContrastColor(brandColor)
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'smart-text-overlay.ts:addSmartTextOverlay',message:'Overlay params',data:{headline,businessName,brandColor,barColor,textColor,width,height,position,inputBufferSize:imageBuffer.length},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{})
-  // #endregion
+  const barPadding = Math.round(20 * (width / 1024))
+  const barHeight = Math.round(90 * (width / 1024))
+  const barWidth = width - barPadding * 2
 
-  const barPadding = 20
-  const barHeight = 90
   let barY: number
-
   if (position === 'bottom') {
     barY = height - barHeight - barPadding
   } else if (position === 'top') {
     barY = barPadding
   } else {
-    barY = (height - barHeight) / 2
+    barY = Math.round((height - barHeight) / 2)
   }
 
-  const scaleFactor = width / 1024
-  const headlineFontSize = Math.round(48 * scaleFactor)
-  const businessNameFontSize = Math.round(24 * scaleFactor)
-
-  const svgOverlay = createTextBarSVG({
-    width,
-    height,
-    barY,
-    barHeight,
-    barPadding,
-    barColor,
-    textColor,
-    headline,
-    businessName,
-    headlineFontSize,
-    businessNameFontSize,
-  })
-
-  return sharp(imageBuffer)
-    .composite([{ input: svgOverlay, blend: 'over' }])
-    .toBuffer()
-}
-
-// ---------------------------------------------------------------------------
-// SVG builder
-// ---------------------------------------------------------------------------
-function createTextBarSVG(params: {
-  width: number
-  height: number
-  barY: number
-  barHeight: number
-  barPadding: number
-  barColor: string
-  textColor: string
-  headline: string
-  businessName: string
-  headlineFontSize: number
-  businessNameFontSize: number
-}): Buffer {
-  const {
-    width,
-    height,
-    barY,
-    barHeight,
-    barPadding,
-    barColor,
-    textColor,
-    headline,
-    businessName,
-    headlineFontSize,
-    businessNameFontSize,
-  } = params
-
-  const barX = barPadding
-  const barWidth = width - barPadding * 2
-  const textCenterX = width / 2
-  const headlineY = barY + barHeight * 0.4
-  const businessNameY = barY + barHeight * 0.75
-
-  return Buffer.from(`
+  // 1. Create the background bar as SVG (no text — librsvg has no fonts on Vercel)
+  const barSvg = Buffer.from(`
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <filter id="barShadow" x="-10%" y="-10%" width="120%" height="120%">
+        <filter id="s" x="-10%" y="-10%" width="120%" height="120%">
           <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
           <feOffset dx="0" dy="2"/>
-          <feComponentTransfer>
-            <feFuncA type="linear" slope="0.3"/>
-          </feComponentTransfer>
-          <feMerge>
-            <feMergeNode/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
+          <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+          <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
       </defs>
-
-      <rect
-        x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}"
-        rx="12" fill="${barColor}" filter="url(#barShadow)"
-      />
-
-      <text
-        x="${textCenterX}" y="${headlineY}"
-        font-family="sans-serif"
-        font-size="${headlineFontSize}" font-weight="bold"
-        fill="${textColor}" text-anchor="middle" dominant-baseline="central"
-      >${escapeXml(headline)}</text>
-
-      <text
-        x="${textCenterX}" y="${businessNameY}"
-        font-family="sans-serif"
-        font-size="${businessNameFontSize}" font-weight="bold"
-        fill="${textColor}" text-anchor="middle" dominant-baseline="central" opacity="0.95"
-      >${escapeXml(businessName.toUpperCase())}</text>
+      <rect x="${barPadding}" y="${barY}" width="${barWidth}" height="${barHeight}" rx="12" fill="${barColor}" filter="url(#s)"/>
     </svg>
   `)
+
+  // 2. Render headline text using Sharp's Pango engine (has fonts on Lambda)
+  const headlineFontSize = Math.max(16, Math.round(36 * (width / 1024)))
+  const bizFontSize = Math.max(10, Math.round(18 * (width / 1024)))
+
+  const headlineText = await sharp({
+    text: {
+      text: `<span foreground="${textColor}" font_desc="Sans Bold ${headlineFontSize}">${escapePango(headline)}</span>`,
+      rgba: true,
+      width: barWidth - 20,
+      height: Math.round(barHeight * 0.55),
+      align: 'centre',
+    },
+  }).png().toBuffer()
+
+  const bizText = await sharp({
+    text: {
+      text: `<span foreground="${textColor}" font_desc="Sans Bold ${bizFontSize}">${escapePango(businessName.toUpperCase())}</span>`,
+      rgba: true,
+      width: barWidth - 20,
+      height: Math.round(barHeight * 0.35),
+      align: 'centre',
+    },
+  }).png().toBuffer()
+
+  // Get rendered text dimensions for centering
+  const headlineMeta = await sharp(headlineText).metadata()
+  const bizMeta = await sharp(bizText).metadata()
+
+  const headlineLeft = Math.round(barPadding + (barWidth - (headlineMeta.width || 0)) / 2)
+  const headlineTop = Math.round(barY + barHeight * 0.08)
+  const bizLeft = Math.round(barPadding + (barWidth - (bizMeta.width || 0)) / 2)
+  const bizTop = Math.round(barY + barHeight * 0.55)
+
+  // 3. Composite: image → bar → headline → business name
+  return sharp(imageBuffer)
+    .composite([
+      { input: barSvg, blend: 'over' },
+      { input: headlineText, left: headlineLeft, top: headlineTop, blend: 'over' },
+      { input: bizText, left: bizLeft, top: bizTop, blend: 'over' },
+    ])
+    .toBuffer()
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function escapeXml(text: string): string {
+
+/** Escape text for Pango markup */
+function escapePango(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
