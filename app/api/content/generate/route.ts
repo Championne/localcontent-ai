@@ -183,7 +183,7 @@ export async function POST(request: Request) {
         frameworkConfidence: result.frameworkConfidence,
         awarenessLevel: result.awarenessLevel,
         // Enriched fields for Marketing Intelligence Brief
-        frameworkName: fwDesc?.name || result.framework.toUpperCase(),
+        frameworkName: fwDesc?.name || result.framework,
         frameworkSubtitle: fwDesc?.subtitle || '',
         frameworkDescription: fwDesc?.description || '',
         frameworkWhyItWorks: fwDesc?.whyItWorks || '',

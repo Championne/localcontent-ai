@@ -1781,14 +1781,23 @@ export default function CreateContentPage() {
               accentColor={accent}
               className="mt-4 mb-4"
             >
+              {frameworkInfo?.frameworkName && (
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">
+                  {frameworkInfo.frameworkName} Strategy
+                </p>
+              )}
               <p className="text-sm text-gray-800 leading-relaxed">
                 {sparkNarrative || frameworkInfo?.frameworkReasoning || ''}
               </p>
+              {frameworkInfo?.frameworkWhyItWorks && (
+                <p className="text-xs text-gray-600 mt-2 leading-relaxed italic">
+                  Why this works: {frameworkInfo.frameworkWhyItWorks}
+                </p>
+              )}
               {frameworkInfo && (
-                <p className="text-xs text-gray-500 mt-2">
-                  {frameworkInfo.frameworkConfidence}% confidence &middot;{' '}
+                <p className="text-xs text-gray-400 mt-2">
                   <a href="/dashboard/resources/frameworks" className="text-amber-600 hover:underline">
-                    Learn more about this approach
+                    Learn more about marketing strategies
                   </a>
                 </p>
               )}
@@ -2353,7 +2362,7 @@ export default function CreateContentPage() {
                 <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
                   <span className="text-base">🧠</span>
                   <div>
-                    <p className="font-semibold text-slate-700">{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()} Framework</p>
+                    <p className="font-semibold text-slate-700">{frameworkInfo.frameworkName || frameworkName(frameworkInfo.framework)} Strategy</p>
                     <p className="text-slate-500">Used by top marketing agencies for {frameworkInfo.frameworkBestFor?.toLowerCase() || 'effective campaigns'}</p>
                   </div>
                 </div>
@@ -2832,7 +2841,7 @@ export default function CreateContentPage() {
                 <div className="flex items-start gap-2 bg-white/70 rounded-lg p-2.5">
                   <span className="text-base">🧠</span>
                   <div>
-                    <p className="font-semibold text-slate-700">{frameworkInfo.frameworkName || frameworkInfo.framework.toUpperCase()} Framework</p>
+                    <p className="font-semibold text-slate-700">{frameworkInfo.frameworkName || frameworkName(frameworkInfo.framework)} Strategy</p>
                     <p className="text-slate-500">{frameworkInfo.frameworkBestFor || 'Professional marketing psychology applied'}</p>
                   </div>
                 </div>

@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       framework: rec.framework,
-      frameworkName: fwDesc?.name || rec.framework.toUpperCase(),
+      frameworkName: fwDesc?.name || rec.framework,
       frameworkSubtitle: fwDesc?.subtitle || '',
       frameworkDescription: fwDesc?.description || '',
       frameworkColor: fwDesc?.color || 'blue',
