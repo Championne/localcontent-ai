@@ -91,6 +91,10 @@ export async function POST(request: Request) {
       userPrefs = await getUserPreferences(supabase, user.id)
     } catch { /* preference fetch is non-critical */ }
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:entry',message:'Generate route entry',data:{template,brandPrimaryColor:brandPrimaryColor||null,brandSecondaryColor:brandSecondaryColor||null,businessName,topic:topic?.substring(0,50)},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+    // #endregion
+
     // Validate required fields
     if (!template || !businessName || !industry || !topic) {
       return NextResponse.json(
@@ -594,9 +598,15 @@ export async function POST(request: Request) {
           }
 
           // Smart text overlay — add branded headline to the image
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:overlayEntry',message:'Social-pack overlay entry',data:{brandPrimaryColor:brandPrimaryColor||null,hasBrandColor:!!brandPrimaryColor,topic,businessName},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
+          // #endregion
           if (brandPrimaryColor) {
             try {
               const headline = extractHeadline(topic)
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:headline',message:'Social-pack headline extracted',data:{headline,headlineLength:headline?.length},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+              // #endregion
               if (headline) {
                 if (!imageBuffer) {
                   const imgRes = await fetch(imageResult.url)
@@ -607,8 +617,14 @@ export async function POST(request: Request) {
                   businessName,
                   brandColor: brandPrimaryColor,
                 })
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:overlayDone',message:'Social-pack overlay done',data:{bufferSize:imageBuffer?.length},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+                // #endregion
               }
             } catch (e) {
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:overlayError',message:'Social-pack overlay FAILED',data:{error:e instanceof Error?e.message:String(e)},timestamp:Date.now(),hypothesisId:'H5'})}).catch(()=>{});
+              // #endregion
               console.error('Text overlay failed, continuing without:', e)
             }
           }
@@ -618,6 +634,9 @@ export async function POST(request: Request) {
           }
 
           const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'generate/route.ts:socialPack:persist',message:'Social-pack persist result',data:{hadBuffer:!!imageBuffer,hadPermanentUrl:!!permanentUrl,finalUrlPrefix:finalImageUrl?.substring(0,50)},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+          // #endregion
           const imageUrl = permanentUrl || finalImageUrl
           image = {
             url: imageUrl,

@@ -35,6 +35,10 @@ export async function addSmartTextOverlay(
   const barColor = adjustAlpha(brandColor, barOpacity)
   const textColor = getContrastColor(brandColor)
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'smart-text-overlay.ts:addSmartTextOverlay',message:'Overlay params',data:{headline,businessName,brandColor,barColor,textColor,width,height,position,inputBufferSize:imageBuffer.length},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{})
+  // #endregion
+
   const barPadding = 20
   const barHeight = 90
   let barY: number
