@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const template = searchParams.get('template')
     const status = searchParams.get('status')
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
 
     let query = supabase
       .from('content')
@@ -31,7 +33,19 @@ export async function GET(request: NextRequest) {
       query = query.eq('template', template)
     }
     if (status) {
-      query = query.eq('status', status)
+      // Support comma-separated statuses
+      const statuses = status.split(',').map(s => s.trim()).filter(Boolean)
+      if (statuses.length === 1) {
+        query = query.eq('status', statuses[0])
+      } else if (statuses.length > 1) {
+        query = query.in('status', statuses)
+      }
+    }
+    if (from) {
+      query = query.or(`scheduled_for.gte.${from},published_at.gte.${from}`)
+    }
+    if (to) {
+      query = query.or(`scheduled_for.lte.${to},published_at.lte.${to}`)
     }
 
     const { data: contentList, error } = await query

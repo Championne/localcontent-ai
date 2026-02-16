@@ -887,6 +887,105 @@ export default function CreateContentPage() {
   // Spark reaction after rating (Touchpoint 4)
   const [sparkReaction, setSparkReaction] = useState<{ type: 'image' | 'text'; good: boolean } | null>(null)
 
+  // Publish / Schedule state
+  const [showPublishPanel, setShowPublishPanel] = useState(false)
+  const [publishMode, setPublishMode] = useState<'now' | 'schedule'>('now')
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
+  const [scheduleDate, setScheduleDate] = useState('')
+  const [scheduleTime, setScheduleTime] = useState('')
+  const [publishing, setPublishing] = useState(false)
+  const [publishResult, setPublishResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [connectedPlatforms, setConnectedPlatforms] = useState<string[]>([])
+
+  // Fetch connected platforms when publish panel opens
+  useEffect(() => {
+    if (!showPublishPanel || !selectedBusinessId) return
+    const fetchPlatforms = async () => {
+      try {
+        const res = await fetch(`/api/integrations?businessId=${selectedBusinessId}`)
+        if (res.ok) {
+          const data = await res.json()
+          const platforms: string[] = []
+          if (data.integrations) {
+            for (const integ of data.integrations) {
+              if (integ.platform === 'google_business') platforms.push('gmb')
+              if (integ.platform === 'late_aggregator' && integ.connected_accounts) {
+                for (const acc of integ.connected_accounts) platforms.push(acc.platform)
+              }
+            }
+          }
+          setConnectedPlatforms(platforms)
+        }
+      } catch {}
+    }
+    fetchPlatforms()
+  }, [showPublishPanel, selectedBusinessId])
+
+  const handlePublish = async () => {
+    if (!selectedBusinessId || selectedPlatforms.length === 0) return
+    setPublishing(true)
+    setPublishResult(null)
+    try {
+      const postText = selectedTemplate === 'social-pack' && socialPack?.facebook?.content
+        ? socialPack.facebook.content
+        : generatedContent || ''
+
+      if (publishMode === 'schedule') {
+        if (!scheduleDate || !scheduleTime) {
+          setPublishResult({ success: false, message: 'Please select a date and time.' })
+          setPublishing(false)
+          return
+        }
+        const scheduledFor = new Date(`${scheduleDate}T${scheduleTime}`).toISOString()
+        // Schedule each platform individually
+        for (const platform of selectedPlatforms) {
+          await fetch('/api/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessId: selectedBusinessId,
+              contentId: editingContentId || undefined,
+              platform,
+              postText,
+              mediaUrl: generatedImage?.url || undefined,
+              scheduledFor,
+            }),
+          })
+        }
+        setPublishResult({ success: true, message: `Scheduled for ${selectedPlatforms.length} platform${selectedPlatforms.length > 1 ? 's' : ''}!` })
+      } else {
+        const res = await fetch('/api/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contentId: editingContentId || undefined,
+            businessId: selectedBusinessId,
+            platforms: selectedPlatforms,
+            text: postText,
+            mediaUrl: generatedImage?.url || undefined,
+          }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          const failedPlatforms = Object.entries(data.results || {})
+            .filter(([, r]) => !(r as { success: boolean }).success)
+            .map(([p]) => p)
+          if (failedPlatforms.length > 0) {
+            setPublishResult({ success: true, message: `Published! Some platforms had issues: ${failedPlatforms.join(', ')}` })
+          } else {
+            setPublishResult({ success: true, message: 'Published successfully!' })
+          }
+        } else {
+          setPublishResult({ success: false, message: data.error || 'Publishing failed' })
+        }
+      }
+    } catch (err) {
+      setPublishResult({ success: false, message: err instanceof Error ? err.message : 'Publishing failed' })
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   const handleRateImage = async (rating: number, feedbackReasons?: string[]) => {
     if (!generatedImageId) return
     try {
@@ -2267,6 +2366,106 @@ export default function CreateContentPage() {
               </p>
             ) : null })()}
           </div>
+
+          {/* Publish / Schedule Section */}
+          <div className="mt-6 max-w-4xl mx-auto">
+            {!showPublishPanel ? (
+              <div className="flex items-center gap-3 justify-center">
+                <button
+                  onClick={() => { setShowPublishPanel(true); setPublishMode('now') }}
+                  className="px-6 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  Post Now
+                </button>
+                <button
+                  onClick={() => { setShowPublishPanel(true); setPublishMode('schedule') }}
+                  className="px-6 py-3 border-2 border-teal-200 bg-white hover:bg-teal-50 text-teal-700 rounded-xl font-semibold transition-all flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  Schedule
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50/50 to-emerald-50/50 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    {publishMode === 'schedule' ? (
+                      <><svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Schedule Post</>
+                    ) : (
+                      <><svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>Publish Now</>
+                    )}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPublishMode(publishMode === 'now' ? 'schedule' : 'now')}
+                      className="text-xs text-teal-600 hover:text-teal-800 underline"
+                    >
+                      Switch to {publishMode === 'now' ? 'Schedule' : 'Post Now'}
+                    </button>
+                    <button onClick={() => { setShowPublishPanel(false); setPublishResult(null) }} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+                  </div>
+                </div>
+
+                {/* Platform Selection */}
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Select platforms:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {connectedPlatforms.length > 0 ? connectedPlatforms.map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setSelectedPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selectedPlatforms.includes(p) ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-200 text-gray-700 hover:border-teal-300'}`}
+                      >
+                        {p === 'gmb' ? 'Google Business' : p.charAt(0).toUpperCase() + p.slice(1)}
+                      </button>
+                    )) : (
+                      <p className="text-xs text-gray-500">No platforms connected. <a href="/dashboard/analytics" className="text-teal-600 underline">Connect your accounts</a></p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Schedule Date/Time (only if scheduling) */}
+                {publishMode === 'schedule' && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+                )}
+
+                {/* Publish Result */}
+                {publishResult && (
+                  <div className={`mb-3 px-3 py-2 rounded-lg text-sm ${publishResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                    {publishResult.message}
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing || selectedPlatforms.length === 0}
+                  className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  {publishing ? (
+                    <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>{publishMode === 'schedule' ? 'Scheduling...' : 'Publishing...'}</>
+                  ) : (
+                    <>{publishMode === 'schedule' ? 'Schedule Post' : 'Publish Now'} to {selectedPlatforms.length} platform{selectedPlatforms.length !== 1 ? 's' : ''}</>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -2640,6 +2839,102 @@ export default function CreateContentPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Publish / Schedule Section (Regular Content) */}
+          <div className="mt-6 max-w-4xl mx-auto">
+            {!showPublishPanel ? (
+              <div className="flex items-center gap-3 justify-center">
+                <button
+                  onClick={() => { setShowPublishPanel(true); setPublishMode('now') }}
+                  className="px-6 py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  Post Now
+                </button>
+                <button
+                  onClick={() => { setShowPublishPanel(true); setPublishMode('schedule') }}
+                  className="px-6 py-3 border-2 border-teal-200 bg-white hover:bg-teal-50 text-teal-700 rounded-xl font-semibold transition-all flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  Schedule
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50/50 to-emerald-50/50 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    {publishMode === 'schedule' ? (
+                      <><svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Schedule Post</>
+                    ) : (
+                      <><svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>Publish Now</>
+                    )}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPublishMode(publishMode === 'now' ? 'schedule' : 'now')}
+                      className="text-xs text-teal-600 hover:text-teal-800 underline"
+                    >
+                      Switch to {publishMode === 'now' ? 'Schedule' : 'Post Now'}
+                    </button>
+                    <button onClick={() => { setShowPublishPanel(false); setPublishResult(null) }} className="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-gray-600 mb-2">Select platforms:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {connectedPlatforms.length > 0 ? connectedPlatforms.map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setSelectedPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selectedPlatforms.includes(p) ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-200 text-gray-700 hover:border-teal-300'}`}
+                      >
+                        {p === 'gmb' ? 'Google Business' : p.charAt(0).toUpperCase() + p.slice(1)}
+                      </button>
+                    )) : (
+                      <p className="text-xs text-gray-500">No platforms connected. <a href="/dashboard/analytics" className="text-teal-600 underline">Connect your accounts</a></p>
+                    )}
+                  </div>
+                </div>
+
+                {publishMode === 'schedule' && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <input
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                    <input
+                      type="time"
+                      value={scheduleTime}
+                      onChange={(e) => setScheduleTime(e.target.value)}
+                      className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                    />
+                  </div>
+                )}
+
+                {publishResult && (
+                  <div className={`mb-3 px-3 py-2 rounded-lg text-sm ${publishResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                    {publishResult.message}
+                  </div>
+                )}
+
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing || selectedPlatforms.length === 0}
+                  className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  {publishing ? (
+                    <><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>{publishMode === 'schedule' ? 'Scheduling...' : 'Publishing...'}</>
+                  ) : (
+                    <>{publishMode === 'schedule' ? 'Schedule Post' : 'Publish Now'} to {selectedPlatforms.length} platform{selectedPlatforms.length !== 1 ? 's' : ''}</>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -162,3 +162,68 @@ export async function fetchFirstGmbLocation(accessToken: string, accountName: st
   const loc = data.locations?.[0]
   return loc ? { name: loc.name, title: loc.title } : null
 }
+
+// ---------------------------------------------------------------------------
+// GMB Posting via My Business v4 API
+// ---------------------------------------------------------------------------
+
+const GMB_POSTS_BASE = 'https://mybusiness.googleapis.com/v4'
+
+export interface GMBPost {
+  languageCode: string
+  summary: string
+  topicType: 'STANDARD' | 'EVENT' | 'OFFER'
+  callToAction?: { actionType: string; url: string }
+  media?: Array<{ mediaFormat: 'PHOTO' | 'VIDEO'; sourceUrl: string }>
+  event?: { title: string; schedule: { startDate: object; endDate: object } }
+  offer?: { couponCode?: string; redeemOnlineUrl?: string; termsConditions?: string }
+}
+
+export interface GMBPostResult {
+  success: boolean
+  postId?: string
+  error?: string
+}
+
+/**
+ * Create a post on Google Business Profile.
+ * Requires a valid access token for the user and their location_id from user_integrations.
+ */
+export async function createGmbPost(
+  accessToken: string,
+  locationName: string,
+  post: GMBPost,
+): Promise<GMBPostResult> {
+  try {
+    const body: Record<string, unknown> = {
+      languageCode: post.languageCode || 'en',
+      summary: post.summary,
+      topicType: post.topicType || 'STANDARD',
+    }
+
+    if (post.callToAction) body.callToAction = post.callToAction
+    if (post.media?.length) body.media = post.media
+    if (post.topicType === 'EVENT' && post.event) body.event = post.event
+    if (post.topicType === 'OFFER' && post.offer) body.offer = post.offer
+
+    const res = await fetch(`${GMB_POSTS_BASE}/${locationName}/localPosts`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      return { success: false, error: `GMB post failed: ${res.status} ${err}` }
+    }
+
+    const data = (await res.json()) as { name?: string }
+    const postId = data.name?.split('/').pop()
+    return { success: true, postId }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'GMB post error' }
+  }
+}

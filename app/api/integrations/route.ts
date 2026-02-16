@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from('user_integrations')
-    .select('id, business_id, platform, account_id, account_name, location_id, connected_at, last_sync_at')
+    .select('id, business_id, platform, account_id, account_name, location_id, connected_at, last_sync_at, metadata')
     .eq('user_id', user.id)
     .order('platform')
 
