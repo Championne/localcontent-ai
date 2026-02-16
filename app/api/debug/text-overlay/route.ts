@@ -37,7 +37,13 @@ export async function GET() {
       return NextResponse.json(diagnostics)
     }
 
-    const brandColor = business.brand_primary_color
+    // Test with the LAST business (FairPlay) to match the user's active business
+    const testBusiness = allBusinesses?.find(b => b.name === 'FairPlay') || business
+    diagnostics.testingBusiness = testBusiness.name
+
+    const brandColor = testBusiness.brand_primary_color
+    diagnostics.rawBrandColor = brandColor
+    diagnostics.effectiveBrandColor = brandColor || '#0d9488'
     diagnostics.brandPrimaryColorTruthy = !!brandColor
     diagnostics.brandPrimaryColorValue = brandColor
 
@@ -46,22 +52,18 @@ export async function GET() {
     const headline = extractHeadline(testTopic)
     diagnostics.extractHeadline = { topic: testTopic, result: headline, truthy: !!headline }
 
-    // 3. Test color functions
-    if (brandColor) {
-      try {
-        const barColor = adjustAlpha(brandColor, 0.9)
-        const textColor = getContrastColor(brandColor)
-        diagnostics.colors = { brandColor, barColor, textColor }
-      } catch (e) {
-        diagnostics.colors = { error: e instanceof Error ? e.message : String(e) }
-      }
-    } else {
-      diagnostics.colors = 'SKIPPED — no brand_primary_color'
-      diagnostics.conclusion = 'H1 CONFIRMED: brandPrimaryColor is falsy, overlay is skipped entirely'
+    // 3. Test color functions with effective color (fallback to teal like generate route does)
+    const effectiveColor = brandColor || '#0d9488'
+    try {
+      const barColor = adjustAlpha(effectiveColor, 0.9)
+      const textColor = getContrastColor(effectiveColor)
+      diagnostics.colors = { effectiveColor, barColor, textColor, rawWasNull: !brandColor }
+    } catch (e) {
+      diagnostics.colors = { error: e instanceof Error ? e.message : String(e) }
     }
 
-    // 4. Test sharp overlay on a tiny test image (1x1 white pixel PNG)
-    if (brandColor && headline) {
+    // 4. Test sharp overlay on a test image
+    if (headline) {
       try {
         const sharp = (await import('sharp')).default
         const testImg = await sharp({
@@ -72,8 +74,8 @@ export async function GET() {
 
         const result = await addSmartTextOverlay(testImg, {
           headline,
-          businessName: business.name,
-          brandColor,
+          businessName: testBusiness.name,
+          brandColor: effectiveColor,
         })
         diagnostics.overlayResult = {
           success: true,
