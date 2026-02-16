@@ -47,6 +47,20 @@ export async function GET(request: Request) {
   }
 
   if (profileId) {
+    // Fetch existing integration to merge connected platforms
+    const { data: existing } = await supabase
+      .from('user_integrations')
+      .select('metadata')
+      .eq('user_id', user.id)
+      .eq('business_id', businessId)
+      .eq('platform', 'late_aggregator')
+      .single()
+
+    const existingPlatforms: string[] = (existing?.metadata as { connectedPlatforms?: string[] })?.connectedPlatforms || []
+    const mergedPlatforms = connected
+      ? [...new Set([...existingPlatforms, connected])]
+      : existingPlatforms
+
     const { error: upsertError } = await supabase
       .from('user_integrations')
       .upsert(
@@ -56,9 +70,10 @@ export async function GET(request: Request) {
           platform: 'late_aggregator',
           account_id: profileId,
           account_name: business.name || 'Social',
-          metadata: connected
-            ? { lastConnectedPlatform: connected, connectedPlatforms: [connected] }
-            : {},
+          metadata: {
+            lastConnectedPlatform: connected || null,
+            connectedPlatforms: mergedPlatforms,
+          },
           last_error: null,
           updated_at: new Date().toISOString(),
         },
