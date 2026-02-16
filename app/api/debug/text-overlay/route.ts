@@ -1,101 +1,86 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { addSmartTextOverlay, extractHeadline } from '@/lib/image-processing/smart-text-overlay'
-import { adjustAlpha, getContrastColor } from '@/lib/branding/personality-detection'
+import { addSmartTextOverlay } from '@/lib/image-processing/smart-text-overlay'
 
 /**
- * GET /api/debug/text-overlay — Temporary debug endpoint.
- * Returns diagnostic info about text overlay pipeline for the current user's business.
+ * GET /api/debug/text-overlay — Returns the actual rendered overlay image as PNG.
+ * This lets us see exactly what Sharp produces on Vercel.
  * Remove after debugging.
  */
-export async function GET() {
-  const diagnostics: Record<string, unknown> = {}
+export async function GET(request: Request) {
+  const url = new URL(request.url)
+  const mode = url.searchParams.get('mode') // 'image' returns PNG, default returns JSON
 
   try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    const sharp = (await import('sharp')).default
 
-    // 1. Get ALL user businesses and brand colors
-    const { data: allBusinesses } = await supabase
-      .from('businesses')
-      .select('id, name, brand_primary_color, brand_secondary_color, brand_accent_color')
-      .eq('user_id', user.id)
+    // Create a 512x512 grey test image
+    const testImg = await sharp({
+      create: { width: 512, height: 512, channels: 4, background: { r: 180, g: 180, b: 180, alpha: 1 } }
+    }).png().toBuffer()
 
-    diagnostics.allBusinesses = (allBusinesses || []).map(b => ({
-      id: b.id,
-      name: b.name,
-      brand_primary_color: b.brand_primary_color,
-      brand_secondary_color: b.brand_secondary_color,
-      brand_accent_color: b.brand_accent_color,
-      hasPrimaryColor: !!b.brand_primary_color,
-    }))
+    // Apply our text overlay
+    const result = await addSmartTextOverlay(testImg, {
+      headline: 'Gourmet Tacos And Burgers',
+      businessName: 'FairPlay',
+      brandColor: '#0d9488',
+    })
 
-    const business = allBusinesses?.[0]
-    if (!business) {
-      diagnostics.conclusion = 'No business found for this user'
-      return NextResponse.json(diagnostics)
+    if (mode === 'image') {
+      // Return the actual PNG image
+      return new Response(result, {
+        headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' },
+      })
     }
 
-    // Test with the LAST business (FairPlay) to match the user's active business
-    const testBusiness = allBusinesses?.find(b => b.name === 'FairPlay') || business
-    diagnostics.testingBusiness = testBusiness.name
+    // Also test a raw SVG composite to isolate the issue
+    const svgTest = Buffer.from(`
+      <svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="380" width="472" height="90" rx="12" fill="rgba(13,148,136,0.9)"/>
+        <text x="256" y="415" font-family="sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central">Test Headline Text</text>
+        <text x="256" y="445" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central" opacity="0.95">FAIRPLAY</text>
+      </svg>
+    `)
+    const svgResult = await sharp(testImg).composite([{ input: svgTest, blend: 'over' }]).png().toBuffer()
 
-    const brandColor = testBusiness.brand_primary_color
-    diagnostics.rawBrandColor = brandColor
-    diagnostics.effectiveBrandColor = brandColor || '#0d9488'
-    diagnostics.brandPrimaryColorTruthy = !!brandColor
-    diagnostics.brandPrimaryColorValue = brandColor
-
-    // 2. Test extractHeadline
-    const testTopic = 'gourmet tacos and burgers in Maxvorstadt'
-    const headline = extractHeadline(testTopic)
-    diagnostics.extractHeadline = { topic: testTopic, result: headline, truthy: !!headline }
-
-    // 3. Test color functions with effective color (fallback to teal like generate route does)
-    const effectiveColor = brandColor || '#0d9488'
+    // Also test with Pango text input (Sharp's built-in text rendering)
+    let pangoResult: Buffer | null = null
+    let pangoError: string | null = null
     try {
-      const barColor = adjustAlpha(effectiveColor, 0.9)
-      const textColor = getContrastColor(effectiveColor)
-      diagnostics.colors = { effectiveColor, barColor, textColor, rawWasNull: !brandColor }
+      const textImage = await sharp({
+        text: {
+          text: '<span foreground="white" font_desc="sans-serif bold 28">Gourmet Tacos And Burgers</span>',
+          rgba: true,
+          width: 472,
+          height: 50,
+        }
+      }).png().toBuffer()
+      pangoResult = await sharp(testImg)
+        .composite([
+          { input: svgTest, blend: 'over' },  // bar background
+        ])
+        .png().toBuffer()
+      // Just check if pango text renders
+      const pangoMeta = await sharp(textImage).metadata()
+      pangoError = null
+      return NextResponse.json({
+        svgOverlay: { size: result.length, changed: result.length !== testImg.length },
+        rawSvgOverlay: { size: svgResult.length, changed: svgResult.length !== testImg.length },
+        pangoText: { success: true, width: pangoMeta.width, height: pangoMeta.height, size: textImage.length },
+        viewImage: '?mode=image  — open this URL to see the actual rendered image',
+        viewSvgRaw: '?mode=svgraw — see raw SVG composite',
+        viewPango: '?mode=pango — see Pango text rendering',
+      })
     } catch (e) {
-      diagnostics.colors = { error: e instanceof Error ? e.message : String(e) }
+      pangoError = e instanceof Error ? e.message : String(e)
     }
 
-    // 4. Test sharp overlay on a test image
-    if (headline) {
-      try {
-        const sharp = (await import('sharp')).default
-        const testImg = await sharp({
-          create: { width: 256, height: 256, channels: 4, background: { r: 200, g: 200, b: 200, alpha: 1 } }
-        }).png().toBuffer()
-
-        diagnostics.sharpTestImageSize = testImg.length
-
-        const result = await addSmartTextOverlay(testImg, {
-          headline,
-          businessName: testBusiness.name,
-          brandColor: effectiveColor,
-        })
-        diagnostics.overlayResult = {
-          success: true,
-          inputSize: testImg.length,
-          outputSize: result.length,
-          sizeChanged: result.length !== testImg.length,
-        }
-      } catch (e) {
-        diagnostics.overlayResult = {
-          success: false,
-          error: e instanceof Error ? e.message : String(e),
-          stack: e instanceof Error ? e.stack?.split('\n').slice(0, 5) : undefined,
-        }
-      }
-    }
-
-    diagnostics.conclusion = diagnostics.conclusion || 'Check results above to identify the failing step'
+    return NextResponse.json({
+      svgOverlay: { size: result.length, changed: result.length !== testImg.length },
+      rawSvgOverlay: { size: svgResult.length, changed: svgResult.length !== testImg.length },
+      pangoText: pangoError ? { success: false, error: pangoError } : { success: true },
+      viewImage: '?mode=image  — append to URL to see the actual rendered image',
+    })
   } catch (e) {
-    diagnostics.fatalError = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 })
   }
-
-  return NextResponse.json(diagnostics, { status: 200 })
 }
