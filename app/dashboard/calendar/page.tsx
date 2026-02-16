@@ -296,10 +296,10 @@ export default function CalendarPage() {
             <div className="flex items-center gap-2">
               <Link
                 href="/dashboard/content"
-                className="text-xs font-medium text-teal-600 hover:text-teal-800 flex items-center gap-1"
+                className="px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-lg font-semibold text-xs transition-all shadow-sm hover:shadow-md flex items-center gap-1.5"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                Create Spark
+                Create a spark
               </Link>
               <button
                 onClick={() => setSelectedDay(null)}
@@ -313,13 +313,13 @@ export default function CalendarPage() {
           {selectedDayEvents.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <svg className="w-10 h-10 text-gray-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              <p className="text-sm text-gray-400">No posts scheduled for this day</p>
+              <p className="text-sm text-gray-400 mb-4">No posts scheduled for this day</p>
               <Link
                 href="/dashboard/content"
-                className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-teal-600 hover:text-teal-800"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                Create a Spark for this day
+                Create a spark
               </Link>
             </div>
           ) : (
