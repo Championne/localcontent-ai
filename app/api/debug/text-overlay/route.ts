@@ -16,25 +16,22 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-    // 1. Get user's business and brand colors
-    const { data: business } = await supabase
+    // 1. Get ALL user businesses and brand colors
+    const { data: allBusinesses } = await supabase
       .from('businesses')
       .select('id, name, brand_primary_color, brand_secondary_color, brand_accent_color')
       .eq('user_id', user.id)
-      .limit(1)
-      .single()
 
-    diagnostics.business = business
-      ? {
-          id: business.id,
-          name: business.name,
-          brand_primary_color: business.brand_primary_color,
-          brand_secondary_color: business.brand_secondary_color,
-          brand_accent_color: business.brand_accent_color,
-          hasPrimaryColor: !!business.brand_primary_color,
-        }
-      : null
+    diagnostics.allBusinesses = (allBusinesses || []).map(b => ({
+      id: b.id,
+      name: b.name,
+      brand_primary_color: b.brand_primary_color,
+      brand_secondary_color: b.brand_secondary_color,
+      brand_accent_color: b.brand_accent_color,
+      hasPrimaryColor: !!b.brand_primary_color,
+    }))
 
+    const business = allBusinesses?.[0]
     if (!business) {
       diagnostics.conclusion = 'No business found for this user'
       return NextResponse.json(diagnostics)
