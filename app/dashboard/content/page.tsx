@@ -858,6 +858,9 @@ export default function CreateContentPage() {
       setGenerationStartTime(null)
       setTimeout(() => setStep(3), 800)
     } catch (err) {
+      // #region agent log
+      console.error('[GeoSpark Debug] GENERATE FAILED:', err instanceof Error ? err.message : err)
+      // #endregion
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setGenerating(false)
@@ -1101,8 +1104,9 @@ export default function CreateContentPage() {
       console.log('[GeoSpark Debug] Uploading to /api/image-library...')
       const res = await fetch('/api/image-library', { method: 'POST', body: form })
       const data = await res.json()
-      console.log('[GeoSpark Debug] Upload response:', { ok: res.ok, status: res.status, url: data.image?.public_url || data.url, error: data.error, _debug: data._debug })
-      if (!res.ok) throw new Error(JSON.stringify({ error: data.error, _debug: data._debug }))
+      console.log('[GeoSpark Debug] Upload response:', res.status, data.error || 'OK')
+      if (data._debug) console.warn('[GeoSpark Debug] UPLOAD DEBUG:', JSON.stringify(data._debug))
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
       const url = data.image?.public_url || data.url
       if (!url) throw new Error('Upload failed — no URL returned')
       setGeneratedImage({ url, source: 'upload' })

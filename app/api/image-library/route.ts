@@ -6,18 +6,22 @@ const BUCKET = 'user-images'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const MAX_LIBRARY_IMAGES = 100 // free tier limit
 
-/** Ensure the user-images bucket exists — returns diagnostic info */
-async function ensureBucket(): Promise<{ ok: boolean; detail?: string }> {
+/** Ensure the user-images bucket exists — tries admin first, then user client */
+async function ensureBucket(userClient: ReturnType<typeof createClient>): Promise<{ ok: boolean; detail?: string }> {
+  // Try admin client first
   const admin = getSupabaseAdmin()
-  if (!admin) return { ok: false, detail: 'No admin client (SUPABASE_SERVICE_ROLE_KEY missing?)' }
+  const client = admin || userClient
   try {
-    const { error } = await admin.storage.getBucket(BUCKET)
-    if (error) {
-      const { error: createErr } = await admin.storage.createBucket(BUCKET, { public: true, fileSizeLimit: 50 * 1024 * 1024 })
-      if (createErr) return { ok: false, detail: `Bucket create failed: ${createErr.message}` }
-      return { ok: true, detail: 'Bucket created' }
+    const { error } = await client.storage.getBucket(BUCKET)
+    if (!error) return { ok: true, detail: 'Bucket exists' }
+    // Bucket doesn't exist — try to create
+    const { error: createErr } = await client.storage.createBucket(BUCKET, { public: true, fileSizeLimit: 50 * 1024 * 1024 })
+    if (createErr) {
+      // If user client can't create, try admin specifically
+      if (!admin) return { ok: false, detail: `Bucket missing. No admin key to create it. Error: ${createErr.message}` }
+      return { ok: false, detail: `Bucket create failed: ${createErr.message}` }
     }
-    return { ok: true, detail: 'Bucket exists' }
+    return { ok: true, detail: 'Bucket created' }
   } catch (e) {
     return { ok: false, detail: `ensureBucket error: ${e instanceof Error ? e.message : String(e)}` }
   }
@@ -89,7 +93,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Library limit reached (${MAX_LIBRARY_IMAGES} images). Delete some to upload more.` }, { status: 403 })
   }
 
-  const bucketStatus = await ensureBucket()
+  const bucketStatus = await ensureBucket(supabase)
+  console.log('[ImageLibrary] Bucket status:', bucketStatus)
+
+  if (!bucketStatus.ok) {
+    return NextResponse.json({ 
+      error: 'Image storage not configured. Please create a "user-images" bucket in Supabase Storage.', 
+      _debug: bucketStatus 
+    }, { status: 500 })
+  }
 
   const formData = await request.formData()
   const file = formData.get('file') as File | null
