@@ -568,17 +568,22 @@ export default function CreateContentPage() {
   const secondary = brand?.secondary ?? '#6b7280'
   const accent = brand?.accent ?? '#6b7280'
 
-  // Client-side headline for text overlay — sentence case, natural phrasing
+  // Client-side headline for text overlay — prefer AI headline, fall back to topic
+  // Title Case for short marketing overlays (industry standard for image ads)
   const overlayHeadline = (() => {
-    if (!topic) return ''
-    // Clean punctuation but keep commas/periods for natural reading
-    const cleaned = topic.replace(/[!?]+$/, '').trim()
-    if (cleaned.length <= 50) {
-      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
-    }
-    // Truncate at a word boundary near 50 chars
-    const truncated = cleaned.slice(0, 50).replace(/\s+\S*$/, '')
-    return truncated.charAt(0).toUpperCase() + truncated.slice(1) + '...'
+    const raw = generatedHeadline || topic || ''
+    if (!raw) return ''
+    const cleaned = raw.replace(/[!?]+$/, '').replace(/^[#*_]+\s*/, '').trim()
+    // Title Case: capitalize major words, lowercase minor words
+    const minor = new Set(['a','an','the','and','but','or','nor','for','so','yet','in','on','at','to','by','of','up','as','is','it'])
+    const titled = cleaned.split(/\s+/).map((w, i) => {
+      const lower = w.toLowerCase()
+      if (i === 0 || !minor.has(lower)) return lower.charAt(0).toUpperCase() + lower.slice(1)
+      return lower
+    }).join(' ')
+    if (titled.length <= 50) return titled
+    const truncated = titled.slice(0, 50).replace(/\s+\S*$/, '')
+    return truncated + '...'
   })()
 
   // Contrast color for text on brand background
@@ -816,7 +821,8 @@ export default function CreateContentPage() {
       const data = await response.json()
 
       // #region agent log
-      console.log('[GeoSpark Debug] Generate response:', { ok: response.ok, status: response.status, hasImage: !!data.image, imageSource: data.image?.source, _productDebug: data._productDebug })
+      console.log('[GeoSpark Debug] Generate response:', { ok: response.ok, status: response.status, hasImage: !!data.image, imageSource: data.image?.source })
+      if (data._productDebug) console.warn('[GeoSpark Debug] PRODUCT COMPOSITING:', JSON.stringify(data._productDebug, null, 2))
       // #endregion
 
       if (!response.ok) {

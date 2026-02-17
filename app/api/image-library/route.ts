@@ -109,20 +109,37 @@ export async function POST(request: NextRequest) {
 
   const buffer = Buffer.from(await file.arrayBuffer())
 
-  // Use admin client for storage (bypasses RLS)
-  const storageClient = getSupabaseAdmin() || supabase
-  const { error: uploadError } = await storageClient.storage
+  // Use admin client for storage (bypasses RLS); fall back to user client
+  const admin = getSupabaseAdmin()
+  const storageClient = admin || supabase
+
+  let uploadError: { message: string } | null = null
+  const uploadResult = await storageClient.storage
     .from(BUCKET)
     .upload(storagePath, buffer, {
       contentType: file.type,
       cacheControl: '31536000',
       upsert: false,
     })
+  uploadError = uploadResult.error
+
+  // If admin upload failed, retry with user client (different RLS context)
+  if (uploadError && admin) {
+    console.warn('Admin upload failed, retrying with user client:', uploadError.message)
+    const retry = await supabase.storage
+      .from(BUCKET)
+      .upload(storagePath, buffer, {
+        contentType: file.type,
+        cacheControl: '31536000',
+        upsert: false,
+      })
+    uploadError = retry.error
+  }
 
   if (uploadError) {
     console.error('Image library upload error:', uploadError)
     // #region agent log
-    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, statusCode: (uploadError as unknown as Record<string,unknown>).statusCode, bucket: BUCKET, path: storagePath, adminAvailable: !!getSupabaseAdmin(), bucketStatus } }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, bucket: BUCKET, path: storagePath, adminAvailable: !!admin, bucketStatus } }, { status: 500 })
     // #endregion
   }
 
