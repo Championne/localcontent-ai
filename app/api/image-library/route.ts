@@ -116,7 +116,9 @@ export async function POST(request: NextRequest) {
 
   if (uploadError) {
     console.error('Image library upload error:', uploadError)
-    return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+    // #region agent log
+    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, statusCode: (uploadError as Record<string,unknown>).statusCode, bucket: BUCKET, path: storagePath, adminAvailable: !!getSupabaseAdmin() } }, { status: 500 })
+    // #endregion
   }
 
   const { data: urlData } = storageClient.storage.from(BUCKET).getPublicUrl(storagePath)

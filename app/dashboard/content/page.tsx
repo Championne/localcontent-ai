@@ -775,12 +775,12 @@ export default function CreateContentPage() {
       })
       console.log('[GeoSpark Debug] Product image included in generation', { fileName: productImage.file.name, base64Length: productImageBase64?.length })
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image PRESENT',data:{fileName:productImage.file.name,fileSize:productImage.file.size,base64Length:productImageBase64?.length,mode},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image PRESENT',data:{fileName:productImage.file.name,fileSize:productImage.file.size,base64Length:productImageBase64?.length,base64Prefix:productImageBase64?.substring(0,50),mode},timestamp:Date.now(),hypothesisId:'H2a-H2c'})}).catch(()=>{});
       // #endregion
     } else {
       console.log('[GeoSpark Debug] No product image for generation', { hasProductImage: !!productImage, mode })
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image ABSENT',data:{hasProductImage:!!productImage,mode},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image ABSENT',data:{hasProductImage:!!productImage,productImagePreview:productImage?.preview?.substring(0,30),mode},timestamp:Date.now(),hypothesisId:'H2a-H2c'})}).catch(()=>{});
       // #endregion
     }
 
@@ -1102,7 +1102,10 @@ export default function CreateContentPage() {
       console.log('[GeoSpark Debug] Uploading to /api/image-library...')
       const res = await fetch('/api/image-library', { method: 'POST', body: form })
       const data = await res.json()
-      console.log('[GeoSpark Debug] Upload response:', { ok: res.ok, status: res.status, url: data.image?.public_url || data.url, error: data.error })
+      console.log('[GeoSpark Debug] Upload response:', { ok: res.ok, status: res.status, url: data.image?.public_url || data.url, error: data.error, _debug: data._debug })
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload',message:'Upload response',data:{ok:res.ok,status:res.status,error:data.error,_debug:data._debug,hasImage:!!data.image,publicUrl:data.image?.public_url},timestamp:Date.now(),hypothesisId:'H1a-H1c'})}).catch(()=>{});
+      // #endregion
       if (!res.ok) throw new Error(data.error || 'Upload failed')
       const url = data.image?.public_url || data.url
       if (!url) throw new Error('Upload failed — no URL returned')
@@ -1110,6 +1113,9 @@ export default function CreateContentPage() {
       setGeneratedImageId(null)
     } catch (err) {
       console.error('[GeoSpark Debug] Upload error:', err)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload',message:'Upload FAILED',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),hypothesisId:'H1a-H1c'})}).catch(()=>{});
+      // #endregion
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setUploadingImage(false)
