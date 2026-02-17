@@ -773,47 +773,40 @@ export default function CreateContentPage() {
         reader.onloadend = () => resolve(reader.result as string)
         reader.readAsDataURL(productImage.file)
       })
-      console.log('[GeoSpark Debug] Product image included in generation', { fileName: productImage.file.name, base64Length: productImageBase64?.length })
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image PRESENT',data:{fileName:productImage.file.name,fileSize:productImage.file.size,base64Length:productImageBase64?.length,base64Prefix:productImageBase64?.substring(0,50),mode},timestamp:Date.now(),hypothesisId:'H2a-H2c'})}).catch(()=>{});
-      // #endregion
+      console.log('[GeoSpark Debug] Product image PRESENT', { fileName: productImage.file.name, fileSize: productImage.file.size, base64Length: productImageBase64?.length, base64Prefix: productImageBase64?.substring(0, 50) })
     } else {
-      console.log('[GeoSpark Debug] No product image for generation', { hasProductImage: !!productImage, mode })
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image ABSENT',data:{hasProductImage:!!productImage,productImagePreview:productImage?.preview?.substring(0,30),mode},timestamp:Date.now(),hypothesisId:'H2a-H2c'})}).catch(()=>{});
-      // #endregion
+      console.log('[GeoSpark Debug] Product image ABSENT', { hasProductImage: !!productImage, mode })
     }
 
-    // #region agent log
-    const bodyPayload = JSON.stringify({
-      template: selectedTemplate,
-      businessName,
-      industry,
-      topic,
-      tone,
-      location: currentBusiness?.location ?? undefined,
-      generateImageFlag: mode !== 'text',
-      imageSource: 'ai',
-      includeAiImage: true,
-      postType: selectedTemplate,
-      regenerateMode: mode,
-      tagline: currentBusiness?.tagline ?? undefined,
-      defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
-      defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
-      seoKeywords: currentBusiness?.seo_keywords ?? undefined,
-      shortAbout: currentBusiness?.short_about ?? undefined,
-      website: currentBusiness?.website ?? undefined,
-      socialHandles: currentBusiness?.social_handles ?? undefined,
-      serviceAreas: currentBusiness?.service_areas ?? undefined,
-      brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
-      brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
-      brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
-      productImage: productImageBase64,
-    })
-    fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Request body stats',data:{bodyLength:bodyPayload.length,hasProductImageInPayload:bodyPayload.includes('"productImage":"data:image'),template:selectedTemplate},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
-    // #endregion
-
     try {
+      const bodyPayload = JSON.stringify({
+        template: selectedTemplate,
+        businessName,
+        industry,
+        topic,
+        tone,
+        location: currentBusiness?.location ?? undefined,
+        generateImageFlag: mode !== 'text',
+        imageSource: 'ai',
+        includeAiImage: true,
+        postType: selectedTemplate,
+        regenerateMode: mode,
+        tagline: currentBusiness?.tagline ?? undefined,
+        defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
+        defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
+        seoKeywords: currentBusiness?.seo_keywords ?? undefined,
+        shortAbout: currentBusiness?.short_about ?? undefined,
+        website: currentBusiness?.website ?? undefined,
+        socialHandles: currentBusiness?.social_handles ?? undefined,
+        serviceAreas: currentBusiness?.service_areas ?? undefined,
+        brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+        brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+        brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+        productImage: productImageBase64,
+      })
+      // #region agent log
+      console.log('[GeoSpark Debug] Request body size:', bodyPayload.length, 'hasProductImage:', bodyPayload.includes('"productImage":"data:image'))
+      // #endregion
       const response = await fetch('/api/content/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -823,7 +816,7 @@ export default function CreateContentPage() {
       const data = await response.json()
 
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Generate response received',data:{ok:response.ok,status:response.status,hasImage:!!data.image,hasImageUrl:!!data.image?.url,imageSource:data.image?.source,error:data.error,_productDebug:data._productDebug},timestamp:Date.now(),hypothesisId:'H1-H5'})}).catch(()=>{});
+      console.log('[GeoSpark Debug] Generate response:', { ok: response.ok, status: response.status, hasImage: !!data.image, imageSource: data.image?.source, _productDebug: data._productDebug })
       // #endregion
 
       if (!response.ok) {
@@ -1103,20 +1096,15 @@ export default function CreateContentPage() {
       const res = await fetch('/api/image-library', { method: 'POST', body: form })
       const data = await res.json()
       console.log('[GeoSpark Debug] Upload response:', { ok: res.ok, status: res.status, url: data.image?.public_url || data.url, error: data.error, _debug: data._debug })
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload',message:'Upload response',data:{ok:res.ok,status:res.status,error:data.error,_debug:data._debug,hasImage:!!data.image,publicUrl:data.image?.public_url},timestamp:Date.now(),hypothesisId:'H1a-H1c'})}).catch(()=>{});
-      // #endregion
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      if (!res.ok) throw new Error(JSON.stringify({ error: data.error, _debug: data._debug }))
       const url = data.image?.public_url || data.url
       if (!url) throw new Error('Upload failed — no URL returned')
       setGeneratedImage({ url, source: 'upload' })
       setGeneratedImageId(null)
     } catch (err) {
-      console.error('[GeoSpark Debug] Upload error:', err)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleStep3Upload',message:'Upload FAILED',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),hypothesisId:'H1a-H1c'})}).catch(()=>{});
-      // #endregion
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      const msg = err instanceof Error ? err.message : 'Upload failed'
+      console.error('[GeoSpark Debug] Upload error (full):', msg)
+      setError(msg)
     } finally {
       setUploadingImage(false)
     }

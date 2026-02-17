@@ -6,16 +6,21 @@ const BUCKET = 'user-images'
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const MAX_LIBRARY_IMAGES = 100 // free tier limit
 
-/** Ensure the user-images bucket exists */
-async function ensureBucket() {
+/** Ensure the user-images bucket exists — returns diagnostic info */
+async function ensureBucket(): Promise<{ ok: boolean; detail?: string }> {
   const admin = getSupabaseAdmin()
-  if (!admin) return
+  if (!admin) return { ok: false, detail: 'No admin client (SUPABASE_SERVICE_ROLE_KEY missing?)' }
   try {
     const { error } = await admin.storage.getBucket(BUCKET)
     if (error) {
-      await admin.storage.createBucket(BUCKET, { public: true, fileSizeLimit: 50 * 1024 * 1024 })
+      const { error: createErr } = await admin.storage.createBucket(BUCKET, { public: true, fileSizeLimit: 50 * 1024 * 1024 })
+      if (createErr) return { ok: false, detail: `Bucket create failed: ${createErr.message}` }
+      return { ok: true, detail: 'Bucket created' }
     }
-  } catch { /* ignore */ }
+    return { ok: true, detail: 'Bucket exists' }
+  } catch (e) {
+    return { ok: false, detail: `ensureBucket error: ${e instanceof Error ? e.message : String(e)}` }
+  }
 }
 
 /** GET /api/image-library — list user's images (optionally scoped to a business) */
@@ -84,7 +89,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Library limit reached (${MAX_LIBRARY_IMAGES} images). Delete some to upload more.` }, { status: 403 })
   }
 
-  await ensureBucket()
+  const bucketStatus = await ensureBucket()
 
   const formData = await request.formData()
   const file = formData.get('file') as File | null
@@ -117,7 +122,7 @@ export async function POST(request: NextRequest) {
   if (uploadError) {
     console.error('Image library upload error:', uploadError)
     // #region agent log
-    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, statusCode: (uploadError as Record<string,unknown>).statusCode, bucket: BUCKET, path: storagePath, adminAvailable: !!getSupabaseAdmin() } }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, statusCode: (uploadError as Record<string,unknown>).statusCode, bucket: BUCKET, path: storagePath, adminAvailable: !!getSupabaseAdmin(), bucketStatus } }, { status: 500 })
     // #endregion
   }
 
