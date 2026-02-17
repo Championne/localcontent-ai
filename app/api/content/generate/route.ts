@@ -212,6 +212,10 @@ export async function POST(request: Request) {
       }
     }
 
+    // #region agent log
+    const _productDebug: Record<string, unknown> = { received: !!productImage, base64Len: productImage ? (productImage as string).length : 0 }
+    // #endregion
+
     // Handle social-pack separately
     if (template === 'social-pack') {
       let socialPack: SocialPackResult | null = null
@@ -254,9 +258,6 @@ export async function POST(request: Request) {
       let image = null
       let generatedImageId: string | null = null
       let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
-      // #region agent log
-      const _productDebug: Record<string, unknown> = { received: !!productImage, base64Len: productImage ? (productImage as string).length : 0 }
-      // #endregion
       if (shouldGenerateImage) {
         const useStock = imageSource === 'stock' && isStockImageConfigured()
         const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
