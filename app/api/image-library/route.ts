@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
   if (uploadError) {
     console.error('Image library upload error:', uploadError)
     // #region agent log
-    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, statusCode: (uploadError as Record<string,unknown>).statusCode, bucket: BUCKET, path: storagePath, adminAvailable: !!getSupabaseAdmin(), bucketStatus } }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to upload image', _debug: { message: uploadError.message, statusCode: (uploadError as unknown as Record<string,unknown>).statusCode, bucket: BUCKET, path: storagePath, adminAvailable: !!getSupabaseAdmin(), bucketStatus } }, { status: 500 })
     // #endregion
   }
 
