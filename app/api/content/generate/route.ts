@@ -481,13 +481,23 @@ export async function POST(request: Request) {
         frameworkRec.framework, topic, businessName,
         finalImageStyle, brandPersonalityObj?.personality,
       )
-      // Extract headline from Twitter post (shortest, punchiest) or topic
+      // Extract headline from generated content — try multiple sources for best result
       let headline: string | null = null
-      if (socialPack?.twitter?.content) {
-        const firstLine = socialPack.twitter.content.split('\n')[0].replace(/^[#@🔥⚡💡🚀✨🏠🔧]+\s*/g, '').trim()
-        if (firstLine.length > 3 && firstLine.length < 80) headline = firstLine
+      const allContent = [
+        socialPack?.twitter?.content,
+        socialPack?.facebook?.content,
+        socialPack?.instagram?.content,
+        socialPack?.linkedin?.content,
+      ].filter(Boolean).join('\n')
+      if (allContent) {
+        headline = extractHeadline(topic, allContent)
       }
-      if (!headline) headline = extractHeadline(topic)
+      if (!headline || headline.toLowerCase() === topic.toLowerCase()) {
+        headline = extractHeadline(topic)
+      }
+      // #region agent log
+      console.log('[Headline] topic:', topic, '→ headline:', headline)
+      // #endregion
 
       return NextResponse.json({
         success: true,
@@ -789,10 +799,11 @@ export async function POST(request: Request) {
     )
     let headlineRegular: string | null = null
     if (content) {
-      const firstLine = content.split('\n').find(l => l.trim().length > 5 && l.trim().length < 80)
-      if (firstLine) headlineRegular = firstLine.replace(/^[#*_]+\s*/g, '').trim()
+      headlineRegular = extractHeadline(topic, content)
     }
-    if (!headlineRegular) headlineRegular = extractHeadline(topic)
+    if (!headlineRegular || headlineRegular.toLowerCase() === topic.toLowerCase()) {
+      headlineRegular = extractHeadline(topic)
+    }
 
     return NextResponse.json({
       success: true,

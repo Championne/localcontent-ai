@@ -131,14 +131,43 @@ function escapePango(text: string): string {
  * 3. Use the topic as-is in sentence case, truncated to ~50 chars
  */
 export function extractHeadline(topic: string, generatedContent?: string | null): string {
-  // 1. Try to extract from generated content (e.g. the Twitter post)
+  const topicLower = topic.toLowerCase().trim()
+
+  // 1. Try to extract a punchy line from generated content that differs from the topic
   if (generatedContent) {
     const lines = generatedContent
       .split('\n')
-      .map(l => l.replace(/^[#@🔥⚡💡🚀✨🏠🔧🎉📢💪🙌]+\s*/g, '').trim())
-      .filter(l => l.length > 5 && l.length < 70 && !l.startsWith('#') && !l.startsWith('@') && !l.startsWith('http'))
+      .map(l => l
+        .replace(/^[#@🔥⚡💡🚀✨🏠🔧🎉📢💪🙌🍔🌮🎯❤️👉]+\s*/g, '')
+        .replace(/[#@]\w+/g, '')
+        .trim()
+      )
+      .filter(l =>
+        l.length > 8 && l.length < 70
+        && !l.startsWith('http')
+        && !l.startsWith('---')
+        && l.toLowerCase() !== topicLower
+      )
+
     if (lines.length > 0) {
-      const best = lines.reduce((a, b) => a.length < b.length && a.length > 10 ? a : b)
+      // Score lines: prefer short, punchy, different from topic
+      const scored = lines.map(line => {
+        let score = 0
+        const lineLower = line.toLowerCase()
+        // Penalize if line is just the topic rephrased minimally
+        if (lineLower.includes(topicLower) || topicLower.includes(lineLower)) score -= 10
+        // Prefer lines 15-45 chars (ideal for overlay)
+        if (line.length >= 15 && line.length <= 45) score += 5
+        // Bonus for action words / hooks
+        if (/\b(discover|try|taste|experience|love|best|new|fresh|ultimate|craving|delicious|amazing)\b/i.test(line)) score += 3
+        // Bonus for questions or calls to action
+        if (/[?!]$/.test(line)) score += 2
+        // Penalty for overly generic filler
+        if (/^(here|this|that|the|our|we|i )/i.test(line)) score -= 2
+        return { line, score }
+      })
+      scored.sort((a, b) => b.score - a.score)
+      const best = scored[0].line
       return best.length > 50 ? best.slice(0, 47) + '...' : best
     }
   }
@@ -150,7 +179,7 @@ export function extractHeadline(topic: string, generatedContent?: string | null)
   const dollarMatch = topic.match(/(\$\d+(?:\.\d{2})?)/)
   if (dollarMatch) return dollarMatch[1]
 
-  // 3. Sentence case — capitalize first letter, keep rest natural
+  // 3. Fall back to topic — sentence case, truncated
   const cleaned = topic.replace(/[!?]+$/, '').trim()
   if (cleaned.length <= 50) {
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
