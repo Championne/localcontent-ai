@@ -286,22 +286,43 @@ export async function POST(request: Request) {
             let finalImageUrl = imageResult.url
             let imageBuffer: Buffer | null = null
             let bgRemovalMethod: string | null = null
+            // #region agent log
+            const _productDebug: Record<string, unknown> = { received: !!productImage, base64Len: productImage ? (productImage as string).length : 0 }
+            // #endregion
             if (productImage) {
               console.log('[Product] Starting compositing pipeline, base64 length:', (productImage as string).length)
               try {
                 const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
                 const productBuffer = Buffer.from(base64Data, 'base64')
                 console.log('[Product] Decoded buffer size:', productBuffer.length)
+                // #region agent log
+                _productDebug.decodedSize = productBuffer.length
+                // #endregion
                 const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
                 bgRemovalMethod = method
                 console.log('[Product] Background removed, method:', method, 'size:', transparentProduct.length)
+                // #region agent log
+                _productDebug.bgRemoval = { method, size: transparentProduct.length }
+                // #endregion
                 const bgRes = await fetch(imageResult.url)
                 const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
                 console.log('[Product] Fetched AI background, size:', bgBuffer.length)
+                // #region agent log
+                _productDebug.bgFetch = { ok: bgRes.ok, size: bgBuffer.length }
+                // #endregion
                 imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
                 console.log('[Product] Compositing SUCCESS, final size:', imageBuffer.length)
+                // #region agent log
+                _productDebug.compositeSuccess = true
+                _productDebug.compositeSize = imageBuffer.length
+                // #endregion
               } catch (e) {
                 console.error('[Product] Compositing FAILED, falling back to raw AI image:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
+                // #region agent log
+                _productDebug.compositeSuccess = false
+                _productDebug.error = e instanceof Error ? e.message : String(e)
+                _productDebug.stack = e instanceof Error ? e.stack?.split('\n').slice(0, 4) : undefined
+                // #endregion
               }
             }
 
@@ -479,7 +500,10 @@ export async function POST(request: Request) {
         usage: {
           imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image && (image as { source?: string }).source === 'ai' ? 1 : 0)),
           imageLimit: IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
-        }
+        },
+        // #region agent log
+        _productDebug,
+        // #endregion
       })
     }
 
@@ -560,22 +584,43 @@ export async function POST(request: Request) {
           let finalImageUrl = imageResult.url
           let imageBuffer: Buffer | null = null
           let bgRemovalMethod: string | null = null
+          // #region agent log
+          const _productDebugReg: Record<string, unknown> = { received: !!productImage, base64Len: productImage ? (productImage as string).length : 0 }
+          // #endregion
           if (productImage) {
             console.log('[Product-SP] Starting compositing pipeline, base64 length:', (productImage as string).length)
             try {
               const base64Data = (productImage as string).replace(/^data:image\/\w+;base64,/, '')
               const productBuffer = Buffer.from(base64Data, 'base64')
               console.log('[Product-SP] Decoded buffer size:', productBuffer.length)
+              // #region agent log
+              _productDebugReg.decodedSize = productBuffer.length
+              // #endregion
               const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
               bgRemovalMethod = method
               console.log('[Product-SP] Background removed, method:', method, 'size:', transparentProduct.length)
+              // #region agent log
+              _productDebugReg.bgRemoval = { method, size: transparentProduct.length }
+              // #endregion
               const bgRes = await fetch(imageResult.url)
               const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
               console.log('[Product-SP] Fetched AI background, size:', bgBuffer.length)
+              // #region agent log
+              _productDebugReg.bgFetch = { ok: bgRes.ok, size: bgBuffer.length }
+              // #endregion
               imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
               console.log('[Product-SP] Compositing SUCCESS, final size:', imageBuffer.length)
+              // #region agent log
+              _productDebugReg.compositeSuccess = true
+              _productDebugReg.compositeSize = imageBuffer.length
+              // #endregion
             } catch (e) {
               console.error('[Product-SP] Compositing FAILED, falling back to raw AI image:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
+              // #region agent log
+              _productDebugReg.compositeSuccess = false
+              _productDebugReg.error = e instanceof Error ? e.message : String(e)
+              _productDebugReg.stack = e instanceof Error ? e.stack?.split('\n').slice(0, 4) : undefined
+              // #endregion
             }
           }
 
@@ -752,7 +797,10 @@ export async function POST(request: Request) {
       usage: {
         imagesRemaining: getRemainingImageQuota(plan, imagesUsedThisMonth + (image && (image as { source?: string }).source === 'ai' ? 1 : 0)),
         imageLimit: IMAGE_LIMITS[plan] || IMAGE_LIMITS.free
-      }
+      },
+      // #region agent log
+      _productDebug: typeof _productDebugReg !== 'undefined' ? _productDebugReg : { received: false },
+      // #endregion
     })
 
   } catch (error) {

@@ -774,42 +774,57 @@ export default function CreateContentPage() {
         reader.readAsDataURL(productImage.file)
       })
       console.log('[GeoSpark Debug] Product image included in generation', { fileName: productImage.file.name, base64Length: productImageBase64?.length })
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image PRESENT',data:{fileName:productImage.file.name,fileSize:productImage.file.size,base64Length:productImageBase64?.length,mode},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
     } else {
       console.log('[GeoSpark Debug] No product image for generation', { hasProductImage: !!productImage, mode })
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Product image ABSENT',data:{hasProductImage:!!productImage,mode},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+      // #endregion
     }
+
+    // #region agent log
+    const bodyPayload = JSON.stringify({
+      template: selectedTemplate,
+      businessName,
+      industry,
+      topic,
+      tone,
+      location: currentBusiness?.location ?? undefined,
+      generateImageFlag: mode !== 'text',
+      imageSource: 'ai',
+      includeAiImage: true,
+      postType: selectedTemplate,
+      regenerateMode: mode,
+      tagline: currentBusiness?.tagline ?? undefined,
+      defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
+      defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
+      seoKeywords: currentBusiness?.seo_keywords ?? undefined,
+      shortAbout: currentBusiness?.short_about ?? undefined,
+      website: currentBusiness?.website ?? undefined,
+      socialHandles: currentBusiness?.social_handles ?? undefined,
+      serviceAreas: currentBusiness?.service_areas ?? undefined,
+      brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
+      brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
+      brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
+      productImage: productImageBase64,
+    })
+    fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Request body stats',data:{bodyLength:bodyPayload.length,hasProductImageInPayload:bodyPayload.includes('"productImage":"data:image'),template:selectedTemplate},timestamp:Date.now(),hypothesisId:'H2'})}).catch(()=>{});
+    // #endregion
 
     try {
       const response = await fetch('/api/content/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          template: selectedTemplate,
-          businessName,
-          industry,
-          topic,
-          tone,
-          location: currentBusiness?.location ?? undefined,
-          generateImageFlag: mode !== 'text',
-          imageSource: 'ai',
-          includeAiImage: true,
-          postType: selectedTemplate,
-          regenerateMode: mode,
-          tagline: currentBusiness?.tagline ?? undefined,
-          defaultCtaPrimary: currentBusiness?.default_cta_primary ?? undefined,
-          defaultCtaSecondary: currentBusiness?.default_cta_secondary ?? undefined,
-          seoKeywords: currentBusiness?.seo_keywords ?? undefined,
-          shortAbout: currentBusiness?.short_about ?? undefined,
-          website: currentBusiness?.website ?? undefined,
-          socialHandles: currentBusiness?.social_handles ?? undefined,
-          serviceAreas: currentBusiness?.service_areas ?? undefined,
-          brandPrimaryColor: currentBusiness?.brand_primary_color ?? undefined,
-          brandSecondaryColor: currentBusiness?.brand_secondary_color ?? undefined,
-          brandAccentColor: currentBusiness?.brand_accent_color ?? undefined,
-          productImage: productImageBase64,
-        }),
+        body: bodyPayload,
       })
 
       const data = await response.json()
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'content/page.tsx:handleGenerate',message:'Generate response received',data:{ok:response.ok,status:response.status,hasImage:!!data.image,hasImageUrl:!!data.image?.url,imageSource:data.image?.source,error:data.error,_productDebug:data._productDebug},timestamp:Date.now(),hypothesisId:'H1-H5'})}).catch(()=>{});
+      // #endregion
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate content')
