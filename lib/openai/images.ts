@@ -67,7 +67,7 @@ export const IMAGE_STYLES = {
     name: 'Lifestyle',
     description: 'Candid real-people everyday moments',
     keywords: ['everyday', 'real', 'life', 'experience', 'home', 'moment', 'routine', 'authentic', 'people', 'living'],
-    promptPrefix: 'Candid lifestyle photograph capturing natural candid moments with warm inviting atmosphere. People interacting with the service in a real home or business setting. Soft natural light, relatable and aspirational feel, DSLR quality with subtle depth of field. No staged poses. All surfaces blank. No signage',
+    promptPrefix: 'Photorealistic editorial lifestyle photograph, shot on Canon EOS R5 with 35mm lens. Natural candid moment with warm inviting atmosphere. Real people with natural skin texture and proportions in a real setting. Soft natural window light, shallow depth of field, warm colour grading. No 3D renders, no illustrations, no CGI. All surfaces blank. No signage',
     subVariations: {} as Record<string, StyleSubVariation>,
   },
   minimalist: {

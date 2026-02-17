@@ -569,20 +569,24 @@ export default function CreateContentPage() {
   const accent = brand?.accent ?? '#6b7280'
 
   // Client-side headline for text overlay — prefer AI headline, fall back to topic
-  // Title Case for short marketing overlays (industry standard for image ads)
+  // Title Case: capitalize major words only (nouns, verbs, adjectives, adverbs)
   const overlayHeadline = (() => {
     const raw = generatedHeadline || topic || ''
     if (!raw) return ''
     const cleaned = raw.replace(/[!?]+$/, '').replace(/^[#*_]+\s*/, '').trim()
-    // Title Case: capitalize major words, lowercase minor words
-    const minor = new Set(['a','an','the','and','but','or','nor','for','so','yet','in','on','at','to','by','of','up','as','is','it'])
+    const minor = new Set([
+      'a','an','the','and','but','or','nor','for','so','yet',
+      'in','on','at','to','by','of','up','as','is','it',
+      'your','our','my','his','her','its','their','this','that',
+      'with','from','into','than','over','just','also','very',
+    ])
     const titled = cleaned.split(/\s+/).map((w, i) => {
       const lower = w.toLowerCase()
       if (i === 0 || !minor.has(lower)) return lower.charAt(0).toUpperCase() + lower.slice(1)
       return lower
     }).join(' ')
-    if (titled.length <= 50) return titled
-    const truncated = titled.slice(0, 50).replace(/\s+\S*$/, '')
+    if (titled.length <= 60) return titled
+    const truncated = titled.slice(0, 60).replace(/\s+\S*$/, '')
     return truncated + '...'
   })()
 
