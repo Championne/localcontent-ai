@@ -93,10 +93,10 @@ async function sharpBackgroundRemoval(imageBuffer: Buffer): Promise<Buffer> {
     maskData[i] = distance < 40 ? 0 : 255
   }
 
-  // Create single-channel mask and join onto original image
+  // Create single-channel mask as PNG so joinChannel can decode it
   const mask = await sharp(maskData, {
     raw: { width, height, channels: 1 },
-  }).toBuffer()
+  }).png().toBuffer()
 
   return sharp(imageBuffer)
     .removeAlpha()
