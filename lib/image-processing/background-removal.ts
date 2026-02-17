@@ -99,7 +99,7 @@ async function sharpBackgroundRemoval(imageBuffer: Buffer): Promise<Buffer> {
   }).toBuffer()
 
   return sharp(imageBuffer)
-    .ensureAlpha()
+    .removeAlpha()
     .joinChannel(mask)
     .png()
     .toBuffer()
