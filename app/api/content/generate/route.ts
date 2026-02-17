@@ -318,16 +318,28 @@ export async function POST(request: Request) {
                 _productDebug.compositeSize = imageBuffer.length
                 // #endregion
               } catch (e) {
-                console.error('[Product] Compositing FAILED, falling back to raw AI image:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
+                console.error('[Product] Compositing FAILED:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
                 // #region agent log
                 _productDebug.compositeSuccess = false
                 _productDebug.error = e instanceof Error ? e.message : String(e)
                 _productDebug.stack = e instanceof Error ? e.stack?.split('\n').slice(0, 4) : undefined
                 // #endregion
+                // Compositing failed — regenerate a topic-relevant image instead of keeping the blank product background
+                try {
+                  console.log('[Product] Regenerating topic-relevant image as fallback...')
+                  const fallbackResult = await generateImage({
+                    topic, businessName, industry, style: finalImageStyle,
+                    subVariation: subVariation || undefined, contentType: template,
+                    postType: effectivePostType, preferredStyles: bizPreferred, avoidStyles: bizAvoided,
+                    brandPrimaryColor: brandPrimaryColor || undefined, brandSecondaryColor: brandSecondaryColor || undefined,
+                    brandAccentColor: brandAccentColor || undefined,
+                    hasProductImage: false, frameworkMood,
+                  })
+                  finalImageUrl = fallbackResult.url
+                  _productDebug.fallback = 'regenerated-topic-image'
+                } catch { /* keep original background if even fallback fails */ }
               }
             }
-
-            // Text overlay moved to client-side (Vercel Lambda has no fonts for server-side rendering)
 
             if (imageBuffer) {
               finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
@@ -613,16 +625,28 @@ export async function POST(request: Request) {
               _productDebug.compositeSize = imageBuffer.length
               // #endregion
             } catch (e) {
-              console.error('[Product-SP] Compositing FAILED, falling back to raw AI image:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
+              console.error('[Product-SP] Compositing FAILED:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
               // #region agent log
               _productDebug.compositeSuccess = false
               _productDebug.error = e instanceof Error ? e.message : String(e)
               _productDebug.stack = e instanceof Error ? e.stack?.split('\n').slice(0, 4) : undefined
               // #endregion
+              // Compositing failed — regenerate a topic-relevant image instead of keeping the blank product background
+              try {
+                console.log('[Product-SP] Regenerating topic-relevant image as fallback...')
+                const fallbackResult = await generateImage({
+                  topic, businessName, industry, style: finalImageStyle,
+                  subVariation: subVariation || undefined, contentType: template,
+                  postType: effectivePostType, preferredStyles: bizPreferred, avoidStyles: bizAvoided,
+                  brandPrimaryColor: brandPrimaryColor || undefined, brandSecondaryColor: brandSecondaryColor || undefined,
+                  brandAccentColor: brandAccentColor || undefined,
+                  hasProductImage: false, frameworkMood,
+                })
+                finalImageUrl = fallbackResult.url
+                _productDebug.fallback = 'regenerated-topic-image'
+              } catch { /* keep original background if even fallback fails */ }
             }
           }
-
-          // Text overlay moved to client-side (Vercel Lambda has no fonts for server-side rendering)
 
           if (imageBuffer) {
             finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
