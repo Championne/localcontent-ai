@@ -11,8 +11,7 @@ const samplePosts = [
     initials: 'DG',
     platform: 'Instagram',
     text: "Weekend brunch special! Join us for bottomless mimosas and our NEW avocado benedict. Book your table — link in bio! 🥂🍳 #BrunchGoals #WeekendVibes",
-    imageGradient: 'from-amber-200 via-orange-200 to-rose-200',
-    imageEmoji: '🥑🍳',
+    imageUrl: '/demo/brunch.jpg',
   },
   {
     business: 'Bloom & Petal Florist',
@@ -20,8 +19,7 @@ const samplePosts = [
     initials: 'BP',
     platform: 'Facebook',
     text: "Spring arrangements are HERE! 🌸 Hand-tied bouquets starting at $35 — perfect for Mother's Day. Order by Friday for free local delivery. #ShopLocal #SpringFlowers",
-    imageGradient: 'from-pink-200 via-rose-200 to-fuchsia-200',
-    imageEmoji: '💐🌷',
+    imageUrl: '/demo/flowers.jpg',
   },
   {
     business: 'Summit Fitness Studio',
@@ -29,8 +27,7 @@ const samplePosts = [
     initials: 'SF',
     platform: 'Instagram',
     text: "New 6AM HIIT class dropping Monday! 🔥 First class FREE for new members. Limited spots — DM us to reserve yours. #FitnessGoals #MondayMotivation",
-    imageGradient: 'from-blue-200 via-indigo-200 to-violet-200',
-    imageEmoji: '💪🏋️',
+    imageUrl: '/demo/gym.jpg',
   },
 ]
 
@@ -194,9 +191,11 @@ export default function Hero() {
                 className="bg-gray-50 rounded-xl overflow-hidden mb-4 border border-gray-100"
               >
                 {/* Post Image */}
-                <div className={`w-full aspect-[16/9] bg-gradient-to-br ${post.imageGradient} flex items-center justify-center`}>
-                  <span className="text-5xl">{post.imageEmoji}</span>
-                </div>
+                <img
+                  src={post.imageUrl}
+                  alt={`${post.business} post`}
+                  className="w-full aspect-[16/9] object-cover"
+                />
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-spark-400 to-amber-500 flex items-center justify-center text-white text-[10px] font-bold">{post.initials}</div>
