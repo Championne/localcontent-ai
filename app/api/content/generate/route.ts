@@ -22,6 +22,8 @@ import { detectBrandPersonality } from '@/lib/branding/personality-detection'
 import { getUserPreferences, getStyleBoosts, getFrameworkBoost } from '@/lib/ai-learning/preference-engine'
 import { getFallbackNarrative, frameworkName } from '@/lib/spark/narratives'
 
+export const maxDuration = 120
+
 export async function POST(request: Request) {
   const supabase = createClient()
   
