@@ -170,8 +170,8 @@ function EmailCaptureModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-spark-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-spark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
@@ -188,7 +188,7 @@ function EmailCaptureModal({
               placeholder="you@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-spark-500 focus:border-spark-500 outline-none"
             />
             {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
           </div>
@@ -196,7 +196,7 @@ function EmailCaptureModal({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:bg-gray-300"
+            className="w-full bg-spark-600 hover:bg-spark-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:bg-gray-300"
           >
             {isSubmitting ? 'Saving...' : 'Unlock More Demos'}
           </button>
@@ -281,7 +281,7 @@ function DemoCounter({ usage }: { usage: UsageInfo | null }) {
           <div
             key={i}
             className={`w-2 h-2 rounded-full ${
-              i < totalUsed ? 'bg-teal-500' : 'bg-gray-300'
+              i < totalUsed ? 'bg-spark-500' : 'bg-gray-300'
             }`}
           />
         ))}
@@ -290,7 +290,7 @@ function DemoCounter({ usage }: { usage: UsageInfo | null }) {
         {remainingDemos} demo{remainingDemos !== 1 ? 's' : ''} left
       </span>
       {!hasEmail && demoCount > 0 && (
-        <span className="text-teal-600 text-xs">
+        <span className="text-spark-600 text-xs">
           +5 with email
         </span>
       )}
@@ -317,7 +317,7 @@ function RegenerateButton({
       className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
         isGenerating
           ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 border border-gray-200 shadow-sm'
+          : 'bg-white/90 backdrop-blur-sm text-gray-700 hover:bg-spark-50 hover:text-spark-700 border border-gray-200 shadow-sm'
       }`}
     >
       <svg className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -421,7 +421,7 @@ function SocialPackDisplay({ pack, imageUrl, businessName = 'Local Business', in
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-4">
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-spark-400 to-amber-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
               {businessInitial}
             </div>
             <div className="flex-1 min-w-0">
@@ -694,7 +694,7 @@ function BlogPostDisplay({ content, imageUrl, businessName }: { content: string;
       
       {/* Markdown Content */}
       <div className="px-6 py-6">
-        <article className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-5 prose-strong:text-gray-900 prose-ul:my-4 prose-ul:space-y-2 prose-li:text-gray-600 prose-a:text-teal-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-teal-500 prose-blockquote:text-gray-500">
+        <article className="prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-gray-100 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-5 prose-strong:text-gray-900 prose-ul:my-4 prose-ul:space-y-2 prose-li:text-gray-600 prose-a:text-spark-600 prose-a:no-underline hover:prose-a:underline prose-blockquote:border-spark-500 prose-blockquote:text-gray-500">
           <ReactMarkdown>{body}</ReactMarkdown>
         </article>
       </div>
@@ -978,7 +978,7 @@ export function SingleContentDemo({ contentType, title, description, compact = f
         accent: 'bg-blue-400'
       }
       case 'gmb-post': return { 
-        gradient: 'from-emerald-500 via-green-500 to-teal-500',
+        gradient: 'from-spark-500 via-amber-500 to-yellow-500',
         glow: 'shadow-green-500/25',
         icon: '📍',
         badge: 'bg-green-100 text-green-700',
@@ -1312,7 +1312,7 @@ export function LandingPageDemo() {
     <>
       <section ref={sectionRef} id="examples" className="container mx-auto px-4 py-20">
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">See It In Action</span>
+          <span className="text-spark-600 font-semibold text-sm uppercase tracking-wide">See It In Action</span>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2 mb-4">
             {demo ? 'Real AI-Generated Content' : 'Watch AI Create Content in Real-Time'}
           </h2>
@@ -1331,7 +1331,7 @@ export function LandingPageDemo() {
             <select
               value={selectedIndustry}
               onChange={(e) => setSelectedIndustry(e.target.value)}
-              className="w-full max-w-xs mx-auto block px-4 py-3 border border-gray-300 rounded-xl text-gray-700 bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none cursor-pointer"
+              className="w-full max-w-xs mx-auto block px-4 py-3 border border-gray-300 rounded-xl text-gray-700 bg-white focus:ring-2 focus:ring-spark-500 focus:border-spark-500 outline-none cursor-pointer"
             >
               {INDUSTRY_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
@@ -1398,14 +1398,14 @@ export function LandingPageDemo() {
       {/* Generated Result */}
       {demo && (
         <div ref={resultRef} className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-teal-50 to-green-50 rounded-2xl p-6 mb-6">
+          <div className="bg-gradient-to-r from-spark-50 to-amber-50 rounded-2xl p-6 mb-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-medium">
                     Social Media Pack
                   </span>
-                  <span className="bg-teal-100 text-teal-700 px-2 py-0.5 rounded text-xs font-medium">
+                  <span className="bg-spark-100 text-spark-700 px-2 py-0.5 rounded text-xs font-medium">
                     AI Generated
                   </span>
                 </div>
@@ -1415,7 +1415,7 @@ export function LandingPageDemo() {
               <button
                 onClick={() => generateDemo()}
                 disabled={isGenerating}
-                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-spark-600 hover:bg-spark-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
               >
                 <svg className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1439,7 +1439,7 @@ export function LandingPageDemo() {
         <div className="text-center mt-12">
           <Link 
             href="/demo" 
-            className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 text-sm font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-spark-600 hover:text-spark-700 text-sm font-medium transition-colors"
           >
             Explore all content types
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
