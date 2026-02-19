@@ -156,6 +156,7 @@ export async function POST(request: Request) {
 
     let content: string | SocialPackResult
     let displayType: string
+    let aiPowered = false
 
     // No demo limits – usage info for optional client display only
     const usageInfo = {
@@ -167,60 +168,53 @@ export async function POST(request: Request) {
       unlimited: true
     }
 
-    if (!isOpenAIConfigured()) {
-      // Return mock data with a note
-      const response = NextResponse.json({
-        success: true,
-        demo: true,
-        aiPowered: false,
-        businessName,
-        industry,
-        topic,
-        contentType,
-        displayType: contentType === 'social-pack' ? 'Social Media Pack' : 
-                     contentType === 'blog-post' ? 'Blog Post' :
-                     contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter',
-        content: getMockContent(contentType, businessName, industry, topic),
-        message: 'Demo mode - configure AI for live generation',
-        usage: usageInfo
-      })
-      return response
-    }
+    displayType = contentType === 'social-pack' ? 'Social Media Pack' : 
+                  contentType === 'blog-post' ? 'Blog Post' :
+                  contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'
 
-    // Generate real content with AI
-    if (contentType === 'social-pack') {
-      content = await generateSocialPack({
-        businessName,
-        industry,
-        topic,
-        tone: 'professional',
-      })
-      displayType = 'Social Media Pack'
+    // Try AI generation first, fall back to mock content on any failure
+    if (isOpenAIConfigured()) {
+      try {
+        if (contentType === 'social-pack') {
+          content = await generateSocialPack({
+            businessName,
+            industry,
+            topic,
+            tone: 'professional',
+          })
+        } else {
+          content = await generateContent({
+            template: contentType as 'blog-post' | 'gmb-post' | 'email',
+            businessName,
+            industry,
+            topic,
+            tone: 'professional',
+            gbpPostType: contentType === 'gmb-post' ? 'update' : undefined,
+          })
+        }
+        aiPowered = true
+      } catch (aiError) {
+        console.error('[Demo] AI content generation failed, using mock:', aiError instanceof Error ? aiError.message : aiError)
+        content = getMockContent(contentType, businessName, industry, topic)
+      }
     } else {
-      content = await generateContent({
-        template: contentType as 'blog-post' | 'gmb-post' | 'email',
-        businessName,
-        industry,
-        topic,
-        tone: 'professional',
-        gbpPostType: contentType === 'gmb-post' ? 'update' : undefined,
-      })
-      displayType = contentType === 'blog-post' ? 'Blog Post' :
-                    contentType === 'gmb-post' ? 'Google Business Post' : 'Email Newsletter'
+      content = getMockContent(contentType, businessName, industry, topic)
     }
 
-    // Image: always use AI-generated images to showcase our capability
+    // If AI content failed and we got mock, content is already set above
+    if (!content) {
+      content = getMockContent(contentType, businessName, industry, topic)
+    }
+
+    // Image: try AI image, gracefully skip on failure
     let imageUrl: string | undefined
     let imageSource: string | undefined
     let imageError: string | undefined
     const imageConfigured = isImageGenerationConfigured()
-    console.log(`[Demo] Image config: AI=${imageConfigured}`)
 
-    // --- Attempt 1: DALL-E AI image ---
     if (imageConfigured) {
       try {
         const style = detectBestStyle(topic)
-        console.log(`[Demo] Generating AI image: style=${style}, topic="${topic}", industry="${industry}"`)
         const imageResult = await generateImage({
           topic,
           businessName,
@@ -230,7 +224,6 @@ export async function POST(request: Request) {
         })
         imageUrl = imageResult.url
         imageSource = 'ai'
-        console.log(`[Demo] AI image generated successfully: ${imageUrl?.substring(0, 80)}...`)
       } catch (imgError: unknown) {
         const errMsg = imgError instanceof Error ? imgError.message : String(imgError)
         console.error('[Demo] AI image generation failed:', errMsg)
@@ -238,18 +231,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // Stock image fallback removed (Unsplash integration disabled).
-    // DALL-E is the sole image source. If it fails, the UI shows platform placeholders.
-
-    if (!imageUrl) {
-      console.error('[Demo] CRITICAL: No image could be produced at all')
-    }
-
-    console.log(`[Demo] Generation complete: content=${typeof content === 'object' ? 'social-pack' : 'text'}, image=${imageSource || 'none'}${imageError ? ` (AI error: ${imageError})` : ''}`)
+    console.log(`[Demo] Generation complete: ai=${aiPowered}, image=${imageSource || 'none'}`)
     const response = NextResponse.json({
       success: true,
       demo: true,
-      aiPowered: true,
+      aiPowered,
       businessName,
       industry,
       topic,
