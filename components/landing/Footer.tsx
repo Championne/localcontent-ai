@@ -22,12 +22,12 @@ const footerLinks = {
 
 export default function Footer() {
   return (
-    <footer className="bg-navy-950 text-gray-400 pt-16 pb-8">
+    <footer className="bg-gray-50 border-t border-gray-200 text-gray-500 pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid md:grid-cols-5 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="mb-4 bg-white/10 rounded-xl p-3 inline-block">
+            <div className="mb-4">
               <Image
                 src="/logo-geospark.png"
                 alt="GeoSpark"
@@ -39,7 +39,7 @@ export default function Footer() {
             <p className="text-sm leading-relaxed text-gray-500 max-w-xs">
               AI content that learns your brand. Dual learning engine builds irreplaceable intelligence with every post.
             </p>
-            <p className="text-xs text-gray-600 mt-4">
+            <p className="text-xs text-gray-400 mt-4">
               2,400 data points after 12 months. Your competitors can&apos;t replicate it.
             </p>
           </div>
@@ -47,11 +47,11 @@ export default function Footer() {
           {/* Link Columns */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h4 className="font-bold text-white text-sm mb-4">{title}</h4>
+              <h4 className="font-bold text-gray-900 text-sm mb-4">{title}</h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-gray-500 hover:text-spark-400 transition-colors">
+                    <Link href={link.href} className="text-sm text-gray-500 hover:text-spark-600 transition-colors">
                       {link.label}
                     </Link>
                   </li>
@@ -61,13 +61,13 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-gray-600">
+        <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-gray-400">
             &copy; {new Date().getFullYear()} GeoSpark. All rights reserved.
           </p>
-          <div className="flex gap-6 text-xs text-gray-600">
-            <Link href="/privacy" className="hover:text-spark-400 transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-spark-400 transition-colors">Terms of Service</Link>
+          <div className="flex gap-6 text-xs text-gray-400">
+            <Link href="/privacy" className="hover:text-spark-600 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-spark-600 transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

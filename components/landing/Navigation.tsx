@@ -40,7 +40,7 @@ export default function Navigation() {
             alt="GeoSpark"
             width={180}
             height={48}
-            className={`h-10 w-auto transition-all duration-500 ${scrolled ? '' : 'brightness-0 invert'}`}
+            className="h-10 w-auto"
             priority
           />
         </Link>
@@ -50,11 +50,7 @@ export default function Navigation() {
             <Link
               key={link.href}
               href={link.href}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                scrolled
-                  ? 'text-gray-600 hover:text-spark-600 hover:bg-spark-50'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
-              }`}
+              className="px-3 py-2 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:text-spark-600 hover:bg-spark-50"
             >
               {link.label}
             </Link>
@@ -64,9 +60,7 @@ export default function Navigation() {
         <div className="hidden lg:flex items-center gap-3">
           <Link
             href="/auth/login"
-            className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-              scrolled ? 'text-gray-700 hover:text-spark-600' : 'text-white/80 hover:text-white'
-            }`}
+            className="text-sm font-medium px-4 py-2 rounded-lg transition-colors text-gray-700 hover:text-spark-600"
           >
             Sign In
           </Link>
@@ -80,29 +74,21 @@ export default function Navigation() {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className={`lg:hidden p-2 rounded-lg transition-colors ${
-            scrolled ? 'text-gray-700' : 'text-white'
-          }`}
+          className="lg:hidden p-2 rounded-lg transition-colors text-gray-700"
           aria-label="Toggle menu"
         >
           <div className="w-6 h-5 relative flex flex-col justify-between">
             <motion.span
               animate={mobileOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-              className={`w-full h-0.5 rounded-full block origin-center transition-colors ${
-                scrolled || mobileOpen ? 'bg-gray-700' : 'bg-white'
-              }`}
+              className="w-full h-0.5 rounded-full block origin-center bg-gray-700"
             />
             <motion.span
               animate={mobileOpen ? { opacity: 0 } : { opacity: 1 }}
-              className={`w-full h-0.5 rounded-full block transition-colors ${
-                scrolled || mobileOpen ? 'bg-gray-700' : 'bg-white'
-              }`}
+              className="w-full h-0.5 rounded-full block bg-gray-700"
             />
             <motion.span
               animate={mobileOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-              className={`w-full h-0.5 rounded-full block origin-center transition-colors ${
-                scrolled || mobileOpen ? 'bg-gray-700' : 'bg-white'
-              }`}
+              className="w-full h-0.5 rounded-full block origin-center bg-gray-700"
             />
           </div>
         </button>

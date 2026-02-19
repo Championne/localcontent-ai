@@ -14,11 +14,11 @@ function AnimatedCounter({ target, suffix = '', label }: { target: number; suffi
         initial={{ opacity: 0, scale: 0.5 }}
         animate={inView ? { opacity: 1, scale: 1 } : {}}
         transition={{ duration: 0.5, type: 'spring' }}
-        className="text-4xl md:text-5xl font-black text-white tabular-nums"
+        className="text-4xl md:text-5xl font-black text-gray-900 tabular-nums"
       >
         {inView ? target.toLocaleString() : '0'}{suffix}
       </motion.p>
-      <p className="text-sm text-white/40 mt-1 font-medium">{label}</p>
+      <p className="text-sm text-gray-500 mt-1 font-medium">{label}</p>
     </div>
   )
 }
@@ -49,10 +49,10 @@ const testimonials = [
 
 export default function SocialProof() {
   return (
-    <section className="bg-navy-900 py-20 md:py-24 relative overflow-hidden">
+    <section className="bg-gray-50 py-20 md:py-24 relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-spark-500/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-spark-100/40 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-100/30 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -82,7 +82,7 @@ export default function SocialProof() {
             <motion.div
               key={i}
               variants={fadeInUp}
-              className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.06] rounded-2xl p-6 hover:bg-white/[0.07] transition-all group"
+              className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all group"
             >
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, j) => (
@@ -91,18 +91,18 @@ export default function SocialProof() {
                   </svg>
                 ))}
               </div>
-              <p className="text-white/60 text-sm leading-relaxed mb-5 italic">&ldquo;{t.quote}&rdquo;</p>
+              <p className="text-gray-600 text-sm leading-relaxed mb-5 italic">&ldquo;{t.quote}&rdquo;</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-spark-400 to-amber-500 flex items-center justify-center text-white text-xs font-bold">
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="font-semibold text-white/90 text-sm">{t.name}</p>
-                    <p className="text-xs text-white/30">{t.role}</p>
+                    <p className="font-semibold text-gray-900 text-sm">{t.name}</p>
+                    <p className="text-xs text-gray-500">{t.role}</p>
                   </div>
                 </div>
-                <span className="bg-spark-500/15 text-spark-400 px-3 py-1 rounded-full text-xs font-bold border border-spark-500/20">
+                <span className="bg-spark-50 text-spark-600 px-3 py-1 rounded-full text-xs font-bold border border-spark-100">
                   {t.metric}
                 </span>
               </div>
