@@ -301,24 +301,35 @@ export async function POST(request: Request) {
                 // #region agent log
                 _productDebug.decodedSize = productBuffer.length
                 // #endregion
-                const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
+                const { buffer: transparentProduct, method, quality: bgQuality } = await smartBackgroundRemoval(productBuffer)
                 bgRemovalMethod = method
-                console.log('[Product] Background removed, method:', method, 'size:', transparentProduct.length)
+                console.log('[Product] Background removed, method:', method, 'quality:', bgQuality, 'size:', transparentProduct.length)
                 // #region agent log
-                _productDebug.bgRemoval = { method, size: transparentProduct.length }
+                _productDebug.bgRemoval = { method, quality: bgQuality, size: transparentProduct.length }
                 // #endregion
-                const bgRes = await fetch(imageResult.url)
-                const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
-                console.log('[Product] Fetched AI background, size:', bgBuffer.length)
-                // #region agent log
-                _productDebug.bgFetch = { ok: bgRes.ok, size: bgBuffer.length }
-                // #endregion
-                imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
-                console.log('[Product] Compositing SUCCESS, final size:', imageBuffer.length)
-                // #region agent log
-                _productDebug.compositeSuccess = true
-                _productDebug.compositeSize = imageBuffer.length
-                // #endregion
+
+                // Quality gate: only composite if background removal is decent
+                // Poor removal (busy backgrounds) makes the composite look bad
+                if (bgQuality < 0.5) {
+                  console.log('[Product] Quality too low for compositing, using product image directly')
+                  _productDebug.skippedComposite = true
+                  _productDebug.reason = `Quality ${bgQuality.toFixed(2)} below 0.5 threshold`
+                  // Use the original product image as the main image (with branded overlay applied client-side)
+                  imageBuffer = productBuffer
+                } else {
+                  const bgRes = await fetch(imageResult.url)
+                  const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
+                  console.log('[Product] Fetched AI background, size:', bgBuffer.length)
+                  // #region agent log
+                  _productDebug.bgFetch = { ok: bgRes.ok, size: bgBuffer.length }
+                  // #endregion
+                  imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
+                  console.log('[Product] Compositing SUCCESS, final size:', imageBuffer.length)
+                  // #region agent log
+                  _productDebug.compositeSuccess = true
+                  _productDebug.compositeSize = imageBuffer.length
+                  // #endregion
+                }
               } catch (e) {
                 console.error('[Product] Compositing FAILED:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
                 // #region agent log
@@ -618,24 +629,32 @@ export async function POST(request: Request) {
               // #region agent log
               _productDebug.decodedSize = productBuffer.length
               // #endregion
-              const { buffer: transparentProduct, method } = await smartBackgroundRemoval(productBuffer)
+              const { buffer: transparentProduct, method, quality: bgQuality } = await smartBackgroundRemoval(productBuffer)
               bgRemovalMethod = method
-              console.log('[Product-SP] Background removed, method:', method, 'size:', transparentProduct.length)
+              console.log('[Product-SP] Background removed, method:', method, 'quality:', bgQuality, 'size:', transparentProduct.length)
               // #region agent log
-              _productDebug.bgRemoval = { method, size: transparentProduct.length }
+              _productDebug.bgRemoval = { method, quality: bgQuality, size: transparentProduct.length }
               // #endregion
-              const bgRes = await fetch(imageResult.url)
-              const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
-              console.log('[Product-SP] Fetched AI background, size:', bgBuffer.length)
-              // #region agent log
-              _productDebug.bgFetch = { ok: bgRes.ok, size: bgBuffer.length }
-              // #endregion
-              imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
-              console.log('[Product-SP] Compositing SUCCESS, final size:', imageBuffer.length)
-              // #region agent log
-              _productDebug.compositeSuccess = true
-              _productDebug.compositeSize = imageBuffer.length
-              // #endregion
+
+              if (bgQuality < 0.5) {
+                console.log('[Product-SP] Quality too low for compositing, using product image directly')
+                _productDebug.skippedComposite = true
+                _productDebug.reason = `Quality ${bgQuality.toFixed(2)} below 0.5 threshold`
+                imageBuffer = productBuffer
+              } else {
+                const bgRes = await fetch(imageResult.url)
+                const bgBuffer = Buffer.from(await bgRes.arrayBuffer())
+                console.log('[Product-SP] Fetched AI background, size:', bgBuffer.length)
+                // #region agent log
+                _productDebug.bgFetch = { ok: bgRes.ok, size: bgBuffer.length }
+                // #endregion
+                imageBuffer = await compositeProduct(bgBuffer, transparentProduct, brandPrimaryColor || '#000000')
+                console.log('[Product-SP] Compositing SUCCESS, final size:', imageBuffer.length)
+                // #region agent log
+                _productDebug.compositeSuccess = true
+                _productDebug.compositeSize = imageBuffer.length
+                // #endregion
+              }
             } catch (e) {
               console.error('[Product-SP] Compositing FAILED:', e instanceof Error ? e.message : e, e instanceof Error ? e.stack : '')
               // #region agent log
