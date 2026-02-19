@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     // Fetch the external image
     const fetchOpts: RequestInit = {
-      headers: { 'User-Agent': 'GeoSpark-ImagePersist/1.0 (https://geospark.ai)' },
+      headers: { 'User-Agent': 'GeoSpark-ImagePersist/1.0 (https://geospark.app)' },
     }
     const response = await fetch(imageUrl, fetchOpts)
     if (!response.ok) {

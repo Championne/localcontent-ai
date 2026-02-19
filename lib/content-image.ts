@@ -57,7 +57,7 @@ export async function persistContentImage(
     }
 
     const res = await fetch(imageUrl, {
-      headers: { 'User-Agent': 'GeoSpark-ContentImage/1.0 (https://geospark.ai)' },
+      headers: { 'User-Agent': 'GeoSpark-ContentImage/1.0 (https://geospark.app)' },
       cache: 'no-store',
     })
     if (!res.ok) {

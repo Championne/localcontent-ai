@@ -121,7 +121,7 @@ export default function Hero() {
                   <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
                   <div className="w-3 h-3 rounded-full bg-green-400/80" />
                 </div>
-                <span className="text-xs text-white/30 font-mono">geospark.ai — Brand Intelligence</span>
+                <span className="text-xs text-white/30 font-mono">geospark.app — Brand Intelligence</span>
               </div>
 
               {/* Intelligence Meter */}

@@ -40,7 +40,7 @@ export default function Navigation() {
             alt="GeoSpark"
             width={180}
             height={48}
-            className="h-10 w-auto"
+            className={`h-10 w-auto transition-all duration-500 ${scrolled ? '' : 'brightness-0 invert'}`}
             priority
           />
         </Link>
