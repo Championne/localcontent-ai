@@ -506,7 +506,7 @@ export default function CreateContentPage() {
               source: 'stock',
               photographerName: meta.photographer_name as string | undefined,
               photographerUrl: meta.photographer_url as string | undefined,
-              attribution: meta.photographer_name ? `Photo by ${meta.photographer_name} on Unsplash` : undefined,
+              attribution: meta.photographer_name ? `Photo by ${meta.photographer_name}` : undefined,
             }),
           })
         }

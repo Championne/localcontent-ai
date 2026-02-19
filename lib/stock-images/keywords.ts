@@ -7,7 +7,7 @@
  * Each industry should have 15-20+ total terms across tiers.
  *
  * Queries are written to surface high-quality, artistic, emotion-rich
- * Unsplash images that feel authentic, aspirational, and client-focused.
+ * images that feel authentic, aspirational, and client-focused.
  */
 
 export interface IndustryQueryConfig {

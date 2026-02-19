@@ -12,8 +12,6 @@ import {
   type GenerateImageResult,
 } from '@/lib/openai/images'
 
-const UNSPLASH_API = 'https://api.unsplash.com'
-
 interface TierResult {
   tier: string
   query: string
@@ -32,8 +30,6 @@ export async function POST(request: Request) {
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  const accessKey = process.env.UNSPLASH_ACCESS_KEY
 
   try {
     const body = await request.json()
@@ -76,36 +72,8 @@ export async function POST(request: Request) {
       generic: userOverrides.generic || tiers?.generic || [],
     }
 
-    // 3. Fetch stock images for each tier (in parallel)
+    // Stock image search disabled (Unsplash removed)
     const stockResults: TierResult[] = []
-    if (accessKey) {
-      const tierEntries = Object.entries(tierData).filter(([, terms]) => terms.length > 0)
-      const fetches = tierEntries.flatMap(([tier, terms]) => {
-        // Pick up to 3 terms per tier for variety
-        const selectedTerms = terms.slice(0, 3)
-        return selectedTerms.map(async (term) => {
-          const query = `${term} ${topic}`.slice(0, 100)
-          const params = new URLSearchParams({ query, per_page: '3', orientation: 'squarish' })
-          try {
-            const res = await fetch(`${UNSPLASH_API}/search/photos?${params}`, {
-              headers: { Authorization: `Client-ID ${accessKey}` },
-              next: { revalidate: 60 },
-            })
-            if (!res.ok) return { tier, query: term, images: [], totalHits: 0 } as TierResult
-            const data = await res.json()
-            const images = (data.results ?? []).slice(0, 3).map((photo: { urls: { small: string }; user: { name: string } }) => ({
-              url: photo.urls?.small,
-              photographer: photo.user?.name || 'Unknown',
-            }))
-            return { tier, query: term, images, totalHits: data.total ?? 0 } as TierResult
-          } catch {
-            return { tier, query: term, images: [], totalHits: 0 } as TierResult
-          }
-        })
-      })
-      const results = await Promise.all(fetches)
-      stockResults.push(...results)
-    }
 
     // 4. Optionally generate AI image
     let aiResult: (GenerateImageResult & { fullPrompt?: string }) | null = null

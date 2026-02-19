@@ -143,18 +143,18 @@ export default function ImageQueriesTab() {
 
       {/* Explanation */}
       <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-blue-900 mb-1">How Unsplash prompts work</h3>
+        <h3 className="text-sm font-semibold text-blue-900 mb-1">How image search prompts work</h3>
         <p className="text-xs text-blue-700 leading-relaxed">
-          When GeoSpark fetches free stock images, it searches Unsplash using keyword queries grouped into three tiers: <strong>Primary</strong> (most specific, industry-focused), <strong>Secondary</strong> (broader related terms), and <strong>Generic</strong> (fallback catch-all). The system tries primary queries first and falls back down the tiers if too few results are found. Click any query tag to preview matching Unsplash images. Override queries to fine-tune results for your business.
+          Image search queries are grouped into three tiers: <strong>Primary</strong> (most specific, industry-focused), <strong>Secondary</strong> (broader related terms), and <strong>Generic</strong> (fallback catch-all). The system tries primary queries first and falls back down the tiers if too few results are found. Override queries to fine-tune results for your business.
         </p>
       </div>
 
-      {/* Industry Unsplash Queries — single card matching AI Prompts layout */}
+      {/* Industry Image Queries — single card matching AI Prompts layout */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">Industry Unsplash Queries</h3>
-            <p className="text-xs text-gray-500 mt-1">Search terms used to find stock images on Unsplash for each industry. Click a query to preview results. Override to customise.</p>
+            <h3 className="text-base font-semibold text-gray-900">Industry Image Queries</h3>
+            <p className="text-xs text-gray-500 mt-1">Search terms used for image generation for each industry. Click a query to preview results. Override to customise.</p>
           </div>
           <button
             type="button"

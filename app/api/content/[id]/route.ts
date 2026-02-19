@@ -88,7 +88,7 @@ export async function PATCH(
     // then fall back to metadata.image_url
     let bestImageUrl: string | null = bodyImageUrl || metadata?.image_url || null
 
-    // Persist temporary image URLs (e.g. DALL-E, Unsplash) so library thumbnails don't expire
+    // Persist temporary image URLs (e.g. DALL-E) so library thumbnails don't expire
     if (bestImageUrl && isTemporaryImageUrl(bestImageUrl)) {
       const persisted = await persistContentImage(supabase, user.id, bestImageUrl)
       if (persisted) bestImageUrl = persisted

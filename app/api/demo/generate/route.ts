@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { generateContent, generateSocialPack, isOpenAIConfigured, SocialPackResult } from '@/lib/openai'
 import { generateImage, isImageGenerationConfigured, detectBestStyle } from '@/lib/openai/images'
-import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 
 export const maxDuration = 90 // Allow up to 90 seconds for text + image
 
@@ -215,8 +214,7 @@ export async function POST(request: Request) {
     let imageSource: string | undefined
     let imageError: string | undefined
     const imageConfigured = isImageGenerationConfigured()
-    const stockConfigured = isStockImageConfigured()
-    console.log(`[Demo] Image config: AI=${imageConfigured}, Stock=${stockConfigured}`)
+    console.log(`[Demo] Image config: AI=${imageConfigured}`)
 
     // --- Attempt 1: DALL-E AI image ---
     if (imageConfigured) {
@@ -240,55 +238,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // --- Attempt 2: Stock image fallback (Unsplash) ---
-    if (!imageUrl && stockConfigured) {
-      try {
-        const templateForStock = contentType === 'social-pack' ? 'social-pack' : (contentType as 'blog-post' | 'gmb-post' | 'email')
-        console.log(`[Demo] Trying stock image for "${topic}" / "${industry}"`)
-        const options = await getStockImageOptions({ topic, industry, contentType: templateForStock }, 1)
-        if (options.length > 0) {
-          imageUrl = options[0].url
-          imageSource = 'stock'
-          console.log(`[Demo] Stock image succeeded: ${imageUrl?.substring(0, 80)}...`)
-        } else {
-          console.warn('[Demo] Stock image search returned 0 results, trying broader query')
-          // Try a broader search with just the industry
-          const broaderOptions = await getStockImageOptions({ topic: industry, industry, contentType: templateForStock }, 1)
-          if (broaderOptions.length > 0) {
-            imageUrl = broaderOptions[0].url
-            imageSource = 'stock'
-            console.log(`[Demo] Broader stock search succeeded: ${imageUrl?.substring(0, 80)}...`)
-          }
-        }
-      } catch (e: unknown) {
-        const stockErr = e instanceof Error ? e.message : String(e)
-        console.error('[Demo] Stock image also failed:', stockErr)
-      }
-    }
-
-    // --- Attempt 3: Curated fallback images (always available, no API needed) ---
-    if (!imageUrl) {
-      console.warn(`[Demo] All image sources failed. Using curated fallback. AI error: ${imageError || 'not configured'}`)
-      // Curated, royalty-free Unsplash direct URLs by industry keyword
-      const fallbackImages: Record<string, string> = {
-        restaurant: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1024&q=80',
-        plumbing: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=1024&q=80',
-        dental: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1024&q=80',
-        fitness: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1024&q=80',
-        beauty: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1024&q=80',
-        real_estate: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1024&q=80',
-        legal: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1024&q=80',
-        auto: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1024&q=80',
-        landscaping: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?w=1024&q=80',
-        cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1024&q=80',
-        accounting: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1024&q=80',
-        default: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1024&q=80',
-      }
-      const industryKey = (industry || '').toLowerCase()
-      const matched = Object.entries(fallbackImages).find(([k]) => industryKey.includes(k) || k.includes(industryKey))
-      imageUrl = matched ? matched[1] : fallbackImages.default
-      imageSource = 'fallback'
-    }
+    // Stock image fallback removed (Unsplash integration disabled).
+    // DALL-E is the sole image source. If it fails, the UI shows platform placeholders.
 
     if (!imageUrl) {
       console.error('[Demo] CRITICAL: No image could be produced at all')

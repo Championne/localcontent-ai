@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-const UNSPLASH_UTM = 'https://unsplash.com?utm_source=geospark&utm_medium=referral'
+const STOCK_ATTRIBUTION_URL = ''
 
 interface ContentItem {
   id: string
@@ -244,7 +244,7 @@ export default function ContentLibraryPage() {
                     ) : (
                       <span>{item.metadata.photographer_name || 'Photographer'}</span>
                     )}{' '}
-                    on <a href={UNSPLASH_UTM} target='_blank' rel='noopener noreferrer' className='hover:underline' style={{ color: 'var(--brand-primary)' }} onClick={(e) => e.stopPropagation()}>Unsplash</a>
+                    {STOCK_ATTRIBUTION_URL && <> on <a href={STOCK_ATTRIBUTION_URL} target='_blank' rel='noopener noreferrer' className='hover:underline' style={{ color: 'var(--brand-primary)' }} onClick={(e) => e.stopPropagation()}>Stock</a></>}
                   </p>
                 )}
               </div>

@@ -7,7 +7,7 @@ const BUCKET = 'generated-images'
 /**
  * POST /api/image/persist
  *
- * Takes an external image URL (e.g. DALL-E, Unsplash), downloads it server-side,
+ * Takes an external image URL (e.g. DALL-E), downloads it server-side,
  * uploads it to Supabase Storage, and returns a persistent public URL that never
  * expires.  This prevents "Failed to fetch base image" errors when re-applying
  * branding to an image whose original URL has expired.

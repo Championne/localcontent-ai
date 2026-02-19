@@ -13,7 +13,6 @@ import {
 } from '@/lib/openai/images'
 import { selectOptimalFramework, FRAMEWORK_DESCRIPTIONS, AWARENESS_LEVEL_DESCRIPTIONS } from '@/lib/content/framework-selector'
 import { persistContentImage } from '@/lib/content-image'
-import { getStockImageOptions, isStockImageConfigured } from '@/lib/stock-images'
 import { smartBackgroundRemoval } from '@/lib/image-processing/background-removal'
 import { compositeProduct } from '@/lib/image-processing/product-composition'
 import { extractHeadline } from '@/lib/image-processing/smart-text-overlay'
@@ -261,14 +260,8 @@ export async function POST(request: Request) {
       let generatedImageId: string | null = null
       let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
       if (shouldGenerateImage) {
-        const useStock = imageSource === 'stock' && isStockImageConfigured()
         const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
         try {
-          if (useStock) {
-            const options = await getStockImageOptions({ topic, industry, contentType: template }, 5, stockImagePage)
-            if (options.length) stockImageOptions = options
-          }
-          // Only generate AI image when user explicitly opted in, or when imageSource is 'ai', or when no stock images were found (fallback)
           const shouldGenerateAiImage = canUseAi && (imageSource === 'ai' || includeAiImage || stockImageOptions.length === 0)
           if (shouldGenerateAiImage) {
             const imageResult = await generateImage({
@@ -589,14 +582,8 @@ export async function POST(request: Request) {
     let generatedImageId: string | null = null
     let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
     if (shouldGenerateImage) {
-      const useStock = imageSource === 'stock' && isStockImageConfigured()
       const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
       try {
-        if (useStock) {
-          const options = await getStockImageOptions({ topic, industry, contentType: template }, 5, stockImagePage)
-          if (options.length) stockImageOptions = options
-        }
-        // Only generate AI image when user explicitly opted in, or when imageSource is 'ai', or when no stock images were found (fallback)
         const shouldGenerateAiImage = canUseAi && (imageSource === 'ai' || includeAiImage || stockImageOptions.length === 0)
         if (shouldGenerateAiImage) {
           const imageResult = await generateImage({
