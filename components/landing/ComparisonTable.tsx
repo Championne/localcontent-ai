@@ -45,7 +45,7 @@ export default function ComparisonTable() {
   const [hoveredCol, setHoveredCol] = useState<string | null>(null)
 
   return (
-    <section id="pricing" className="py-20 md:py-28 bg-gray-50">
+    <section id="compare" className="py-20 md:py-28 bg-gray-50">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           variants={fadeInUp}
