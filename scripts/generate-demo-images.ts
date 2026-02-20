@@ -39,7 +39,7 @@ async function main() {
       style: 'natural',
     })
 
-    const url = response.data[0]?.url
+    const url = response.data?.[0]?.url
     if (!url) {
       console.error(`  FAILED — no URL returned`)
       continue
