@@ -10,6 +10,8 @@ from config.database import db
 from scrapers.outscraper_scraper import OutscraperScraper
 from scrapers.instagram_scraper import InstagramScraper
 from scrapers.email_finder import EmailFinder
+from scrapers.fresh_sources import FreshSourcesScraper
+from scrapers.engagement_scraper import EngagementScraper
 from enrichment.multi_platform import MultiPlatformEnricher
 from enrichment.competitor_finder import CompetitorFinder
 from scoring.scoring_engine import ScoringEngine
@@ -26,6 +28,8 @@ class MainOrchestrator:
         self.outscraper = OutscraperScraper()
         self.ig_scraper = InstagramScraper()
         self.email_finder = EmailFinder()
+        self.fresh_sources = FreshSourcesScraper()
+        self.engagement_scraper = EngagementScraper()
         self.enricher = MultiPlatformEnricher()
         self.competitor_finder = CompetitorFinder()
         self.scorer = ScoringEngine()
@@ -60,13 +64,43 @@ class MainOrchestrator:
 
         start_time = time.time()
 
-        # ── STEP 1: SCRAPE ──
+        # ── STEP 1: SCRAPE (60% Outscraper / 20% Fresh / 20% Engagement) ──
         try:
             logger.info("=" * 60)
-            logger.info("STEP 1: SCRAPING")
-            scrape_result = self.outscraper.scrape_and_save(limit=settings.daily_scrape_target)
-            results["scraped"] = scrape_result.get("saved", 0)
-            logger.info(f"Scraped: {results['scraped']} new prospects")
+            logger.info("STEP 1: SCRAPING (3 sources)")
+            total_target = settings.daily_scrape_target
+            outscraper_target = int(total_target * 0.6)
+            fresh_target = int(total_target * 0.2)
+            engagement_target = int(total_target * 0.2)
+
+            # 60% — Outscraper (Google Maps)
+            logger.info(f"  1a. Outscraper: targeting {outscraper_target}")
+            outscraper_result = self.outscraper.scrape_and_save(limit=outscraper_target)
+            outscraper_saved = outscraper_result.get("saved", 0)
+
+            # 20% — Fresh sources (directories, awards)
+            logger.info(f"  1b. Fresh sources: targeting {fresh_target}")
+            try:
+                fresh_result = self.fresh_sources.scrape_and_save(limit=fresh_target)
+                fresh_saved = fresh_result.get("saved", 0)
+            except Exception as e:
+                logger.warning(f"  Fresh sources failed (non-fatal): {e}")
+                fresh_saved = 0
+
+            # 20% — Engagement targeting (Lead Magnet Thief)
+            logger.info(f"  1c. Engagement targeting: targeting {engagement_target}")
+            try:
+                engagement_result = self.engagement_scraper.scrape_and_save(max_prospects=engagement_target)
+                engagement_saved = engagement_result.get("saved", 0)
+            except Exception as e:
+                logger.warning(f"  Engagement targeting failed (non-fatal): {e}")
+                engagement_saved = 0
+
+            results["scraped"] = outscraper_saved + fresh_saved + engagement_saved
+            logger.info(
+                f"Scraped: {results['scraped']} total "
+                f"(Outscraper: {outscraper_saved}, Fresh: {fresh_saved}, Engagement: {engagement_saved})"
+            )
         except Exception as e:
             logger.error(f"Scraping failed: {e}", exc_info=True)
             results["errors"].append({"step": "scraping", "error": str(e)})

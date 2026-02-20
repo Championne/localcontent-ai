@@ -32,6 +32,13 @@ class ScoringEngine:
         breakdown["email_confidence"] = self._score_email_confidence(lead_data)
 
         total = sum(v["points"] for v in breakdown.values())
+
+        # +15 bonus for engagement source prospects (Lead Magnet Thief)
+        source = lead_data.get("prospect_source")
+        if source == "engagement":
+            breakdown["engagement_bonus"] = {"points": 15, "reason": "Engagement source — proved interest in marketing content"}
+            total += 15
+
         total = max(0, min(100, total))
 
         tier = self._assign_tier(total)

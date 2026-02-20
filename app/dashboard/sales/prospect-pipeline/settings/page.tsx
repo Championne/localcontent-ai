@@ -8,12 +8,15 @@ interface SettingEntry {
   updated_at: string
 }
 
-const SETTING_CONFIG: Record<string, { label: string; type: 'number' | 'text' | 'boolean' | 'select'; options?: string[] }> = {
+const SETTING_CONFIG: Record<string, { label: string; type: 'number' | 'text' | 'boolean' | 'select' | 'textarea'; options?: string[] }> = {
   pipeline_enabled: { label: 'Pipeline Enabled', type: 'boolean' },
   daily_scrape_target: { label: 'Daily Scrape Target', type: 'number' },
   target_category: { label: 'Target Category', type: 'text' },
   target_city: { label: 'Target City', type: 'text' },
   target_state: { label: 'Target State', type: 'text' },
+  fresh_sources_enabled: { label: 'Fresh Sources (directories, awards)', type: 'boolean' },
+  engagement_enabled: { label: 'Engagement Targeting (Lead Magnet Thief)', type: 'boolean' },
+  engagement_target_creators: { label: 'Target Creators (comma-separated @usernames)', type: 'textarea' },
   sender_first_name: { label: 'Sender Name (email sign-off)', type: 'text' },
   social_proof_stage: { label: 'Social Proof Stage', type: 'select', options: ['1', '2', '3'] },
   learning_mode: { label: 'Learning Mode', type: 'select', options: ['passive', 'active', 'autonomous'] },
@@ -28,6 +31,7 @@ const SETTING_CONFIG: Record<string, { label: string; type: 'number' | 'text' | 
 const SECTION_ORDER = [
   { title: 'Pipeline Control', keys: ['pipeline_enabled', 'daily_scrape_target', 'schedule_cron'] },
   { title: 'Targeting', keys: ['target_category', 'target_city', 'target_state'] },
+  { title: 'Source Mix (60% Google Maps + 20% Fresh + 20% Engagement)', keys: ['fresh_sources_enabled', 'engagement_enabled', 'engagement_target_creators'] },
   { title: 'Email Settings', keys: ['sender_first_name', 'social_proof_stage', 'ab_test_subject_lines'] },
   { title: 'Scoring', keys: ['tier_1_min', 'tier_2_min'] },
   { title: 'Advanced', keys: ['learning_mode', 'instagram_delay_seconds', 'max_competitors_per_lead'] },
@@ -165,6 +169,16 @@ function SettingRow({
             onChange={(e) => onUpdate(settingKey, parseInt(e.target.value) || 0)}
             className="px-3 py-1.5 border rounded-lg text-sm w-24 text-right"
           />
+        ) : config.type === 'textarea' ? (
+          <TextAreaInput
+            initialValue={
+              Array.isArray(value) ? value.join(', ') : String(value)
+            }
+            onSave={(v) => {
+              const items = v.split(',').map((s: string) => s.trim().replace('@', '')).filter(Boolean)
+              onUpdate(settingKey, items)
+            }}
+          />
         ) : (
           <TextInput
             initialValue={String(value)}
@@ -189,6 +203,20 @@ function TextInput({ initialValue, onSave }: { initialValue: string; onSave: (v:
       onBlur={() => { if (val !== initialValue) onSave(val) }}
       onKeyDown={(e) => { if (e.key === 'Enter') onSave(val) }}
       className="px-3 py-1.5 border rounded-lg text-sm w-48"
+    />
+  )
+}
+
+function TextAreaInput({ initialValue, onSave }: { initialValue: string; onSave: (v: string) => void }) {
+  const [val, setVal] = useState(initialValue)
+  return (
+    <textarea
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onBlur={() => { if (val !== initialValue) onSave(val) }}
+      rows={2}
+      placeholder="salonownershub, instagramforsalons, modernsalon"
+      className="px-3 py-1.5 border rounded-lg text-sm w-64 resize-none"
     />
   )
 }
