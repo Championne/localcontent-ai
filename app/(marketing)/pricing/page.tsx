@@ -102,7 +102,7 @@ export default function PricingPage() {
           <p className="mt-4 text-xl text-gray-600 max-w-2xl mx-auto">
             From hours to minutes: generate a month of content for less than one freelance article.
           </p>
-          <div className="mt-6 inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
+          <div className="mt-6 inline-flex items-center gap-2 bg-spark-50 text-spark-700 px-4 py-2 rounded-full text-sm font-medium border border-spark-100">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -117,13 +117,13 @@ export default function PricingPage() {
               key={tier.name}
               className={`relative bg-white rounded-2xl shadow-sm border-2 transition-all hover:shadow-lg ${
                 tier.highlighted
-                  ? 'border-teal-500 scale-105 shadow-lg'
+                  ? 'border-spark-500 scale-105 shadow-lg'
                   : 'border-gray-200'
               }`}
             >
               {tier.badge && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-teal-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-gradient-to-r from-spark-500 to-amber-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                     {tier.badge}
                   </span>
                 </div>
@@ -141,7 +141,7 @@ export default function PricingPage() {
                     <span className="ml-1 text-gray-500">/month</span>
                   </div>
                   {tier.price > 0 && (
-                    <p className="mt-1 text-sm text-teal-600 font-medium">
+                    <p className="mt-1 text-sm text-spark-600 font-medium">
                       or ${tier.annualTotal}/year
                     </p>
                   )}
@@ -151,10 +151,10 @@ export default function PricingPage() {
                   href={tier.ctaLink}
                   className={`mt-6 block w-full text-center py-3 px-4 rounded-lg font-semibold transition-colors ${
                     tier.highlighted
-                      ? 'bg-teal-600 text-white hover:bg-teal-700'
+                      ? 'bg-gradient-to-r from-spark-500 to-amber-500 text-white hover:from-spark-600 hover:to-amber-600'
                       : tier.price === 0
                       ? 'bg-gray-900 text-white hover:bg-gray-800'
-                      : 'bg-orange-500 text-white hover:bg-orange-600'
+                      : 'bg-spark-500 text-white hover:bg-spark-600'
                   }`}
                 >
                   {tier.cta}
@@ -167,7 +167,7 @@ export default function PricingPage() {
                     <li key={idx} className="flex items-start gap-3">
                       {feature.included ? (
                         <svg
-                          className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5"
+                          className="w-5 h-5 text-spark-500 flex-shrink-0 mt-0.5"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -216,7 +216,7 @@ export default function PricingPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <span className="text-teal-600 font-semibold text-sm uppercase tracking-wide">FAQ</span>
+              <span className="text-spark-600 font-semibold text-sm uppercase tracking-wide">FAQ</span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
                 Pricing Questions
               </h2>
@@ -258,7 +258,7 @@ export default function PricingPage() {
             {/* CTA */}
             <div className="mt-12 text-center">
               <p className="text-gray-600">
-                More questions? <Link href="/contact" className="text-teal-600 font-medium hover:underline">Contact us</Link>
+                More questions? <Link href="/contact" className="text-spark-600 font-medium hover:underline">Contact us</Link>
               </p>
             </div>
           </div>
