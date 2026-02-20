@@ -1,0 +1,22 @@
+# Database
+supabase>=2.3.0
+psycopg2-binary>=2.9.9
+
+# Web Scraping
+outscraper>=3.0.0
+instaloader>=4.10.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+
+# AI
+anthropic>=0.40.0
+
+# Data Processing
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.4.0
