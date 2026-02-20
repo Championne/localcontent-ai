@@ -8,8 +8,8 @@ instaloader>=4.10.0
 requests>=2.31.0
 beautifulsoup4>=4.12.0
 
-# AI
-anthropic>=0.40.0
+# AI (via OpenRouter)
+openai>=1.0.0
 
 # Data Processing
 pydantic>=2.5.0

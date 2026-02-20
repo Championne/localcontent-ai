@@ -11,8 +11,11 @@ class Settings(BaseSettings):
 
     # APIs
     outscraper_api_key: str = Field("", alias="OUTSCRAPER_API_KEY")
-    anthropic_api_key: str = Field("", alias="ANTHROPIC_API_KEY")
+    openrouter_api_key: str = Field("", alias="OPENROUTER_API_KEY")
     instantly_api_key: str = Field("", alias="INSTANTLY_API_KEY")
+
+    # AI model (OpenRouter model ID)
+    ai_model: str = Field("anthropic/claude-sonnet-4-20250514", alias="AI_MODEL")
 
     # Target market
     target_city: str = Field("Denver, CO", alias="TARGET_CITY")

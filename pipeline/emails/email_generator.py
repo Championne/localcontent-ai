@@ -1,10 +1,10 @@
 """
-AI email sequence generator using Claude API.
+AI email sequence generator using OpenRouter API.
 Uses the Email Playbook prompt to generate hyper-personalized 4-email sequences.
 """
 
 import json
-import anthropic
+from openai import OpenAI
 from config.settings import settings
 from config.database import db
 from utils.logger import logger
@@ -13,7 +13,10 @@ from utils.helpers import retry
 
 class EmailGenerator:
     def __init__(self):
-        self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=settings.openrouter_api_key,
+        )
 
     @retry(max_attempts=2, delay=5.0)
     def generate_sequence(
@@ -27,14 +30,16 @@ class EmailGenerator:
         system_prompt = self._build_system_prompt()
         user_prompt = self._build_user_prompt(lead_data, social_data, insights, competitors)
 
-        response = self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+        response = self.client.chat.completions.create(
+            model=settings.ai_model,
             max_tokens=3000,
-            messages=[{"role": "user", "content": user_prompt}],
-            system=system_prompt,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
         )
 
-        text = response.content[0].text
+        text = response.choices[0].message.content
         emails = self._parse_response(text)
 
         if not emails:

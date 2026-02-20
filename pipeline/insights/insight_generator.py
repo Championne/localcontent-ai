@@ -1,10 +1,10 @@
 """
-AI insight generator using Claude API.
+AI insight generator using OpenRouter API.
 Generates 7-10 data-driven marketing insights per prospect.
 """
 
 import json
-import anthropic
+from openai import OpenAI
 from config.settings import settings
 from config.database import db
 from utils.logger import logger
@@ -13,20 +13,25 @@ from utils.helpers import retry
 
 class InsightGenerator:
     def __init__(self):
-        self.client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=settings.openrouter_api_key,
+        )
 
     @retry(max_attempts=2, delay=5.0)
     def generate_insights(self, lead_id: str, lead_data: dict, social_data: dict | None = None, competitors: list[dict] | None = None) -> list[dict]:
         prompt = self._build_prompt(lead_data, social_data, competitors)
 
-        response = self.client.messages.create(
-            model="claude-sonnet-4-20250514",
+        response = self.client.chat.completions.create(
+            model=settings.ai_model,
             max_tokens=2000,
-            messages=[{"role": "user", "content": prompt}],
-            system=self._system_prompt(),
+            messages=[
+                {"role": "system", "content": self._system_prompt()},
+                {"role": "user", "content": prompt},
+            ],
         )
 
-        text = response.content[0].text
+        text = response.choices[0].message.content
         insights = self._parse_response(text)
 
         if not insights:
