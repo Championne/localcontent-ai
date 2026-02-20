@@ -118,6 +118,10 @@ export async function POST(request: Request) {
     )
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/072cb7fb-f7a7-4c3d-8a91-0de911adc8bb',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'api/demo/generate/route.ts:POST',message:'Demo API called',data:{referer:request.headers.get('referer'),url:request.url},timestamp:Date.now(),hypothesisId:'H3'})}).catch(()=>{});
+  // #endregion
+
   try {
     const body = await request.json().catch(() => ({}))
     

@@ -1,3 +1,4 @@
+import json
 from pydantic_settings import BaseSettings
 from pydantic import Field
 from typing import Optional
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
     daily_scrape_target: int = Field(100, alias="DAILY_SCRAPE_TARGET")
     social_proof_stage: int = Field(1, alias="SOCIAL_PROOF_STAGE")
     sender_first_name: str = Field("James", alias="SENDER_FIRST_NAME")
+    pipeline_enabled: bool = True
 
     # Learning engine
     learning_mode: str = Field("passive", alias="LEARNING_MODE")
@@ -52,5 +54,47 @@ class Settings(BaseSettings):
         "extra": "ignore",
     }
 
+    def load_remote_settings(self):
+        """Pull settings from Supabase pipeline_settings table (set via dashboard)."""
+        try:
+            from supabase import create_client
+            db = create_client(self.supabase_url, self.supabase_service_key)
+            result = db.table("pipeline_settings").select("key, value").execute()
+
+            if not result.data:
+                return
+
+            mapping = {
+                "daily_scrape_target": ("daily_scrape_target", int),
+                "target_category": ("target_category", str),
+                "target_city": ("target_city", str),
+                "target_state": ("target_state", str),
+                "social_proof_stage": ("social_proof_stage", int),
+                "sender_first_name": ("sender_first_name", str),
+                "learning_mode": ("learning_mode", str),
+                "instagram_delay_seconds": ("instagram_delay_seconds", int),
+                "pipeline_enabled": ("pipeline_enabled", bool),
+                "tier_1_min": ("tier_1_min", int),
+                "tier_2_min": ("tier_2_min", int),
+                "max_competitors_per_lead": ("outscraper_batch_size", int),
+                "ab_test_subject_lines": ("ab_test_subject_lines", bool),
+            }
+
+            for row in result.data:
+                key = row["key"]
+                raw = row["value"]
+                if key in mapping:
+                    attr, cast = mapping[key]
+                    val = raw if not isinstance(raw, str) else json.loads(raw) if raw.startswith('"') or raw.startswith('{') else raw
+                    try:
+                        setattr(self, attr, cast(val))
+                    except (ValueError, TypeError):
+                        pass
+
+        except Exception as e:
+            # If remote load fails, continue with .env values
+            print(f"[settings] Remote settings load failed (using .env): {e}")
+
 
 settings = Settings()
+settings.load_remote_settings()

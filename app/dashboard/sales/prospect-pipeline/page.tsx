@@ -125,6 +125,12 @@ export default function ProspectPipelinePage() {
           >
             Prospects
           </button>
+          <a
+            href="/dashboard/sales/prospect-pipeline/settings"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+          >
+            Settings
+          </a>
         </div>
       </div>
 

@@ -36,6 +36,16 @@ class MainOrchestrator:
 
     def run_daily_workflow(self) -> dict:
         """Execute the full daily pipeline."""
+        if not settings.pipeline_enabled:
+            logger.info("Pipeline is DISABLED via dashboard settings. Exiting.")
+            return {"run_id": None, "status": "disabled"}
+
+        # Reload remote settings at start of each run
+        settings.load_remote_settings()
+        if not settings.pipeline_enabled:
+            logger.info("Pipeline is DISABLED via dashboard settings. Exiting.")
+            return {"run_id": None, "status": "disabled"}
+
         run_id = self._start_run()
         results = {
             "run_id": run_id,
