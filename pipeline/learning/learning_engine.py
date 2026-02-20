@@ -133,8 +133,9 @@ class LearningEngine:
             logger.info("Learning engine: insufficient data for recommendations")
             return []
 
-        if metrics.get("total_sent", 0) < self.MIN_EMAILS_FOR_ACTIVE:
-            logger.info(f"Learning engine: {metrics['total_sent']} emails sent, need {self.MIN_EMAILS_FOR_ACTIVE} for active mode")
+        total_sent = metrics.get("total_sent", 0)
+        if total_sent < self.MIN_EMAILS_FOR_ACTIVE:
+            logger.info(f"Learning engine: {total_sent} emails sent, need {self.MIN_EMAILS_FOR_ACTIVE} for active mode")
             return []
 
         recommendations = []

@@ -31,7 +31,6 @@ class OutscraperScraper:
             query,
             limit=limit,
             language="en",
-            extract_contacts=True,
         )
 
         if not results or not results[0]:
