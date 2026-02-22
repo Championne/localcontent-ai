@@ -18,9 +18,10 @@ class Settings(BaseSettings):
     ai_model: str = Field("anthropic/claude-sonnet-4", alias="AI_MODEL")
 
     # Target market
-    target_city: str = Field("Denver, CO", alias="TARGET_CITY")
-    target_state: str = Field("Colorado", alias="TARGET_STATE")
-    target_category: str = Field("Hair Salon", alias="TARGET_CATEGORY")
+    target_location: str = Field("Munich, Germany", alias="TARGET_LOCATION")
+    target_city: str = Field("Munich, Germany", alias="TARGET_CITY")
+    target_state: str = Field("", alias="TARGET_STATE")
+    target_category: str = Field("All Categories", alias="TARGET_CATEGORY")
 
     # Pipeline
     daily_scrape_target: int = Field(100, alias="DAILY_SCRAPE_TARGET")
@@ -70,6 +71,7 @@ class Settings(BaseSettings):
             mapping = {
                 "daily_scrape_target": ("daily_scrape_target", int),
                 "target_category": ("target_category", str),
+                "target_location": ("target_location", str),
                 "target_city": ("target_city", str),
                 "target_state": ("target_state", str),
                 "social_proof_stage": ("social_proof_stage", int),

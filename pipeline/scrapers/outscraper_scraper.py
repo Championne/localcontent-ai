@@ -14,17 +14,31 @@ class OutscraperScraper:
     def __init__(self):
         self.client = ApiClient(api_key=settings.outscraper_api_key)
 
-    @retry(max_attempts=3, delay=5.0)
+    ALL_CATEGORIES = [
+        'Hair Salon', 'Barber Shop', 'Nail Salon', 'Spa & Wellness',
+        'Dental Practice', 'Chiropractor', 'Veterinarian',
+        'Restaurant', 'Cafe', 'Gym & Fitness', 'Yoga Studio',
+        'Auto Repair', 'Plumber', 'Electrician', 'HVAC',
+        'Real Estate Agent', 'Accountant', 'Photographer', 'Pet Grooming',
+    ]
+
     def scrape_google_maps(
         self,
         category: str | None = None,
-        city: str | None = None,
+        location: str | None = None,
         limit: int = 100,
     ) -> list[dict]:
         category = category or settings.target_category
-        city = city or settings.target_city
-        query = f"{category} in {city}"
+        location = location or getattr(settings, 'target_location', None) or settings.target_city
 
+        if category == 'All Categories':
+            return self._scrape_all_categories(location, limit)
+
+        return self._scrape_single_category(category, location, limit)
+
+    @retry(max_attempts=3, delay=5.0)
+    def _scrape_single_category(self, category: str, location: str, limit: int) -> list[dict]:
+        query = f"{category} in {location}"
         logger.info(f"Scraping Google Maps: '{query}' (limit={limit})")
 
         results = self.client.google_maps_search(
@@ -46,12 +60,32 @@ class OutscraperScraper:
         logger.info(f"Parsed {len(businesses)} businesses from {len(results[0])} results")
         return businesses
 
-    def _parse_business(self, item: dict, category: str, city: str) -> dict | None:
+    def _scrape_all_categories(self, location: str, limit: int) -> list[dict]:
+        per_category = max(3, limit // len(self.ALL_CATEGORIES))
+        all_businesses = []
+
+        for cat in self.ALL_CATEGORIES:
+            if len(all_businesses) >= limit:
+                break
+            try:
+                batch = self._scrape_single_category(cat, location, per_category)
+                all_businesses.extend(batch)
+            except Exception as e:
+                logger.warning(f"Failed to scrape '{cat}': {e}")
+
+        logger.info(f"All Categories: {len(all_businesses)} total from {len(self.ALL_CATEGORIES)} categories")
+        return all_businesses[:limit]
+
+    def _parse_business(self, item: dict, category: str, location: str) -> dict | None:
         name = item.get("name")
         if not name:
             return None
 
         social_links = self._extract_social_links(item)
+
+        loc_parts = [p.strip() for p in location.split(",")]
+        city_name = loc_parts[0] if loc_parts else location
+        region = loc_parts[1] if len(loc_parts) > 1 else ""
 
         return {
             "business_name": name,
@@ -68,8 +102,8 @@ class OutscraperScraper:
             "owner_email": clean_email(item.get("email_1") or item.get("email")),
             "owner_phone": clean_phone(item.get("phone")),
             "address": item.get("full_address"),
-            "city": city.split(",")[0].strip() if "," in city else city,
-            "state": city.split(",")[1].strip() if "," in city else settings.target_state,
+            "city": item.get("city") or city_name,
+            "state": item.get("state") or region,
             "zip": item.get("postal_code"),
             "google_rating": item.get("rating"),
             "google_reviews_count": item.get("reviews"),

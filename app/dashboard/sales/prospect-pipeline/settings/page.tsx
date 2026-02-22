@@ -11,9 +11,18 @@ interface SettingEntry {
 const SETTING_CONFIG: Record<string, { label: string; type: 'number' | 'text' | 'boolean' | 'select' | 'textarea'; options?: string[] }> = {
   pipeline_enabled: { label: 'Pipeline Enabled', type: 'boolean' },
   daily_scrape_target: { label: 'Daily Scrape Target', type: 'number' },
-  target_category: { label: 'Target Category', type: 'text' },
-  target_city: { label: 'Target City', type: 'text' },
-  target_state: { label: 'Target State', type: 'text' },
+  target_category: { label: 'Target Category', type: 'select', options: [
+    'All Categories',
+    'Hair Salon', 'Barber Shop', 'Nail Salon', 'Spa & Wellness',
+    'Dental Practice', 'Chiropractor', 'Veterinarian', 'Optometrist',
+    'Restaurant', 'Cafe & Coffee Shop', 'Bar & Nightclub', 'Bakery',
+    'Gym & Fitness', 'Yoga Studio', 'Martial Arts',
+    'Auto Repair', 'Car Wash', 'Auto Detailing',
+    'Plumber', 'Electrician', 'HVAC', 'Roofing', 'Landscaping', 'Cleaning Service',
+    'Real Estate Agent', 'Insurance Agent', 'Accountant', 'Lawyer',
+    'Photography Studio', 'Tattoo Shop', 'Pet Grooming',
+  ] },
+  target_location: { label: 'Target Location (city, country)', type: 'text' },
   fresh_sources_enabled: { label: 'Fresh Sources (directories, awards)', type: 'boolean' },
   engagement_enabled: { label: 'Engagement Targeting (Lead Magnet Thief)', type: 'boolean' },
   engagement_target_creators: { label: 'Target Creators (comma-separated @usernames)', type: 'textarea' },
@@ -30,7 +39,7 @@ const SETTING_CONFIG: Record<string, { label: string; type: 'number' | 'text' | 
 
 const SECTION_ORDER = [
   { title: 'Pipeline Control', keys: ['pipeline_enabled', 'daily_scrape_target', 'schedule_cron'] },
-  { title: 'Targeting', keys: ['target_category', 'target_city', 'target_state'] },
+  { title: 'Targeting', keys: ['target_category', 'target_location'] },
   { title: 'Source Mix (60% Google Maps + 20% Fresh + 20% Engagement)', keys: ['fresh_sources_enabled', 'engagement_enabled', 'engagement_target_creators'] },
   { title: 'Email Settings', keys: ['sender_first_name', 'social_proof_stage', 'ab_test_subject_lines'] },
   { title: 'Scoring', keys: ['tier_1_min', 'tier_2_min'] },

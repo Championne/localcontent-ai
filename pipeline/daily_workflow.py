@@ -21,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description="GeoSpark Autonomous Sales Machine")
     parser.add_argument("--target", type=int, help="Override daily scrape target")
     parser.add_argument("--category", type=str, help="Override target category")
-    parser.add_argument("--city", type=str, help="Override target city")
+    parser.add_argument("--location", type=str, help="Override target location (e.g. 'Munich, Germany')")
     parser.add_argument("--scrape-only", action="store_true", help="Only run scraping step")
     parser.add_argument("--dry-run", action="store_true", help="Log actions but don't execute")
     args = parser.parse_args()
@@ -30,12 +30,14 @@ def main():
         settings.daily_scrape_target = args.target
     if args.category:
         settings.target_category = args.category
-    if args.city:
-        settings.target_city = args.city
+    if args.location:
+        settings.target_location = args.location
+        settings.target_city = args.location
 
+    location = getattr(settings, 'target_location', None) or settings.target_city
     logger.info("=" * 60)
     logger.info("GEOSPARK AUTONOMOUS SALES MACHINE — STARTING")
-    logger.info(f"Target: {settings.target_category} in {settings.target_city}")
+    logger.info(f"Target: {settings.target_category} in {location}")
     logger.info(f"Daily target: {settings.daily_scrape_target}")
     logger.info(f"Learning mode: {settings.learning_mode}")
     logger.info("=" * 60)
