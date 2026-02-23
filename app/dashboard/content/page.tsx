@@ -825,8 +825,8 @@ export default function CreateContentPage() {
       const data = await response.json()
 
       // #region agent log
-      console.log('[GeoSpark Debug] Generate response:', { ok: response.ok, status: response.status, hasImage: !!data.image, imageSource: data.image?.source })
-      if (data._productDebug) console.warn('[GeoSpark Debug] PRODUCT COMPOSITING:', JSON.stringify(data._productDebug, null, 2))
+      console.log('[GeoSpark Debug] Generate response:', { ok: response.ok, status: response.status, hasImage: !!data.image, imageSource: data.image?.source, imageUrl: data.image?.url?.slice(0, 80) })
+      if (data._productDebug) console.warn('[GeoSpark Debug] PRODUCT DEBUG (full):', JSON.stringify(data._productDebug, null, 2))
       // #endregion
 
       if (!response.ok) {

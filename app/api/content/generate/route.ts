@@ -259,10 +259,19 @@ export async function POST(request: Request) {
       let image = null
       let generatedImageId: string | null = null
       let stockImageOptions: Array<{ url: string; attribution: string; photographerName: string; photographerUrl: string; downloadLocation?: string }> = []
+      // #region agent log
+      _productDebug._imgPipeline = { shouldGenerateImage, imageSource, includeAiImage }
+      // #endregion
       if (shouldGenerateImage) {
         const canUseAi = isImageGenerationConfigured() && hasImageQuota(plan, imagesUsedThisMonth)
+        // #region agent log
+        _productDebug._imgPipeline = { ..._productDebug._imgPipeline as object, canUseAi, isConfigured: isImageGenerationConfigured(), hasQuota: hasImageQuota(plan, imagesUsedThisMonth), plan, imagesUsedThisMonth }
+        // #endregion
         try {
           const shouldGenerateAiImage = canUseAi && (imageSource === 'ai' || includeAiImage || stockImageOptions.length === 0)
+          // #region agent log
+          _productDebug._imgPipeline = { ..._productDebug._imgPipeline as object, shouldGenerateAiImage }
+          // #endregion
           if (shouldGenerateAiImage) {
             const imageResult = await generateImage({
               topic,
@@ -280,6 +289,9 @@ export async function POST(request: Request) {
               hasProductImage: !!productImage,
               frameworkMood,
             })
+            // #region agent log
+            _productDebug._generateImage = { success: true, urlPrefix: imageResult.url?.slice(0, 80), style: imageResult.style }
+            // #endregion
 
             // Product image compositing: remove background → composite onto AI scene
             let finalImageUrl = imageResult.url
@@ -348,10 +360,16 @@ export async function POST(request: Request) {
             }
 
             if (imageBuffer) {
-              finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
+              // Detect mime from magic bytes: JPEG starts with FF D8, PNG with 89 50
+              const isJpeg = imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8
+              const mime = isJpeg ? 'image/jpeg' : 'image/png'
+              finalImageUrl = `data:${mime};base64,${imageBuffer.toString('base64')}`
             }
 
             const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)
+            // #region agent log
+            _productDebug._persist = { hasPermanentUrl: !!permanentUrl, urlPrefix: (permanentUrl || finalImageUrl).slice(0, 80) }
+            // #endregion
             const imageUrl = permanentUrl || finalImageUrl
             image = {
               url: imageUrl,
@@ -411,6 +429,9 @@ export async function POST(request: Request) {
           }
         } catch (imgError) {
           console.error('Image generation failed:', imgError)
+          // #region agent log
+          _productDebug._imgError = { message: imgError instanceof Error ? imgError.message : String(imgError), stack: imgError instanceof Error ? imgError.stack?.split('\n').slice(0, 5) : undefined }
+          // #endregion
         }
       }
 
@@ -667,7 +688,9 @@ export async function POST(request: Request) {
           }
 
           if (imageBuffer) {
-            finalImageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`
+            const isJpeg = imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8
+            const mime = isJpeg ? 'image/jpeg' : 'image/png'
+            finalImageUrl = `data:${mime};base64,${imageBuffer.toString('base64')}`
           }
 
           const permanentUrl = await persistContentImage(supabase, user.id, finalImageUrl)

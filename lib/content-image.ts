@@ -56,16 +56,30 @@ export async function persistContentImage(
       return null
     }
 
-    const res = await fetch(imageUrl, {
-      headers: { 'User-Agent': 'GeoSpark-ContentImage/1.0 (https://geospark.app)' },
-      cache: 'no-store',
-    })
-    if (!res.ok) {
-      console.error(`persistContentImage: download failed (${res.status}) for ${imageUrl.slice(0, 120)}`)
-      return null
+    let buffer: Buffer
+    let contentType: string
+
+    if (imageUrl.startsWith('data:')) {
+      // Decode data URL directly — no fetch needed
+      const match = imageUrl.match(/^data:(image\/\w+);base64,(.+)$/)
+      if (!match) {
+        console.error('persistContentImage: invalid data URL format')
+        return null
+      }
+      contentType = match[1]
+      buffer = Buffer.from(match[2], 'base64')
+    } else {
+      const res = await fetch(imageUrl, {
+        headers: { 'User-Agent': 'GeoSpark-ContentImage/1.0 (https://geospark.app)' },
+        cache: 'no-store',
+      })
+      if (!res.ok) {
+        console.error(`persistContentImage: download failed (${res.status}) for ${imageUrl.slice(0, 120)}`)
+        return null
+      }
+      contentType = res.headers.get('content-type') || 'image/png'
+      buffer = Buffer.from(await res.arrayBuffer())
     }
-    const contentType = res.headers.get('content-type') || 'image/png'
-    const buffer = Buffer.from(await res.arrayBuffer())
     if (buffer.length === 0) {
       console.error('persistContentImage: downloaded image is empty')
       return null
