@@ -3,6 +3,7 @@ Multi-platform enrichment: Yelp and website analysis.
 Enriches prospect data beyond Google Maps + Instagram.
 """
 
+import re
 import requests
 from bs4 import BeautifulSoup
 from config.database import db
@@ -109,6 +110,9 @@ class MultiPlatformEnricher:
                 if href.startswith("/") and len(href) > 1:
                     nav_links.add(href)
 
+            social_links = self._extract_social_links(soup, website)
+            emails = self._extract_emails(soup, resp.text)
+
             return {
                 "has_ssl": has_ssl,
                 "has_booking": has_booking,
@@ -116,10 +120,39 @@ class MultiPlatformEnricher:
                 "platform": platform,
                 "estimated_pages": len(nav_links),
                 "url": website,
+                "social_links": social_links,
+                "emails": emails,
             }
         except Exception as e:
             logger.warning(f"Website analysis failed for {website}: {e}")
             return None
+
+    def _extract_social_links(self, soup: BeautifulSoup, base_url: str) -> dict:
+        links = {}
+        for a in soup.find_all("a", href=True):
+            href = a["href"].lower()
+            if "instagram.com/" in href and "instagram" not in links:
+                links["instagram"] = a["href"]
+            elif "facebook.com/" in href and "facebook" not in links:
+                links["facebook"] = a["href"]
+            elif "tiktok.com/" in href and "tiktok" not in links:
+                links["tiktok"] = a["href"]
+            elif "youtube.com/" in href and "youtube" not in links:
+                links["youtube"] = a["href"]
+        return links
+
+    def _extract_emails(self, soup: BeautifulSoup, html: str) -> list[str]:
+        found = set()
+        for match in re.findall(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", html):
+            email = clean_email(match)
+            if email and not any(x in email for x in ["example.com", "sentry.io", "wixpress", "schema.org"]):
+                found.add(email)
+        for a in soup.find_all("a", href=True):
+            if a["href"].startswith("mailto:"):
+                email = clean_email(a["href"].replace("mailto:", "").split("?")[0])
+                if email:
+                    found.add(email)
+        return list(found)[:5]
 
     def enrich_lead(self, lead_id: str, lead_data: dict) -> dict:
         """Run all enrichment for a lead and save results."""
@@ -133,14 +166,37 @@ class MultiPlatformEnricher:
                 results["yelp"] = yelp_data
                 self._save_social_profile(lead_id, "yelp", yelp_data)
 
-        # Website analysis
+        # Website analysis + social/email extraction
         website = lead_data.get("website")
         if website:
             site_data = self.analyze_website(website)
             if site_data:
                 results["website"] = site_data
+                self._update_lead_from_website(lead_id, lead_data, site_data)
 
         return results
+
+    def _update_lead_from_website(self, lead_id: str, lead_data: dict, site_data: dict):
+        updates = {}
+        social = site_data.get("social_links", {})
+
+        if social.get("instagram") and not lead_data.get("instagram_url"):
+            updates["instagram_url"] = social["instagram"]
+        if social.get("facebook") and not lead_data.get("facebook_url"):
+            updates["facebook_url"] = social["facebook"]
+
+        emails = site_data.get("emails", [])
+        if emails and not lead_data.get("contact_email"):
+            updates["contact_email"] = emails[0]
+            updates["owner_email"] = emails[0]
+            updates["email_source"] = "website"
+
+        if updates:
+            try:
+                db.table("outreach_leads").update(updates).eq("id", lead_id).execute()
+                logger.info(f"Website enrichment for {lead_id}: {list(updates.keys())}")
+            except Exception as e:
+                logger.error(f"Failed to update lead {lead_id} from website: {e}")
 
     def _save_social_profile(self, lead_id: str, platform: str, data: dict):
         try:

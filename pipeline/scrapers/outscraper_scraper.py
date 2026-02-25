@@ -87,32 +87,35 @@ class OutscraperScraper:
         city_name = loc_parts[0] if loc_parts else location
         region = loc_parts[1] if len(loc_parts) > 1 else ""
 
+        website = item.get("website") or item.get("site")
+
         return {
             "business_name": name,
             "category": category,
-            "website": item.get("site"),
-            "contact_name": item.get("owner_name") or item.get("contact_name"),
+            "website": website,
+            "contact_name": item.get("owner_name") or item.get("contact_name") or item.get("name_for_emails"),
             "contact_email": clean_email(
                 item.get("email_1") or item.get("email")
             ),
             "contact_phone": clean_phone(
                 item.get("phone") or item.get("phone_number")
             ),
-            "owner_name": item.get("owner_name"),
+            "owner_name": item.get("owner_name") or item.get("name_for_emails"),
             "owner_email": clean_email(item.get("email_1") or item.get("email")),
             "owner_phone": clean_phone(item.get("phone")),
-            "address": item.get("full_address"),
+            "address": item.get("full_address") or item.get("address") or item.get("street"),
             "city": item.get("city") or city_name,
             "state": item.get("state") or region,
+            "country": item.get("country"),
             "zip": item.get("postal_code"),
             "google_rating": item.get("rating"),
             "google_reviews_count": item.get("reviews"),
-            "google_maps_url": item.get("google_maps_url") or item.get("link"),
+            "google_maps_url": item.get("google_maps_url") or item.get("location_link"),
             "google_place_id": item.get("place_id"),
             "instagram_url": social_links.get("instagram"),
             "facebook_url": social_links.get("facebook"),
             "yelp_url": social_links.get("yelp"),
-            "has_website": bool(item.get("site")),
+            "has_website": bool(website),
             "has_social_media": bool(social_links),
             "source": "outscraper",
             "prospect_source": "outscraper",
@@ -126,7 +129,7 @@ class OutscraperScraper:
 
     def _extract_social_links(self, item: dict) -> dict:
         links = {}
-        site = item.get("site", "") or ""
+        site = item.get("website") or item.get("site") or ""
         socials = item.get("social_media", []) or []
 
         all_urls = [site] + (socials if isinstance(socials, list) else [])
