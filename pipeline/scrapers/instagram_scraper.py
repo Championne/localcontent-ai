@@ -54,12 +54,16 @@ class InstagramScraper:
         except instaloader.exceptions.ProfileNotExistsException:
             logger.warning(f"Instagram profile @{username} does not exist")
             return None
-        except instaloader.exceptions.ConnectionException as e:
+        except (instaloader.exceptions.ConnectionException,
+                instaloader.exceptions.AbortDownloadException) as e:
             if "429" in str(e) or "Too Many Requests" in str(e):
-                logger.warning(f"Instagram rate-limited — disabling for this run")
+                logger.warning("Instagram rate-limited — disabling for this run")
                 self._available = False
             else:
                 logger.error(f"Instagram connection error for @{username}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Instagram unexpected error for @{username}: {e}")
             return None
 
         if profile.is_private:
