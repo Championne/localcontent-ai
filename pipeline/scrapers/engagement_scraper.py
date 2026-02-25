@@ -35,6 +35,7 @@ L = instaloader.Instaloader(
     save_metadata=False,
     compress_json=False,
     quiet=True,
+    max_connection_attempts=1,
 )
 
 # Default target creators — configurable via dashboard pipeline_settings
@@ -101,13 +102,19 @@ class EngagementScraper:
 
         all_prospects = []
 
+        ig_failures = 0
         for creator_username in creators:
             try:
                 posts = self._find_marketing_posts(creator_username)
                 if not posts:
+                    ig_failures += 1
+                    if ig_failures >= 2:
+                        logger.warning("Instagram rate-limited — aborting engagement scan")
+                        break
                     continue
 
-                for post_data in posts[:2]:  # Max 2 posts per creator
+                ig_failures = 0
+                for post_data in posts[:2]:
                     commenters = self._scrape_commenters(post_data)
                     business_commenters = self._filter_business_accounts(commenters, category, city)
 
@@ -121,10 +128,14 @@ class EngagementScraper:
                     if len(all_prospects) >= max_prospects:
                         break
 
-                time.sleep(10)  # Delay between creators
+                time.sleep(10)
 
             except Exception as e:
                 logger.warning(f"Engagement scan failed for @{creator_username}: {e}")
+                ig_failures += 1
+                if ig_failures >= 2:
+                    logger.warning("Instagram rate-limited — aborting engagement scan")
+                    break
                 continue
 
             if len(all_prospects) >= max_prospects:

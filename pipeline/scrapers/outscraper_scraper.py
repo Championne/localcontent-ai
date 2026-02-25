@@ -53,7 +53,7 @@ class OutscraperScraper:
 
         businesses = []
         for item in results[0]:
-            business = self._parse_business(item, category, city)
+            business = self._parse_business(item, category, location)
             if business:
                 businesses.append(business)
 
@@ -117,7 +117,7 @@ class OutscraperScraper:
             "source": "outscraper",
             "prospect_source": "outscraper",
             "source_details": {
-                "query": f"{category} in {city}",
+                "query": f"{category} in {location}",
                 "place_id": item.get("place_id"),
                 "photos_count": item.get("photos_count"),
                 "type": item.get("type"),

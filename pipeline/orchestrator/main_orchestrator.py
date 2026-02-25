@@ -64,37 +64,39 @@ class MainOrchestrator:
 
         start_time = time.time()
 
-        # ── STEP 1: SCRAPE (60% Outscraper / 20% Fresh / 20% Engagement) ──
+        # ── STEP 1: SCRAPE ──
+        # Outscraper gets full target; fresh/engagement get spillover only if Outscraper under-delivers.
         try:
             logger.info("=" * 60)
-            logger.info("STEP 1: SCRAPING (3 sources)")
+            logger.info("STEP 1: SCRAPING")
             total_target = settings.daily_scrape_target
-            outscraper_target = int(total_target * 0.6)
-            fresh_target = int(total_target * 0.2)
-            engagement_target = int(total_target * 0.2)
 
-            # 60% — Outscraper (Google Maps)
-            logger.info(f"  1a. Outscraper: targeting {outscraper_target}")
-            outscraper_result = self.outscraper.scrape_and_save(limit=outscraper_target)
+            # Primary: Outscraper (Google Maps) — full target
+            logger.info(f"  1a. Outscraper: targeting {total_target}")
+            outscraper_result = self.outscraper.scrape_and_save(limit=total_target)
             outscraper_saved = outscraper_result.get("saved", 0)
 
-            # 20% — Fresh sources (directories, awards)
-            logger.info(f"  1b. Fresh sources: targeting {fresh_target}")
-            try:
-                fresh_result = self.fresh_sources.scrape_and_save(limit=fresh_target)
-                fresh_saved = fresh_result.get("saved", 0)
-            except Exception as e:
-                logger.warning(f"  Fresh sources failed (non-fatal): {e}")
-                fresh_saved = 0
+            # Spillover to secondary sources if Outscraper fell short
+            remaining = max(0, total_target - outscraper_saved)
+            fresh_saved = 0
+            engagement_saved = 0
 
-            # 20% — Engagement targeting (Lead Magnet Thief)
-            logger.info(f"  1c. Engagement targeting: targeting {engagement_target}")
-            try:
-                engagement_result = self.engagement_scraper.scrape_and_save(max_prospects=engagement_target)
-                engagement_saved = engagement_result.get("saved", 0)
-            except Exception as e:
-                logger.warning(f"  Engagement targeting failed (non-fatal): {e}")
-                engagement_saved = 0
+            if remaining > 0:
+                logger.info(f"  1b. Fresh sources: targeting {remaining}")
+                try:
+                    fresh_result = self.fresh_sources.scrape_and_save(limit=remaining)
+                    fresh_saved = fresh_result.get("saved", 0)
+                except Exception as e:
+                    logger.warning(f"  Fresh sources failed (non-fatal): {e}")
+
+            remaining = max(0, remaining - fresh_saved)
+            if remaining > 0:
+                logger.info(f"  1c. Engagement targeting: targeting {remaining}")
+                try:
+                    engagement_result = self.engagement_scraper.scrape_and_save(max_prospects=remaining)
+                    engagement_saved = engagement_result.get("saved", 0)
+                except Exception as e:
+                    logger.warning(f"  Engagement targeting failed (non-fatal): {e}")
 
             results["scraped"] = outscraper_saved + fresh_saved + engagement_saved
             logger.info(
