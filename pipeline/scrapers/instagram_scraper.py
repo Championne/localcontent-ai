@@ -1,6 +1,7 @@
 """
 Instagram scraper using Instaloader.
 Extracts profile data, recent posts, engagement metrics, and posting patterns.
+Requires SOCIAL_PROXY in .env for datacenter/VPS IPs (Instagram blocks them).
 """
 
 import time
@@ -12,24 +13,39 @@ from config.database import db
 from utils.logger import logger
 from utils.helpers import rate_limit
 
-L = instaloader.Instaloader(
-    download_pictures=False,
-    download_videos=False,
-    download_video_thumbnails=False,
-    download_geotags=False,
-    download_comments=False,
-    save_metadata=False,
-    compress_json=False,
-    quiet=True,
-)
+
+def _build_loader() -> instaloader.Instaloader:
+    loader = instaloader.Instaloader(
+        download_pictures=False,
+        download_videos=False,
+        download_video_thumbnails=False,
+        download_geotags=False,
+        download_comments=False,
+        save_metadata=False,
+        compress_json=False,
+        quiet=True,
+        max_connection_attempts=1,
+        fatal_status_codes=[429],
+    )
+    proxy = settings.social_proxy
+    if proxy:
+        loader.context._session.proxies = {"http": proxy, "https": proxy}
+        logger.info(f"Instagram scraper using proxy: {proxy.split('@')[-1] if '@' in proxy else 'configured'}")
+    else:
+        logger.warning("No SOCIAL_PROXY configured — Instagram scraping may fail from datacenter IPs")
+    return loader
 
 
 class InstagramScraper:
     def __init__(self):
-        self.loader = L
+        self.loader = _build_loader()
+        self._available = True
 
     @rate_limit(seconds=settings.instagram_delay_seconds)
     def scrape_profile(self, username: str) -> dict | None:
+        if not self._available:
+            return None
+
         username = username.strip().lower().lstrip("@")
         logger.info(f"Scraping Instagram: @{username}")
 
@@ -39,7 +55,11 @@ class InstagramScraper:
             logger.warning(f"Instagram profile @{username} does not exist")
             return None
         except instaloader.exceptions.ConnectionException as e:
-            logger.error(f"Instagram connection error for @{username}: {e}")
+            if "429" in str(e) or "Too Many Requests" in str(e):
+                logger.warning(f"Instagram rate-limited — disabling for this run")
+                self._available = False
+            else:
+                logger.error(f"Instagram connection error for @{username}: {e}")
             return None
 
         if profile.is_private:

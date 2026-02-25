@@ -26,17 +26,23 @@ from config.database import db
 from utils.logger import logger
 from utils.helpers import extract_instagram_username, clean_email, rate_limit
 
-L = instaloader.Instaloader(
-    download_pictures=False,
-    download_videos=False,
-    download_video_thumbnails=False,
-    download_geotags=False,
-    download_comments=True,
-    save_metadata=False,
-    compress_json=False,
-    quiet=True,
-    max_connection_attempts=1,
-)
+def _build_engagement_loader() -> instaloader.Instaloader:
+    loader = instaloader.Instaloader(
+        download_pictures=False,
+        download_videos=False,
+        download_video_thumbnails=False,
+        download_geotags=False,
+        download_comments=True,
+        save_metadata=False,
+        compress_json=False,
+        quiet=True,
+        max_connection_attempts=1,
+        fatal_status_codes=[429],
+    )
+    proxy = settings.social_proxy
+    if proxy:
+        loader.context._session.proxies = {"http": proxy, "https": proxy}
+    return loader
 
 # Default target creators — configurable via dashboard pipeline_settings
 DEFAULT_TARGET_CREATORS = {
@@ -74,7 +80,7 @@ MARKETING_KEYWORDS = [
 
 class EngagementScraper:
     def __init__(self):
-        self.loader = L
+        self.loader = _build_engagement_loader()
 
     def run_engagement_scan(
         self,

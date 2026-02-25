@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     tier_3_min: int = 60
     tier_4_min: int = 50
 
+    # Proxy for social media scraping (residential proxy recommended)
+    # Format: http://user:pass@host:port or socks5://user:pass@host:port
+    social_proxy: str = Field("", alias="SOCIAL_PROXY")
+
     # Rate limits
     instagram_delay_seconds: int = 60
     outscraper_batch_size: int = 50
