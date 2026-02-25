@@ -41,11 +41,13 @@ class InstagramScraper:
         self.loader = _build_loader()
         self._available = True
 
-    @rate_limit(seconds=settings.instagram_delay_seconds)
     def scrape_profile(self, username: str) -> dict | None:
         if not self._available:
             return None
+        return self._scrape_profile_inner(username)
 
+    @rate_limit(seconds=settings.instagram_delay_seconds)
+    def _scrape_profile_inner(self, username: str) -> dict | None:
         username = username.strip().lower().lstrip("@")
         logger.info(f"Scraping Instagram: @{username}")
 
