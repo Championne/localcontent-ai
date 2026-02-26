@@ -144,10 +144,13 @@ class MainOrchestrator:
             results["errors"].append({"step": "emails", "error": str(e)})
 
         # ── STEP 6: UPLOAD TO INSTANTLY ──
-        # Disabled while email accounts are warming up — re-enable when ready
-        logger.info("=" * 60)
-        logger.info("STEP 6: INSTANTLY UPLOAD — SKIPPED (warmup mode)")
-        results["uploaded"] = 0
+        try:
+            logger.info("=" * 60)
+            logger.info("STEP 6: INSTANTLY UPLOAD")
+            results["uploaded"] = self._upload_to_instantly()
+        except Exception as e:
+            logger.error(f"Instantly upload failed: {e}", exc_info=True)
+            results["errors"].append({"step": "instantly", "error": str(e)})
 
         # ── STEP 7: LEARNING ──
         try:
