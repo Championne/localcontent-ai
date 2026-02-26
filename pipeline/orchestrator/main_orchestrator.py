@@ -144,13 +144,10 @@ class MainOrchestrator:
             results["errors"].append({"step": "emails", "error": str(e)})
 
         # ── STEP 6: UPLOAD TO INSTANTLY ──
-        try:
-            logger.info("=" * 60)
-            logger.info("STEP 6: INSTANTLY UPLOAD")
-            results["uploaded"] = self._upload_to_instantly()
-        except Exception as e:
-            logger.error(f"Instantly upload failed: {e}", exc_info=True)
-            results["errors"].append({"step": "instantly", "error": str(e)})
+        # Disabled while email accounts are warming up — re-enable when ready
+        logger.info("=" * 60)
+        logger.info("STEP 6: INSTANTLY UPLOAD — SKIPPED (warmup mode)")
+        results["uploaded"] = 0
 
         # ── STEP 7: LEARNING ──
         try:
@@ -284,7 +281,7 @@ class MainOrchestrator:
             db.table("outreach_leads")
             .select("*")
             .eq("pipeline_status", "scored")
-            .in_("score_tier", ["TIER_1", "TIER_2"])
+            .in_("score_tier", ["TIER_1", "TIER_2", "TIER_3"])
             .limit(50)
             .execute()
         )
