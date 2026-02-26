@@ -63,13 +63,14 @@ export async function GET(request: Request) {
     if (view === 'prospects') {
       const tier = searchParams.get('tier')
       const status = searchParams.get('status')
+      const location = searchParams.get('location')
       const limit = parseInt(searchParams.get('limit') || '50')
       const offset = parseInt(searchParams.get('offset') || '0')
 
       let query = supabase
         .from('outreach_leads')
         .select(`
-          id, business_name, category, city, state, website,
+          id, business_name, category, city, state, country, website,
           contact_name, contact_email, owner_name, owner_email,
           google_rating, google_reviews_count,
           geospark_score, score_tier, pipeline_status, prospect_source,
@@ -81,11 +82,21 @@ export async function GET(request: Request) {
 
       if (tier) query = query.eq('score_tier', tier)
       if (status) query = query.eq('pipeline_status', status)
+      if (location) query = query.ilike('city', `%${location}%`)
 
       const { data, error } = await query
       if (error) throw error
 
-      return NextResponse.json({ prospects: data || [] })
+      // Get distinct locations for filter dropdown
+      const { data: locations } = await supabase
+        .from('outreach_leads')
+        .select('city')
+        .not('city', 'is', null)
+        .not('city', 'eq', '')
+
+      const uniqueLocations = [...new Set((locations || []).map(l => l.city).filter(Boolean))].sort()
+
+      return NextResponse.json({ prospects: data || [], locations: uniqueLocations })
     }
 
     if (view === 'prospect-detail') {

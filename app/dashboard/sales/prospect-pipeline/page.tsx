@@ -30,7 +30,11 @@ interface Prospect {
   category: string
   city: string
   state: string
+  country: string
+  website: string
+  contact_name: string
   contact_email: string
+  owner_name: string
   owner_email: string
   google_rating: number
   google_reviews_count: number
@@ -38,7 +42,16 @@ interface Prospect {
   score_tier: string
   pipeline_status: string
   prospect_source: string
+  enrichment_status: string
   created_at: string
+}
+
+interface ProspectDetail {
+  lead: Record<string, unknown>
+  social_profiles: Record<string, unknown>[]
+  insights: Record<string, unknown>[]
+  email_sequence: Record<string, unknown>[]
+  competitors: Record<string, unknown>[]
 }
 
 const TIER_COLORS: Record<string, string> = {
@@ -71,10 +84,15 @@ const STATUS_LABELS: Record<string, string> = {
 export default function ProspectPipelinePage() {
   const [overview, setOverview] = useState<PipelineOverview | null>(null)
   const [prospects, setProspects] = useState<Prospect[]>([])
+  const [locations, setLocations] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTier, setSelectedTier] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
   const [view, setView] = useState<'overview' | 'prospects'>('overview')
+  const [selectedProspect, setSelectedProspect] = useState<string | null>(null)
+  const [prospectDetail, setProspectDetail] = useState<ProspectDetail | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/sales/prospect-pipeline?view=overview')
@@ -88,10 +106,23 @@ export default function ProspectPipelinePage() {
     const params = new URLSearchParams({ view: 'prospects' })
     if (selectedTier) params.set('tier', selectedTier)
     if (selectedStatus) params.set('status', selectedStatus)
+    if (selectedLocation) params.set('location', selectedLocation)
     fetch(`/api/sales/prospect-pipeline?${params}`)
       .then(r => r.json())
-      .then(d => setProspects(d.prospects || []))
-  }, [view, selectedTier, selectedStatus])
+      .then(d => {
+        setProspects(d.prospects || [])
+        if (d.locations) setLocations(d.locations)
+      })
+  }, [view, selectedTier, selectedStatus, selectedLocation])
+
+  useEffect(() => {
+    if (!selectedProspect) { setProspectDetail(null); return }
+    setDetailLoading(true)
+    fetch(`/api/sales/prospect-pipeline?view=prospect-detail&id=${selectedProspect}`)
+      .then(r => r.json())
+      .then(setProspectDetail)
+      .finally(() => setDetailLoading(false))
+  }, [selectedProspect])
 
   if (loading) {
     return (
@@ -138,10 +169,22 @@ export default function ProspectPipelinePage() {
       {view === 'prospects' && (
         <ProspectsView
           prospects={prospects}
+          locations={locations}
           selectedTier={selectedTier}
           setSelectedTier={setSelectedTier}
           selectedStatus={selectedStatus}
           setSelectedStatus={setSelectedStatus}
+          selectedLocation={selectedLocation}
+          setSelectedLocation={setSelectedLocation}
+          onSelectProspect={setSelectedProspect}
+        />
+      )}
+
+      {selectedProspect && (
+        <ProspectDetailPanel
+          detail={prospectDetail}
+          loading={detailLoading}
+          onClose={() => setSelectedProspect(null)}
         />
       )}
     </div>
@@ -250,21 +293,39 @@ function OverviewView({ overview }: { overview: PipelineOverview }) {
 
 function ProspectsView({
   prospects,
+  locations,
   selectedTier,
   setSelectedTier,
   selectedStatus,
   setSelectedStatus,
+  selectedLocation,
+  setSelectedLocation,
+  onSelectProspect,
 }: {
   prospects: Prospect[]
+  locations: string[]
   selectedTier: string | null
   setSelectedTier: (t: string | null) => void
   selectedStatus: string | null
   setSelectedStatus: (s: string | null) => void
+  selectedLocation: string | null
+  setSelectedLocation: (l: string | null) => void
+  onSelectProspect: (id: string) => void
 }) {
   return (
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap gap-2">
+        <select
+          value={selectedLocation || ''}
+          onChange={(e) => setSelectedLocation(e.target.value || null)}
+          className="px-3 py-2 border rounded-lg text-sm bg-white"
+        >
+          <option value="">All Locations</option>
+          {locations.map((loc) => (
+            <option key={loc} value={loc}>{loc}</option>
+          ))}
+        </select>
         <select
           value={selectedTier || ''}
           onChange={(e) => setSelectedTier(e.target.value || null)}
@@ -285,6 +346,7 @@ function ProspectsView({
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
+        <span className="self-center text-xs text-gray-400">{prospects.length} results</span>
       </div>
 
       {/* Prospects table */}
@@ -311,7 +373,11 @@ function ProspectsView({
               </tr>
             ) : (
               prospects.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
+                <tr
+                  key={p.id}
+                  className="hover:bg-teal-50 cursor-pointer transition-colors"
+                  onClick={() => onSelectProspect(p.id)}
+                >
                   <td className="px-4 py-3">
                     <div className="font-medium text-gray-900">{p.business_name}</div>
                     <div className="text-xs text-gray-500">{p.category}</div>
@@ -349,6 +415,218 @@ function ProspectsView({
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  )
+}
+
+function ProspectDetailPanel({
+  detail,
+  loading,
+  onClose,
+}: {
+  detail: ProspectDetail | null
+  loading: boolean
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative w-full max-w-2xl bg-white shadow-xl overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {loading ? 'Loading...' : (detail?.lead as Record<string, unknown>)?.business_name as string || 'Prospect Detail'}
+          </h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg text-gray-500 text-xl leading-none">&times;</button>
+        </div>
+
+        {loading && (
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+          </div>
+        )}
+
+        {!loading && detail && (
+          <div className="p-6 space-y-6">
+            <DetailSection title="Business Info" data={detail.lead} fields={[
+              ['business_name', 'Business Name'],
+              ['category', 'Category'],
+              ['city', 'City'],
+              ['state', 'State'],
+              ['country', 'Country'],
+              ['address', 'Address'],
+              ['zip', 'ZIP'],
+              ['contact_name', 'Contact Name'],
+              ['contact_email', 'Email'],
+              ['contact_phone', 'Phone'],
+              ['owner_name', 'Owner Name'],
+              ['owner_email', 'Owner Email'],
+              ['owner_phone', 'Owner Phone'],
+              ['website', 'Website'],
+            ]} />
+
+            <DetailSection title="Google & Scoring" data={detail.lead} fields={[
+              ['google_rating', 'Google Rating'],
+              ['google_reviews_count', 'Reviews'],
+              ['google_maps_url', 'Google Maps'],
+              ['geospark_score', 'GeoSpark Score'],
+              ['score_tier', 'Tier'],
+              ['pipeline_status', 'Pipeline Status'],
+              ['enrichment_status', 'Enrichment'],
+              ['prospect_source', 'Source'],
+              ['email_source', 'Email Source'],
+              ['created_at', 'Created'],
+            ]} />
+
+            <ScoreBreakdown data={detail.lead} />
+
+            <DetailSection title="Social Links" data={detail.lead} fields={[
+              ['instagram_url', 'Instagram'],
+              ['facebook_url', 'Facebook'],
+              ['yelp_url', 'Yelp'],
+            ]} />
+
+            {detail.social_profiles.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Instagram Profile</h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                  {detail.social_profiles.filter(s => s.platform === 'instagram').map((sp, i) => (
+                    <div key={i} className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      {[
+                        ['username', 'Username'],
+                        ['followers', 'Followers'],
+                        ['following', 'Following'],
+                        ['posts_count', 'Posts'],
+                        ['engagement_rate', 'Engagement Rate'],
+                        ['posts_last_30_days', 'Posts (30d)'],
+                        ['posting_frequency', 'Posts/Month'],
+                        ['is_business_account', 'Business Account'],
+                        ['bio', 'Bio'],
+                      ].map(([key, label]) => {
+                        const val = sp[key]
+                        if (val == null || val === '') return null
+                        return (
+                          <div key={key} className="contents">
+                            <span className="text-gray-500">{label}</span>
+                            <span className="text-gray-900 break-all">
+                              {typeof val === 'number' ? val.toLocaleString() : String(val)}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detail.competitors.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Competitors ({detail.competitors.length})</h3>
+                <div className="space-y-2">
+                  {detail.competitors.map((c, i) => (
+                    <div key={i} className="bg-gray-50 rounded-lg p-3 text-sm">
+                      <span className="font-medium text-gray-900">{c.competitor_name as string}</span>
+                      {c.follower_count && <span className="text-gray-500 ml-2">{(c.follower_count as number).toLocaleString()} followers</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detail.insights.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Marketing Insights ({detail.insights.length})</h3>
+                <div className="space-y-2">
+                  {detail.insights.map((ins, i) => (
+                    <div key={i} className="bg-gray-50 rounded-lg p-3 text-sm">
+                      <div className="font-medium text-gray-900">{ins.insight_type as string}</div>
+                      <div className="text-gray-600 mt-1">{ins.insight_text as string}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {detail.email_sequence.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Email Sequence ({detail.email_sequence.length})</h3>
+                <div className="space-y-2">
+                  {detail.email_sequence.map((em, i) => (
+                    <div key={i} className="bg-gray-50 rounded-lg p-3 text-sm">
+                      <div className="font-medium text-gray-900">
+                        #{em.email_number as number}: {em.subject_line as string}
+                      </div>
+                      <div className="text-gray-600 mt-1 whitespace-pre-wrap text-xs">
+                        {em.body_text as string}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function DetailSection({
+  title,
+  data,
+  fields,
+}: {
+  title: string
+  data: Record<string, unknown>
+  fields: string[][]
+}) {
+  const rows = fields.filter(([key]) => data[key] != null && data[key] !== '')
+  if (rows.length === 0) return null
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-2">{title}</h3>
+      <div className="bg-gray-50 rounded-lg p-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        {rows.map(([key, label]) => {
+          let val = data[key]
+          if (typeof val === 'boolean') val = val ? 'Yes' : 'No'
+          const isUrl = typeof val === 'string' && (val.startsWith('http') || val.startsWith('www'))
+          return (
+            <div key={key} className="contents">
+              <span className="text-gray-500">{label}</span>
+              {isUrl ? (
+                <a href={val as string} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline break-all">
+                  {(val as string).replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)}
+                </a>
+              ) : (
+                <span className="text-gray-900 break-all">{String(val)}</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function ScoreBreakdown({ data }: { data: Record<string, unknown> }) {
+  const breakdown = data.score_breakdown as Record<string, { points: number; reason: string }> | undefined
+  if (!breakdown) return null
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-700 mb-2">Score Breakdown ({data.geospark_score as number}/100)</h3>
+      <div className="bg-gray-50 rounded-lg p-4 space-y-1.5">
+        {Object.entries(breakdown).map(([key, { points, reason }]) => (
+          <div key={key} className="flex items-start gap-2 text-sm">
+            <span className={`shrink-0 w-8 text-right font-mono font-medium ${points > 0 ? 'text-teal-600' : 'text-gray-400'}`}>
+              +{points}
+            </span>
+            <span className="text-gray-500">{key.replace(/_/g, ' ')}</span>
+            <span className="text-gray-400 ml-auto text-xs max-w-[50%] text-right">{reason}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
