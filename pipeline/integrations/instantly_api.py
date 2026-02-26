@@ -59,7 +59,7 @@ class InstantlyAPI:
                     "name": "Default",
                     "timing": {"from": "09:00", "to": "17:00"},
                     "days": {"0": False, "1": True, "2": True, "3": True, "4": True, "5": True, "6": False},
-                    "timezone": "Europe/Berlin",
+                    "timezone": "Etc/GMT-1",
                 }]
             },
         })
