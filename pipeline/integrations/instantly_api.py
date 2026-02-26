@@ -1,5 +1,5 @@
 """
-Instantly.ai API integration for the Python pipeline.
+Instantly.ai API v2 integration.
 Handles campaign creation, lead upload with email sequences, and stats retrieval.
 """
 
@@ -9,27 +9,31 @@ from config.database import db
 from utils.logger import logger
 from utils.helpers import retry
 
-
-INSTANTLY_API_URL = "https://api.instantly.ai/api/v1"
+INSTANTLY_API_URL = "https://api.instantly.ai/api/v2"
 
 
 class InstantlyAPI:
     def __init__(self):
         self.api_key = settings.instantly_api_key
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
 
-    def _request(self, endpoint: str, method: str = "POST", data: dict | None = None) -> dict | None:
+    def _request(self, endpoint: str, method: str = "GET", data: dict | None = None) -> dict | list | None:
         url = f"{INSTANTLY_API_URL}{endpoint}"
-        payload = {"api_key": self.api_key}
-        if data:
-            payload.update(data)
 
         try:
             if method == "GET":
-                resp = requests.get(url, params=payload, timeout=30)
+                resp = requests.get(url, headers=self.headers, params=data, timeout=30)
+            elif method == "POST":
+                resp = requests.post(url, headers=self.headers, json=data, timeout=30)
+            elif method == "PATCH":
+                resp = requests.patch(url, headers=self.headers, json=data, timeout=30)
             else:
-                resp = requests.post(url, json=payload, timeout=30)
+                resp = requests.request(method, url, headers=self.headers, json=data, timeout=30)
 
-            if resp.status_code == 200:
+            if resp.status_code in (200, 201):
                 return resp.json()
             else:
                 logger.error(f"Instantly API {endpoint}: {resp.status_code} — {resp.text[:200]}")
@@ -41,26 +45,27 @@ class InstantlyAPI:
     # ── Campaigns ──
 
     def list_campaigns(self) -> list[dict]:
-        result = self._request("/campaign/list")
+        result = self._request("/campaigns")
+        if isinstance(result, dict):
+            return result.get("items", [])
         return result if isinstance(result, list) else []
 
     @retry(max_attempts=2, delay=3.0)
     def create_campaign(self, name: str) -> str | None:
-        """Create a new campaign. Returns campaign_id."""
-        result = self._request("/campaign/create", data={"name": name})
+        result = self._request("/campaigns", method="POST", data={"name": name})
         if result and isinstance(result, dict):
             return result.get("id") or result.get("campaign_id")
         return None
 
     def get_campaign_stats(self, campaign_id: str) -> dict | None:
-        return self._request("/analytics/campaign/summary", data={"campaign_id": campaign_id})
+        return self._request(f"/campaigns/{campaign_id}/analytics")
 
     def launch_campaign(self, campaign_id: str) -> bool:
-        result = self._request("/campaign/launch", data={"campaign_id": campaign_id})
+        result = self._request(f"/campaigns/{campaign_id}/launch", method="POST")
         return result is not None
 
     def pause_campaign(self, campaign_id: str) -> bool:
-        result = self._request("/campaign/pause", data={"campaign_id": campaign_id})
+        result = self._request(f"/campaigns/{campaign_id}/pause", method="POST")
         return result is not None
 
     # ── Leads ──
@@ -72,9 +77,6 @@ class InstantlyAPI:
         lead_data: dict,
         email_sequence: list[dict],
     ) -> bool:
-        """
-        Add a lead to a campaign with their personalized email sequence.
-        """
         email = lead_data.get("contact_email") or lead_data.get("owner_email")
         if not email:
             logger.warning(f"No email for lead {lead_data.get('business_name')} — skipping")
@@ -101,7 +103,7 @@ class InstantlyAPI:
             },
         }
 
-        result = self._request("/lead/add", data={
+        result = self._request("/leads", method="POST", data={
             "campaign_id": campaign_id,
             "leads": [lead],
             "skip_if_in_workspace": True,
@@ -115,7 +117,7 @@ class InstantlyAPI:
         return True
 
     def get_lead_status(self, campaign_id: str, email: str) -> dict | None:
-        return self._request("/lead/get", data={
+        return self._request("/leads", data={
             "campaign_id": campaign_id,
             "email": email,
         })
@@ -127,10 +129,6 @@ class InstantlyAPI:
         campaign_id: str,
         prospects: list[dict],
     ) -> dict:
-        """
-        Upload multiple prospects with their email sequences to a campaign.
-        Returns {"uploaded": int, "failed": int, "skipped": int}
-        """
         uploaded = 0
         failed = 0
         skipped = 0
@@ -143,7 +141,6 @@ class InstantlyAPI:
                 skipped += 1
                 continue
 
-            # Get the email sequence for this lead
             try:
                 seq_result = (
                     db.table("prospect_email_sequences")
@@ -179,7 +176,6 @@ class InstantlyAPI:
         return result
 
     def get_or_create_campaign(self, name: str) -> str | None:
-        """Get existing campaign by name, or create a new one."""
         campaigns = self.list_campaigns()
         for c in campaigns:
             if isinstance(c, dict) and c.get("name") == name:
@@ -190,7 +186,6 @@ class InstantlyAPI:
     # ── Stats sync ──
 
     def sync_campaign_stats(self, campaign_id: str) -> dict | None:
-        """Fetch campaign stats and update local database."""
         stats = self.get_campaign_stats(campaign_id)
         if not stats:
             return None
