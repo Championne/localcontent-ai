@@ -36,11 +36,11 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", alias="LOG_LEVEL")
     debug: bool = Field(False, alias="DEBUG")
 
-    # Scoring thresholds
-    tier_1_min: int = 80
-    tier_2_min: int = 70
-    tier_3_min: int = 60
-    tier_4_min: int = 50
+    # Scoring thresholds (calibrated to real score distribution, median ~44)
+    tier_1_min: int = 65
+    tier_2_min: int = 55
+    tier_3_min: int = 45
+    tier_4_min: int = 35
 
     # Proxy for social media scraping (residential proxy recommended)
     # Format: http://user:pass@host:port or socks5://user:pass@host:port
