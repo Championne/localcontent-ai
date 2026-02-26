@@ -52,7 +52,17 @@ class InstantlyAPI:
 
     @retry(max_attempts=2, delay=3.0)
     def create_campaign(self, name: str) -> str | None:
-        result = self._request("/campaigns", method="POST", data={"name": name})
+        result = self._request("/campaigns", method="POST", data={
+            "name": name,
+            "campaign_schedule": {
+                "schedules": [{
+                    "name": "Default",
+                    "timing": {"from": "09:00", "to": "17:00"},
+                    "days": {"0": False, "1": True, "2": True, "3": True, "4": True, "5": True, "6": False},
+                    "timezone": "Europe/Berlin",
+                }]
+            },
+        })
         if result and isinstance(result, dict):
             return result.get("id") or result.get("campaign_id")
         return None
