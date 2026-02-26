@@ -527,7 +527,7 @@ function ProspectDetailPanel({
                   {detail.competitors.map((c, i) => (
                     <div key={i} className="bg-gray-50 rounded-lg p-3 text-sm">
                       <span className="font-medium text-gray-900">{c.competitor_name as string}</span>
-                      {c.follower_count && <span className="text-gray-500 ml-2">{(c.follower_count as number).toLocaleString()} followers</span>}
+                      {c.follower_count ? <span className="text-gray-500 ml-2">{Number(c.follower_count).toLocaleString()} followers</span> : null}
                     </div>
                   ))}
                 </div>
